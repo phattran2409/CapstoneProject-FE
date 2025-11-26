@@ -33,6 +33,11 @@ npm run web      # Web browser
 - Theme tự động lưu lại
 - Mượt mà chuyển đổi giữa 2 chế độ
 
+### ✅ Song ngữ EN ↔ VI
+- Dùng `i18next` + `expo-localization`
+- App tự nhận biết ngôn ngữ thiết bị
+- Có thể đổi ngay trên Profile screen
+
 ### ✅ Components có sẵn
 ```typescript
 // Button với 3 variants

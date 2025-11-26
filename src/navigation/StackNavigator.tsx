@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { LoginScreen } from '../screens';
+import { LoginScreen, RegisterScreen, OTPVerificationScreen } from '../screens';
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '../store/authStore';
 import { RootStackParamList } from './types';
@@ -13,14 +13,32 @@ const StackNavigator: React.FC = () => {
   return (
     <Stack.Navigator>
       {!isAuthenticated ? (
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen}
-          options={{
-            headerShown: false,
-            animation: 'none',
-          }}
-        />
+        <>
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Register" 
+            component={RegisterScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="OTPVerification" 
+            component={OTPVerificationScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+        </>
       ) : (
         <Stack.Screen 
           name="MainTabs" 

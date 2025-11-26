@@ -18,6 +18,8 @@ A modern, TypeScript-based React Native application built with Expo, featuring a
 - 💾 **State Management**: Zustand for lightweight, efficient state management
 - 🔐 **Authentication Flow**: Login screen with auth state management
 - 🎨 **Theme System**: Complete theming solution with colors, spacing, fonts
+- 🌐 **Bilingual (EN ↔ VI)**: i18next + Expo Localization with in-app language toggle
+- 📝 **Structured Logging**: `react-native-logs` provides leveled, colored logs
 - 📦 **Clean Architecture**: Well-organized folder structure
 
 ## 📁 Project Structure
@@ -180,6 +182,23 @@ import { useAppStore } from './src/store/appStore';
 const { theme, language, setTheme, setLanguage } = useAppStore();
 ```
 
+## 🌐 Internationalization (EN ↔ VI)
+
+- Built with `i18next`, `react-i18next`, and `expo-localization`
+- Auto-detects the device language on first launch
+- Toggle languages directly on the **Profile** screen
+- Translation resources live in `src/i18n/locales`
+- Add a new language by extending `resources` inside `src/i18n/index.ts`
+- Use translations anywhere in the app:
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+const { t } = useTranslation();
+
+return <Text>{t('home.title')}</Text>;
+```
+
 ## 🌐 API Integration
 
 The app includes a configured Axios instance with interceptors:
@@ -189,6 +208,21 @@ import { api } from './src/services';
 
 // Make API calls
 const response = await api.get('/endpoint');
+```
+
+## 📝 Structured Logging
+
+- Powered by [`react-native-logs`](https://github.com/onubo/react-native-logs)
+- Located in `src/utils/logger.ts`
+- Uses color-coded severities (debug/info/warn/error) and respects `__DEV__`
+- Import once and log from anywhere:
+
+```typescript
+import log from './src/utils/logger';
+
+log.debug('screen.mount', { screen: 'Home' });
+log.info('auth.login.success', { email });
+log.error('api.fetch.failed', error);
 ```
 
 ## 🎨 Design Philosophy

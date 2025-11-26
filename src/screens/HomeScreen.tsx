@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, Card } from '../components';
 import { useTheme } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 type RootStackParamList = {
   Home: undefined;
@@ -18,39 +19,46 @@ interface HomeScreenProps {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.m }}>
-        <Text style={[styles.title, { 
-          fontSize: theme.fontSizes.header,
-          color: theme.colors.text,
-          fontWeight: '700',
-          marginBottom: theme.spacing.l,
-        }]}>
-          Home Screen
+        <Text
+          style={{
+            fontSize: theme.fontSizes.header,
+            color: theme.colors.text,
+            fontWeight: '700',
+            marginBottom: theme.spacing.l,
+          }}
+        >
+          {t('home.title')}
         </Text>
         
         <Card style={{ marginBottom: theme.spacing.l }}>
-          <Text style={[styles.cardTitle, { 
-            fontSize: theme.fontSizes.l,
-            color: theme.colors.text,
-            fontWeight: '600',
-            marginBottom: theme.spacing.s,
-          }]}>
-            Welcome to your app!
+          <Text
+            style={{
+              fontSize: theme.fontSizes.l,
+              color: theme.colors.text,
+              fontWeight: '600',
+              marginBottom: theme.spacing.s,
+            }}
+          >
+            {t('home.welcomeTitle')}
           </Text>
-          <Text style={{ 
-            fontSize: theme.fontSizes.m,
-            color: theme.colors.textSecondary,
-            fontWeight: '400',
-          }}>
-            This is a sample home screen with a card component styled with neon green theme.
+          <Text
+            style={{
+              fontSize: theme.fontSizes.m,
+              color: theme.colors.textSecondary,
+              fontWeight: '400',
+            }}
+          >
+            {t('home.welcomeBody')}
           </Text>
         </Card>
 
         <Button
-          title="Go to Profile"
+          title={t('common.buttons.goToProfile')}
           onPress={() => navigation.navigate('Profile')}
           style={{ marginTop: theme.spacing.m }}
         />

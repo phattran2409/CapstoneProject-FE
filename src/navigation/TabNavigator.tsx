@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HomeScreen, ProfileScreen } from '../screens';
+import { HomeScreen, ProfileScreen, NativeWindDemoScreen } from '../screens';
 import { useTheme } from '../theme';
 import { TabParamList } from './types';
 
@@ -21,10 +21,23 @@ const TabNavigator: React.FC = () => {
       <Tab.Screen 
         name="Home" 
         component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen 
+        name="NativeWindDemo" 
+        component={NativeWindDemoScreen}
+        options={{
+          tabBarLabel: 'NativeWind',
+        }}
       />
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profile',
+        }}
       />
     </Tab.Navigator>
   );
