@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CompositeNavigationProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Modal } from '../components';
+import { Button } from '../components';
 import { useTheme } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
+import { RootStackParamList, TabParamList } from '../navigation/types';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-type RootStackParamList = {
-  Profile: undefined;
-  Login: undefined;
-};
-
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Profile'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface ProfileScreenProps {
   navigation: ProfileScreenNavigationProp;
@@ -21,170 +23,386 @@ interface ProfileScreenProps {
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { theme, toggleTheme, isDark } = useTheme();
-  const [modalVisible, setModalVisible] = useState(false);
   const { user, logout } = useAuthStore();
   const { t } = useTranslation();
   const language = useAppStore((state) => state.language);
   const setLanguage = useAppStore((state) => state.setLanguage);
+  const [matchNotifications, setMatchNotifications] = useState(true);
+  const [newsUpdates, setNewsUpdates] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigation.replace('Login');
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('Login');
+    }
+  };
+
+  const handleAvatarPress = () => {
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('PersonalPage');
+    }
+  };
+
+  const handleChatListPress = () => {
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('ChatList');
+    }
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.m }}>
-        <Text
+        {/* Header: title + chat icon */}
+        <View
           style={{
-            fontSize: theme.fontSizes.header,
-            color: theme.colors.text,
-            fontWeight: '700',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
             marginBottom: theme.spacing.l,
           }}
         >
-          {t('profile.title')}
-        </Text>
-        
-        <Card style={{ marginBottom: theme.spacing.l }}>
-          <Text style={[styles.label, {
-            fontSize: theme.fontSizes.s,
-            color: theme.colors.textSecondary,
-            fontWeight: '400',
-            marginBottom: theme.spacing.xs,
-          }]}>
-            {t('profile.nameLabel')}
-          </Text>
-          <Text style={[styles.value, {
-            fontSize: theme.fontSizes.m,
-            color: theme.colors.text,
-            fontWeight: '500',
-          }]}>
-            {user?.name || 'Guest'}
-          </Text>
-          
-          <Text style={[styles.label, {
-            fontSize: theme.fontSizes.s,
-            color: theme.colors.textSecondary,
-            fontWeight: '400',
-            marginTop: theme.spacing.m,
-            marginBottom: theme.spacing.xs,
-          }]}>
-            {t('profile.emailLabel')}
-          </Text>
-          <Text style={[styles.value, {
-            fontSize: theme.fontSizes.m,
-            color: theme.colors.text,
-            fontWeight: '500',
-          }]}>
-            {user?.email || 'guest@example.com'}
-          </Text>
-        </Card>
-
-        {/* Language Toggle */}
-        <View style={{ marginBottom: theme.spacing.m }}>
           <Text
             style={{
-              fontSize: theme.fontSizes.m,
+              fontSize: theme.fontSizes.xxl,
               color: theme.colors.text,
-              fontWeight: '600',
-              marginBottom: theme.spacing.s,
+              fontWeight: '700',
             }}
           >
-            {t('common.language.select')}
+            {t('profile.title')}
           </Text>
-          <View style={styles.languageRow}>
-            {(['en', 'vi'] as const).map((lang) => {
-              const isActive = language === lang;
-              return (
-                <TouchableOpacity
-                  key={lang}
-                  style={[
-                    styles.languageButton,
-                    {
-                      borderColor: theme.colors.primary,
-                      backgroundColor: isActive
-                        ? theme.colors.primary
-                        : theme.colors.surface,
-                    },
-                  ]}
-                  onPress={() => setLanguage(lang)}
-                >
-                  <Text
-                    style={{
-                      color: isActive ? theme.colors.darkBlack : theme.colors.text,
-                      fontWeight: isActive ? '600' : '500',
-                    }}
-                  >
-                    {lang === 'en'
-                      ? t('common.language.english')
-                      : t('common.language.vietnamese')}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          <TouchableOpacity
+            onPress={handleChatListPress}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: theme.colors.surface,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Ionicons name="chatbubbles-outline" size={23} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Compact Profile Section - rectangular card leading to personal page */}
+        <TouchableOpacity
+          onPress={handleAvatarPress}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: theme.spacing.m,
+            borderRadius: theme.radius.l,
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.surface,
+            marginBottom: theme.spacing.l,
+          }}
+        >
+          {/* Avatar */}
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              backgroundColor: '#E8D5C4',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: theme.colors.primary,
+              marginRight: theme.spacing.m,
+            }}
+          >
+            <Ionicons name="person" size={36} color={theme.colors.textSecondary} />
           </View>
+
+          {/* Name + info */}
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontSize: theme.fontSizes.m,
+                color: theme.colors.text,
+                fontWeight: '700',
+                marginBottom: theme.spacing.xs / 2,
+              }}
+            >
+              {user?.name || 'Tuấn Anh Nguyễn'}
+            </Text>
+            <Text
+              style={{
+                fontSize: theme.fontSizes.s,
+                color: theme.colors.textSecondary,
+              }}
+              numberOfLines={1}
+            >
+              {t('profile.position')}: {t('profile.forward')} · {t('profile.matchesCount', { count: 25 })}
+            </Text>
+          </View>
+
+          {/* Arrow icon to indicate go to personal page */}
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={theme.colors.textSecondary}
+          />
+        </TouchableOpacity>
+
+        {/* Account Section */}
+        <View style={{ marginBottom: theme.spacing.l }}>
+          <Text
+            style={{
+              fontSize: theme.fontSizes.s,
+              color: theme.colors.textSecondary,
+              fontWeight: '600',
+              marginBottom: theme.spacing.m,
+              textTransform: 'uppercase',
+            }}
+          >
+            {t('profile.account')}
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.colors.border,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+            onPress={handleAvatarPress}
+          >
+            <Ionicons name="person-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.editPersonalInfo')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.colors.border,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+          >
+            <Ionicons name="lock-closed-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.changePassword')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+          >
+            <Ionicons name="share-social-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.linkSocialAccounts')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
         </View>
 
-        {/* Theme Toggle */}
+        {/* Notifications Section */}
+        <View style={{ marginBottom: theme.spacing.l }}>
+          <Text
+            style={{
+              fontSize: theme.fontSizes.s,
+              color: theme.colors.textSecondary,
+              fontWeight: '600',
+              marginBottom: theme.spacing.m,
+              textTransform: 'uppercase',
+            }}
+          >
+            {t('profile.notifications')}
+          </Text>
+          <View
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.colors.border,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+          >
+            <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.matchInvitations')}
+            </Text>
+            <Switch
+              value={matchNotifications}
+              onValueChange={setMatchNotifications}
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              thumbColor={theme.colors.white}
+            />
+          </View>
+        
+        </View>
+
+        {/* Application Section */}
+        <View style={{ marginBottom: theme.spacing.l }}>
+          <Text
+            style={{
+              fontSize: theme.fontSizes.s,
+              color: theme.colors.textSecondary,
+              fontWeight: '600',
+              marginBottom: theme.spacing.m,
+              textTransform: 'uppercase',
+            }}
+          >
+            {t('profile.application')}
+          </Text>
+            <TouchableOpacity
+            onPress={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
+            style={[
+              styles.settingItem,
+              {
+              backgroundColor: theme.colors.surface,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.border,
+              paddingVertical: theme.spacing.m,
+              paddingHorizontal: theme.spacing.m,
+              borderRadius: theme.radius.m,
+              marginBottom: theme.spacing.xs,
+              },
+            ]}
+            >
+            <Ionicons name="globe-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.language')}
+            </Text>
+            <Text style={[styles.settingValue, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.s }]}>
+              {language === 'vi' ? t('common.language.vietnamese') : t('common.language.english')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+          <TouchableOpacity
+            onPress={toggleTheme}
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.colors.border,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+          >
+            <Ionicons name="moon-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.interface')}
+            </Text>
+           
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              thumbColor={theme.colors.white}
+            />            
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.colors.border,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+          >
+            <Ionicons name="shield-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.privacyPolicy')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: theme.colors.surface,
+                paddingVertical: theme.spacing.m,
+                paddingHorizontal: theme.spacing.m,
+                borderRadius: theme.radius.m,
+                marginBottom: theme.spacing.xs,
+              },
+            ]}
+          >
+            <Ionicons name="document-text-outline" size={24} color={theme.colors.text} />
+            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
+              {t('profile.termsOfService')}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Chat List Button */}
         <TouchableOpacity
-          onPress={toggleTheme}
+          onPress={handleChatListPress}
           style={{
             backgroundColor: theme.colors.surface,
             borderRadius: theme.radius.m,
             padding: theme.spacing.m,
             marginBottom: theme.spacing.m,
-            borderWidth: 2,
-            borderColor: theme.colors.primary,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
+          <Ionicons name="chatbubbles-outline" size={24} color={theme.colors.primary} />
           <Text
             style={{
               fontSize: theme.fontSizes.m,
-              color: theme.colors.text,
-              fontWeight: '500',
-              textAlign: 'center',
+              color: theme.colors.primary,
+              fontWeight: '600',
+              marginLeft: theme.spacing.s,
             }}
           >
-            {isDark ? `☀️ ${t('common.theme.light')}` : `🌙 ${t('common.theme.dark')}`}
+            {t('profile.goToChats')}
           </Text>
         </TouchableOpacity>
 
-        <Button
-          title={t('common.buttons.showModal')}
-          onPress={() => setModalVisible(true)}
-          variant="secondary"
-          style={{ marginBottom: theme.spacing.m }}
-        />
-
+        {/* Logout Button */}
         <Button
           title={t('common.buttons.logout')}
           onPress={handleLogout}
-          variant="outline"
+          variant="primary"
+          style={{ marginTop: theme.spacing.m }}
         />
-
-        <Modal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          title={t('profile.modalTitle')}
-        >
-          <Text
-            style={{
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.text,
-              fontWeight: '400',
-              marginBottom: theme.spacing.l,
-              lineHeight: 22,
-            }}
-          >
-            {t('profile.modalBody')}
-          </Text>
-          <Button
-            title={t('common.buttons.close')}
-            onPress={() => setModalVisible(false)}
-            size="small"
-          />
-        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -194,24 +412,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {
-    fontWeight: 'bold',
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  label: {
-  },
-  value: {
+  settingText: {
+    flex: 1,
     fontWeight: '500',
   },
-  languageRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  languageButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderRadius: 12,
-    alignItems: 'center',
+  settingValue: {
+    marginRight: 4,
   },
 });
 

@@ -15,6 +15,10 @@ export type RootStackParamList = {
     };
   } | undefined;
   VenueSelection: undefined;
+  PersonalPage: undefined;
+  ChatList: undefined;
+  Chat: { chatId: string; chatName: string };
+  Profile: undefined;
 };
 
 export type TabParamList = {
