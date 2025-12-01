@@ -5,12 +5,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { ThemedCard, ThemedSafeAreaView, ThemedText, ThemedView } from '@/components/themed';
 
 type RootStackParamList = {
   Matches: undefined;
   Profile: undefined;
   MatchDetail: { matchId: string };
   CreateRoom: undefined;
+  RoomDetail: { roomId: string };
 };
 
 type MatchesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Matches'>;
@@ -100,12 +102,12 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-black">
+    <ThemedSafeAreaView className="flex-1 py-10">
       {/* Header */}
-      <View className="flex-row justify-between items-center px-5 py-4">
-        <Text className="text-3xl font-bold text-soft-white">
+      <ThemedView className="flex-row justify-between items-center px-5 py-4">
+          <ThemedText size="xl" weight="bold"  variant="secondary" >
           {t('matches.title', 'Trận đấu')}
-        </Text>
+        </ThemedText>
         <View className="flex-row items-center gap-4">
           <TouchableOpacity className="w-10 h-10 items-center justify-center">
             <Ionicons name="search" size={24} color={theme.colors.textSecondary} />
@@ -114,14 +116,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             <Ionicons name="filter" size={24} color={theme.colors.textSecondary} />
           </TouchableOpacity>
         </View>
-      </View>
+      </ThemedView>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Ongoing Matches Section */}
-        <View className="mb-8">
-          <Text className="text-xl font-bold text-soft-white px-5 mb-4">
+        <ThemedView className="mb-8">
+          <ThemedText size="xl" weight="bold" className="px-5 mb-4">
             {t('home.ongoingMatches')}
-          </Text>
+          </ThemedText>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -129,44 +131,47 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             className="gap-4"
           >
             {ongoingMatches.map((match, index) => (
-              <TouchableOpacity
-                key={match.id}
-                className="bg-[#1a1a1a] rounded-3xl overflow-hidden mr-4"
-                style={{ width: 280 }}
-                onPress={() => {
-                  // navigation.navigate('MatchDetail', { matchId: match.id });
-                }}
-              >
-                <Image
-                  source={match.image}
-                  className="w-full h-40"
-                  resizeMode="cover"
-                />
-                <View className="p-4">
-                  <Text className="text-soft-white text-lg font-bold mb-2">
-                    {match.title}
-                  </Text>
-                  <Text className="text-medium-gray text-sm">
-                    {match.format} - ({match.players})
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <ThemedCard key={match.id} padding={0}  variant="outlined" className="rounded-3xl overflow-hidden mr-4 border-1 border-[#2a2a2a]" >
+                <TouchableOpacity
+                  key={match.id}
+                  className="overflow-hidden bg-transparent"
+                  style={{ width: 280 }}
+                  onPress={() => {
+                    navigation.navigate('RoomDetail', { roomId: match.id });
+                  }}
+                >
+                  <Image
+                    source={match.image}
+                    className="w-full h-40"
+                    resizeMode="cover"
+                  />
+                  <ThemedView className="p-4 bg-transparent">
+                    <ThemedText size="l" weight="bold" className="mb-2">
+                      {match.title}
+                    </ThemedText>
+                    <ThemedText variant="secondary" size="s">
+                      {match.format} - ({match.players})
+                    </ThemedText>
+                  </ThemedView>
+                </TouchableOpacity>
+              </ThemedCard>
             ))}
           </ScrollView>
-        </View>
+        </ThemedView>
 
         {/* Recent Matches Section */}
-        <View className="px-5 mb-24">
-          <Text className="text-xl font-bold text-soft-white mb-4">
+        <ThemedView className="px-5 mb-24">
+          <ThemedText size="xl" weight="bold" className="mb-4">
             {t('home.recentMatches')}
-          </Text>
+          </ThemedText>
           <View className="gap-3">
             {recentMatches.map((match) => (
+              
               <TouchableOpacity
                 key={match.id}
-                className="bg-[#1a1a1a] rounded-2xl p-3 flex-row items-center"
+                className="rounded-2xl p-3 flex-row items-center"
                 onPress={() => {
-                  // navigation.navigate('MatchDetail', { matchId: match.id });
+                  navigation.navigate('RoomDetail', { roomId: match.id });
                 }}
               >
                 <Image
@@ -175,12 +180,12 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                   resizeMode="cover"
                 />
                 <View className="flex-1 ml-4">
-                  <Text className="text-soft-white text-base font-semibold mb-1">
+                  <ThemedText size="m" weight="semiBold" className="mb-1">
                     {match.title}
-                  </Text>
-                  <Text className="text-medium-gray text-sm">
+                  </ThemedText>
+                  <ThemedText variant="secondary" size="s">
                     {match.date} - {getStatusText(match.status)}
-                  </Text>
+                  </ThemedText>
                 </View>
                 <View>
                   {getStatusIcon(match.status)}
@@ -188,11 +193,11 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </ThemedView>
       </ScrollView>
 
       {/* Floating Create Button */}
-      <View className="absolute bottom-0 left-0 right-0 px-5 pb-8 bg-gradient-to-t from-dark-black to-transparent">
+      <ThemedView className="absolute bottom-0 left-0 right-0 px-5 pb-8 bg-gradient-to-t from-dark-black to-transparent">
         <TouchableOpacity
           className="bg-neon-green rounded-2xl py-4 flex-row items-center justify-center"
           style={{
@@ -211,8 +216,9 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             {t('home.createNewRoom')}
           </Text>
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ThemedView>
+    </ThemedSafeAreaView>
+    
   );
 };
 

@@ -244,7 +244,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <ThemedSafeAreaView>
       {/* Header */}
         <ThemedView 
-        className="flex-row justify-between items-center px-5 py-4"
+        className="flex-row justify-between items-center px-5 py-4 mt-6"
         style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
       >
         <View className="flex-row items-center gap-2">
@@ -274,7 +274,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               </ThemedText>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')}>
-              <ThemedText variant="accent" size="s" weight="semiBold">
+              <ThemedText variant="primary" size="s" weight="semiBold">
                 View All
               </ThemedText>
             </TouchableOpacity>
@@ -380,9 +380,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </ThemedView>
 
         {/* Posts Feed */}
-        <View className="pb-24">
+        <ThemedView className="pb-24">
           {posts.map((post) => (
-            <View key={post.id} className="bg-dark-black border-b border-[#2a2a2a] py-4">
+            <ThemedView key={post.id} className="bg-dark-black border-b border-[#2a2a2a] py-4">
               {/* Post Header */}
               <View className="flex-row items-center justify-between px-5 mb-3">
                 <View className="flex-row items-center flex-1">
@@ -392,14 +392,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     resizeMode="cover"
                   />
                   <View className="ml-3 flex-1">
-                    <Text className="text-soft-white font-semibold text-base">
+                    <ThemedText variant="primary" size="m" weight="bold">
                       {post.author.name}
                       {post.community && (
                         <Text className="text-medium-gray font-normal">
                           {' '}posted in '{post.community}'
                         </Text>
                       )}
-                    </Text>
+                    </ThemedText>
                     <Text className="text-medium-gray text-sm">
                       {post.timestamp}
                     </Text>
@@ -421,7 +421,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       {getPostTypeLabel(post.type)}
                     </Text>
                   </View>
-                </View>
+                </View> 
               )}
 
               {/* Post Content */}
@@ -473,30 +473,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </ThemedView>
           ))}
-        </View>
+        </ThemedView>
       </ThemedScrollView>
 
-      {/* Floating Create Button */}
-      <View className="absolute bottom-20 right-5">
-        <TouchableOpacity
-          className="w-14 h-14 rounded-full items-center justify-center"
-          style={{
-            backgroundColor: theme.colors.neonGreen,
-            shadowColor: theme.colors.neonGreen,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.4,
-            shadowRadius: 12,
-            elevation: 8,
-          }}
-          onPress={() => {
-            // Handle create new post
-          }}
-        >
-          <Ionicons name="add" size={32} color="#000" />
-        </TouchableOpacity>
-      </View>
+
     </ThemedSafeAreaView>
   );
 };

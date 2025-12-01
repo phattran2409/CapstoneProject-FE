@@ -87,6 +87,18 @@ const en = {
     perHour: 'Rental price / hour',
     distance: 'km',
   },
+  roomDetail: {
+    title: 'Room Details',
+    format: 'Format',
+    datetime: 'Date & Time',
+    venue: 'Venue',
+    teamLineup: 'Team Lineup',
+    players: 'players',
+    teamA: 'Team A',
+    teamB: 'Team B',
+    emptySlot: 'Available',
+    joinButton: 'Join Match',
+  },
   login: {
     title: 'Login',
     subtitle: 'Sign in to keep playing.',

@@ -42,7 +42,7 @@ const TabNavigator: React.FC = () => {
           ),
         }}
       />
-      <Tab.Screen 
+      {/* <Tab.Screen 
         name="Create" 
         component={HomeScreen}
         options={{
@@ -74,7 +74,7 @@ const TabNavigator: React.FC = () => {
             // Handle create action - can open modal or navigate to create screen
           },
         })}
-      />
+      /> */}
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}

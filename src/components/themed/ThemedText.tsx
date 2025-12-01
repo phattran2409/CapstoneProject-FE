@@ -3,7 +3,7 @@ import { Text, TextProps, StyleSheet } from 'react-native';
 import { useTheme } from '../../theme';
 
 interface ThemedTextProps extends TextProps {
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'accent';
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'accent' | 'muted';
   size?: 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl' | 'title' | 'header';
   weight?: 'regular' | 'medium' | 'semiBold' | 'bold';
   children?: React.ReactNode;
@@ -19,14 +19,18 @@ export const ThemedText: React.FC<ThemedTextProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  const getColor = () => {
+    const getColor = () => {
     switch (variant) {
+      case 'primary':
+        return theme.colors.textPrimary; 
       case 'secondary':
         return theme.colors.textSecondary;
       case 'tertiary':
         return theme.colors.textTertiary;
       case 'accent':
         return theme.colors.neonGreen;
+      case 'muted':
+        return theme.colors.textMuted;
       default:
         return theme.colors.text;
     }

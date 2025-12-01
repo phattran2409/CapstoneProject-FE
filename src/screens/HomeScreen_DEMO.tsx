@@ -97,7 +97,7 @@ const HomeScreenDemo: React.FC<HomeScreenProps> = ({ navigation }) => {
     <ThemedSafeAreaView>
       {/* Header - Now Theme Responsive! */}
       <ThemedView 
-        className="flex-row justify-between items-center px-5 py-4"
+        className="flex-row justify-between items-center px-5 py-6"
         style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
       >
         <View className="flex-row items-center gap-2">

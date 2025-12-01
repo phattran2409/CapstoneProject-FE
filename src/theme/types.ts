@@ -9,8 +9,10 @@ export interface Theme {
     
     // Text colors
     text: string;
+    textPrimary: string;
     textSecondary: string;
     textTertiary: string;
+    textMuted: string;
     
     // UI colors
     border: string;

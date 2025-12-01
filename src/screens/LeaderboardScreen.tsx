@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { ThemedIcon, ThemedScrollView, ThemedText, ThemedView, ThemedSafeAreaView } from '../components/themed';
 
 type RootStackParamList = {
   Home: undefined;
@@ -262,80 +263,106 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-black">
+    <ThemedSafeAreaView>
       {/* Header */}
-      <View className="px-5 py-4 border-b border-[#2a2a2a]">
-        <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-row items-center gap-3">
+      <ThemedView 
+        className="px-5 py-4 mt-10"
+        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+      >
+        <ThemedView className="flex-row items-center justify-between mb-4">
+          <ThemedView className="flex-row items-center gap-3">
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               className="w-10 h-10 items-center justify-center"
             >
-              <Ionicons name="arrow-back" size={24} color={theme.colors.softWhite} />
+              <ThemedIcon name="arrow-back" size={24} variant="secondary" />
             </TouchableOpacity>
             <View className="flex-row items-center gap-2">
-              <Ionicons name="trophy" size={28} color={theme.colors.neonGreen} />
-              <Text className="text-2xl font-bold text-soft-white">
+              <ThemedIcon name="trophy" size={28} variant="primary" />
+              <ThemedText variant="primary" size="xl" weight="bold">
                 ELO Leaderboard
-              </Text>
+              </ThemedText>
             </View>
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
 
         {/* Search Bar */}
-        <View className="bg-[#1a1a1a] rounded-xl px-4 py-3 flex-row items-center mb-4">
-          <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
+        <ThemedView 
+          variant="surface"
+          className="rounded-xl px-4 py-3 flex-row items-center mb-4"
+        >
+          <ThemedIcon name="search" size={20} variant="secondary" />
           <TextInput
-            className="flex-1 ml-2 text-soft-white"
-            placeholder="Search players..."
+            className="flex-1 ml-2"
+            style={{ color: theme.colors.text }}
+            placeholder={t('leaderboard.searchPlaceholder')}
             placeholderTextColor={theme.colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color={theme.colors.textSecondary} />
+              <ThemedIcon name="close-circle" size={20} variant="secondary" />
             </TouchableOpacity>
           )}
-        </View>
+        </ThemedView>
 
         {/* Tabs */}
-        <View className="flex-row gap-2">
+        <ThemedView className="flex-row gap-2">
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-xl ${selectedTab === 'overall' ? 'bg-neon-green' : 'bg-[#1a1a1a]'}`}
+            className="flex-1 py-3 rounded-xl"
+            style={{ backgroundColor: selectedTab === 'overall' ? theme.colors.neonGreen : theme.colors.surface }}
             onPress={() => setSelectedTab('overall')}
           >
-            <Text className={`text-center font-semibold ${selectedTab === 'overall' ? 'text-dark-black' : 'text-medium-gray'}`}>
-              Overall
-            </Text>
+            <ThemedText 
+              weight="semiBold" 
+              className="text-center"
+              style={{ color: selectedTab === 'overall' ? '#000' : theme.colors.textSecondary }}
+            >
+              {t('leaderboard.tabs.overall')}
+            </ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-xl ${selectedTab === 'weekly' ? 'bg-neon-green' : 'bg-[#1a1a1a]'}`}
+            className="flex-1 py-3 rounded-xl"
+            style={{ backgroundColor: selectedTab === 'weekly' ? theme.colors.neonGreen : theme.colors.surface }}
             onPress={() => setSelectedTab('weekly')}
           >
-            <Text className={`text-center font-semibold ${selectedTab === 'weekly' ? 'text-dark-black' : 'text-medium-gray'}`}>
-              Weekly
-            </Text>
+            <ThemedText 
+              weight="semiBold" 
+              className="text-center"
+              style={{ color: selectedTab === 'weekly' ? '#000' : theme.colors.textSecondary }}
+            >
+              {t('leaderboard.tabs.weekly')}
+            </ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-xl ${selectedTab === 'monthly' ? 'bg-neon-green' : 'bg-[#1a1a1a]'}`}
+            className="flex-1 py-3 rounded-xl"
+            style={{ backgroundColor: selectedTab === 'monthly' ? theme.colors.neonGreen : theme.colors.surface }}
             onPress={() => setSelectedTab('monthly')}
           >
-            <Text className={`text-center font-semibold ${selectedTab === 'monthly' ? 'text-dark-black' : 'text-medium-gray'}`}>
-              Monthly
-            </Text>
+            <ThemedText 
+              weight="semiBold" 
+              className="text-center"
+              style={{ color: selectedTab === 'monthly' ? '#000' : theme.colors.textSecondary }}
+            >
+              {t('leaderboard.tabs.monthly')}
+            </ThemedText>
           </TouchableOpacity>
-        </View>
-      </View>
+        </ThemedView>
+      </ThemedView>
 
       {/* Leaderboard List */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ThemedScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-5 py-4">
           {filteredPlayers.map((player) => (
             <TouchableOpacity
               key={player.id}
-              className="bg-[#1a1a1a] rounded-2xl p-4 mb-3 border border-[#2a2a2a]"
-              style={{ backgroundColor: getRankBgColor(player.rank) || '#1a1a1a' }}
+              className="rounded-2xl p-4 mb-3"
+              style={{ 
+                backgroundColor: getRankBgColor(player.rank) || theme.colors.surface,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
               onPress={() => {
                 // navigation.navigate('PlayerProfile', { playerId: player.id });
               }}
@@ -343,12 +370,13 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
               <View className="flex-row items-center">
                 {/* Rank */}
                 <View className="w-12 items-center">
-                  <Text 
-                    className="text-2xl font-bold"
+                  <ThemedText 
+                    size="xxl" 
+                    weight="bold"
                     style={{ color: getRankColor(player.rank) }}
                   >
                     #{player.rank}
-                  </Text>
+                  </ThemedText>
                 </View>
 
                 {/* Avatar */}
@@ -360,20 +388,26 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
 
                 {/* Player Info */}
                 <View className="flex-1 ml-3">
-                  <Text className="text-soft-white text-base font-bold">
+                  <ThemedText variant="muted"  weight="bold">
                     {player.name}
-                  </Text>
+                  </ThemedText>
                   <View className="flex-row items-center gap-2 mt-1">
-                    <Text className="text-medium-gray text-sm">
+                    <ThemedText variant="secondary" size="s">
                       @{player.username}
-                    </Text>
+                    </ThemedText>
                     {player.position && (
                       <>
-                        <View className="w-1 h-1 rounded-full bg-medium-gray" />
-                        <View className="bg-[#2a2a2a] px-2 py-0.5 rounded">
-                          <Text className="text-neon-green text-xs font-semibold">
+                        <View 
+                          className="w-1 h-1 rounded-full" 
+                          style={{ backgroundColor: theme.colors.textSecondary }}
+                        />
+                        <View 
+                          className="px-2 py-0.5 rounded"
+                          style={{ backgroundColor: theme.colors.surface }}
+                        >
+                          <ThemedText variant="muted" size="xs" weight="semiBold">
                             {player.position}
-                          </Text>
+                          </ThemedText>
                         </View>
                       </>
                     )}
@@ -382,58 +416,61 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
 
                 {/* ELO Score */}
                 <View className="items-end">
-                  <Text 
-                    className="text-2xl font-bold"
-                    style={{ color: theme.colors.neonGreen }}
+                  <ThemedText 
+                    variant="primary"
+                    size="xxl" 
+                    weight="bold"
                   >
                     {player.elo}
-                  </Text>
+                  </ThemedText>
                   <View className="flex-row items-center mt-1">
                     <Ionicons 
                       name={getTrendIcon(player.trend)} 
                       size={14} 
                       color={getTrendColor(player.trend)} 
                     />
-                    <Text 
-                      className="text-xs font-semibold ml-1"
+                    <ThemedText 
+                      size="xs" 
+                      weight="semiBold"
+                      className="ml-1"
                       style={{ color: getTrendColor(player.trend) }}
                     >
                       {player.eloChange > 0 ? '+' : ''}{player.eloChange}
-                    </Text>
+                    </ThemedText>
                   </View>
                 </View>
               </View>
 
               {/* Stats Bar */}
-              <View className="flex-row mt-4 pt-3 border-t border-[#2a2a2a]">
+              <View 
+                className="flex-row mt-4 pt-3"
+                style={{ borderTopWidth: 1, borderTopColor: theme.colors.border }}
+              >
                 <View className="flex-1 items-center">
-                  <Text className="text-medium-gray text-xs mb-1">
-                    Matches
-                  </Text>
-                  <Text className="text-soft-white text-sm font-semibold">
+                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                    {t('leaderboard.stats.matches')}
+                  </ThemedText>
+                  <ThemedText variant="primary" size="s" weight="semiBold">
                     {player.matchesPlayed}
-                  </Text>
+                  </ThemedText>
                 </View>
-                <View className="w-px bg-[#2a2a2a]" />
+                <View style={{ width: 1, backgroundColor: theme.colors.border }} />
                 <View className="flex-1 items-center">
-                  <Text className="text-medium-gray text-xs mb-1">
-                    W/L/D
-                  </Text>
-                  <Text className="text-soft-white text-sm font-semibold">
+                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                    {t('leaderboard.stats.winLossDraw')}
+                  </ThemedText>
+                  <ThemedText variant="primary" size="s" weight="semiBold">
                     {player.wins}/{player.losses}/{player.draws}
-                  </Text>
+                  </ThemedText>
                 </View>
-                <View className="w-px bg-[#2a2a2a]" />
+                <View style={{ width: 1, backgroundColor: theme.colors.border }} />
                 <View className="flex-1 items-center">
-                  <Text className="text-medium-gray text-xs mb-1">
-                    Win Rate
-                  </Text>
-                  <Text 
-                    className="text-sm font-semibold"
-                    style={{ color: theme.colors.neonGreen }}
-                  >
+                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                    {t('leaderboard.stats.winRate')}
+                  </ThemedText>
+                  <ThemedText variant="primary" size="s" weight="semiBold">
                     {player.winRate}%
-                  </Text>
+                  </ThemedText>
                 </View>
               </View>
             </TouchableOpacity>
@@ -442,14 +479,14 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
 
         {filteredPlayers.length === 0 && (
           <View className="items-center justify-center py-20">
-            <Ionicons name="search-outline" size={64} color={theme.colors.textSecondary} />
-            <Text className="text-medium-gray text-lg mt-4">
-              No players found
-            </Text>
+            <ThemedIcon name="search-outline" size={64} variant="secondary" />
+            <ThemedText variant="secondary" size="l" className="mt-4">
+              {t('leaderboard.noResults')}
+            </ThemedText>
           </View>
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </ThemedScrollView>
+    </ThemedSafeAreaView>
   );
 };
 

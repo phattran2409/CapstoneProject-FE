@@ -83,6 +83,18 @@ const vi = {
     perHour: 'Giá thuê / giờ',
     distance: 'km',
   },
+  roomDetail: {
+    title: 'Chi tiết phòng đấu',
+    format: 'Thể thức',
+    datetime: 'Thời gian',
+    venue: 'Địa điểm',
+    teamLineup: 'Đội hình tham gia',
+    players: 'người chơi',
+    teamA: 'Đội A',
+    teamB: 'Đội B',
+    emptySlot: 'Còn trống',
+    joinButton: 'Tham gia trận đấu',
+  },
   login: {
     title: 'Đăng nhập',
     subtitle: 'Đăng nhập để tiếp tục sân chơi của bạn.',

@@ -11,8 +11,10 @@ export const darkTheme: Theme = {
     
     // Text colors - Light on dark
     text: '#F6F2F2', // Soft White for main text
+    textPrimary: '#97FB57', // Neon Green for primary text
     textSecondary: '#909090', // Medium Gray stays same
     textTertiary: '#6B6B6B', // Darker gray
+    textMuted: '#eaeaea', // Medium Gray + 50% opacity
     
     // UI colors
     border: '#2C2C2C',

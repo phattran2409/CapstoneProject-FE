@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, TouchableOpacity, TextInput, Switch, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { 
+  ThemedSafeAreaView, 
+  ThemedView, 
+  ThemedText,
+  ThemedScrollView,
+  ThemedIcon 
+} from '../components/themed';
 
 type RootStackParamList = {
   Matches: undefined;
@@ -106,89 +112,113 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-black">
+    <ThemedSafeAreaView className='py-10'>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-5 py-4 border-b border-[#2a2a2a]">
+      <ThemedView 
+        className="flex-row items-center justify-between px-5 py-4"
+        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+      >
         <View className="flex-row items-center gap-3">
           <TouchableOpacity
             onPress={() => navigation?.goBack()}
             className="w-10 h-10 items-center justify-center"
           >
-            <Ionicons name="arrow-back" size={24} color={theme.colors.softWhite} />
+            <ThemedIcon name="arrow-back"  size={24} variant="secondary" />
           </TouchableOpacity>
-          <Text className="text-2xl font-bold text-soft-white">
+          <ThemedText size="xxl" weight="bold">
             {t('createRoom.title')}
-          </Text>
+          </ThemedText>
         </View>
-      </View>
+      </ThemedView>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ThemedScrollView showsVerticalScrollIndicator={false}>
         <View className="px-5 py-6">
           {/* Match Format Selection */}
           <View className="mb-6">
-            <Text className="text-soft-white text-base font-semibold mb-3">
+            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
               {t('createRoom.selectFormat')}
-            </Text>
+            </ThemedText>
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className={`flex-1 py-4 rounded-2xl ${selectedFormat === '5vs5' ? 'bg-neon-green' : 'bg-[#2a2a2a]'}`}
+                className="flex-1 py-4 rounded-2xl"
+                style={{ backgroundColor: selectedFormat === '5vs5' ? theme.colors.neonGreen : theme.colors.surface }}
                 onPress={() => setSelectedFormat('5vs5')}
               >
-                <Text className={`text-center text-lg font-bold ${selectedFormat === '5vs5' ? 'text-dark-black' : 'text-medium-gray'}`}>
+                <ThemedText 
+                  size="l" 
+                  weight="bold" 
+                  className="text-center"
+                  style={{ color: selectedFormat === '5vs5' ? '#000' : theme.colors.textSecondary }}
+                >
                   5 vs 5
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 py-4 rounded-2xl ${selectedFormat === '7vs7' ? 'bg-neon-green' : 'bg-[#2a2a2a]'}`}
+                className="flex-1 py-4 rounded-2xl"
+                style={{ backgroundColor: selectedFormat === '7vs7' ? theme.colors.neonGreen : theme.colors.surface }}
                 onPress={() => setSelectedFormat('7vs7')}
               >
-                <Text className={`text-center text-lg font-bold ${selectedFormat === '7vs7' ? 'text-dark-black' : 'text-medium-gray'}`}>
+                <ThemedText 
+                  size="l" 
+                  weight="bold" 
+                  className="text-center"
+                  style={{ color: selectedFormat === '7vs7' ? '#000' : theme.colors.textSecondary }}
+                >
                   7 vs 7
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Room Name */}
           <View className="mb-6">
-            <Text className="text-soft-white text-base font-semibold mb-3">
+            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
               {t('createRoom.roomName')}
-            </Text>
-            <View className="bg-[#1a1a1a] rounded-2xl px-4 py-4 border border-[#2a2a2a]">
+            </ThemedText>
+            <ThemedView 
+              variant="surface"
+              className="rounded-2xl px-4 py-4"
+              style={{ borderWidth: 1, borderColor: theme.colors.border }}
+            >
               <TextInput
-                className="text-soft-white text-base"
-                placeholder="Nhập tên phòng đấu"
+                style={{ color: theme.colors.text, fontSize: 16 }}
+                placeholder={t('createRoom.roomNamePlaceholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={roomName}
                 onChangeText={setRoomName}
               />
-            </View>
+            </ThemedView>
           </View>
 
           {/* Venue Selection */}
           <View className="mb-6">
-            <Text className="text-soft-white text-base font-semibold mb-3">
+            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
               {t('createRoom.venue')}
-            </Text>
+            </ThemedText>
             <TouchableOpacity
-              className="bg-[#1a1a1a] rounded-2xl px-4 py-4 border border-[#2a2a2a] flex-row items-center justify-between"
+              className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
+              style={{ 
+                backgroundColor: theme.colors.surface,
+                borderWidth: 1, 
+                borderColor: theme.colors.border 
+              }}
               onPress={() => navigation?.navigate('VenueSelection')}
             >
               {selectedVenue ? (
                 <View className="flex-1">
-                  <Text className="text-soft-white text-base font-semibold">
+                  <ThemedText variant="muted" size="m" weight="semiBold">
                     {selectedVenue.name}
-                  </Text>
-                  <Text className="text-medium-gray text-sm mt-1">
+                  </ThemedText>
+                  <ThemedText variant="secondary" size="s" className="mt-1">
                     {selectedVenue.address}
-                  </Text>
+                  </ThemedText>
                 </View>
               ) : (
-                <Text className="text-medium-gray text-base flex-1">
+                <ThemedText variant="secondary" size="m" className="flex-1">
                   {t('createRoom.venuePlaceholder')}
-                </Text>
+                </ThemedText>
               )}
-              <Ionicons name="location" size={24} color={theme.colors.neonGreen} />
+              <ThemedIcon name="location" size={24} variant="accent" />
             </TouchableOpacity>
           </View>
 
@@ -196,95 +226,114 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           <View className="flex-row gap-3 mb-6">
             {/* Date */}
             <View className="flex-1">
-              <Text className="text-soft-white text-base font-semibold mb-3">
+              <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
                 {t('createRoom.matchDate')}
-              </Text>
+              </ThemedText>
               <TouchableOpacity
-                className="bg-[#1a1a1a] rounded-2xl px-4 py-4 border border-[#2a2a2a] flex-row items-center justify-between"
+                className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
+                style={{ 
+                  backgroundColor: theme.colors.surface,
+                  borderWidth: 1, 
+                  borderColor: theme.colors.border 
+                }}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text className="text-soft-white text-base">
+                <ThemedText variant="muted" size="m">
                   {formatDate(matchDate)}
-                </Text>
-                <Ionicons name="calendar" size={20} color={theme.colors.textSecondary} />
+                </ThemedText>
+                <ThemedIcon name="calendar" size={20} variant="secondary" />
               </TouchableOpacity>
             </View>
 
             {/* Time */}
             <View className="flex-1">
-              <Text className="text-soft-white text-base font-semibold mb-3">
+              <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
                 {t('createRoom.matchTime')}
-              </Text>
+              </ThemedText>
               <TouchableOpacity
-                className="bg-[#1a1a1a] rounded-2xl px-4 py-4 border border-[#2a2a2a] flex-row items-center justify-between"
+                className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
+                style={{ 
+                  backgroundColor: theme.colors.surface,
+                  borderWidth: 1, 
+                  borderColor: theme.colors.border 
+                }}
                 onPress={() => setShowTimePicker(true)}
               >
-                <Text className="text-soft-white text-base">
+                <ThemedText variant="muted" size="m">
                   {formatTime(matchTime)}
-                </Text>
-                <Ionicons name="time" size={20} color={theme.colors.textSecondary} />
+                </ThemedText>
+                <ThemedIcon  name="time" size={20} variant="secondary" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Date Picker */}
-          {showDatePicker && (
-            <DateTimePicker
-              value={matchDate}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(false);
-                if (selectedDate) {
-                  setMatchDate(selectedDate);
-                }
-              }}
-            />
-          )}
+            {/* Date Picker */}
+            {showDatePicker && (
+              <DateTimePicker
+                value={matchDate}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setMatchDate(selectedDate);
+                  }
+                }}
+              />
+            )}
 
-          {/* Time Picker */}
-          {showTimePicker && (
-            <DateTimePicker
-              value={matchTime}
-              mode="time"
-              display="default"
-              is24Hour={true}
-              onChange={(event, selectedTime) => {
-                setShowTimePicker(false);
-                if (selectedTime) {
-                  setMatchTime(selectedTime);
-                }
-              }}
-            />
-          )}
+            {/* Time Picker */}
+            {showTimePicker && (
+              <DateTimePicker
+                value={matchTime}
+                mode="time"
+                display="default"
+                is24Hour={true}
+                onChange={(event, selectedTime) => {
+                  setShowTimePicker(false);
+                  if (selectedTime) {
+                    setMatchTime(selectedTime);
+                  }
+                }}
+              />
+            )}
 
           {/* Room Settings */}
           <View className="mb-6">
-            <Text className="text-soft-white text-base font-semibold mb-3">
+            <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
               {t('createRoom.roomSettings')}
-            </Text>
-            <View className="bg-[#1a1a1a] rounded-2xl px-4 py-4 border border-[#2a2a2a] flex-row items-center justify-between">
-              <Text className="text-soft-white text-base">
+            </ThemedText>
+            <ThemedView 
+              variant="surface"
+              className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
+              style={{ borderWidth: 1, borderColor: theme.colors.border }}
+            >
+              <ThemedText variant="muted" size="m">
                 {t('createRoom.privateRoom')}
-              </Text>
+              </ThemedText>
               <Switch
                 value={isPrivate}
                 onValueChange={setIsPrivate}
-                trackColor={{ false: '#2a2a2a', true: theme.colors.neonGreen }}
+                trackColor={{ false: theme.colors.border, true: theme.colors.neonGreen }}
                 thumbColor={isPrivate ? '#000' : '#f4f3f4'}
               />
-            </View>
+            </ThemedView>
           </View>
 
           {/* Password (if private) */}
           {isPrivate && (
             <View className="mb-6">
-              <Text className="text-soft-white text-base font-semibold mb-3">
+              <ThemedText size="m" weight="semiBold" className="mb-3">
                 {t('createRoom.password')}
-              </Text>
-              <View className="bg-[#1a1a1a] rounded-2xl px-4 py-4 border border-[#2a2a2a] flex-row items-center">
+              </ThemedText>
+              <ThemedView 
+                variant="surface"
+                className="rounded-2xl px-4 py-4 flex-row items-center"
+                style={{ borderWidth: 1, borderColor: theme.colors.border }}
+              >
                 <TextInput
-                  className="flex-1 text-soft-white text-base"
+                  className="flex-1"
+                  style={{ color: theme.colors.text, fontSize: 16 }}
                   placeholder={t('createRoom.passwordPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={password}
@@ -292,35 +341,37 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons 
+                  <ThemedIcon 
                     name={showPassword ? "eye-off" : "eye"} 
                     size={20} 
-                    color={theme.colors.textSecondary} 
+                    variant="secondary"
                   />
                 </TouchableOpacity>
-              </View>
+              </ThemedView>
             </View>
           )}
 
-          {/* Create Button */}
-          <TouchableOpacity
-            className="bg-neon-green rounded-2xl py-4 mt-4"
-            style={{
-              shadowColor: theme.colors.neonGreen,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
-            }}
-            onPress={handleCreateRoom}
-          >
-            <Text className="text-dark-black text-lg font-bold text-center">
-              {t('createRoom.createButton')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            {/* Create Button */}
+            <TouchableOpacity
+              className="rounded-2xl py-4 mt-4"
+              style={{
+                backgroundColor: theme.colors.neonGreen,
+                shadowColor: theme.colors.neonGreen,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
+              onPress={handleCreateRoom}
+            >
+              <ThemedText size="l" weight="bold" className="text-center" style={{ color: '#000' }}>
+                {t('createRoom.createButton')}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ThemedScrollView> 
+    </ThemedSafeAreaView>
+   
   );
 };
 

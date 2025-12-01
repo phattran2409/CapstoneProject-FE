@@ -7,6 +7,7 @@ import {
   LeaderboardScreen,
   CreateRoomScreen,
   VenueSelectionScreen,
+  RoomDetailScreen,
 } from '../screens';
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '../store/authStore';
@@ -77,6 +78,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="VenueSelection" 
             component={VenueSelectionScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="RoomDetail" 
+            component={RoomDetailScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',

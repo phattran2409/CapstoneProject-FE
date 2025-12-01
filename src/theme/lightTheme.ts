@@ -11,8 +11,10 @@ export const lightTheme: Theme = {
     
     // Text colors - Dark on light
     text: '#121212', // Dark Black for main text
+    textPrimary: '#121212', // Dark Black for primary text
     textSecondary: '#909090', // Medium Gray for secondary text
-    textTertiary: '#B5B5B5', // Lighter gray
+    textTertiary: '#B5B5B5',
+    textMuted: '#323232', // Lighter gray
     
     // UI colors
     border: '#E0E0E0',
@@ -26,7 +28,7 @@ export const lightTheme: Theme = {
     info: '#00B8D4', // Cyan
     
     // Brand colors
-    neonGreen: '#97FB57',
+    neonGreen: '#059669', // Darker emerald green for better contrast in light mode
     darkBlack: '#121212',
     mediumGray: '#909090',
     softWhite: '#F6F2F2',

@@ -15,6 +15,7 @@ export type RootStackParamList = {
     };
   } | undefined;
   VenueSelection: undefined;
+  RoomDetail: { roomId: string };
 };
 
 export type TabParamList = {
