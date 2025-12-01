@@ -23,10 +23,69 @@ const en = {
     email: 'Email',
   },
   home: {
-    title: 'Home Screen',
+    title: 'Football Field',
     welcomeTitle: 'Welcome to your app!',
     welcomeBody:
       'This is a sample home screen with a neon-themed card component.',
+    ongoingMatches: 'Ongoing Matches',
+    recentMatches: 'Recent Matches',
+    createNewRoom: 'Create New Room',
+    matchStatus: {
+      win: 'Won',
+      lose: 'Lost',
+      draw: 'Draw',
+    },
+  },
+  matches: {
+    title: 'Matches',
+  },
+  roomMatches : {
+    title: 'Create Room Matches',
+    
+  },
+  leaderboard: {
+    title: 'ELO Leaderboard',
+    searchPlaceholder: 'Search players...',
+    noResults: 'No players found',
+    tabs: {
+      overall: 'Overall',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+    },
+    stats: {
+      matches: 'Matches',
+      winLossDraw: 'W/L/D',
+      winRate: 'Win Rate',
+      eloRating: 'ELO Rating',
+    },
+  },
+  createRoom: {
+    title: 'Create Room',
+    selectFormat: 'Select Format',
+    roomName: 'Room Name',
+    roomNamePlaceholder: 'Enter room name',
+    venue: 'Venue',
+    venuePlaceholder: 'Select or enter venue',
+    matchDate: 'Match Date',
+    matchTime: 'Match Time',
+    roomSettings: 'Room Settings',
+    privateRoom: 'Private Room',
+    password: 'Password',
+    passwordPlaceholder: 'Enter password (if any)',
+    createButton: 'Create Room',
+    validation: {
+      nameRequired: 'Please enter room name',
+      venueRequired: 'Please select a venue',
+      passwordRequired: 'Please enter password for private room',
+    },
+  },
+  venueSelection: {
+    title: 'Select Venue',
+    searchPlaceholder: 'Search venues...',
+    noResults: 'No venues found',
+    allFormats: 'All',
+    perHour: 'Rental price / hour',
+    distance: 'km',
   },
   login: {
     title: 'Login',

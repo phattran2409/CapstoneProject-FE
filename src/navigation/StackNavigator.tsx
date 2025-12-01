@@ -1,6 +1,13 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { LoginScreen, RegisterScreen, OTPVerificationScreen } from '../screens';
+import { 
+  LoginScreen, 
+  RegisterScreen, 
+  OTPVerificationScreen, 
+  LeaderboardScreen,
+  CreateRoomScreen,
+  VenueSelectionScreen,
+} from '../screens';
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '../store/authStore';
 import { RootStackParamList } from './types';
@@ -20,7 +27,9 @@ const StackNavigator: React.FC = () => {
             options={{
               headerShown: false,
               animation: 'slide_from_right',
+              
             }}
+            
           />
           <Stack.Screen 
             name="Register" 
@@ -40,14 +49,40 @@ const StackNavigator: React.FC = () => {
           />
         </>
       ) : (
-        <Stack.Screen 
-          name="MainTabs" 
-          component={TabNavigator}
-          options={{
-            headerShown: false,
-            animation: 'none',
-          }}
-        />
+        <>
+          <Stack.Screen 
+            name="MainTabs" 
+            component={TabNavigator}
+            options={{
+              headerShown: false,
+              animation: 'none',
+            }}
+          />
+          <Stack.Screen 
+            name="Leaderboard" 
+            component={LeaderboardScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="CreateRoom" 
+            component={CreateRoomScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_bottom',
+            }}
+          />
+          <Stack.Screen 
+            name="VenueSelection" 
+            component={VenueSelectionScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+        </>
       )}
     </Stack.Navigator>
   );
