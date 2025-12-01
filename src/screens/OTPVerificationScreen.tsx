@@ -88,12 +88,13 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
       
       // If successful, register user and login
       login({ email, name: username });
-      
-      // Navigate to main app
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      });
+      // Wait for state to update, then navigate
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
+      }, 100);
     } catch (error) {
       console.error('OTP verification error:', error);
       Alert.alert(t('otp.errors.invalid'));

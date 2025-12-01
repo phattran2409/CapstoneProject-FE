@@ -46,7 +46,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       await new Promise<void>((resolve) => setTimeout(resolve, 1000));
       
       login({ email, name: 'User' });
-      navigation.replace('MainTabs');
+      // Wait for state to update, then navigate
+      // The StackNavigator will re-render with MainTabs when isAuthenticated changes
+      setTimeout(() => {
+        navigation.replace('MainTabs');
+      }, 100);
     } catch (error) {
       console.error('Login error:', error);
     } finally {

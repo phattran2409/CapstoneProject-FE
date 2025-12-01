@@ -8,6 +8,10 @@ import {
   CreateRoomScreen,
   VenueSelectionScreen,
   RoomDetailScreen,
+  PersonalPageScreen,
+  ChatListScreen,
+  ChatScreen,
+  ProfileScreen,
 } from '../screens';
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '../store/authStore';
@@ -86,6 +90,30 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="RoomDetail" 
             component={RoomDetailScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ChatList" 
+            component={ChatListScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Chat" 
+            component={ChatScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfileScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',
