@@ -96,7 +96,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
           <Text
             style={{
               fontSize: theme.fontSizes.xs,
-              color: item.isOwn ? theme.colors.primary : theme.colors.text,
+              color: item.isOwn ? theme.colors.neonGreen : theme.colors.text,
               marginBottom: theme.spacing.xs,
               marginLeft: theme.spacing.xs,
             }}
@@ -106,7 +106,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         )}
         <View
           style={{
-            backgroundColor: item.isOwn ? theme.colors.primary : theme.colors.surface,
+            backgroundColor: item.isOwn ? theme.colors.neonGreen : theme.colors.surface,
             borderRadius: theme.radius.m,
             padding: theme.spacing.s,
             alignSelf: item.isOwn ? 'flex-end' : 'flex-start',
@@ -115,7 +115,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
           <Text
             style={{
               fontSize: theme.fontSizes.m,
-              color: item.isOwn ? theme.colors.darkBlack : theme.colors.text,
+              color: item.isOwn ? theme.colors.white : theme.colors.text,
             }}
           >
             {item.text}
@@ -140,8 +140,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               >
                 {t('chat.sent')}
               </Text>
-              <Ionicons name="checkmark-done" size={12} color={theme.colors.primary} />
-              <Ionicons name="checkmark-done" size={12} color={theme.colors.primary} style={{ marginLeft: -4 }} />
+              <Ionicons name="checkmark-done" size={12} color={theme.colors.neonGreen} />
+              <Ionicons name="checkmark-done" size={12} color={theme.colors.neonGreen} style={{ marginLeft: -4 }} />
             </>
           )}
           <Text
@@ -270,13 +270,13 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: theme.colors.primary,
+              backgroundColor: theme.colors.neonGreen,
               justifyContent: 'center',
               alignItems: 'center',
               marginLeft: theme.spacing.s,
             }}
           >
-            <Ionicons name="send" size={20} color={theme.colors.darkBlack} />
+            <Ionicons name="send" size={20} color={theme.colors.white} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

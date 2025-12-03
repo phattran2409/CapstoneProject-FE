@@ -215,7 +215,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                     borderColor: theme.colors.surface,
                   }}
                 >
-                  <ThemedIcon name="checkmark" size={14} color="#000" />
+                  <ThemedIcon name="checkmark" size={14} color="white" />
                 </View>
               )}
             </View>
@@ -283,7 +283,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 <ThemedText variant="secondary" size="xs" className="mb-1">
                   {t('roomDetail.format')}
                 </ThemedText>
-                <ThemedText variant="primary" size="xl" weight="bold">
+                <ThemedText variant="muted" size="xl" weight="bold">
                   {roomData.format}
                 </ThemedText>
               </View>
@@ -304,7 +304,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 <ThemedText variant="secondary" size="xs" className="mb-1">
                   {t('roomDetail.datetime')}
                 </ThemedText>
-                <ThemedText variant="primary" size="l" weight="semiBold">
+                <ThemedText variant="muted" size="l" weight="semiBold">
                   {roomData.datetime}
                 </ThemedText>
               </View>
@@ -325,7 +325,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 <ThemedText variant="secondary" size="xs" className="mb-1">
                   {t('roomDetail.venue')}
                 </ThemedText>
-                <ThemedText variant="primary" size="m" weight="medium">
+                <ThemedText variant="muted" size="m" weight="medium">
                   {roomData.venue.name}, {roomData.venue.address}
                 </ThemedText>
               </View>
@@ -410,7 +410,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
             size="l" 
             weight="bold" 
             className="text-center" 
-            style={{ color: '#000' }}
+            style={{ color: theme.colors.background }}
           >
             {t('roomDetail.joinButton')}
           </ThemedText>
