@@ -12,10 +12,12 @@ import {
   ChatListScreen,
   ChatScreen,
   ProfileScreen,
+  RoomInformationScreen,
 } from '../screens';
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '../store/authStore';
 import { RootStackParamList } from './types';
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -82,6 +84,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="VenueSelection" 
             component={VenueSelectionScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="RoomInformation" 
+            component={RoomInformationScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',

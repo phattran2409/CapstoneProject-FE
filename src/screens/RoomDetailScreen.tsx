@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Image, ScrollView, Animated } from 'react-native';
+import { View, TouchableOpacity, Image, TextInput } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
 import { useTranslation } from 'react-i18next';
@@ -9,13 +9,9 @@ import {
   ThemedText,
   ThemedScrollView,
   ThemedIcon,
-  ThemedCard 
 } from '../components/themed';
-
-type RootStackParamList = {
-  Matches: undefined;
-  RoomDetail: { roomId: string };
-};
+import { RootStackParamList } from '../navigation/types';
+import Field3DView, { FieldPlayer } from '../components/Field3Dview';
 
 type RoomDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomDetail'>;
 
@@ -32,13 +28,14 @@ interface Player {
   id: string;
   name: string;
   avatar: any;
-  isConfirmed: boolean;
 }
 
 interface Team {
   name: string;
   players: (Player | null)[];
 }
+
+type SelectedTeam = 'teamA' | 'teamB';
 
 const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
@@ -48,204 +45,122 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   // Mock data - replace with real data from API
   const roomData = {
     id: roomId,
-    format: '5vs5',
-    datetime: '18:00, 25 Tháng 12',
+    format: '5 vs 5',
+    datetime: '19:00 - 20:30, 28/08',
     venue: {
       name: 'Sân bóng ABC',
-      address: '123 Đường XYZ',
     },
     totalPlayers: 10,
-    currentPlayers: 8,
+    currentPlayers: 9,
+    pricePerPlayer: 80000,
   };
 
-  const [teams, setTeams] = useState<{ teamA: Team; teamB: Team }>({
+  const [teams] = useState<{ teamA: Team; teamB: Team }>({
     teamA: {
       name: 'Đội A',
       players: [
-        { id: '1', name: 'An Nguyễn', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        { id: '2', name: 'Cường Phạm', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        { id: '3', name: 'Emeka Okafor', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        { id: '4', name: 'Giang Hoàng', avatar: require('../../assets/icon.png'), isConfirmed: true },
+        { id: '1', name: 'An Nguyễn', avatar: require('../../assets/icon.png') },
+        { id: '2', name: 'Cường Phạm', avatar: require('../../assets/icon.png') },
+        { id: '3', name: 'Emeka Okafor', avatar: require('../../assets/icon.png') },
+        { id: '4', name: 'Giang Hoàng', avatar: require('../../assets/icon.png') },
         null, // Empty slot
       ],
     },
     teamB: {
       name: 'Đội B',
       players: [
-        { id: '5', name: 'Bình Lê', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        { id: '6', name: 'Dung Trần', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        { id: '7', name: 'Fiona Do', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        { id: '8', name: 'Hạnh Mai', avatar: require('../../assets/icon.png'), isConfirmed: true },
-        null, // Empty slot
+        { id: '5', name: 'Bình Lê', avatar: require('../../assets/icon.png') },
+        { id: '6', name: 'Dung Trần', avatar: require('../../assets/icon.png') },
+        { id: '7', name: 'Fiona Do', avatar: require('../../assets/icon.png') },
+        { id: '8', name: 'Hạnh Mai', avatar: require('../../assets/icon.png') },
+        { id: '9', name: 'Tuấn Minh', avatar: require('../../assets/icon.png') },
       ],
     },
   });
 
-  const handleJoinMatch = () => {
-    // Handle join match logic
-    console.log('Joining match:', roomId);
+  const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>('teamA');
+
+  const currentTeam = teams[selectedTeam];
+
+  const handlePlayerPress = (player: any) => {
+    if (player) {
+      console.log('Player pressed:', player.name);
+      // TODO: Navigate to player profile hoặc show modal
+    }
   };
 
-  const renderPlayerCard = (player: Player | null, teamColor: string) => {
-    const [scaleAnim] = useState(new Animated.Value(1));
+  const renderPlayerOnField = (player: Player | null, index: number) => {
+    // 5 giả lập vị trí: GK, LB, RB, LW, RW
+    const positions = [
+      { top: 0.72, left: 0.5 },  // GK
+      { top: 0.5, left: 0.18 },  // LB
+      { top: 0.5, left: 0.82 },  // RB
+      { top: 0.28, left: 0.3 },  // LW
+      { top: 0.28, left: 0.7 },  // RW
+    ];
 
-    const handlePressIn = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        useNativeDriver: true,
-        speed: 50,
-        bounciness: 4,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 50,
-        bounciness: 8,
-      }).start();
-    };
+    const pos = positions[index] || positions[0];
 
     if (!player) {
-      // Empty slot - Interactive add button
       return (
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={() => {
-              console.log('Add player to slot');
-              // Handle add player logic
-            }}
-          >
-            <View
-              className="items-center justify-center rounded-2xl"
-              style={{ 
-                width: 110,
-                height: 140,
-                borderWidth: 2,
-                borderStyle: 'dashed',
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.surface + '80', // Semi-transparent
-              }}
-            >
-              <View 
-                className="w-16 h-16 rounded-full items-center justify-center mb-2"
-                style={{ 
-                  backgroundColor: theme.colors.neonGreen + '20',
-                }}
-              >
-                <ThemedIcon name="add" size={32} variant="accent" />
-              </View>
-              <ThemedText variant="secondary" size="s" weight="medium">
-                {t('roomDetail.emptySlot')}
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
+        <View
+          key={`empty-${index}`}
+          style={{
+            position: 'absolute',
+            top: `${pos.top * 100}%`,
+            left: `${pos.left * 100}%`,
+            transform: [{ translateX: -24 }, { translateY: -24 }],
+            width: 48,
+            height: 48,
+            borderRadius: 999,
+            borderWidth: 2,
+            borderStyle: 'dashed',
+            borderColor: theme.colors.border,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ThemedIcon name="add" size={20} variant="secondary" />
+        </View>
       );
     }
 
-    // Player card with beautiful background and effects
     return (
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          onPress={() => {
-            console.log('View player profile:', player.id);
-            // Handle view player profile
+      <View
+        key={player.id}
+        style={{
+          position: 'absolute',
+          top: `${pos.top * 100}%`,
+          left: `${pos.left * 100}%`,
+          transform: [{ translateX: -24 }, { translateY: -24 }],
+          alignItems: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 999,
+            borderWidth: 3,
+            borderColor: theme.colors.neonGreen,
+            backgroundColor: theme.colors.background,
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
           }}
         >
-          <View
-            className="items-center justify-center rounded-2xl overflow-hidden"
-            style={{ 
-              width: 110,
-              height: 140,
-              backgroundColor: theme.colors.surface,
-              borderWidth: 2,
-              borderColor: theme.colors.border,
-              shadowColor: teamColor,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 5,
-            }}
-          >
-            {/* Gradient Background Effect */}
-            <View 
-              className="absolute top-0 left-0 right-0 h-16"
-              style={{
-                backgroundColor: teamColor + '15',
-              }}
-            />
-            
-            {/* Avatar with Glow Effect */}
-            <View className="mt-3">
-              <View 
-                className="w-16 h-16 rounded-full overflow-hidden"
-                style={{ 
-                  borderWidth: 3,
-                  borderColor: teamColor,
-                  backgroundColor: theme.colors.background,
-                  shadowColor: teamColor,
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 8,
-                  elevation: 8,
-                }}
-              >
-                <Image
-                  source={player.avatar}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              </View>
-              
-              {/* Confirmed Badge */}
-              {player.isConfirmed && (
-                <View 
-                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full items-center justify-center"
-                  style={{ 
-                    backgroundColor: teamColor,
-                    borderWidth: 2,
-                    borderColor: theme.colors.surface,
-                  }}
-                >
-                  <ThemedIcon name="checkmark" size={14} color="#000" />
-                </View>
-              )}
-            </View>
-
-            {/* Player Name with better contrast */}
-            <View 
-              className="mt-2 px-2 py-1 rounded-lg"
-              style={{ 
-                backgroundColor: theme.colors.background + '80',
-              }}
-            >
-              <ThemedText 
-                variant="secondary" 
-                size="s" 
-                weight="medium"
-                className="text-center"
-                numberOfLines={1}
-                style={{ letterSpacing: 0.3 }}
-              >
-                {player.name}
-              </ThemedText>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
+          <Image
+            source={player.avatar}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </View>
+      </View>
     );
   };
 
   return (
-    <ThemedSafeAreaView className='py-10'>
+    <ThemedSafeAreaView className="py-10">
       {/* Header */}
       <ThemedView 
         className="flex-row items-center justify-between px-5 py-4"
@@ -266,154 +181,233 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
 
       <ThemedScrollView showsVerticalScrollIndicator={false}>
         <View className="px-5 py-6">
-          {/* Room Info Section */}
+          {/* Match Info */}
           <View className="mb-6">
-            {/* Format */}
             <ThemedView 
-              className="flex-row items-center px-4 py-4 rounded-2xl mb-3"
+              className="flex-row justify-between px-4 py-4 rounded-2xl mb-3"
               style={{ backgroundColor: theme.colors.surface }}
             >
-              <View 
-                className="w-12 h-12 rounded-xl items-center justify-center mr-4"
-                style={{ backgroundColor: theme.colors.neonGreen + '20' }}
-              >
-                <ThemedIcon name="people" size={24} variant="accent" />
-              </View>
-              <View className="flex-1">
-                <ThemedText variant="secondary" size="xs" className="mb-1">
-                  {t('roomDetail.format')}
-                </ThemedText>
-                <ThemedText variant="primary" size="xl" weight="bold">
-                  {roomData.format}
-                </ThemedText>
-              </View>
-            </ThemedView>
-
-            {/* Datetime */}
-            <ThemedView 
-              className="flex-row items-center px-4 py-4 rounded-2xl mb-3"
-              style={{ backgroundColor: theme.colors.surface }}
-            >
-              <View 
-                className="w-12 h-12 rounded-xl items-center justify-center mr-4"
-                style={{ backgroundColor: theme.colors.neonGreen + '20' }}
-              >
-                <ThemedIcon name="time" size={24} variant="accent" />
-              </View>
-              <View className="flex-1">
+              <View>
                 <ThemedText variant="secondary" size="xs" className="mb-1">
                   {t('roomDetail.datetime')}
                 </ThemedText>
-                <ThemedText variant="primary" size="l" weight="semiBold">
+                <ThemedText variant="primary" size="m" weight="semiBold">
                   {roomData.datetime}
                 </ThemedText>
               </View>
-            </ThemedView>
-
-            {/* Venue */}
-            <ThemedView 
-              className="flex-row items-center px-4 py-4 rounded-2xl"
-              style={{ backgroundColor: theme.colors.surface }}
-            >
-              <View 
-                className="w-12 h-12 rounded-xl items-center justify-center mr-4"
-                style={{ backgroundColor: theme.colors.neonGreen + '20' }}
-              >
-                <ThemedIcon name="location" size={24} variant="accent" />
-              </View>
-              <View className="flex-1">
+              <View>
                 <ThemedText variant="secondary" size="xs" className="mb-1">
                   {t('roomDetail.venue')}
                 </ThemedText>
                 <ThemedText variant="primary" size="m" weight="medium">
-                  {roomData.venue.name}, {roomData.venue.address}
+                  {roomData.venue.name}
+                </ThemedText>
+              </View>
+            </ThemedView>
+
+            <ThemedView 
+              className="flex-row justify-between px-4 py-4 rounded-2xl"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <View>
+                <ThemedText variant="secondary" size="xs" className="mb-1">
+                  {t('roomDetail.format')}
+                </ThemedText>
+                <ThemedText variant="primary" size="m" weight="semiBold">
+                  {roomData.format}
+                </ThemedText>
+              </View>
+              <View>
+                <ThemedText variant="secondary" size="xs" className="mb-1">
+                  {t('roomDetail.status')}
+                </ThemedText>
+                <ThemedText 
+                  variant="accent" 
+                  size="m" 
+                  weight="bold"
+                  style={{ color: theme.colors.neonGreen }}
+                >
+                  Sắp diễn ra
                 </ThemedText>
               </View>
             </ThemedView>
           </View>
 
-          {/* Team Lineup Section */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <ThemedText variant="primary" size="l" weight="bold">
-                {t('roomDetail.teamLineup')} ({roomData.currentPlayers}/{roomData.totalPlayers})
+          {/* Team Switch Tabs */}
+          <View 
+            className="flex-row rounded-2xl mb-6"
+            style={{ backgroundColor: theme.colors.surface }}
+          >
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 14,
+                borderRadius: 16,
+                backgroundColor: selectedTeam === 'teamA' ? theme.colors.neonGreen : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={() => setSelectedTeam('teamA')}
+            >
+              <ThemedText
+                size="m"
+                weight="bold"
+                style={{ color: selectedTeam === 'teamA' ? '#000' : theme.colors.textSecondary }}
+              >
+                Đội A ({teams.teamA.players.filter(Boolean).length}/5)
               </ThemedText>
-            </View>
+            </TouchableOpacity>
 
-            {/* Team A */}
-            <View className="mb-6">
-              <View className="flex-row items-center gap-2 mb-3">
-                <ThemedIcon name="shield" size={20} variant="accent" />
-                <ThemedText variant="accent" size="m" weight="bold">
-                  {t('roomDetail.teamA')}
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 14,
+                borderRadius: 16,
+                backgroundColor: selectedTeam === 'teamB' ? theme.colors.neonGreen : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={() => setSelectedTeam('teamB')}
+            >
+              <ThemedText
+                size="m"
+                weight="bold"
+                style={{ color: selectedTeam === 'teamB' ? theme.colors.darkBlack : theme.colors.textSecondary }}
+              >
+                Đội B ({teams.teamB.players.filter(Boolean).length}/5)
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Field Layout - 3D View */}
+          <View 
+            style={{
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              overflow: 'hidden',
+              backgroundColor: '#111',
+              padding: 16,
+            }}
+          >
+            <Field3DView 
+              players={currentTeam.players as FieldPlayer[]} 
+              style={{ borderRadius: 24 }}
+              onPlayerPress={handlePlayerPress}
+              format="7vs7"
+            />
+          </View>
+
+          {/* Check-in & Payment */}
+          <View className="mt-6 mb-4">
+            <ThemedView
+              className="px-4 py-4 rounded-2xl mb-3"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <ThemedText variant="primary" size="l" weight="bold" className="mb-2">
+                Check-in & Thanh toán
+              </ThemedText>
+              <View className="flex-row items-center justify-between">
+                <ThemedText variant="secondary" size="s">
+                  Tiền sân mỗi người:
+                </ThemedText>
+                <ThemedText variant="primary" size="l" weight="bold">
+                  {roomData.pricePerPlayer.toLocaleString('vi-VN')}đ
                 </ThemedText>
               </View>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 12 }}
-              >
-                {teams.teamA.players.map((player, index) => (
-                  <View key={`teamA-${index}`}>
-                    {renderPlayerCard(player, theme.colors.neonGreen)}
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
 
-            {/* Team B */}
-            <View>
-              <View className="flex-row items-center gap-2 mb-3">
-                <ThemedIcon name="shield" size={20} variant="accent" />
-                <ThemedText variant="accent" size="m" weight="bold">
-                  {t('roomDetail.teamB')}
-                </ThemedText>
+              <View className="flex-row mt-4 gap-3">
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingVertical: 12,
+                    borderRadius: 16,
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor: theme.colors.neonGreen,
+                  }}
+                >
+                  <ThemedIcon name="qr-code" size={20} variant="accent" />
+                  <ThemedText
+                    size="m"
+                    weight="bold"
+                    className="ml-2"
+                    style={{ color: theme.colors.neonGreen }}
+                  >
+                    Check-in Ngay
+                  </ThemedText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingVertical: 12,
+                    borderRadius: 16,
+                    backgroundColor: theme.colors.neonGreen,
+                  }}
+                >
+                  <ThemedIcon name="card" size={20} color="#000" />
+                  <ThemedText
+                    size="m"
+                    weight="bold"
+                    className="ml-2"
+                    style={{ color: '#000' }}
+                  >
+                    Thanh toán
+                  </ThemedText>
+                </TouchableOpacity>
               </View>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 12 }}
-              >
-                {teams.teamB.players.map((player, index) => (
-                  <View key={`teamB-${index}`}>
-                    {renderPlayerCard(player, theme.colors.neonGreen)}
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
+            </ThemedView>
           </View>
         </View>
       </ThemedScrollView>
 
-      {/* Join Button */}
-      <View 
-        className="px-5 pb-6"
-        style={{ 
-          borderTopWidth: 1, 
+      {/* Chat input */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingBottom: 20,
+          paddingTop: 8,
+          borderTopWidth: 1,
           borderTopColor: theme.colors.border,
           backgroundColor: theme.colors.background,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
         }}
       >
-        <TouchableOpacity
-          className="rounded-2xl py-4 mt-4"
+        <View
           style={{
-            backgroundColor: theme.colors.neonGreen,
-            shadowColor: theme.colors.neonGreen,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
+            flex: 1,
+            borderRadius: 999,
+            backgroundColor: theme.colors.surface,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
           }}
-          onPress={handleJoinMatch}
         >
-          <ThemedText 
-            size="l" 
-            weight="bold" 
-            className="text-center" 
-            style={{ color: '#000' }}
-          >
-            {t('roomDetail.joinButton')}
-          </ThemedText>
+          <TextInput
+            placeholder="Nhập tin nhắn..."
+            placeholderTextColor={theme.colors.textSecondary}
+            style={{ color: theme.colors.textPrimary }}
+          />
+        </View>
+        <TouchableOpacity
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 18,
+            backgroundColor: theme.colors.neonGreen,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ThemedIcon name="send" size={22} color="#000" />
         </TouchableOpacity>
       </View>
     </ThemedSafeAreaView>

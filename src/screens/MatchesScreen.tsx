@@ -12,7 +12,7 @@ type RootStackParamList = {
   Profile: undefined;
   MatchDetail: { matchId: string };
   CreateRoom: undefined;
-  RoomDetail: { roomId: string };
+  RoomInformation: { roomId: string };
 };
 
 type MatchesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Matches'>;
@@ -137,7 +137,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                   className="overflow-hidden bg-transparent"
                   style={{ width: 280 }}
                   onPress={() => {
-                    navigation.navigate('RoomDetail', { roomId: match.id });
+                    navigation.navigate('RoomInformation', { roomId: match.id });
                   }}
                 >
                   <Image
@@ -171,7 +171,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                 key={match.id}
                 className="rounded-2xl p-3 flex-row items-center"
                 onPress={() => {
-                  navigation.navigate('RoomDetail', { roomId: match.id });
+                  navigation.navigate('RoomInformation', { roomId: match.id });
                 }}
               >
                 <Image
