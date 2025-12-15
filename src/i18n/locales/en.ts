@@ -39,6 +39,11 @@ const en = {
   matches: {
     title: 'Matches',
   },
+  tabs: {
+    home: 'Home',
+    matches: 'Matches',
+    profile: 'Profile',
+  },
   roomMatches : {
     title: 'Create Room Matches',
     

@@ -90,7 +90,7 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
               width: 16,
               height: 16,
               borderRadius: 8,
-              backgroundColor: theme.colors.primary,
+              backgroundColor: theme.colors.neonGreen,
               borderWidth: 2,
               borderColor: theme.colors.surface,
             }}
@@ -134,7 +134,7 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
               width: 8,
               height: 8,
               borderRadius: 4,
-              backgroundColor: theme.colors.primary,
+              backgroundColor: theme.colors.neonGreen,
             }}
           />
         )}

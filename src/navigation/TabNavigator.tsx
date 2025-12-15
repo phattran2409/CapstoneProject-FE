@@ -4,12 +4,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen, MatchesScreen, ProfileScreen } from '../screens';
 import { useTheme } from '../theme';
 import { TabParamList } from './types';
+import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 const TabNavigator: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -26,7 +28,7 @@ const TabNavigator: React.FC = () => {
         name="Home" 
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: t('tabs.home'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -36,7 +38,7 @@ const TabNavigator: React.FC = () => {
         name="Matches" 
         component={MatchesScreen}
         options={{
-          tabBarLabel: 'Matches',
+          tabBarLabel: t('tabs.matches'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
@@ -79,7 +81,7 @@ const TabNavigator: React.FC = () => {
         name="Profile" 
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profile',
+          tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),

@@ -12,7 +12,7 @@ type RootStackParamList = {
   Profile: undefined;
   MatchDetail: { matchId: string };
   CreateRoom: undefined;
-  RoomDetail: { roomId: string };
+  RoomInformation: { roomId: string };
 };
 
 type MatchesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Matches'>;
@@ -137,7 +137,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                   className="overflow-hidden bg-transparent"
                   style={{ width: 280 }}
                   onPress={() => {
-                    navigation.navigate('RoomDetail', { roomId: match.id });
+                    navigation.navigate('RoomInformation', { roomId: match.id });
                   }}
                 >
                   <Image
@@ -171,7 +171,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                 key={match.id}
                 className="rounded-2xl p-3 flex-row items-center"
                 onPress={() => {
-                  navigation.navigate('RoomDetail', { roomId: match.id });
+                  navigation.navigate('RoomInformation', { roomId: match.id });
                 }}
               >
                 <Image
@@ -199,8 +199,9 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       {/* Floating Create Button */}
       <ThemedView className="absolute bottom-0 left-0 right-0 px-5 pb-8 bg-gradient-to-t from-dark-black to-transparent">
         <TouchableOpacity
-          className="bg-neon-green rounded-2xl py-4 flex-row items-center justify-center"
+          className="rounded-2xl py-4 flex-row items-center justify-center"
           style={{
+            backgroundColor: theme.colors.neonGreen,
             shadowColor: theme.colors.neonGreen,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
@@ -211,10 +212,15 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             navigation.navigate('CreateRoom');
           }}
         >
-          <Ionicons name="add" size={24} color="#000" />
-          <Text className="text-dark-black text-lg font-bold ml-2">
+          <Ionicons name="add" size={24} color={theme.colors.background} />
+          <ThemedText 
+            size="l" 
+            weight="bold" 
+            className="ml-2"
+            style={{ color: theme.colors.background }}
+          >
             {t('home.createNewRoom')}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ThemedSafeAreaView>

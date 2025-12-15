@@ -39,6 +39,11 @@ const vi = {
   matches: {
     title: 'Trận đấu',
   },
+  tabs: {
+    home: 'Trang chủ',
+    matches: 'Trận đấu',
+    profile: 'Hồ sơ',
+  },
   leaderboard: {
     title: 'Bảng xếp hạng ELO',
     searchPlaceholder: 'Tìm kiếm người chơi...',

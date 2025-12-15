@@ -12,4 +12,4 @@ export { default as ChatScreen } from './ChatScreen';
 export { default as NativeWindDemoScreen } from './NativeWindDemoScreen';
 export { default as RegisterScreen } from './RegisterScreen';
 export { default as OTPVerificationScreen } from './OTPVerificationScreen';
-
+export { default as RoomInformationScreen } from './RoomInformation';
