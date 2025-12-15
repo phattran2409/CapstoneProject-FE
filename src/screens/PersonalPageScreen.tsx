@@ -86,7 +86,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
               justifyContent: 'center',
               alignItems: 'center',
               borderWidth: 2,
-              borderColor: theme.colors.primary,
+              borderColor: theme.colors.neonGreen,
               marginBottom: theme.spacing.m,
             }}
           >
@@ -113,7 +113,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
           </Text>
           <TouchableOpacity
             style={{
-              backgroundColor: theme.colors.primary,
+              backgroundColor: theme.colors.neonGreen,
               paddingVertical: theme.spacing.s,
               paddingHorizontal: theme.spacing.xl,
               borderRadius: theme.radius.m,
@@ -122,7 +122,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
             <Text
               style={{
                 fontSize: theme.fontSizes.m,
-                color: theme.colors.darkBlack,
+                color: theme.colors.white,
                 fontWeight: '600',
               }}
             >
@@ -245,13 +245,13 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
                 paddingVertical: theme.spacing.m,
                 alignItems: 'center',
                 borderBottomWidth: activeTab === tab ? 2 : 0,
-                borderBottomColor: activeTab === tab ? theme.colors.primary : 'transparent',
+                borderBottomColor: activeTab === tab ? theme.colors.neonGreen : 'transparent',
               }}
             >
               <Text
                 style={{
                   fontSize: theme.fontSizes.m,
-                  color: activeTab === tab ? theme.colors.primary : theme.colors.textSecondary,
+                  color: activeTab === tab ? theme.colors.neonGreen : theme.colors.textSecondary,
                   fontWeight: activeTab === tab ? '700' : '400',
                 }}
               >

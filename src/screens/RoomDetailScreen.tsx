@@ -213,8 +213,8 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 <ThemedText variant="secondary" size="xs" className="mb-1">
                   {t('roomDetail.format')}
                 </ThemedText>
-                <ThemedText variant="primary" size="m" weight="semiBold">
-                  {roomData.format}
+                <ThemedText variant="primary" size="l" weight="semiBold">
+                  {roomData.datetime}
                 </ThemedText>
               </View>
               <View>

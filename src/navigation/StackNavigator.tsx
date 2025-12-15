@@ -129,6 +129,14 @@ const StackNavigator: React.FC = () => {
               animation: 'slide_from_right',
             }}
           />
+          <Stack.Screen 
+            name="PersonalPage" 
+            component={PersonalPageScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
         </>
       )}
     </Stack.Navigator>

@@ -5,8 +5,8 @@ import { CompositeNavigationProp, useNavigation } from '@react-navigation/native
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../components';
 import { useTheme } from '../theme';
+import { ThemedText } from '../components/themed';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { RootStackParamList, TabParamList } from '../navigation/types';
@@ -84,7 +84,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               alignItems: 'center',
             }}
           >
-            <Ionicons name="chatbubbles-outline" size={23} color={theme.colors.primary} />
+            <Ionicons name="chatbubbles-outline" size={23} color={theme.colors.neonGreen} />
           </TouchableOpacity>
         </View>
         
@@ -113,7 +113,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               justifyContent: 'center',
               alignItems: 'center',
               borderWidth: 2,
-              borderColor: theme.colors.primary,
+              borderColor: theme.colors.neonGreen,
               marginRight: theme.spacing.m,
             }}
           >
@@ -259,7 +259,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <Switch
               value={matchNotifications}
               onValueChange={setMatchNotifications}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: theme.colors.border, true: theme.colors.neonGreen }}
               thumbColor={theme.colors.white}
             />
           </View>
@@ -326,7 +326,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <Switch
               value={isDark}
               onValueChange={toggleTheme}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: theme.colors.border, true: theme.colors.neonGreen }}
               thumbColor={theme.colors.white}
             />            
           </TouchableOpacity>
@@ -387,7 +387,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text
             style={{
               fontSize: theme.fontSizes.m,
-              color: theme.colors.primary,
+              color: theme.colors.neonGreen,
               fontWeight: '600',
               marginLeft: theme.spacing.s,
             }}
@@ -397,12 +397,27 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
 
         {/* Logout Button */}
-        <Button
-          title={t('common.buttons.logout')}
+        <TouchableOpacity
+          className="rounded-2xl py-4 mt-4"
+          style={{
+            backgroundColor: theme.colors.neonGreen,
+            shadowColor: theme.colors.neonGreen,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
           onPress={handleLogout}
-          variant="primary"
-          style={{ marginTop: theme.spacing.m }}
-        />
+        >
+          <ThemedText 
+            size="l" 
+            weight="bold" 
+            className="text-center" 
+            style={{ color: theme.colors.background }}
+          >
+            {t('common.buttons.logout')}
+          </ThemedText>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
