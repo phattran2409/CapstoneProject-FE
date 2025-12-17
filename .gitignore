@@ -40,3 +40,6 @@ yarn-error.*
 *.swp
 *.swo
 *~
+
+# JSON Server backup
+db.json.bak

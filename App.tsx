@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider, useTheme } from './src/theme';
-import { StackNavigator } from './src/navigation';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider, useTheme } from './src/shared/theme';
+import { StackNavigator } from './src/app/navigation';
 import { useAppStore } from './src/store';
-import i18n from './src/i18n';
+import { queryClient } from './src/shared/api/queryClient';
+import i18n from './src/shared/i18n';
 import './global.css';
 
 const AppContent: React.FC = () => {
@@ -28,11 +30,13 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 };
 

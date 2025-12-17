@@ -25,7 +25,9 @@
       "@utils/*": ["src/utils/*"],
       "@constants/*": ["src/constants/*"],
       "@theme/*": ["src/theme/*"],
-      "@assets/*": ["src/assets/*"]
+      "@assets/*": ["src/assets/*"],
+      "@features/*": ["src/features/*"],
+      "@shared/*": ["src/shared/*"]
     }
   },
   "include": ["src/**/*", "App.tsx", "nativewind-env.d.ts"],

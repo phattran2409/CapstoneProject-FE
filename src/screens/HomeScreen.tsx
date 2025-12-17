@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useTheme } from '../theme';
+import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/components/themed';
+import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 
 type RootStackParamList = {
   Home: undefined;

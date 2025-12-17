@@ -1,0 +1,360 @@
+{
+  "info": {
+    "name": "Capstone Project API - JSON Server",
+    "_postman_id": "capstone-json-server",
+    "description": "Collection for testing the JSON Server API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"an.nguyen@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyễn Văn A\",\n  \"email\": \"nguyenvana@example.com\",\n  \"phone\": \"+84909123456\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+84909123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/auth/send-otp",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "auth", "send-otp"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+84909123456\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/auth/verify-otp",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "auth", "verify-otp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Get All Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/rooms",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get Rooms (Open only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/rooms?status=open",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "rooms"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Room by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/rooms/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "rooms", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Room Full Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/rooms/1/full-info",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "rooms", "1", "full-info"]
+            }
+          }
+        },
+        {
+          "name": "Create Room",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"format\": \"7vs7\",\n  \"datetime\": \"2024-12-30T18:00:00Z\",\n  \"venueId\": \"1\",\n  \"totalPlayers\": 14,\n  \"status\": \"open\",\n  \"hostId\": \"1\",\n  \"pricePerPlayer\": 100000,\n  \"description\": \"Trận đấu giao hữu cuối tuần\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/rooms",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "rooms"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Join Room",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"1\",\n  \"roomId\": \"2\",\n  \"teamId\": \"3\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/bookings",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get User Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/bookings?userId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "bookings"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Venues",
+      "item": [
+        {
+          "name": "Get All Venues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/venues",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "venues"]
+            }
+          }
+        },
+        {
+          "name": "Get Venue by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/venues/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "venues", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Room Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/messages?roomId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "messages"],
+              "query": [
+                {
+                  "key": "roomId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"1\",\n  \"userId\": \"1\",\n  \"message\": \"Hello everyone!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/messages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "messages"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "users", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
