@@ -53,7 +53,7 @@ export interface Player {
 }
 
 export interface Team {
-  id: string;
+  id: string; 
   roomId: string;
   name: string;
   color: string;

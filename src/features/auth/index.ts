@@ -30,7 +30,7 @@ export type {
 export { useAuthStore } from './store/authStore';
 
 // ============ Screens ============
-export * from './screens';
+// export * from './screens';
 
 // Note: API functions and keys are internal, not exported
 

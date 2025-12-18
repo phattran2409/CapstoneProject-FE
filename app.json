@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CAPSTONE_PROJECT",
-    "slug": "CAPSTONE_PROJECT",
+    "name": "Kickyfi",
+    "slug": "kickyfi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.CAPSTONE_PROJECT"
+      "package": "com.kickyfi.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -29,6 +29,11 @@
     },
     "plugins": [
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "baf90d31-c412-4952-a47b-00eafe28eb52"
+      }
+    }
   }
 }

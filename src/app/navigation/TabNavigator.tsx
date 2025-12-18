@@ -1,6 +1,7 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
 import { useTheme } from '../../shared/theme';
 import { TabParamList } from './types';
 import { useTranslation } from 'react-i18next';
@@ -17,11 +18,50 @@ const TabNavigator: React.FC = () => {
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: theme.colors.darkBlack,
+          position: 'absolute',
+          bottom: 20,
+          left: 20,
+          right: 20,
+          height: 70,
+          borderRadius: 25,
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowColor: theme.colors.neonGreen,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 20,
         },
+        tabBarBackground: () => (
+          <View style={styles.tabBarBackground}>
+            <BlurView
+              intensity={80}
+              tint="dark"
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Gradient Overlay */}
+            <View style={[styles.gradientOverlay, { backgroundColor: theme.colors.darkBlack + '40' }]} />
+            {/* Glass Border */}
+            <View style={[styles.glassBorder, { 
+              borderColor: theme.colors.neonGreen + '30',
+              shadowColor: theme.colors.neonGreen,
+            }]} />
+            {/* Inner Glow */}
+            <View style={[styles.innerGlow, { backgroundColor: theme.colors.neonGreen + '05' }]} />
+          </View>
+        ),
         tabBarActiveTintColor: theme.colors.neonGreen,
         tabBarInactiveTintColor: theme.colors.textSecondary,
         headerShown: false,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginBottom: 5,
+        },
+        tabBarIconStyle: {
+          marginTop: 5,
+        },
       }}
     >
       <Tab.Screen 
@@ -29,8 +69,17 @@ const TabNavigator: React.FC = () => {
         component={HomeScreen}
         options={{
           tabBarLabel: t('tabs.home'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+              <Ionicons 
+                name={focused ? 'home' : 'home-outline'} 
+                size={size} 
+                color={color} 
+              />
+              {focused && (
+                <View style={[styles.activeIndicator, { backgroundColor: theme.colors.neonGreen }]} />
+              )}
+            </View>
           ),
         }}
       />
@@ -39,57 +88,101 @@ const TabNavigator: React.FC = () => {
         component={MatchesScreen}
         options={{
           tabBarLabel: t('tabs.matches'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+              <Ionicons 
+                name={focused ? 'calendar' : 'calendar-outline'} 
+                size={size} 
+                color={color} 
+              />
+              {focused && (
+                <View style={[styles.activeIndicator, { backgroundColor: theme.colors.neonGreen }]} />
+              )}
+            </View>
           ),
         }}
       />
-      {/* <Tab.Screen 
-        name="Create" 
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Create',
-          tabBarIcon: ({ color, size, focused }) => (
-            <View 
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: focused ? color : color,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: -20,
-              }}
-            >
-              <Ionicons name="add" size={32} color="#000" />
-            </View>
-          ),
-          tabBarButton: (props) => (
-            <View {...props} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              {props.children}
-            </View>
-          ),
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            // Handle create action - can open modal or navigate to create screen
-          },
-        })}
-      /> */}
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
         options={{
           tabBarLabel: t('tabs.profile'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+              <Ionicons 
+                name={focused ? 'person' : 'person-outline'} 
+                size={size} 
+                color={color} 
+              />
+              {focused && (
+                <View style={[styles.activeIndicator, { backgroundColor: theme.colors.neonGreen }]} />
+              )}
+            </View>
           ),
         }}
       />
     </Tab.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  tabBarBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 25,
+  },
+  glassBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 25,
+    borderWidth: 1.5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+  },
+  innerGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 25,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  iconContainerActive: {
+    transform: [{ scale: 1.1 }],
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: -8,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    shadowColor: '#90EE90',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+});
 
 export default TabNavigator;
 

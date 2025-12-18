@@ -22,7 +22,7 @@ export const authApi = {
    * Login with email and password
    */
   login: async (request: LoginRequest): Promise<LoginResponse> => {
-    const data = await apiClient.post('/auth/login', request);
+    const data = await apiClient.post('/auth/login', { email: request.email, password: request.password });
     return data;
   },
 

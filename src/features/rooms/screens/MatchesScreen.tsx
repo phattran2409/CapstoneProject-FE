@@ -55,7 +55,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
   const recentMatches: Match[] = [
     {
-      id: '3',
+      id: '1',
       title: 'Giao hữu cuối tuần',
       date: '18/07/2024',
       status: 'win',
