@@ -380,31 +380,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Chat List Button */}
-        <TouchableOpacity
-          onPress={handleChatListPress}
-          style={{
-            backgroundColor: theme.colors.surface,
-            borderRadius: theme.radius.m,
-            padding: theme.spacing.m,
-            marginBottom: theme.spacing.m,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Ionicons name="chatbubbles-outline" size={24} color={theme.colors.primary} />
-          <Text
-            style={{
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.neonGreen,
-              fontWeight: '600',
-              marginLeft: theme.spacing.s,
-            }}
-          >
-            {t('profile.goToChats')}
-          </Text>
-        </TouchableOpacity>
 
         {/* Logout Button */}
         <TouchableOpacity

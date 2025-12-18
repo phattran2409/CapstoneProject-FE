@@ -26,5 +26,9 @@ export { default as ChatScreen } from '../features/chat/screens/ChatScreen';
 // Leaderboard Feature Screens
 export { default as LeaderboardScreen } from '../features/leaderboard/screens/LeaderboardScreen';
 
+// Onboarding Feature Screens
+export { default as OnboardingScreen, checkOnboardingStatus } from '../features/onboarding/screens/OnboardingScreen';
+
 // Shared Screens (not feature-specific)
 export { default as HomeScreen } from './HomeScreen';
+export { default as SplashScreen } from '../features/splash/screens/SplashScreen';  

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { 
   LoginScreen, 
@@ -13,6 +13,9 @@ import {
   ChatScreen,
   ProfileScreen,
   RoomInformation,
+  SplashScreen,
+  OnboardingScreen,
+  checkOnboardingStatus,
 } from '@/screens';
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '@/features/auth/store/authStore';
@@ -23,6 +26,29 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const StackNavigator: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() =>{
+    const checkInitialState = async () => {
+      const hasSeenOnboarding = await checkOnboardingStatus();
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true);
+      }
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2500);
+    };
+    checkInitialState();
+  }, []);
+
+  if (isLoading) {
+    return <SplashScreen />;
+  }
+
+  if (showOnboarding) {
+    return <OnboardingScreen onComplete={() => setShowOnboarding(false)} />;
+  }
 
   return (
     <Stack.Navigator>
