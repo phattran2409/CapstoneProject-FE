@@ -184,6 +184,7 @@ const vi = {
     tabs: {
       posts: "Bài đăng",
       history: "Lịch sử trận đấu",
+      analysis: "Phân tích",
       achievements: "Thành tích",
     },
     comingSoon: "Sắp ra mắt",

@@ -187,6 +187,7 @@ const en = {
     tabs: {
       posts: "Posts",
       history: "Match History",
+      analysis: "Analysis",
       achievements: "Achievements",
     },
     comingSoon: "Coming soon",
