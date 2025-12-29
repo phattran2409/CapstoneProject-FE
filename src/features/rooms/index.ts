@@ -31,7 +31,7 @@ export type {
 export { useRoomUIStore } from './store/roomUIStore';
 
 // ============ Screens ============
-export * from './screens';
+// export * from './screens';
 
 // Don't export:
 // - API functions (roomsApi) - internal implementation

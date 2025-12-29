@@ -36,6 +36,13 @@ export const roomsApi = {
    */
   getRoomFullInfo: async (id: string): Promise<RoomFullInfo> => {
     const data = await apiClient.get(`/rooms/${id}/full-info`);
+    console.log('Room Full Info:', data);
+    
+    // If backend returns undefined/null, throw error so React Query handles it properly
+    if (!data) {
+      throw new Error('Room not found');
+    }
+    
     return data;
   },
 

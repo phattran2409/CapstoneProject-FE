@@ -1,24 +1,24 @@
 {
   "expo": {
-    "name": "Kickyfi",
-    "slug": "kickyfi",
+    "name": "kickify",
+    "slug": "kickify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./src/assets/kickify/logo_app.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./src/assets/kickify/logo_only.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./src/assets/kickify/logo_only.png",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.kickyfi.app"
@@ -28,11 +28,13 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      "expo-asset",
+      "expo-font"
     ],
     "extra": {
       "eas": {
-        "projectId": "baf90d31-c412-4952-a47b-00eafe28eb52"
+        "projectId": "27b70d13-d3b5-44e1-89ef-9878c60fcdbf"
       }
     }
   }

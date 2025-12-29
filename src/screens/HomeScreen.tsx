@@ -186,9 +186,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const getPostTypeLabel = (type?: string) => {
     switch (type) {
       case 'match':
-        return 'MATCH ANNOUNCEMENT';
+        return t('newsFeed.matches');
       case 'announcement':
-        return 'ANNOUNCEMENT';
+        return t('newsFeed.announcements');
       default:
         return null;
     }
@@ -243,22 +243,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   return (
     <ThemedSafeAreaView>
       {/* Header */}
-        <ThemedView 
+      <ThemedView
         className="flex-row justify-between items-center px-5 py-4 mt-6"
         style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
       >
         <View className="flex-row items-center gap-2">
-          <Ionicons name="football" size={28} color={theme.colors.neonGreen} />
           <ThemedText variant="primary" size="xxl" weight="bold">
-            Feeds
+            {t("newsFeed.title")}
           </ThemedText>
         </View>
         <View className="flex-row items-center gap-4">
           <TouchableOpacity className="w-10 h-10 items-center justify-center">
-            <Ionicons name="search" size={24} color={theme.colors.textSecondary} />
+            <Ionicons
+              name="search"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
           </TouchableOpacity>
           <TouchableOpacity className="w-10 h-10 items-center justify-center">
-            <Ionicons name="notifications-outline" size={24} color={theme.colors.textSecondary} />
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
       </ThemedView>
@@ -268,20 +275,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <ThemedView className="py-5 border-b border-[#2a2a2a]">
           <View className="flex-row justify-between items-center px-5 mb-4">
             <View className="flex-row items-center gap-2">
-              <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
-              <ThemedText variant="primary" size="xl" weight="bold">
-                ELO Leaderboard
+              <Ionicons
+                name="trophy"
+                size={24}
+                color={theme.colors.neonGreen}
+              />
+              <ThemedText
+                style={{ color: theme.colors.neonGreen }}
+                variant="primary"
+                size="xl"
+                weight="bold"
+              >
+                {t("newsFeed.leaderboard")}
               </ThemedText>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Leaderboard")}
+            >
               <ThemedText variant="primary" size="s" weight="semiBold">
-                View All
+                {t("newsFeed.view")}
               </ThemedText>
             </TouchableOpacity>
           </View>
 
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
           >
@@ -295,15 +313,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 }}
               >
                 {/* Rank Badge */}
-                <View 
+                <View
                   className="absolute top-3 right-3 w-8 h-8 rounded-full items-center justify-center"
-                  style={{ 
-                    backgroundColor: getRankColor(player.rank) + '20',
+                  style={{
+                    backgroundColor: getRankColor(player.rank) + "20",
                     borderWidth: 2,
                     borderColor: getRankColor(player.rank),
                   }}
                 >
-                  <Text 
+                  <Text
                     className="text-xs font-bold"
                     style={{ color: getRankColor(player.rank) }}
                   >
@@ -331,25 +349,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   <Text className="text-medium-gray text-xs text-center mb-1">
                     ELO Rating
                   </Text>
-                  <Text 
+                  <Text
                     className="text-2xl font-bold text-center"
                     style={{ color: theme.colors.neonGreen }}
                   >
                     {player.elo}
                   </Text>
-                  
+
                   {/* Trend Indicator */}
                   <View className="flex-row items-center justify-center mt-1">
-                    <Ionicons 
-                      name={getTrendIcon(player.trend)} 
-                      size={14} 
-                      color={getTrendColor(player.trend)} 
+                    <Ionicons
+                      name={getTrendIcon(player.trend)}
+                      size={14}
+                      color={getTrendColor(player.trend)}
                     />
-                    <Text 
+                    <Text
                       className="text-xs font-semibold ml-1"
                       style={{ color: getTrendColor(player.trend) }}
                     >
-                      {player.eloChange > 0 ? '+' : ''}{player.eloChange}
+                      {player.eloChange > 0 ? "+" : ""}
+                      {player.eloChange}
                     </Text>
                   </View>
                 </View>
@@ -382,7 +401,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         {/* Posts Feed */}
         <ThemedView className="pb-24">
           {posts.map((post) => (
-            <ThemedView key={post.id} className="bg-dark-black border-b border-[#2a2a2a] py-4">
+            <ThemedView
+              key={post.id}
+              className="bg-dark-black border-b border-[#2a2a2a] py-4"
+            >
               {/* Post Header */}
               <View className="flex-row items-center justify-between px-5 mb-3">
                 <View className="flex-row items-center flex-1">
@@ -396,7 +418,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       {post.author.name}
                       {post.community && (
                         <Text className="text-medium-gray font-normal">
-                          {' '}posted in '{post.community}'
+                          {" "}
+                          posted in '{post.community}'
                         </Text>
                       )}
                     </ThemedText>
@@ -406,14 +429,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   </View>
                 </View>
                 <TouchableOpacity className="w-8 h-8 items-center justify-center">
-                  <Ionicons name="ellipsis-horizontal" size={20} color={theme.colors.textSecondary} />
+                  <Ionicons
+                    name="ellipsis-horizontal"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
 
               {/* Post Type Badge */}
               {getPostTypeLabel(post.type) && getPostTypeBgColor(post.type) && (
                 <View className="px-5 mb-2">
-                  <View 
+                  <View
                     className="self-start px-3 py-1 rounded-full"
                     style={{ backgroundColor: getPostTypeBgColor(post.type)! }}
                   >
@@ -421,7 +448,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       {getPostTypeLabel(post.type)}
                     </Text>
                   </View>
-                </View> 
+                </View>
               )}
 
               {/* Post Content */}
@@ -445,40 +472,50 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
               {/* Post Actions */}
               <View className="flex-row items-center justify-between px-5">
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-row items-center gap-2"
                   onPress={() => handleLike(post.id)}
                 >
-                  <Ionicons 
-                    name={post.isLiked ? "heart" : "heart-outline"} 
-                    size={22} 
-                    color={post.isLiked ? "#ef4444" : theme.colors.textSecondary} 
+                  <Ionicons
+                    name={post.isLiked ? "heart" : "heart-outline"}
+                    size={22}
+                    color={
+                      post.isLiked ? "#ef4444" : theme.colors.textSecondary
+                    }
                   />
-                  <Text className={post.isLiked ? "text-[#ef4444] font-semibold" : "text-medium-gray"}>
+                  <Text
+                    className={
+                      post.isLiked
+                        ? "text-[#ef4444] font-semibold"
+                        : "text-medium-gray"
+                    }
+                  >
                     {post.likes}
                   </Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity className="flex-row items-center gap-2">
-                  <Ionicons name="chatbubble-outline" size={22} color={theme.colors.textSecondary} />
-                  <Text className="text-medium-gray">
-                    {post.comments}
-                  </Text>
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={22}
+                    color={theme.colors.textSecondary}
+                  />
+                  <Text className="text-medium-gray">{post.comments}</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity className="flex-row items-center gap-2">
-                  <Ionicons name="share-social-outline" size={22} color={theme.colors.textSecondary} />
-                  <Text className="text-medium-gray">
-                    {post.shares}
-                  </Text>
+                  <Ionicons
+                    name="share-social-outline"
+                    size={22}
+                    color={theme.colors.textSecondary}
+                  />
+                  <Text className="text-medium-gray">{post.shares}</Text>
                 </TouchableOpacity>
               </View>
             </ThemedView>
           ))}
         </ThemedView>
       </ThemedScrollView>
-
-
     </ThemedSafeAreaView>
   );
 };

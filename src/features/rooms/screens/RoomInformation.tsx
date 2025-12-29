@@ -14,6 +14,7 @@ import {
 import { RootStackParamList } from '@/app/navigation/types';
 import { useRoomDetail, useJoinRoom, type Player } from '@/features/rooms';
 import { useAuthStore } from '@/features/auth';
+import SplashScreen from '@/features/splash/screens/SplashScreen';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -36,8 +37,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { mutate: joinRoom, isPending: isJoining } = useJoinRoom();
   const { user } = useAuthStore();
   
+  console.log('room', room);
   // ✅ Local UI state
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'teams' | 'host' | 'venue'>('teams');
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // ✅ Handle join team
   const handleJoinTeam = (teamId: string) => {
@@ -72,11 +76,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Loading state
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className='py-10'>
-        <ThemedView className="flex-1 items-center justify-center">
-          <ThemedText>Loading...</ThemedText>
-        </ThemedView>
-      </ThemedSafeAreaView>
+      <SplashScreen />
     );
   }
 
@@ -85,7 +85,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     return (
       <ThemedSafeAreaView className='py-10'>
         <ThemedView className="flex-1 items-center justify-center p-5">
-          <ThemedText variant="error" className="mb-4">{(error as any).message}</ThemedText>
+          <ThemedText variant="secondary" className="mb-4" style={{ color: '#ef4444' }}>{(error as any).message}</ThemedText>
           <TouchableOpacity
             onPress={() => refetch()}
             className="rounded-2xl py-3 px-6"
@@ -110,7 +110,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   }
 
   const renderPlayerCard = (player: Player | null, teamId: string, teamColor: string) => {
-    const [scaleAnim] = useState(new Animated.Value(1));
+    // ✅ Create animation value directly (not a hook, safe in render function)
+    const scaleAnim = new Animated.Value(1);
 
     const handlePressIn = () => {
       Animated.spring(scaleAnim, {
@@ -178,7 +179,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           onPress={() => {
-            console.log('View player profile:', player.id);
+            console.log('View player profile:', player.user?.id);
             // Handle view player profile
           }}
         >
@@ -292,8 +293,65 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         </View>
       </ThemedView>
 
+      {/* Tab Navigation */}
+      <View 
+        className="flex-row px-5 py-3"
+        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+      >
+        <TouchableOpacity
+          onPress={() => setActiveTab('teams')}
+          className="flex-1 items-center py-3 rounded-xl mr-2"
+          style={{ 
+            backgroundColor: activeTab === 'teams' ? theme.colors.neonGreen + '20' : 'transparent',
+          }}
+        >
+          <ThemedText 
+            size="m" 
+            weight={activeTab === 'teams' ? 'bold' : 'medium'}
+            style={{ color: activeTab === 'teams' ? theme.colors.neonGreen : theme.colors.textSecondary }}
+          >
+            Teams
+          </ThemedText>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => setActiveTab('host')}
+          className="flex-1 items-center py-3 rounded-xl mr-2"
+          style={{ 
+            backgroundColor: activeTab === 'host' ? theme.colors.neonGreen + '20' : 'transparent',
+          }}
+        >
+          <ThemedText 
+            size="m" 
+            weight={activeTab === 'host' ? 'bold' : 'medium'}
+            style={{ color: activeTab === 'host' ? theme.colors.neonGreen : theme.colors.textSecondary }}
+          >
+            Host Info
+          </ThemedText>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => setActiveTab('venue')}
+          className="flex-1 items-center py-3 rounded-xl"
+          style={{ 
+            backgroundColor: activeTab === 'venue' ? theme.colors.neonGreen + '20' : 'transparent',
+          }}
+        >
+          <ThemedText 
+            size="m" 
+            weight={activeTab === 'venue' ? 'bold' : 'medium'}
+            style={{ color: activeTab === 'venue' ? theme.colors.neonGreen : theme.colors.textSecondary }}
+          >
+            Venue
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+
       <ThemedScrollView showsVerticalScrollIndicator={false}>
         <View className="px-5 py-6">
+          {/* Teams Tab Content */}
+          {activeTab === 'teams' && (
+            <>
           {/* Room Info Section */}
           <View className="mb-6">
             {/* Format */}
@@ -410,10 +468,208 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               </View>
             ))}
           </View>
+            </>
+          )}
+
+          {/* Host Info Tab Content */}
+          {activeTab === 'host' && room.host && (
+            <View>
+              <ThemedText size="xl" weight="bold" className="mb-4">
+                Host Information
+              </ThemedText>
+              
+              <ThemedCard className="p-5 rounded-2xl">
+                <View className="flex-row items-center mb-4">
+                  <Image
+                    source={{ uri: room.host.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(room.host.name) }}
+                    className="w-20 h-20 rounded-full mr-4"
+                  />
+                  <View className="flex-1">
+                    <ThemedText size="xl" weight="bold" className="mb-1">
+                      {room.host.name}
+                    </ThemedText>
+                    <View className="flex-row items-center gap-2">
+                      <ThemedIcon name="star" size={16} variant="accent" />
+                      <ThemedText variant="secondary" size="m">
+                        {(room.host as any).rating || 'N/A'} • {(room.host as any).matchesHosted || 0} matches hosted
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
+
+                {(room.host as any).bio && (
+                  <View className="mb-4">
+                    <ThemedText variant="secondary" size="m">
+                      {(room.host as any).bio}
+                    </ThemedText>
+                  </View>
+                )}
+
+                <View className="flex-row gap-3">
+                  <View 
+                    className="flex-1 p-3 rounded-xl"
+                    style={{ backgroundColor: theme.colors.neonGreen + '10' }}
+                  >
+                    <ThemedText variant="secondary" size="xs" className="mb-1">
+                      Email
+                    </ThemedText>
+                    <ThemedText size="s" weight="medium" numberOfLines={1}>
+                      {room.host.email}
+                    </ThemedText>
+                  </View>
+                  {room.host.phone && (
+                    <View 
+                      className="flex-1 p-3 rounded-xl"
+                      style={{ backgroundColor: theme.colors.neonGreen + '10' }}
+                    >
+                      <ThemedText variant="secondary" size="xs" className="mb-1">
+                        Phone
+                      </ThemedText>
+                      <ThemedText size="s" weight="medium">
+                        {room.host.phone}
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+              </ThemedCard>
+            </View>
+          )}
+
+          {/* Venue Details Tab Content */}
+          {activeTab === 'venue' && room.venue && (
+            <View>
+              <ThemedText size="xl" weight="bold" className="mb-4">
+                Venue Details
+              </ThemedText>
+
+              {/* Venue Images Carousel */}
+              {room.venue.images && room.venue.images.length > 0 && (
+                <View className="mb-6">
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onScroll={(e) => {
+                      const index = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
+                      setSelectedImageIndex(index);
+                    }}
+                    scrollEventThrottle={16}
+                  >
+                    {room.venue.images.map((imageUrl, index) => (
+                      <View key={index} style={{ width: 350, marginRight: 10 }}>
+                        <Image
+                          source={{ uri: imageUrl }}
+                          style={{ 
+                            width: '100%', 
+                            height: 220, 
+                            borderRadius: 16,
+                          }}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ))}
+                  </ScrollView>
+                  {/* Image Indicators */}
+                  <View className="flex-row justify-center mt-3 gap-2">
+                    {room.venue.images.map((_, index) => (
+                      <View
+                        key={index}
+                        style={{
+                          width: selectedImageIndex === index ? 24 : 8,
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: selectedImageIndex === index 
+                            ? theme.colors.neonGreen 
+                            : theme.colors.border,
+                        }}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Venue Info Cards */}
+              <View className="gap-3 mb-6">
+                {/* Rating & Price */}
+                <View className="flex-row gap-3">
+                  <ThemedCard className="flex-1 p-4 rounded-2xl">
+                    <View className="flex-row items-center mb-2">
+                      <ThemedIcon name="star" size={20} variant="accent" />
+                      <ThemedText size="xs" variant="secondary" className="ml-2">
+                        Rating
+                      </ThemedText>
+                    </View>
+                    <ThemedText size="xl" weight="bold">
+                      {room.venue.rating}
+                    </ThemedText>
+                    <ThemedText size="xs" variant="secondary">
+                      {room.venue.totalReviews} reviews
+                    </ThemedText>
+                  </ThemedCard>
+
+                  <ThemedCard className="flex-1 p-4 rounded-2xl">
+                    <View className="flex-row items-center mb-2">
+                      <ThemedIcon name="cash" size={20} variant="accent" />
+                      <ThemedText size="xs" variant="secondary" className="ml-2">
+                        Price/Hour
+                      </ThemedText>
+                    </View>
+                    <ThemedText size="xl" weight="bold">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(room.venue.pricePerHour)}
+                    </ThemedText>
+                  </ThemedCard>
+                </View>
+
+                {/* Location */}
+                <ThemedCard className="p-4 rounded-2xl">
+                  <View className="flex-row items-center mb-2">
+                    <ThemedIcon name="location" size={20} variant="accent" />
+                    <ThemedText size="m" weight="bold" className="ml-2">
+                      Location
+                    </ThemedText>
+                  </View>
+                  <ThemedText variant="secondary" size="m">
+                    {room.venue.address}
+                  </ThemedText>
+                  {room.venue.lat && room.venue.lng && (
+                    <ThemedText variant="secondary" size="s" className="mt-1">
+                      📍 {room.venue.lat.toFixed(4)}, {room.venue.lng.toFixed(4)}
+                    </ThemedText>
+                  )}
+                </ThemedCard>
+
+                {/* Amenities */}
+                {room.venue.amenities && room.venue.amenities.length > 0 && (
+                  <ThemedCard className="p-4 rounded-2xl">
+                    <View className="flex-row items-center mb-3">
+                      <ThemedIcon name="checkmark-circle" size={20} variant="accent" />
+                      <ThemedText size="m" weight="bold" className="ml-2">
+                        Amenities
+                      </ThemedText>
+                    </View>
+                    <View className="flex-row flex-wrap gap-2">
+                      {room.venue.amenities.map((amenity, index) => (
+                        <View
+                          key={index}
+                          className="px-3 py-2 rounded-lg"
+                          style={{ backgroundColor: theme.colors.neonGreen + '15' }}
+                        >
+                          <ThemedText size="s" weight="medium">
+                            ✓ {amenity}
+                          </ThemedText>
+                        </View>
+                      ))}
+                    </View>
+                  </ThemedCard>
+                )}
+              </View>
+            </View>
+          )}
         </View>
       </ThemedScrollView>
 
-      {/* Join Button */}
+      {/* Join Button - Only show on Teams tab */}
+      {activeTab === 'teams' && (
       <View 
         className="px-5 pb-6"
         style={{ 
@@ -450,6 +706,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           </ThemedText>
         </TouchableOpacity>
       </View>
+      )}
     </ThemedSafeAreaView>
   );
 };

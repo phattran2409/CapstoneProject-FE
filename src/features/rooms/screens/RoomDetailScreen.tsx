@@ -60,7 +60,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   // Mock data - replace with real data from API
   const roomData = {
     id: roomId,
-    format: '7vs7',
+    format: '7vs7', 
     datetime: '19:00 - 20:30, 28/08',
     venue: {
       name: 'Sân bóng ABC',
