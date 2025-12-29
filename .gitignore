@@ -16,6 +16,17 @@ web-build/
 *.key
 *.mobileprovision
 
+# Android
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+*.apk
+*.aab
+*.ap_
+*.dex
+
 # Metro
 .metro-health-check*
 
@@ -40,3 +51,6 @@ yarn-error.*
 *.swp
 *.swo
 *~
+
+# JSON Server backup
+db.json.bak
