@@ -12,6 +12,7 @@ import { useMyProfile } from '@/features/profile/hooks';
 import { useAppStore } from '@/store/appStore';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Profile'>,
@@ -36,6 +37,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   
   // ✅ Use logout mutation
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const scrollHandler = useScrollToHideTabBar();
 
   const handleLogout = () => {
     logout(undefined, {
@@ -64,7 +66,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.m }}>
+      <ScrollView 
+        contentContainerStyle={{ padding: theme.spacing.m }}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         {/* Header: title + chat icon */}
         <View
           style={{

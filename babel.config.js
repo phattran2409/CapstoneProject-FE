@@ -6,8 +6,7 @@ module.exports = function (api) {
       "nativewind/babel",
     ],
     plugins: [
-      "react-native-worklets/plugin",
-      "react-native-reanimated/plugin", // Chỉ cần dòng này là đủ cho Reanimated 3
+      "react-native-reanimated/plugin", // Must be last plugin
     ],
   };
 };

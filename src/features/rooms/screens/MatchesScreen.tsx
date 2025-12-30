@@ -6,6 +6,7 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedCard, ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 
 type RootStackParamList = {
   Matches: undefined;
@@ -34,6 +35,7 @@ interface Match {
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const scrollHandler = useScrollToHideTabBar();
 
   // Mock data - replace with real data from API
   const ongoingMatches: Match[] = [
@@ -162,7 +164,12 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         </View>
       </ThemedView>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        className="flex-1" 
+        showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         {/* Ongoing Matches Section */}
         <ThemedView className="mb-8">
           <ThemedText

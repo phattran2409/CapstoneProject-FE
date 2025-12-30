@@ -1,3 +1,4 @@
+import 'react-native-reanimated';
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,6 +8,7 @@ import { ThemeProvider, useTheme } from './src/shared/theme';
 import { StackNavigator } from './src/app/navigation';
 import { useAppStore } from './src/store';
 import { queryClient } from './src/shared/api/queryClient';
+import { TabBarVisibilityProvider } from './src/shared/context/TabBarVisibilityContext';
 import i18n from './src/shared/i18n';
 import './global.css';
 
@@ -33,7 +35,9 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AppContent />
+          <TabBarVisibilityProvider>
+            <AppContent />
+          </TabBarVisibilityProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </QueryClientProvider>

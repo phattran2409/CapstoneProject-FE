@@ -6,6 +6,7 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 
 type RootStackParamList = {
   Home: undefined;
@@ -55,6 +56,7 @@ interface ELOPlayer {
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const scrollHandler = useScrollToHideTabBar();
 
   // Mock ELO Leaderboard data - replace with real data from API
   const topPlayers: ELOPlayer[] = [
@@ -270,7 +272,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       </ThemedView>
 
-      <ThemedScrollView showsVerticalScrollIndicator={false}>
+      <ThemedScrollView 
+        showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         {/* ELO Leaderboard Section */}
         <ThemedView className="py-5 border-b border-[#2a2a2a]">
           <View className="flex-row justify-between items-center px-5 mb-4">
