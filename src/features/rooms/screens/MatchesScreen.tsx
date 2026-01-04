@@ -1,61 +1,53 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedCard, ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
+import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 
-type RootStackParamList = {
-  Matches: undefined;
-  Profile: undefined;
-  MatchDetail: { matchId: string };
-  CreateRoom: undefined;
-  RoomInformation: { roomId: string };
-};
-
-type MatchesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Matches'>;
+type MatchesScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Matches'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface MatchesScreenProps {
   navigation: MatchesScreenNavigationProp;
-}
-
-interface Match {
-  id: string;
-  title: string;
-  format: string;
-  players: string;
-  image: any;
-  date?: string;
-  status?: 'win' | 'lose' | 'draw';
 }
 
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
+  const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Mock data - replace with real data from API
-  const ongoingMatches: Match[] = [
+  const ongoingMatches: MatchItemData[] = [
     {
       id: '1',
       title: 'Giao hữu cuối tuần',
       format: '5vs5',
       players: '7/10',
-      image: require('@assets/images/icon.png'), // Replace with actual match images
+      image: require('@assets/images/icon.png'),
+      status: 'ongoing',
     },
     {
       id: '2',
       title: 'Team Anh Em',
       format: '7vs7',
       players: '12/14',
-      image: require('@assets/images/icon.png'), // Replace with actual match images
+      image: require('@assets/images/icon.png'),
+      status: 'ongoing',
     },
   ];
 
-  const recentMatches: Match[] = [
+  const recentMatches: MatchItemData[] = [
     {
       id: '1',
       title: 'Giao hữu cuối tuần',
@@ -83,78 +75,63 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       format: '6vs6',
       players: '12/12',
     },
-      {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
+    {
+      id: '6',
+      title: 'Trận đấu cuối tuần',
+      date: '10/07/2024',
+      status: 'win',
       image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
+      format: '5vs5',
+      players: '10/10',
     },
-       {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
+    {
+      id: '7',
+      title: 'Giao hữu thân thiện',
+      date: '08/07/2024',
       status: 'draw',
       image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
+      format: '7vs7',
+      players: '14/14',
     },
-       {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
+    {
+      id: '8',
+      title: 'Championship',
+      date: '05/07/2024',
+      status: 'win',
       image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-       {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
+      format: '11vs11',
+      players: '22/22',
     },
   ];
 
-  const getStatusIcon = (status?: 'win' | 'lose' | 'draw') => {
-    switch (status) {
-      case 'win':
-        return <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />;
-      case 'lose':
-        return <Ionicons name="sad-outline" size={24} color="#ef4444" />;
-      case 'draw':
-        return <Ionicons name="git-compare-outline" size={24} color="#6b7280" />;
-      default:
-        return null;
+  const handleMatchPress = (matchId: string) => {
+    const match = [...ongoingMatches, ...recentMatches].find(m => m.id === matchId);
+    if (match) {
+      setSelectedMatch(match);
+      setModalVisible(true);
     }
   };
 
-  const getStatusText = (status?: 'win' | 'lose' | 'draw') => {
-    if (!status) return '';
-    return t(`home.matchStatus.${status}`);
+  const handleViewDetail = (matchId: string) => {
+    navigation.navigate('RoomInformation', { roomId: matchId });
   };
 
   return (
-    <ThemedSafeAreaView className="flex-1 py-10">
+    <ThemedSafeAreaView style={[styles.container, { paddingVertical: theme.spacing.l }]}>
       {/* Header */}
-      <ThemedView className="flex-row justify-between items-center px-5 py-4">
+      <ThemedView style={[styles.header, { paddingHorizontal: theme.spacing.l, paddingVertical: theme.spacing.m }]}>
         <ThemedText size="xxl" weight="bold" variant="primary">
           {t("matches.title", "Trận đấu")}
         </ThemedText>
-        <View className="flex-row items-center gap-4">
-          <TouchableOpacity className="w-10 h-10 items-center justify-center">
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="search"
               size={24}
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity className="w-10 h-10 items-center justify-center">
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="filter"
               size={24}
@@ -165,134 +142,107 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       </ThemedView>
 
       <ScrollView 
-        className="flex-1" 
+        style={styles.flex1}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        nestedScrollEnabled={true}
       >
         {/* Ongoing Matches Section */}
-        <ThemedView className="mb-8">
-          <ThemedText
-            style={{ color: theme.colors.neonGreen }}
-            size="xl"
-            weight="bold"
-            className="px-5 mb-4"
-          >
-            {t("home.ongoingMatches")}
-          </ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            className="gap-4"
-          >
-            {ongoingMatches.map((match, index) => (
-              <ThemedCard
-                key={match.id}
-                padding={0}
-                variant="outlined"
-                className="rounded-3xl overflow-hidden mr-4 border-1 border-[#2a2a2a]"
-              >
-                <TouchableOpacity
-                  key={match.id}
-                  className="overflow-hidden bg-transparent"
-                  style={{ width: 280 }}
-                  onPress={() => {
-                    navigation.navigate("RoomInformation", {
-                      roomId: match.id,
-                    });
-                  }}
-                >
-                  <Image
-                    source={match.image}
-                    className="w-full h-40"
-                    resizeMode="cover"
-                  />
-                  <ThemedView className="p-4 bg-transparent">
-                    <ThemedText size="l" weight="bold" className="mb-2">
-                      {match.title}
-                    </ThemedText>
-                    <ThemedText variant="secondary" size="s">
-                      {match.format} - ({match.players})
-                    </ThemedText>
-                  </ThemedView>
-                </TouchableOpacity>
-              </ThemedCard>
-            ))}
-          </ScrollView>
-        </ThemedView>
+        <MatchList
+          matches={ongoingMatches}
+          title={t("home.ongoingMatches", "Trận đấu đang diễn ra")}
+          variant="horizontal"
+          itemVariant="card"
+          onMatchPress={handleMatchPress}
+          showStatus={true}
+        />
 
         {/* Recent Matches Section */}
-        <ThemedView className="px-5 mb-24">
-          <ThemedText
-            style={{ color: theme.colors.neonGreen }}
-            size="xl"
-            weight="bold"
-            className="mb-4"
-          >
-            {t("home.recentMatches")}
-          </ThemedText>
-          <ScrollView className="gap-3" style={{ height: 300 }} scrollEnabled={true} showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }} >
-            {recentMatches.map((match) => (
-              <TouchableOpacity
-                key={match.id}
-                className="rounded-2xl p-3 flex-row items-center"
-                onPress={() => {
-                  navigation.navigate("RoomInformation", { roomId: match.id });
-                }}
-              >
-                <Image
-                  source={match.image}
-                  className="w-20 h-20 rounded-xl"
-                  resizeMode="cover"
-                />
-                <View className="flex-1 ml-4">
-                  <ThemedText size="m" weight="semiBold" className="mb-1">
-                    {match.title}
-                  </ThemedText>
-                  <ThemedText variant="secondary" size="s">
-                    {match.date} - {getStatusText(match.status)}
-                  </ThemedText>
-                </View>
-                <View>{getStatusIcon(match.status)}</View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </ThemedView>
-
-          <ThemedView className="absolute bottom-0 left-0 right-0 px-5 pb-8 bg-gradient-to-t from-dark-black to-transparent">
-        
-      </ThemedView>
+        <MatchList
+          matches={recentMatches}
+          title={t("home.recentMatches", "Trận đấu gần đây")}
+          variant="vertical"
+          itemVariant="list"
+          onMatchPress={handleMatchPress}
+          showStatus={true}
+          containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
+        />
       </ScrollView>
 
       {/* Floating Create Button */}
-    <TouchableOpacity
-          className="rounded-2xl py-4 flex-row items-center justify-center"
-          style={{
+      <TouchableOpacity
+        style={[
+          styles.createButton,
+          {
             backgroundColor: theme.colors.neonGreen,
             shadowColor: theme.colors.neonGreen,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-          onPress={() => {
-            navigation.navigate("CreateRoom");
-          }}
+            borderRadius: theme.radius.l,
+            paddingVertical: theme.spacing.m,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginHorizontal: theme.spacing.l,
+            marginBottom: theme.spacing.l,
+          },
+        ]}
+        onPress={() => {
+          navigation.navigate("CreateRoom");
+        }}
+      >
+        <Ionicons name="add" size={24} color={theme.colors.background} />
+        <ThemedText
+          size="l"
+          weight="bold"
+          style={{ marginLeft: 8, color: theme.colors.background }}
         >
-          <Ionicons name="add" size={24} color={theme.colors.background} />
-          <ThemedText
-            size="l"
-            weight="bold"
-            className="ml-2"
-            style={{ color: theme.colors.background }}
-          >
-            {t("home.createNewRoom")}
-          </ThemedText>
-        </TouchableOpacity>
+          {t("home.createNewRoom", "Tạo phòng mới")}
+        </ThemedText>
+      </TouchableOpacity>
+
+      {/* Match Detail Modal */}
+      <MatchDetailModal
+        visible={modalVisible}
+        match={selectedMatch}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedMatch(null);
+        }}
+        onViewDetail={handleViewDetail}
+      />
     </ThemedSafeAreaView>
   );
 };
 
-export default MatchesScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  flex1: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createButton: {
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+});
 
+export default MatchesScreen;

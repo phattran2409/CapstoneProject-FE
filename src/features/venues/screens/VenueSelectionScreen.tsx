@@ -1,18 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useVenues, Venue as VenueType } from '@/features/venues';
+import { RootStackParamList } from '@/app/navigation/types';
 
-type RootStackParamList = {
-  CreateRoom: {
-    selectedVenue: Venue;
-  };
-  VenueSelection: undefined;
-};
 
 type VenueSelectionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VenueSelection'>;
 
@@ -53,16 +48,17 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
   // Filter venues by search query
   const venues = useMemo(() => {
     if (!venuesData) return [];
-    
+    console.log('venuesData', venuesData);
     if (!searchQuery.trim()) return venuesData;
     
     const query = searchQuery.toLowerCase();
-    return venuesData.filter(
-      (venue) =>
-        venue.name.toLowerCase().includes(query) ||
-        venue.address.toLowerCase().includes(query) ||
-        venue.district?.toLowerCase().includes(query)
-    );
+    // return venuesData.filter(
+    //   (venue) =>
+    //     venue.name.toLowerCase().includes(query) ||
+    //     venue.address.toLowerCase().includes(query) ||
+    //     venue.district?.toLowerCase().includes(query)
+    // );
+    return venuesData;
   }, [venuesData, searchQuery]);
 
   // Mock data fallback - will be removed once API is ready
@@ -156,20 +152,20 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-black">
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
       {/* Header */}
-      <View className="px-5 py-4 border-b border-[#2a2a2a]">
-        <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-row items-center gap-3">
-          <TouchableOpacity
-            onPress={() => navigation?.goBack()}
-            className="w-10 h-10 items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.colors.softWhite} />
-          </TouchableOpacity>
-            <View className="flex-row items-center gap-2">
+      <View style={[styles.header, { paddingHorizontal: theme.spacing.l, paddingVertical: theme.spacing.m, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
+        <View style={[styles.headerTop, { marginBottom: theme.spacing.m }]}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => navigation?.goBack()}
+              style={styles.iconButton}
+            >
+              <Ionicons name="arrow-back" size={24} color={theme.colors.softWhite} />
+            </TouchableOpacity>
+            <View style={styles.titleContainer}>
               <Ionicons name="location" size={28} color={theme.colors.neonGreen} />
-              <Text className="text-2xl font-bold text-soft-white">
+              <Text style={[styles.title, { color: theme.colors.softWhite, fontSize: theme.fontSizes.xxl }]}>
                 {t('venueSelection.title')}
               </Text>
             </View>
@@ -177,10 +173,10 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
         </View>
 
         {/* Search Bar */}
-        <View className="bg-[#1a1a1a] rounded-xl px-4 py-3 flex-row items-center mb-4">
+        <View style={[styles.searchBar, { backgroundColor: '#1a1a1a', borderRadius: theme.radius.m, paddingHorizontal: theme.spacing.m, paddingVertical: 12, marginBottom: theme.spacing.m }]}>
           <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
           <TextInput
-            className="flex-1 ml-2 text-soft-white"
+            style={[styles.searchInput, { color: theme.colors.softWhite, marginLeft: 8, flex: 1 }]}
             placeholder={t('venueSelection.searchPlaceholder')}
             placeholderTextColor={theme.colors.textSecondary}
             value={searchQuery}
@@ -194,28 +190,52 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
         </View>
 
         {/* Format Filter */}
-        <View className="flex-row gap-2">
+        <View style={styles.filterContainer}>
           <TouchableOpacity
-            className={`px-4 py-2 rounded-xl ${selectedFilter === 'all' ? 'bg-neon-green' : 'bg-[#1a1a1a]'}`}
+            style={[
+              styles.filterButton,
+              {
+                backgroundColor: selectedFilter === 'all' ? theme.colors.neonGreen : '#1a1a1a',
+                paddingHorizontal: theme.spacing.m,
+                paddingVertical: 8,
+                borderRadius: theme.radius.m,
+              },
+            ]}
             onPress={() => setSelectedFilter('all')}
           >
-            <Text className={`font-semibold ${selectedFilter === 'all' ? 'text-dark-black' : 'text-medium-gray'}`}>
+            <Text style={[styles.filterText, { color: selectedFilter === 'all' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
               {t('venueSelection.allFormats')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 rounded-xl ${selectedFilter === '5vs5' ? 'bg-neon-green' : 'bg-[#1a1a1a]'}`}
+            style={[
+              styles.filterButton,
+              {
+                backgroundColor: selectedFilter === '5vs5' ? theme.colors.neonGreen : '#1a1a1a',
+                paddingHorizontal: theme.spacing.m,
+                paddingVertical: 8,
+                borderRadius: theme.radius.m,
+              },
+            ]}
             onPress={() => setSelectedFilter('5vs5')}
           >
-            <Text className={`font-semibold ${selectedFilter === '5vs5' ? 'text-dark-black' : 'text-medium-gray'}`}>
+            <Text style={[styles.filterText, { color: selectedFilter === '5vs5' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
               5 vs 5
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`px-4 py-2 rounded-xl ${selectedFilter === '7vs7' ? 'bg-neon-green' : 'bg-[#1a1a1a]'}`}
+            style={[
+              styles.filterButton,
+              {
+                backgroundColor: selectedFilter === '7vs7' ? theme.colors.neonGreen : '#1a1a1a',
+                paddingHorizontal: theme.spacing.m,
+                paddingVertical: 8,
+                borderRadius: theme.radius.m,
+              },
+            ]}
             onPress={() => setSelectedFilter('7vs7')}
           >
-            <Text className={`font-semibold ${selectedFilter === '7vs7' ? 'text-dark-black' : 'text-medium-gray'}`}>
+            <Text style={[styles.filterText, { color: selectedFilter === '7vs7' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
               7 vs 7
             </Text>
           </TouchableOpacity>
@@ -223,64 +243,74 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
       </View>
 
       {/* Venues List */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 py-4">
-          {filteredVenues.map((venue) => (
+      <ScrollView style={styles.flex1} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingHorizontal: theme.spacing.l, paddingVertical: theme.spacing.m }}>
+          {mockVenues?.map((venue) => (
             <TouchableOpacity
               key={venue.id}
-              className="bg-[#1a1a1a] rounded-2xl mb-4 overflow-hidden border border-[#2a2a2a]"
+              style={[
+                styles.venueCard,
+                {
+                  backgroundColor: '#1a1a1a',
+                  borderRadius: theme.radius.l,
+                  marginBottom: theme.spacing.m,
+                  overflow: 'hidden',
+                  borderWidth: 1,
+                  borderColor: '#2a2a2a',
+                },
+              ]}
               onPress={() => handleSelectVenue(venue)}
             >
               {/* Venue Image */}
               <Image
                 source={venue.image}
-                className="w-full h-48"
+                style={styles.venueImage}
                 resizeMode="cover"
               />
 
-              <View className="p-4">
+              <View style={{ padding: theme.spacing.m }}>
                 {/* Venue Name and Rating */}
-                <View className="flex-row items-start justify-between mb-2">
-                  <View className="flex-1">
-                    <Text className="text-soft-white text-lg font-bold mb-1">
+                <View style={[styles.venueHeader, { marginBottom: 8 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.venueName, { color: theme.colors.softWhite }]}>
                       {venue.name}
                     </Text>
-                    <View className="flex-row items-center gap-1">
+                    <View style={styles.locationRow}>
                       <Ionicons name="location-outline" size={14} color={theme.colors.textSecondary} />
-                      <Text className="text-medium-gray text-sm">
+                      <Text style={[styles.locationText, { color: theme.colors.textSecondary }]}>
                         {venue.district}
                       </Text>
                       {venue.distance && (
                         <>
-                          <Text className="text-medium-gray text-sm"> • </Text>
-                          <Text className="text-medium-gray text-sm">
+                          <Text style={[styles.locationText, { color: theme.colors.textSecondary }]}> • </Text>
+                          <Text style={[styles.locationText, { color: theme.colors.textSecondary }]}>
                             {venue.distance} km
                           </Text>
                         </>
                       )}
                     </View>
                   </View>
-                  <View className="flex-row items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded-lg">
+                  <View style={[styles.ratingBadge, { backgroundColor: '#2a2a2a', paddingHorizontal: 8, paddingVertical: 4, borderRadius: theme.radius.s }]}>
                     <Ionicons name="star" size={14} color="#FFD700" />
-                    <Text className="text-soft-white text-sm font-semibold">
+                    <Text style={[styles.ratingText, { color: theme.colors.softWhite, fontWeight: '600' }]}>
                       {venue.rating}
                     </Text>
-                    <Text className="text-medium-gray text-xs">
+                    <Text style={[styles.reviewsText, { color: theme.colors.textSecondary }]}>
                       ({venue.reviews})
                     </Text>
                   </View>
                 </View>
 
                 {/* Address */}
-                <Text className="text-medium-gray text-sm mb-3">
+                <Text style={[styles.address, { color: theme.colors.textSecondary, marginBottom: 12 }]}>
                   {venue.address}
                 </Text>
 
                 {/* Facilities */}
-                <View className="flex-row flex-wrap gap-2 mb-3">
+                <View style={[styles.facilitiesContainer, { marginBottom: 12 }]}>
                   {venue.facilities.map((facility, index) => (
-                    <View key={index} className="bg-[#2a2a2a] px-2 py-1 rounded">
-                      <Text className="text-medium-gray text-xs">
+                    <View key={index} style={[styles.facilityTag, { backgroundColor: '#2a2a2a', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }]}>
+                      <Text style={[styles.facilityText, { color: theme.colors.textSecondary }]}>
                         {facility}
                       </Text>
                     </View>
@@ -288,22 +318,22 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
                 </View>
 
                 {/* Price and Formats */}
-                <View className="flex-row items-center justify-between pt-3 border-t border-[#2a2a2a]">
+                <View style={[styles.priceRow, { paddingTop: 12, borderTopWidth: 1, borderTopColor: '#2a2a2a' }]}>
                   <View>
-                    <Text className="text-medium-gray text-xs mb-1">
+                    <Text style={[styles.priceLabel, { color: theme.colors.textSecondary, marginBottom: 4 }]}>
                       {t('venueSelection.perHour')}
                     </Text>
-                    <Text className="text-neon-green text-lg font-bold">
+                    <Text style={[styles.priceValue, { color: theme.colors.neonGreen }]}>
                       {formatPrice(venue.price)}
                     </Text>
                   </View>
-                  <View className="flex-row gap-2">
+                  <View style={styles.formatsContainer}>
                     {venue.availableFormats.map((format, index) => (
                       <View 
                         key={index} 
-                        className="bg-neon-green px-3 py-1 rounded-lg"
+                        style={[styles.formatBadge, { backgroundColor: theme.colors.neonGreen, paddingHorizontal: 12, paddingVertical: 4, borderRadius: theme.radius.s }]}
                       >
-                        <Text className="text-dark-black text-xs font-bold">
+                        <Text style={[styles.formatText, { color: theme.colors.darkBlack, fontWeight: '700' }]}>
                           {format}
                         </Text>
                       </View>
@@ -316,9 +346,9 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
         </View>
 
         {filteredVenues.length === 0 && (
-          <View className="items-center justify-center py-20">
+          <View style={styles.emptyState}>
             <Ionicons name="location-outline" size={64} color={theme.colors.textSecondary} />
-            <Text className="text-medium-gray text-lg mt-4">
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
               {t('venueSelection.noResults')}
             </Text>
           </View>
@@ -328,5 +358,136 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
   );
 };
 
-export default VenueSelectionScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  flex1: {
+    flex: 1,
+  },
+  header: {
+    // Styles applied via inline
+  },
+  headerTop: {
+    // Styles applied via inline
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  title: {
+    fontWeight: '700',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchInput: {
+    fontSize: 16,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterButton: {
+    // Styles applied via inline
+  },
+  filterText: {
+    fontSize: 14,
+  },
+  venueCard: {
+    // Styles applied via inline
+  },
+  venueImage: {
+    width: '100%',
+    height: 192,
+  },
+  venueHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  venueName: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationText: {
+    fontSize: 14,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 14,
+  },
+  reviewsText: {
+    fontSize: 12,
+  },
+  address: {
+    fontSize: 14,
+  },
+  facilitiesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  facilityTag: {
+    // Styles applied via inline
+  },
+  facilityText: {
+    fontSize: 12,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  priceLabel: {
+    fontSize: 12,
+  },
+  priceValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  formatsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  formatBadge: {
+    // Styles applied via inline
+  },
+  formatText: {
+    fontSize: 12,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyText: {
+    fontSize: 18,
+    marginTop: 16,
+  },
+});
 
+export default VenueSelectionScreen;

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Switch, Alert } from 'react-native';
+import { View, TouchableOpacity, TextInput, Switch, Alert, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   ThemedSafeAreaView, 
@@ -12,13 +11,8 @@ import {
   ThemedScrollView,
   ThemedIcon 
 } from '@/shared/components/themed';
-import { useCreateRoom } from '@/features/rooms';
-
-type RootStackParamList = {
-  Matches: undefined;
-  CreateRoom: undefined;
-  VenueSelection: undefined;
-};
+import { useCreateRoom, useActiveRoomStore } from '@/features/rooms';
+import { RootStackParamList } from '@/app/navigation/types';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 
@@ -61,6 +55,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
   // ✅ Use React Query mutation
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
+  const { setActiveRoom } = useActiveRoomStore();
 
   // Update venue when returning from VenueSelection
   React.useEffect(() => {
@@ -104,9 +99,15 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         password: isPrivate ? password : undefined,
       },
       {
-        onSuccess: (newRoom) => {
+        onSuccess: async (newRoom) => {
           Alert.alert('Success', 'Room created successfully!');
-          navigation?.goBack();
+          // Save active room ID to storage
+          if (newRoom?.id) {
+            await setActiveRoom(newRoom.id);
+            navigation?.navigate('RoomInformation', { roomId: newRoom.id });
+          } else {
+            navigation?.goBack();
+          }
         },
         onError: (error: any) => {
           Alert.alert('Error', error.message || 'Failed to create room');
@@ -131,17 +132,123 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     });
   };
 
+  const styles = StyleSheet.create({
+    safeArea: {
+      paddingVertical: 40,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingVertical: 24,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      marginBottom: 12,
+    },
+    formatRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    formatButton: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 16,
+    },
+    formatButtonText: {
+      textAlign: 'center',
+    },
+    inputContainer: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+    },
+    venueButton: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    venueContent: {
+      flex: 1,
+    },
+    venueAddress: {
+      marginTop: 4,
+    },
+    dateTimeRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 24,
+    },
+    dateTimeContainer: {
+      flex: 1,
+    },
+    dateTimeButton: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    settingsContainer: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    passwordContainer: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    passwordInput: {
+      flex: 1,
+    },
+    createButton: {
+      borderRadius: 16,
+      paddingVertical: 16,
+      marginTop: 16,
+    },
+    createButtonText: {
+      textAlign: 'center',
+    },
+  });
+
   return (
-    <ThemedSafeAreaView className='py-10'>
+    <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
       <ThemedView 
-        className="flex-row items-center justify-between px-5 py-4"
-        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+        style={[styles.header, { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}
       >
-        <View className="flex-row items-center gap-3">
+        <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => navigation?.goBack()}
-            className="w-10 h-10 items-center justify-center"
+            style={styles.backButton}
           >
             <ThemedIcon name="arrow-back"  size={24} variant="secondary" />
           </TouchableOpacity>
@@ -152,37 +259,33 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       </ThemedView>
 
       <ThemedScrollView showsVerticalScrollIndicator={false}>
-        <View className="px-5 py-6">
+        <View style={styles.scrollContent}>
           {/* Match Format Selection */}
-          <View className="mb-6">
-            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.selectFormat')}
             </ThemedText>
-            <View className="flex-row gap-3">
+            <View style={styles.formatRow}>
               <TouchableOpacity
-                className="flex-1 py-4 rounded-2xl"
-                style={{ backgroundColor: selectedFormat === '5vs5' ? theme.colors.neonGreen : theme.colors.surface }}
+                style={[styles.formatButton, { backgroundColor: selectedFormat === '5vs5' ? theme.colors.neonGreen : theme.colors.surface }]}
                 onPress={() => setSelectedFormat('5vs5')}
               >
                 <ThemedText 
                   size="l" 
                   weight="bold" 
-                  className="text-center"
-                  style={{ color: selectedFormat === '5vs5' ? '#000' : theme.colors.textSecondary }}
+                  style={[styles.formatButtonText, { color: selectedFormat === '5vs5' ? '#000' : theme.colors.textSecondary }]}
                 >
                   5 vs 5
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 py-4 rounded-2xl"
-                style={{ backgroundColor: selectedFormat === '7vs7' ? theme.colors.neonGreen : theme.colors.surface }}
+                style={[styles.formatButton, { backgroundColor: selectedFormat === '7vs7' ? theme.colors.neonGreen : theme.colors.surface }]}
                 onPress={() => setSelectedFormat('7vs7')}
               >
                 <ThemedText 
                   size="l" 
                   weight="bold" 
-                  className="text-center"
-                  style={{ color: selectedFormat === '7vs7' ? '#000' : theme.colors.textSecondary }}
+                  style={[styles.formatButtonText, { color: selectedFormat === '7vs7' ? '#000' : theme.colors.textSecondary }]}
                 >
                   7 vs 7
                 </ThemedText>
@@ -191,14 +294,13 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           </View>
 
           {/* Room Name */}
-          <View className="mb-6">
-            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.roomName')}
             </ThemedText>
             <ThemedView 
               variant="surface"
-              className="rounded-2xl px-4 py-4"
-              style={{ borderWidth: 1, borderColor: theme.colors.border }}
+              style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
             >
               <TextInput
                 style={{ color: theme.colors.text, fontSize: 16 }}
@@ -211,30 +313,29 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           </View>
 
           {/* Venue Selection */}
-          <View className="mb-6">
-            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.venue')}
             </ThemedText>
             <TouchableOpacity
-              className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-              style={{ 
+              style={[styles.venueButton, { 
                 backgroundColor: theme.colors.surface,
                 borderWidth: 1, 
                 borderColor: theme.colors.border 
-              }}
+              }]}
               onPress={() => navigation?.navigate('VenueSelection')}
             >
               {selectedVenue ? (
-                <View className="flex-1">
+                <View style={styles.venueContent}>
                   <ThemedText variant="muted" size="m" weight="semiBold">
                     {selectedVenue.name}
                   </ThemedText>
-                  <ThemedText variant="secondary" size="s" className="mt-1">
+                  <ThemedText variant="secondary" size="s" style={styles.venueAddress}>
                     {selectedVenue.address}
                   </ThemedText>
                 </View>
               ) : (
-                <ThemedText variant="secondary" size="m" className="flex-1">
+                <ThemedText variant="secondary" size="m" style={styles.venueContent}>
                   {t('createRoom.venuePlaceholder')}
                 </ThemedText>
               )}
@@ -243,19 +344,18 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           </View>
 
           {/* Date and Time */}
-          <View className="flex-row gap-3 mb-6">
+          <View style={styles.dateTimeRow}>
             {/* Date */}
-            <View className="flex-1">
-              <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
+            <View style={styles.dateTimeContainer}>
+              <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.matchDate')}
               </ThemedText>
               <TouchableOpacity
-                className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-                style={{ 
+                style={[styles.dateTimeButton, { 
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1, 
                   borderColor: theme.colors.border 
-                }}
+                }]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <ThemedText variant="muted" size="m">
@@ -266,17 +366,16 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             </View>
 
             {/* Time */}
-            <View className="flex-1">
-              <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
+            <View style={styles.dateTimeContainer}>
+              <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.matchTime')}
               </ThemedText>
               <TouchableOpacity
-                className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-                style={{ 
+                style={[styles.dateTimeButton, { 
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1, 
                   borderColor: theme.colors.border 
-                }}
+                }]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <ThemedText variant="muted" size="m">
@@ -319,14 +418,13 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             )}
 
           {/* Room Settings */}
-          <View className="mb-6">
-            <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
+          <View style={styles.section}>
+            <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.roomSettings')}
             </ThemedText>
             <ThemedView 
               variant="surface"
-              className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-              style={{ borderWidth: 1, borderColor: theme.colors.border }}
+              style={[styles.settingsContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
             >
               <ThemedText variant="muted" size="m">
                 {t('createRoom.privateRoom')}
@@ -342,18 +440,16 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
           {/* Password (if private) */}
           {isPrivate && (
-            <View className="mb-6">
-              <ThemedText size="m" weight="semiBold" className="mb-3">
+            <View style={styles.section}>
+              <ThemedText size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.password')}
               </ThemedText>
               <ThemedView 
                 variant="surface"
-                className="rounded-2xl px-4 py-4 flex-row items-center"
-                style={{ borderWidth: 1, borderColor: theme.colors.border }}
+                style={[styles.passwordContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
               >
                 <TextInput
-                  className="flex-1"
-                  style={{ color: theme.colors.text, fontSize: 16 }}
+                  style={[styles.passwordInput, { color: theme.colors.text, fontSize: 16 }]}
                   placeholder={t('createRoom.passwordPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={password}
@@ -373,18 +469,17 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
             {/* Create Button */}
             <TouchableOpacity
-              className="rounded-2xl py-4 mt-4"
-              style={{
+              style={[styles.createButton, {
                 backgroundColor: theme.colors.neonGreen,
                 shadowColor: theme.colors.neonGreen,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
                 elevation: 8,
-              }}
+              }]}
               onPress={handleCreateRoom}
             >
-              <ThemedText size="l" weight="bold" className="text-center" style={{ color: '#000' }}>
+              <ThemedText size="l" weight="bold" style={[styles.createButtonText, { color: '#000' }]}>
                 {t('createRoom.createButton')}
               </ThemedText>
             </TouchableOpacity>

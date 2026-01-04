@@ -12,20 +12,25 @@ export const getVenues = async (filters?: VenueFilters): Promise<Venue[]> => {
   if (filters?.maxPrice) params.append('price_lte', filters.maxPrice.toString());
   if (filters?.minRating) params.append('rating_gte', filters.minRating.toString());
 
-  const response = await apiClient.get<Venue[]>(`/venues?${params.toString()}`);
-  return response.data;
+  // const response = await apiClient.get<Venue[]>(`/venues?${params.toString()}`);
+  const response = await apiClient.get<Venue[]>('/venues');
+  console.log('Venues response:', response);
+  // Interceptor returns response.data, so response is already the data
+  return response as unknown as Venue[];
 };
 
 // Get single venue by ID
 export const getVenueById = async (id: string): Promise<Venue> => {
   const response = await apiClient.get<Venue>(`/venues/${id}`);
-  return response.data;
+  // Interceptor returns response.data, so response is already the data
+  return response as unknown as Venue;
 };
 
 // Get venue reviews
 export const getVenueReviews = async (venueId: string): Promise<VenueReview[]> => {
   const response = await apiClient.get<VenueReview[]>(`/reviews?venueId=${venueId}`);
-  return response.data;
+  // Interceptor returns response.data, so response is already the data
+  return response as unknown as VenueReview[];
 };
 
 // Create venue review
@@ -36,13 +41,15 @@ export const createVenueReview = async (
     ...review,
     createdAt: new Date().toISOString(),
   });
-  return response.data;
+  // Interceptor returns response.data, so response is already the data
+  return response as unknown as VenueReview;
 };
 
 // Get my bookings
 export const getMyBookings = async (): Promise<VenueBooking[]> => {
   const response = await apiClient.get<VenueBooking[]>('/bookings?_sort=date&_order=desc');
-  return response.data;
+  // Interceptor returns response.data, so response is already the data
+  return response as unknown as VenueBooking[];
 };
 
 // Create venue booking
@@ -53,7 +60,8 @@ export const createVenueBooking = async (
     ...booking,
     status: 'pending',
   });
-  return response.data;
+  // Interceptor returns response.data, so response is already the data
+  return response as unknown as VenueBooking;
 };
 
 // Cancel booking

@@ -80,5 +80,19 @@ export const authApi = {
     const data = await apiClient.patch('/auth/profile', updates);
     return data;
   },
+
+  /**
+   * Login/Register with Google
+   * Backend will verify the ID token and create/login user
+   */
+  googleLogin: async (request: { idToken: string; email: string; name: string; picture?: string }): Promise<LoginResponse> => {
+    const data = await apiClient.post('/auth/google', {
+      idToken: request.idToken,
+      email: request.email,
+      name: request.name,
+      picture: request.picture,
+    });
+    return data;
+  },
 };
 

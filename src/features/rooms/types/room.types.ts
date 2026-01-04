@@ -83,11 +83,14 @@ export interface RoomFilters {
 // ==================== Create/Update Types ====================
 export interface CreateRoomRequest {
   format: string;
+  name: string;
   datetime: string;
   venueId: string;
-  totalPlayers: number;
-  pricePerPlayer: number;
-  description: string;
+  totalPlayers?: number;
+  pricePerPlayer?: number;
+  description?: string;
+  isPrivate?: boolean;
+  password?: string;
 }
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {

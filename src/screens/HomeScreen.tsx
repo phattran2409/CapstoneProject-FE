@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -246,23 +246,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <ThemedSafeAreaView>
       {/* Header */}
       <ThemedView
-        className="flex-row justify-between items-center px-5 py-4 mt-6"
-        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.l,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
       >
-        <View className="flex-row items-center gap-2">
+        <View style={styles.headerLeft}>
           <ThemedText variant="primary" size="xxl" weight="bold">
             {t("newsFeed.title")}
           </ThemedText>
         </View>
-        <View className="flex-row items-center gap-4">
-          <TouchableOpacity className="w-10 h-10 items-center justify-center">
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="search"
               size={24}
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity className="w-10 h-10 items-center justify-center">
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="notifications-outline"
               size={24}
@@ -278,16 +286,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         scrollEventThrottle={16}
       >
         {/* ELO Leaderboard Section */}
-        <ThemedView className="py-5 border-b border-[#2a2a2a]">
-          <View className="flex-row justify-between items-center px-5 mb-4">
-            <View className="flex-row items-center gap-2">
+        <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
+          <View style={[styles.leaderboardHeader, { paddingHorizontal: theme.spacing.l, marginBottom: theme.spacing.m }]}>
+            <View style={styles.leaderboardTitle}>
               <Ionicons
                 name="trophy"
                 size={24}
                 color={theme.colors.neonGreen}
               />
               <ThemedText
-                style={{ color: theme.colors.neonGreen }}
+                style={{ color: theme.colors.neonGreen, marginLeft: 8 }}
                 variant="primary"
                 size="xl"
                 weight="bold"
@@ -309,221 +317,429 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
           >
-            {topPlayers.map((player) => (
-              <TouchableOpacity
-                key={player.id}
-                className="bg-[#1a1a1a] rounded-2xl p-4 mr-4 border border-[#2a2a2a]"
-                style={{ width: 180 }}
-                onPress={() => {
-                  // Navigate to player profile
-                }}
-              >
-                {/* Rank Badge */}
-                <View
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full items-center justify-center"
-                  style={{
-                    backgroundColor: getRankColor(player.rank) + "20",
-                    borderWidth: 2,
-                    borderColor: getRankColor(player.rank),
+            {topPlayers.map((player) => {
+              const rankColor = getRankColor(player.rank);
+              return (
+                <TouchableOpacity
+                  key={player.id}
+                  style={[
+                    styles.playerCard,
+                    {
+                      backgroundColor: '#1a1a1a',
+                      borderRadius: theme.radius.l,
+                      padding: theme.spacing.m,
+                      marginRight: theme.spacing.m,
+                      borderWidth: 1,
+                      borderColor: '#2a2a2a',
+                      width: 180,
+                    },
+                  ]}
+                  onPress={() => {
+                    // Navigate to player profile
                   }}
                 >
-                  <Text
-                    className="text-xs font-bold"
-                    style={{ color: getRankColor(player.rank) }}
+                  {/* Rank Badge */}
+                  <View
+                    style={[
+                      styles.rankBadge,
+                      {
+                        backgroundColor: rankColor + "20",
+                        borderWidth: 2,
+                        borderColor: rankColor,
+                      },
+                    ]}
                   >
-                    #{player.rank}
+                    <Text style={[styles.rankText, { color: rankColor }]}>
+                      #{player.rank}
+                    </Text>
+                  </View>
+
+                  {/* Avatar */}
+                  <Image
+                    source={player.avatar}
+                    style={styles.playerAvatar}
+                    resizeMode="cover"
+                  />
+
+                  {/* Player Name */}
+                  <Text style={[styles.playerName, { color: theme.colors.softWhite }]}>
+                    {player.name}
                   </Text>
-                </View>
-
-                {/* Avatar */}
-                <Image
-                  source={player.avatar}
-                  className="w-16 h-16 rounded-full self-center mb-3 mt-2"
-                  resizeMode="cover"
-                />
-
-                {/* Player Name */}
-                <Text className="text-soft-white text-base font-bold text-center mb-1">
-                  {player.name}
-                </Text>
-                <Text className="text-medium-gray text-xs text-center mb-3">
-                  @{player.username}
-                </Text>
-
-                {/* ELO Score */}
-                <View className="bg-[#0a0a0a] rounded-xl p-3 mb-2">
-                  <Text className="text-medium-gray text-xs text-center mb-1">
-                    ELO Rating
-                  </Text>
-                  <Text
-                    className="text-2xl font-bold text-center"
-                    style={{ color: theme.colors.neonGreen }}
-                  >
-                    {player.elo}
+                  <Text style={[styles.playerUsername, { color: theme.colors.textSecondary }]}>
+                    @{player.username}
                   </Text>
 
-                  {/* Trend Indicator */}
-                  <View className="flex-row items-center justify-center mt-1">
-                    <Ionicons
-                      name={getTrendIcon(player.trend)}
-                      size={14}
-                      color={getTrendColor(player.trend)}
-                    />
+                  {/* ELO Score */}
+                  <View style={[styles.eloContainer, { backgroundColor: '#0a0a0a', borderRadius: theme.radius.m, padding: 12, marginBottom: 8 }]}>
+                    <Text style={[styles.eloLabel, { color: theme.colors.textSecondary }]}>
+                      ELO Rating
+                    </Text>
                     <Text
-                      className="text-xs font-semibold ml-1"
-                      style={{ color: getTrendColor(player.trend) }}
+                      style={[styles.eloValue, { color: theme.colors.neonGreen }]}
                     >
-                      {player.eloChange > 0 ? "+" : ""}
-                      {player.eloChange}
+                      {player.elo}
                     </Text>
-                  </View>
-                </View>
 
-                {/* Stats */}
-                <View className="flex-row justify-between">
-                  <View className="flex-1">
-                    <Text className="text-medium-gray text-xs text-center">
-                      Matches
-                    </Text>
-                    <Text className="text-soft-white text-sm font-semibold text-center">
-                      {player.matchesPlayed}
-                    </Text>
+                    {/* Trend Indicator */}
+                    <View style={styles.trendContainer}>
+                      <Ionicons
+                        name={getTrendIcon(player.trend)}
+                        size={14}
+                        color={getTrendColor(player.trend)}
+                      />
+                      <Text
+                        style={[styles.trendText, { color: getTrendColor(player.trend) }]}
+                      >
+                        {player.eloChange > 0 ? "+" : ""}
+                        {player.eloChange}
+                      </Text>
+                    </View>
                   </View>
-                  <View className="w-px bg-[#2a2a2a]" />
-                  <View className="flex-1">
-                    <Text className="text-medium-gray text-xs text-center">
-                      Win Rate
-                    </Text>
-                    <Text className="text-soft-white text-sm font-semibold text-center">
-                      {player.winRate}%
-                    </Text>
+
+                  {/* Stats */}
+                  <View style={styles.statsContainer}>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                        Matches
+                      </Text>
+                      <Text style={[styles.statValue, { color: theme.colors.softWhite }]}>
+                        {player.matchesPlayed}
+                      </Text>
+                    </View>
+                    <View style={[styles.statDivider, { backgroundColor: '#2a2a2a' }]} />
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                        Win Rate
+                      </Text>
+                      <Text style={[styles.statValue, { color: theme.colors.softWhite }]}>
+                        {player.winRate}%
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </ThemedView>
 
         {/* Posts Feed */}
-        <ThemedView className="pb-24">
-          {posts.map((post) => (
-            <ThemedView
-              key={post.id}
-              className="bg-dark-black border-b border-[#2a2a2a] py-4"
-            >
-              {/* Post Header */}
-              <View className="flex-row items-center justify-between px-5 mb-3">
-                <View className="flex-row items-center flex-1">
+        <ThemedView style={{ paddingBottom: theme.spacing.xxl * 2 }}>
+          {posts.map((post) => {
+            const postTypeBgColor = getPostTypeBgColor(post.type);
+            return (
+              <ThemedView
+                key={post.id}
+                style={[
+                  styles.postContainer,
+                  {
+                    backgroundColor: theme.colors.darkBlack,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#2a2a2a',
+                    paddingVertical: theme.spacing.m,
+                  },
+                ]}
+              >
+                {/* Post Header */}
+                <View style={[styles.postHeader, { paddingHorizontal: theme.spacing.l, marginBottom: 12 }]}>
+                  <View style={styles.postAuthor}>
+                    <Image
+                      source={post.author.avatar}
+                      style={styles.postAvatar}
+                      resizeMode="cover"
+                    />
+                    <View style={{ marginLeft: 12, flex: 1 }}>
+                      <ThemedText variant="primary" size="m" weight="bold">
+                        {post.author.name}
+                        {post.community && (
+                          <Text style={{ color: theme.colors.textSecondary, fontWeight: '400' }}>
+                            {" "}
+                            posted in '{post.community}'
+                          </Text>
+                        )}
+                      </ThemedText>
+                      <Text style={[styles.postTimestamp, { color: theme.colors.textSecondary }]}>
+                        {post.timestamp}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.postMenuButton}>
+                    <Ionicons
+                      name="ellipsis-horizontal"
+                      size={20}
+                      color={theme.colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Post Type Badge */}
+                {getPostTypeLabel(post.type) && postTypeBgColor && (
+                  <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 8 }}>
+                    <View
+                      style={[
+                        styles.postTypeBadge,
+                        {
+                          backgroundColor: postTypeBgColor,
+                          paddingHorizontal: 12,
+                          paddingVertical: 4,
+                          borderRadius: 20,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.postTypeText, { color: theme.colors.darkBlack }]}>
+                        {getPostTypeLabel(post.type)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Post Content */}
+                <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}>
+                  <Text style={[styles.postTitle, { color: theme.colors.softWhite }]}>
+                    {post.title}
+                  </Text>
+                  <Text style={[styles.postContent, { color: theme.colors.textSecondary }]}>
+                    {post.content}
+                  </Text>
+                </View>
+
+                {/* Post Image */}
+                {post.image && (
                   <Image
-                    source={post.author.avatar}
-                    className="w-12 h-12 rounded-full"
+                    source={post.image}
+                    style={styles.postImage}
                     resizeMode="cover"
                   />
-                  <View className="ml-3 flex-1">
-                    <ThemedText variant="primary" size="m" weight="bold">
-                      {post.author.name}
-                      {post.community && (
-                        <Text className="text-medium-gray font-normal">
-                          {" "}
-                          posted in '{post.community}'
-                        </Text>
-                      )}
-                    </ThemedText>
-                    <Text className="text-medium-gray text-sm">
-                      {post.timestamp}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity className="w-8 h-8 items-center justify-center">
-                  <Ionicons
-                    name="ellipsis-horizontal"
-                    size={20}
-                    color={theme.colors.textSecondary}
-                  />
-                </TouchableOpacity>
-              </View>
+                )}
 
-              {/* Post Type Badge */}
-              {getPostTypeLabel(post.type) && getPostTypeBgColor(post.type) && (
-                <View className="px-5 mb-2">
-                  <View
-                    className="self-start px-3 py-1 rounded-full"
-                    style={{ backgroundColor: getPostTypeBgColor(post.type)! }}
+                {/* Post Actions */}
+                <View style={[styles.postActions, { paddingHorizontal: theme.spacing.l }]}>
+                  <TouchableOpacity
+                    style={styles.postAction}
+                    onPress={() => handleLike(post.id)}
                   >
-                    <Text className="text-xs font-bold text-dark-black">
-                      {getPostTypeLabel(post.type)}
+                    <Ionicons
+                      name={post.isLiked ? "heart" : "heart-outline"}
+                      size={22}
+                      color={post.isLiked ? "#ef4444" : theme.colors.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles.postActionText,
+                        {
+                          color: post.isLiked ? "#ef4444" : theme.colors.textSecondary,
+                          fontWeight: post.isLiked ? '600' : '400',
+                        },
+                      ]}
+                    >
+                      {post.likes}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.postAction}>
+                    <Ionicons
+                      name="chatbubble-outline"
+                      size={22}
+                      color={theme.colors.textSecondary}
+                    />
+                    <Text style={[styles.postActionText, { color: theme.colors.textSecondary }]}>
+                      {post.comments}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.postAction}>
+                    <Ionicons
+                      name="share-social-outline"
+                      size={22}
+                      color={theme.colors.textSecondary}
+                    />
+                    <Text style={[styles.postActionText, { color: theme.colors.textSecondary }]}>
+                      {post.shares}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              )}
-
-              {/* Post Content */}
-              <View className="px-5 mb-3">
-                <Text className="text-soft-white text-lg font-bold mb-2">
-                  {post.title}
-                </Text>
-                <Text className="text-medium-gray text-base leading-6">
-                  {post.content}
-                </Text>
-              </View>
-
-              {/* Post Image */}
-              {post.image && (
-                <Image
-                  source={post.image}
-                  className="w-full h-64 mb-3"
-                  resizeMode="cover"
-                />
-              )}
-
-              {/* Post Actions */}
-              <View className="flex-row items-center justify-between px-5">
-                <TouchableOpacity
-                  className="flex-row items-center gap-2"
-                  onPress={() => handleLike(post.id)}
-                >
-                  <Ionicons
-                    name={post.isLiked ? "heart" : "heart-outline"}
-                    size={22}
-                    color={
-                      post.isLiked ? "#ef4444" : theme.colors.textSecondary
-                    }
-                  />
-                  <Text
-                    className={
-                      post.isLiked
-                        ? "text-[#ef4444] font-semibold"
-                        : "text-medium-gray"
-                    }
-                  >
-                    {post.likes}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity className="flex-row items-center gap-2">
-                  <Ionicons
-                    name="chatbubble-outline"
-                    size={22}
-                    color={theme.colors.textSecondary}
-                  />
-                  <Text className="text-medium-gray">{post.comments}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity className="flex-row items-center gap-2">
-                  <Ionicons
-                    name="share-social-outline"
-                    size={22}
-                    color={theme.colors.textSecondary}
-                  />
-                  <Text className="text-medium-gray">{post.shares}</Text>
-                </TouchableOpacity>
-              </View>
-            </ThemedView>
-          ))}
+              </ThemedView>
+            );
+          })}
         </ThemedView>
       </ThemedScrollView>
     </ThemedSafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leaderboardSection: {
+    // Styles applied via inline
+  },
+  leaderboardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  leaderboardTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  playerCard: {
+    position: 'relative',
+  },
+  rankBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  playerAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignSelf: 'center',
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  playerName: {
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  playerUsername: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  eloContainer: {
+    // Styles applied via inline
+  },
+  eloLabel: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  eloValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  trendContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  trendText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  statDivider: {
+    width: 1,
+  },
+  postContainer: {
+    // Styles applied via inline
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  postAuthor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  postAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  postTimestamp: {
+    fontSize: 14,
+  },
+  postMenuButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  postTypeBadge: {
+    alignSelf: 'flex-start',
+  },
+  postTypeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  postContent: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  postImage: {
+    width: '100%',
+    height: 256,
+    marginBottom: 12,
+  },
+  postActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  postAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  postActionText: {
+    fontSize: 14,
+  },
+});
 
 export default HomeScreen;

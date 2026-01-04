@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import type Animated from 'react-native-reanimated';
 
 interface TabBarVisibilityContextType {
@@ -14,20 +14,24 @@ const TabBarVisibilityContext = createContext<TabBarVisibilityContextType | unde
 export const TabBarVisibilityProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isVisible, setIsVisible] = useState(true);
   const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const opacity = translateY.value === 0 ? 1 : 0;
     return {
       transform: [{ translateY: translateY.value }],
-      opacity: opacity,
+      opacity: opacity.value,
     };
   });
 
   const handleSetVisible = (visible: boolean) => {
     setIsVisible(visible);
-    translateY.value = withTiming(visible ? 0 : 100, {
-      duration: 300,
-    });
+    const animationConfig = {
+      duration: 350,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1), // Smooth ease-in-out curve
+    };
+    
+    translateY.value = withTiming(visible ? 0 : 100, animationConfig);
+    opacity.value = withTiming(visible ? 1 : 0, animationConfig);
   };
 
   return (

@@ -5,12 +5,13 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { NativeWindButton } from '@/shared/components';
+import { Button } from '@/shared/components';
 import { useVerifyOTP, useSendOTP } from '@/features/auth';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
@@ -85,7 +86,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 
     // ✅ Call verify OTP mutation
     verifyOTP(
-      { email, otp: otpCode },
+      { phone: email , otp: otpCode },
       {
         onSuccess: () => {
           Alert.alert('Success', 'Account verified successfully!');
@@ -108,7 +109,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
   const handleResend = () => {
     // ✅ Call send OTP mutation
     sendOTP(
-      { email },
+      { email: email },
       {
         onSuccess: () => {
           setResendTimer(60);
@@ -122,28 +123,32 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-black">
-      <View className="flex-1 px-6 pt-12">
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
+      <View style={[styles.content, { paddingHorizontal: theme.spacing.l, paddingTop: theme.spacing.xl * 1.5 }]}>
         {/* Header */}
-        <View className="items-center mb-12">
-          <View className="w-20 h-20 rounded-full bg-green-800 items-center justify-center mb-6">
+        <View style={styles.header}>
+          <View style={[styles.iconContainer, { backgroundColor: '#065f46' }]}>
             <Ionicons name="mail" size={40} color={theme.colors.neonGreen} />
           </View>
-          <Text className="text-3xl font-bold text-white mb-3">
+          <Text style={[styles.title, { color: theme.colors.softWhite, fontSize: theme.fontSizes.xxl }]}>
             {t('otp.title')}
           </Text>
-          <Text className="text-base text-gray-400 text-center px-4">
+          <Text style={[styles.subtitle, { color: '#9ca3af' }]}>
             {t('otp.subtitle', { email })}
           </Text>
         </View>
 
         {/* OTP Input */}
-        <View className="flex-row justify-between mb-8 px-2">
+        <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
             <TextInput
               key={index}
               ref={(ref) => (inputRefs.current[index] = ref)}
-              className="w-12 h-14 bg-gray-900 border-2 border-gray-700 rounded-xl text-white text-2xl font-bold text-center"
+              style={[styles.otpInput, { 
+                backgroundColor: '#111827',
+                borderColor: '#374151',
+                color: theme.colors.softWhite,
+              }]}
               value={digit}
               onChangeText={(value) => handleOtpChange(value, index)}
               onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
@@ -155,24 +160,24 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
         </View>
 
         {/* Verify Button */}
-        <NativeWindButton
+        <Button
           title={t('otp.verify')}
           onPress={handleVerify}
           loading={isVerifying}
           variant="primary"
-          size="lg"
-          className="mb-6"
+          size="large"
+          style={styles.verifyButton}
         />
 
         {/* Resend OTP */}
-        <View className="items-center">
+        <View style={styles.resendContainer}>
           {resendTimer > 0 ? (
-            <Text className="text-gray-400">
+            <Text style={{ color: '#9ca3af' }}>
               {t('otp.resendIn', { seconds: resendTimer })}
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResend}>
-              <Text className="text-neon-green font-semibold">
+              <Text style={[styles.resendText, { color: theme.colors.neonGreen }]}>
                 {t('otp.resend')}
               </Text>
             </TouchableOpacity>
@@ -182,14 +187,71 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
         {/* Back to Register */}
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="items-center mt-8"
+          style={styles.backButton}
         >
-          <Text className="text-gray-400">{t('otp.changeEmail')}</Text>
+          <Text style={{ color: '#9ca3af' }}>{t('otp.changeEmail')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
-export default OTPVerificationScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 48,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 32,
+    paddingHorizontal: 8,
+  },
+  otpInput: {
+    width: 48,
+    height: 56,
+    borderWidth: 2,
+    borderRadius: 12,
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  verifyButton: {
+    marginBottom: 24,
+  },
+  resendContainer: {
+    alignItems: 'center',
+  },
+  resendText: {
+    fontWeight: '600',
+  },
+  backButton: {
+    alignItems: 'center',
+    marginTop: 32,
+  },
+});
 
+export default OTPVerificationScreen;

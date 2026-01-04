@@ -1,7 +1,11 @@
 export { default as Button } from './Button';
 export { default as Card } from './Card';
 export { default as Modal } from './Modal';
-export { default as NativeWindButton } from './NativeWindButton';
-export { default as NativeWindCard } from './NativeWindCard';
 export { default as ChatInMatches } from './ChatInMatches';
+export { default as MatchItem } from './MatchItem';
+export { default as MatchList } from './MatchList';
+export { default as MatchDetailModal } from './MatchDetailModal';
+export type { MatchItemData, MatchItemProps } from './MatchItem';
+export type { MatchListProps } from './MatchList';
+export type { MatchDetailModalProps } from './MatchDetailModal';
 

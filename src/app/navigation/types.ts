@@ -15,6 +15,7 @@ export type RootStackParamList = {
     };
   } | undefined;
   VenueSelection: undefined;
+  RoomInformation: { roomId: string };
   RoomDetail: { roomId: string };
   PersonalPage: undefined;
   ChatList: undefined;

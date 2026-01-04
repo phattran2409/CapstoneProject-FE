@@ -11,6 +11,7 @@ export {
   useLogout,
   useProfile,
   useUpdateProfile,
+  useGoogleSignIn,
 } from './hooks';
 
 // ============ Types ============

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -300,18 +300,17 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
     <ThemedSafeAreaView>
       {/* Header */}
       <ThemedView 
-        className="px-5 py-4 mt-10"
-        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+        style={[styles.headerContainer, { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}
       >
-        <ThemedView className="flex-row items-center justify-between mb-4">
-          <ThemedView className="flex-row items-center gap-3">
+        <ThemedView style={styles.headerRow}>
+          <ThemedView style={styles.headerLeft}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              className="w-10 h-10 items-center justify-center"
+              style={styles.backButton}
             >
               <ThemedIcon name="arrow-back" size={24} variant="secondary" />
             </TouchableOpacity>
-            <View className="flex-row items-center gap-2">
+            <View style={styles.titleContainer}>
               <ThemedIcon name="trophy" size={28} variant="primary" />
               <ThemedText variant="primary" size="xl" weight="bold">
                 ELO Leaderboard
@@ -323,12 +322,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
         {/* Search Bar */}
         <ThemedView 
           variant="surface"
-          className="rounded-xl px-4 py-3 flex-row items-center mb-4"
+          style={styles.searchContainer}
         >
           <ThemedIcon name="search" size={20} variant="secondary" />
           <TextInput
-            className="flex-1 ml-2"
-            style={{ color: theme.colors.text }}
+            style={[styles.searchInput, { color: theme.colors.text }]}
             placeholder={t('leaderboard.searchPlaceholder')}
             placeholderTextColor={theme.colors.textSecondary}
             value={searchQuery}
@@ -342,42 +340,36 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
         </ThemedView>
 
         {/* Tabs */}
-        <ThemedView className="flex-row gap-2">
+        <ThemedView style={styles.tabsContainer}>
           <TouchableOpacity
-            className="flex-1 py-3 rounded-xl"
-            style={{ backgroundColor: selectedTab === 'overall' ? theme.colors.neonGreen : theme.colors.surface }}
+            style={[styles.tabButton, { backgroundColor: selectedTab === 'overall' ? theme.colors.neonGreen : theme.colors.surface }]}
             onPress={() => setSelectedTab('overall')}
           >
             <ThemedText 
               weight="semiBold" 
-              className="text-center"
-              style={{ color: selectedTab === 'overall' ? '#000' : theme.colors.textSecondary }}
+              style={[styles.tabText, { color: selectedTab === 'overall' ? '#000' : theme.colors.textSecondary }]}
             >
               {t('leaderboard.tabs.overall')}
             </ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-1 py-3 rounded-xl"
-            style={{ backgroundColor: selectedTab === 'weekly' ? theme.colors.neonGreen : theme.colors.surface }}
+            style={[styles.tabButton, { backgroundColor: selectedTab === 'weekly' ? theme.colors.neonGreen : theme.colors.surface }]}
             onPress={() => setSelectedTab('weekly')}
           >
             <ThemedText 
               weight="semiBold" 
-              className="text-center"
-              style={{ color: selectedTab === 'weekly' ? '#000' : theme.colors.textSecondary }}
+              style={[styles.tabText, { color: selectedTab === 'weekly' ? '#000' : theme.colors.textSecondary }]}
             >
               {t('leaderboard.tabs.weekly')}
             </ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-1 py-3 rounded-xl"
-            style={{ backgroundColor: selectedTab === 'monthly' ? theme.colors.neonGreen : theme.colors.surface }}
+            style={[styles.tabButton, { backgroundColor: selectedTab === 'monthly' ? theme.colors.neonGreen : theme.colors.surface }]}
             onPress={() => setSelectedTab('monthly')}
           >
             <ThemedText 
               weight="semiBold" 
-              className="text-center"
-              style={{ color: selectedTab === 'monthly' ? '#000' : theme.colors.textSecondary }}
+              style={[styles.tabText, { color: selectedTab === 'monthly' ? '#000' : theme.colors.textSecondary }]}
             >
               {t('leaderboard.tabs.monthly')}
             </ThemedText>
@@ -386,24 +378,26 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
       </ThemedView>
 
       {/* Leaderboard List */}
-      <ThemedScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 py-4">
+      <ThemedScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.listContainer}>
           {filteredPlayers.map((player) => (
             <TouchableOpacity
               key={player.id}
-              className="rounded-2xl p-4 mb-3"
-              style={{ 
-                backgroundColor: getRankBgColor(player.rank) || theme.colors.surface,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-              }}
+              style={[
+                styles.playerCard,
+                { 
+                  backgroundColor: getRankBgColor(player.rank) || theme.colors.surface,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }
+              ]}
               onPress={() => {
                 // navigation.navigate('PlayerProfile', { playerId: player.id });
               }}
             >
-              <View className="flex-row items-center">
+              <View style={styles.playerRow}>
                 {/* Rank */}
-                <View className="w-12 items-center">
+                <View style={styles.rankContainer}>
                   <ThemedText 
                     size="xxl" 
                     weight="bold"
@@ -416,28 +410,26 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                 {/* Avatar */}
                 <Image
                   source={player.avatar}
-                  className="w-14 h-14 rounded-full ml-2"
+                  style={styles.playerAvatar}
                   resizeMode="cover"
                 />
 
                 {/* Player Info */}
-                <View className="flex-1 ml-3">
+                <View style={styles.playerInfo}>
                   <ThemedText variant="muted"  weight="bold">
                     {player.name}
                   </ThemedText>
-                  <View className="flex-row items-center gap-2 mt-1">
+                  <View style={styles.playerMeta}>
                     <ThemedText variant="secondary" size="s">
                       @{player.username}
                     </ThemedText>
                     {player.position && (
                       <>
                         <View 
-                          className="w-1 h-1 rounded-full" 
-                          style={{ backgroundColor: theme.colors.textSecondary }}
+                          style={[styles.dot, { backgroundColor: theme.colors.textSecondary }]}
                         />
                         <View 
-                          className="px-2 py-0.5 rounded"
-                          style={{ backgroundColor: theme.colors.surface }}
+                          style={[styles.positionBadge, { backgroundColor: theme.colors.surface }]}
                         >
                           <ThemedText variant="muted" size="xs" weight="semiBold">
                             {player.position}
@@ -449,7 +441,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                 </View>
 
                 {/* ELO Score */}
-                <View className="items-end">
+                <View style={styles.eloContainer}>
                   <ThemedText 
                     variant="primary"
                     size="xxl" 
@@ -457,7 +449,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                   >
                     {player.elo}
                   </ThemedText>
-                  <View className="flex-row items-center mt-1">
+                  <View style={styles.trendContainer}>
                     <Ionicons 
                       name={getTrendIcon(player.trend)} 
                       size={14} 
@@ -466,8 +458,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                     <ThemedText 
                       size="xs" 
                       weight="semiBold"
-                      className="ml-1"
-                      style={{ color: getTrendColor(player.trend) }}
+                      style={[styles.trendText, { color: getTrendColor(player.trend) }]}
                     >
                       {player.eloChange > 0 ? '+' : ''}{player.eloChange}
                     </ThemedText>
@@ -477,11 +468,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
 
               {/* Stats Bar */}
               <View 
-                className="flex-row mt-4 pt-3"
-                style={{ borderTopWidth: 1, borderTopColor: theme.colors.border }}
+                style={[styles.statsBar, { borderTopWidth: 1, borderTopColor: theme.colors.border }]}
               >
-                <View className="flex-1 items-center">
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                <View style={styles.statItem}>
+                  <ThemedText variant="secondary" size="xs" style={styles.statLabel}>
                     {t('leaderboard.stats.matches')}
                   </ThemedText>
                   <ThemedText variant="primary" size="s" weight="semiBold">
@@ -489,8 +479,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                   </ThemedText>
                 </View>
                 <View style={{ width: 1, backgroundColor: theme.colors.border }} />
-                <View className="flex-1 items-center">
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                <View style={styles.statItem}>
+                  <ThemedText variant="secondary" size="xs" style={styles.statLabel}>
                     {t('leaderboard.stats.winLossDraw')}
                   </ThemedText>
                   <ThemedText variant="primary" size="s" weight="semiBold">
@@ -498,8 +488,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                   </ThemedText>
                 </View>
                 <View style={{ width: 1, backgroundColor: theme.colors.border }} />
-                <View className="flex-1 items-center">
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                <View style={styles.statItem}>
+                  <ThemedText variant="secondary" size="xs" style={styles.statLabel}>
                     {t('leaderboard.stats.winRate')}
                   </ThemedText>
                   <ThemedText variant="primary" size="s" weight="semiBold">
@@ -512,9 +502,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
         </View>
 
         {filteredPlayers.length === 0 && (
-          <View className="items-center justify-center py-20">
+          <View style={styles.emptyContainer}>
             <ThemedIcon name="search-outline" size={64} variant="secondary" />
-            <ThemedText variant="secondary" size="l" className="mt-4">
+            <ThemedText variant="secondary" size="l" style={styles.emptyText}>
               {t('leaderboard.noResults')}
             </ThemedText>
           </View>
@@ -523,6 +513,137 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
     </ThemedSafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginTop: 40,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  searchContainer: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  tabText: {
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  listContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  playerCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  playerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rankContainer: {
+    width: 48,
+    alignItems: 'center',
+  },
+  playerAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginLeft: 8,
+  },
+  playerInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  playerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  positionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  eloContainer: {
+    alignItems: 'flex-end',
+  },
+  trendContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  trendText: {
+    marginLeft: 4,
+  },
+  statsBar: {
+    flexDirection: 'row',
+    marginTop: 16,
+    paddingTop: 12,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    marginBottom: 4,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyText: {
+    marginTop: 16,
+  },
+});
 
 export default LeaderboardScreen;
 

@@ -34,7 +34,7 @@ export interface RegisterRequest {
 export interface RegisterResponse extends LoginResponse {}
 
 export interface OTPRequest {
-  phone: string;
+  email: string;
 }
 
 export interface OTPResponse {

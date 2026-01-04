@@ -5,8 +5,8 @@ import { VenueFilters } from '../types/venue.types';
 
 export const useVenues = (filters?: VenueFilters) => {
   return useQuery({
-    queryKey: venuesKeys.list(filters),
-    queryFn: () => getVenues(filters),
+    queryKey: venuesKeys.lists(),
+    queryFn: () => getVenues(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

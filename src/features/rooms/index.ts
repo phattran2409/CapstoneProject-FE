@@ -29,6 +29,7 @@ export type {
 
 // ============ UI Store (for internal use within rooms feature) ============
 export { useRoomUIStore } from './store/roomUIStore';
+export { useActiveRoomStore } from './store/activeRoomStore';
 
 // ============ Screens ============
 // export * from './screens';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Modal, Animated } from 'react-native';
+import { View, TouchableOpacity, Modal, Animated, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
@@ -113,16 +113,18 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   };
 
   return (
-    <ThemedSafeAreaView className="py-10">
+    <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
         <ThemedView 
-          className="flex-row items-center justify-between px-5 py-4"
-          style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+          style={[
+            styles.header,
+            { borderBottomColor: theme.colors.border }
+          ]}
         >
-          <View className="flex-row items-center gap-3">
+          <View style={styles.headerLeft}>
             <TouchableOpacity
               onPress={() => navigation?.goBack()}
-              className="w-10 h-10 items-center justify-center"
+              style={styles.backButton}
             >
               <ThemedIcon name="arrow-back" size={24} variant="secondary" />
             </TouchableOpacity>
@@ -132,7 +134,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
           </View>
           <TouchableOpacity
             onPress={handleShowChat}
-            style={{ position: 'relative', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
+            style={styles.chatButton}
           >
             <ThemedIcon 
               name={showChat ? "close-circle" : "chatbubbles"} 
@@ -141,24 +143,18 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
             />
             {!showChat && (
               <View 
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  backgroundColor: theme.colors.neonGreen,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 2,
-                  borderColor: theme.colors.background,
-                }}
+                style={[
+                  styles.chatBadge,
+                  {
+                    backgroundColor: theme.colors.neonGreen,
+                    borderColor: theme.colors.background,
+                  }
+                ]}
               >
                 <ThemedText 
                   size="xs" 
                   weight="bold" 
-                  style={{ color: '#000', fontSize: 10 }}
+                  style={styles.chatBadgeText}
                 >
                   5
                 </ThemedText>
@@ -168,15 +164,17 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
         </ThemedView>
 
         <ThemedScrollView showsVerticalScrollIndicator={false}>
-          <View className="px-5 py-6">
+          <View style={styles.contentContainer}>
             {/* Match Info */}
-            <View className="mb-6">
+            <View style={styles.matchInfoSection}>
               <ThemedView 
-                className="flex-row justify-between px-4 py-4 rounded-2xl mb-3"
-                style={{ backgroundColor: theme.colors.surface }}
+                style={[
+                  styles.matchInfoCard,
+                  { backgroundColor: theme.colors.surface }
+                ]}
               >
                 <View>
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                  <ThemedText variant="secondary" size="xs" style={styles.matchInfoLabel}>
                     {t('roomDetail.datetime')}
                   </ThemedText>
                   <ThemedText variant="primary" size="m" weight="semiBold">
@@ -184,7 +182,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                   </ThemedText>
                 </View>
                 <View>
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                  <ThemedText variant="secondary" size="xs" style={styles.matchInfoLabel}>
                     {t('roomDetail.venue')}
                   </ThemedText>
                   <ThemedText variant="primary" size="m" weight="medium">
@@ -194,11 +192,13 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
               </ThemedView>
 
               <ThemedView 
-                className="flex-row justify-between px-4 py-4 rounded-2xl"
-                style={{ backgroundColor: theme.colors.surface }}
+                style={[
+                  styles.matchInfoCard,
+                  { backgroundColor: theme.colors.surface }
+                ]}
               >
                 <View>
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                  <ThemedText variant="secondary" size="xs" style={styles.matchInfoLabel}>
                     {t('roomDetail.datetime')}
                   </ThemedText>
                   <ThemedText variant="primary" size="l" weight="semiBold">
@@ -206,7 +206,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                   </ThemedText>
                 </View>
                 <View>
-                  <ThemedText variant="secondary" size="xs" className="mb-1">
+                  <ThemedText variant="secondary" size="xs" style={styles.matchInfoLabel}>
                     {t('roomDetail.status')}
                   </ThemedText>
                   <ThemedText 
@@ -223,18 +223,22 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
 
             {/* Format & Team Info */}
             <ThemedView 
-              className="flex-row justify-between items-center rounded-2xl mb-6 px-4 py-4"
-              style={{ backgroundColor: theme.colors.surface }}
+              style={[
+                styles.formatTeamCard,
+                { backgroundColor: theme.colors.surface }
+              ]}
             >
               {/* Format */}
               <View>
-                <ThemedText variant="secondary" size="s" className="mb-2">
+                <ThemedText variant="secondary" size="s" style={styles.formatLabel}>
                   {t('roomDetail.format')}
                 </ThemedText>
-                <View className="flex-row items-center">
+                <View style={styles.formatContainer}>
                   <View 
-                    className="px-3 py-1.5 rounded-full"
-                    style={{ backgroundColor: theme.colors.neonGreen + '20' }}
+                    style={[
+                      styles.formatBadge,
+                      { backgroundColor: theme.colors.neonGreen + '20' }
+                    ]}
                   >
                     <ThemedText 
                       variant="accent" 
@@ -249,16 +253,18 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
               </View>
               {/* Team Info */}
               <View>
-                <ThemedText variant="secondary" size="s" className="mb-2">
+                <ThemedText variant="secondary" size="s" style={styles.formatLabel}>
                   Tên Đội
                 </ThemedText>
-                <View className="flex-row items-center justify-between">
+                <View style={styles.teamInfoContainer}>
                   <ThemedText variant="primary" size="m" weight="semiBold">
                     {roomData.teams.name}
                   </ThemedText>
                   <View 
-                    className="px-3 py-1 rounded-full"
-                    style={{ backgroundColor: theme.colors.neonGreen + '15' }}
+                    style={[
+                      styles.teamCountBadge,
+                      { backgroundColor: theme.colors.neonGreen + '15' }
+                    ]}
                   >
                     <ThemedText 
                       variant="secondary" 
@@ -273,23 +279,19 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
             </ThemedView>
 
             {/* Lineup Selector Dropdown */}
-            <View className="mb-4">
-              <ThemedText variant="secondary" size="s" className="mb-2">
+            <View style={styles.lineupSelectorContainer}>
+              <ThemedText variant="secondary" size="s" style={styles.lineupLabel}>
                 Chọn đội hình:
               </ThemedText>
-              <View style={{ position: 'relative', zIndex: 1000 }}>
+              <View style={styles.dropdownWrapper}>
                 <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    borderRadius: 16,
-                    backgroundColor: theme.colors.surface,
-                    borderWidth: 1,
-                    borderColor: theme.colors.border,
-                  }}
+                  style={[
+                    styles.dropdownButton,
+                    {
+                      backgroundColor: theme.colors.surface,
+                      borderColor: theme.colors.border,
+                    }
+                  ]}
                   onPress={() => setIsLineupDropdownOpen(!isLineupDropdownOpen)}
                 >
                   <ThemedText variant="primary" size="m" weight="semiBold">
@@ -305,36 +307,27 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 {/* Dropdown Menu */}
                 {isLineupDropdownOpen && (
                   <View
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      marginTop: 4,
-                      borderRadius: 16,
-                      backgroundColor: theme.colors.surface,
-                      borderWidth: 1,
-                      borderColor: theme.colors.border,
-                      overflow: 'hidden',
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                      elevation: 5,
-                    }}
+                    style={[
+                      styles.dropdownMenu,
+                      {
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.border,
+                      }
+                    ]}
                   >
                     {availableLineups.map((lineup) => (
                       <TouchableOpacity
                         key={lineup}
-                        style={{
-                          paddingHorizontal: 16,
-                          paddingVertical: 12,
-                          backgroundColor: selectedLineup === lineup 
-                            ? theme.colors.neonGreen + '20' 
-                            : 'transparent',
-                          borderBottomWidth: lineup !== availableLineups[availableLineups.length - 1] ? 1 : 0,
-                          borderBottomColor: theme.colors.border,
-                        }}
+                        style={[
+                          styles.dropdownItem,
+                          {
+                            backgroundColor: selectedLineup === lineup 
+                              ? theme.colors.neonGreen + '20' 
+                              : 'transparent',
+                            borderBottomWidth: lineup !== availableLineups[availableLineups.length - 1] ? 1 : 0,
+                            borderBottomColor: theme.colors.border,
+                          }
+                        ]}
                         onPress={() => {
                           setSelectedLineup(lineup);
                           setIsLineupDropdownOpen(false);
@@ -361,14 +354,12 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
 
             {/* Field Layout - 3D View */}
             <View 
-              style={{
-                borderRadius: 24,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
-                overflow: 'hidden',
-                backgroundColor: '#111',
-                padding: 16,
-              }}
+              style={[
+                styles.fieldContainer,
+                {
+                  borderColor: theme.colors.border,
+                }
+              ]}
             >
               <Field3DView 
                 players={getPlayers(roomData.teams.players) as FieldPlayer[]} 
@@ -380,15 +371,17 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
             </View>
 
             {/* Check-in & Payment */}
-            <View className="mt-6 mb-4">
+            <View style={styles.paymentSection}>
               <ThemedView
-                className="px-4 py-4 rounded-2xl mb-3"
-                style={{ backgroundColor: theme.colors.surface }}
+                style={[
+                  styles.paymentCard,
+                  { backgroundColor: theme.colors.surface }
+                ]}
               >
-                <ThemedText variant="primary" size="l" weight="bold" className="mb-2">
+                <ThemedText variant="primary" size="l" weight="bold" style={styles.paymentTitle}>
                   Check-in & Thanh toán
                 </ThemedText>
-                <View className="flex-row items-center justify-between">
+                <View style={styles.paymentRow}>
                   <ThemedText variant="secondary" size="s">
                     Tiền sân mỗi người:
                   </ThemedText>
@@ -397,48 +390,39 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                   </ThemedText>
                 </View>
 
-                <View className="flex-row mt-4 gap-3">
+                <View style={styles.paymentButtons}>
                   <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingVertical: 12,
-                      borderRadius: 16,
-                      backgroundColor: theme.colors.surface,
-                      borderWidth: 1,
-                      borderColor: theme.colors.neonGreen,
-                    }}
+                    style={[
+                      styles.paymentButton,
+                      {
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.neonGreen,
+                      }
+                    ]}
                   >
                     <ThemedIcon name="qr-code" size={20} variant="accent" />
                     <ThemedText
                       size="m"
                       weight="bold"
-                      className="ml-2"
-                      style={{ color: theme.colors.neonGreen }}
+                      style={[styles.paymentButtonText, { color: theme.colors.neonGreen }]}
                     >
                       Check-in Ngay
                     </ThemedText>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingVertical: 12,
-                      borderRadius: 16,
-                      backgroundColor: theme.colors.neonGreen,
-                    }}
+                    style={[
+                      styles.paymentButton,
+                      {
+                        backgroundColor: theme.colors.neonGreen,
+                      }
+                    ]}
                   >
                     <ThemedIcon name="card" size={20} color="#000" />
                     <ThemedText
                       size="m"
                       weight="bold"
-                      className="ml-2"
-                      style={{ color: '#000' }}
+                      style={[styles.paymentButtonText, { color: '#000' }]}
                     >
                       Thanh toán
                     </ThemedText>
@@ -457,55 +441,55 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
           transparent={true}
           onRequestClose={() => setShowChat(false)}
         >
-          <View className="flex-1 justify-end">
+          <View style={styles.modalContainer}>
             {/* Backdrop */}
             <TouchableOpacity 
-              className="absolute inset-0"
+              style={styles.modalBackdrop}
               activeOpacity={1}
               onPress={() => setShowChat(false)}
             >
               <Animated.View 
-                className="flex-1"
-                style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  opacity: slideAnim,
-                }}
+                style={[
+                  styles.modalBackdropOverlay,
+                  {
+                    opacity: slideAnim,
+                  }
+                ]}
               />
             </TouchableOpacity>
 
             {/* Modal Content */}
             <Animated.View
-              className="rounded-t-3xl max-h-[85%]"
-              style={{
-                backgroundColor: theme.colors.background,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: -4 },
-                shadowOpacity: 0.25,
-                shadowRadius: 8,
-                elevation: 10,
-                transform: [
-                  {
-                    translateY: slideAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [600, 0],
-                    }),
-                  },
-                ],
-              }}
+              style={[
+                styles.modalContent,
+                {
+                  backgroundColor: theme.colors.background,
+                  transform: [
+                    {
+                      translateY: slideAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [600, 0],
+                      }),
+                    },
+                  ],
+                }
+              ]}
             >
               {/* Modal Header */}
               <View
-                className="border-b pt-2"
-                style={{
-                  borderBottomColor: theme.colors.border,
-                  backgroundColor: theme.colors.background,
-                }}
+                style={[
+                  styles.modalHeader,
+                  {
+                    borderBottomColor: theme.colors.border,
+                    backgroundColor: theme.colors.background,
+                  }
+                ]}
               >
-                <View className="flex-row items-center px-5 py-4">
-                  <View className="mr-3">
+                <View style={styles.modalHeaderContent}>
+                  <View style={styles.modalHeaderIcon}>
                     <ThemedIcon name="chatbubbles" size={24} variant="accent" />
                   </View>
-                  <View className="flex-1">
+                  <View style={styles.modalHeaderText}>
                     <ThemedText size="l" weight="bold">
                       Chat Đội
                     </ThemedText>
@@ -515,7 +499,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                   </View>
                   <TouchableOpacity
                     onPress={() => setShowChat(false)}
-                    className="w-10 h-10 items-center justify-center rounded-full"
+                    style={styles.modalCloseButton}
                   >
                     <ThemedIcon name="close" size={24} variant="secondary" />
                   </TouchableOpacity>
@@ -523,7 +507,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
               </View>
 
               {/* Chat Content */}
-              <View style={{ height: 600 }}>
+              <View style={styles.chatContent}>
                 <ChatInMatches 
                   roomId={roomId}
                   maxHeight={600}
@@ -541,5 +525,231 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   );
 };
 
-export default RoomDetailScreen;
+const styles = StyleSheet.create({
+  safeArea: {
+    paddingVertical: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatButton: {
+    position: 'relative',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+  },
+  chatBadgeText: {
+    color: '#000',
+    fontSize: 10,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+  matchInfoSection: {
+    marginBottom: 24,
+  },
+  matchInfoCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  matchInfoLabel: {
+    marginBottom: 4,
+  },
+  formatTeamCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: 16,
+    marginBottom: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  formatLabel: {
+    marginBottom: 8,
+  },
+  formatContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  formatBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  teamInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  teamCountBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  lineupSelectorContainer: {
+    marginBottom: 16,
+  },
+  lineupLabel: {
+    marginBottom: 8,
+  },
+  dropdownWrapper: {
+    position: 'relative',
+    zIndex: 1000,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  fieldContainer: {
+    borderRadius: 24,
+    borderWidth: 1,
+    overflow: 'hidden',
+    backgroundColor: '#111',
+    padding: 16,
+  },
+  paymentSection: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  paymentCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  paymentTitle: {
+    marginBottom: 8,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  paymentButtons: {
+    flexDirection: 'row',
+    marginTop: 16,
+    gap: 12,
+  },
+  paymentButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  paymentButtonText: {
+    marginLeft: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modalBackdropOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalHeader: {
+    borderBottomWidth: 1,
+    paddingTop: 8,
+  },
+  modalHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  modalHeaderIcon: {
+    marginRight: 12,
+  },
+  modalHeaderText: {
+    flex: 1,
+  },
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+  },
+  chatContent: {
+    height: 600,
+  },
+});
 
+export default RoomDetailScreen;

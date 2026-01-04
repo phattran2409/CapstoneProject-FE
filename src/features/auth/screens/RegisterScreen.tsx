@@ -9,13 +9,14 @@ import {
   ScrollView,
   Alert,
   Image,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { useRegister } from "@/features/auth";
-import { NativeWindButton } from "@/shared/components";
+import { Button } from "@/shared/components";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 type RootStackParamList = {
@@ -86,48 +87,48 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-black">
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={styles.flex1}
       >
         <ScrollView
-          className="flex-1"
+          style={styles.flex1}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 40 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Header với icon */}
-          <View className="items-center mb-8">
-            <View className="w-20 h-20 rounded-full bg-[#1c2a16] items-center justify-center mb-6">
+          <View style={styles.header}>
+            <View style={[styles.logoContainer, { backgroundColor: '#1c2a16' }]}>
               <Image
                 source={require("../../../assets/kickify/logo_only.png")}
-                className="w-20 h-20"
+                style={styles.logo}
                 resizeMode="contain"
               />
             </View>
-            <Text className="text-4xl font-bold text-white mb-2">
+            <Text style={[styles.title, { color: theme.colors.softWhite, fontSize: theme.fontSizes.xxl * 1.5 }]}>
               {t("register.title")}
             </Text>
-            <Text className="text-base text-gray-400 text-center">
+            <Text style={[styles.subtitle, { color: '#9ca3af' }]}>
               {t("register.subtitle")}
             </Text>
           </View>
 
           {/* Form */}
-          <View className="space-y-2 gap-4">
+          <View style={styles.form}>
             {/* Username */}
-            <View>
-              <Text className="text-white text-base mb-2">
+            <View style={styles.formField}>
+              <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("register.usernameLabel")}
               </Text>
-              <View className="flex-row items-center gap-2 border border-[#3b3b3b] rounded-2xl px-4 py-1">
+              <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
                 <Ionicons
                   name="person"
                   size={20}
                   color={theme.colors.textSecondary}
                 />
                 <TextInput
-                  className="bg-transparent text-soft-white text-base"
+                  style={[styles.input, { color: theme.colors.softWhite }]}
                   placeholder={t("register.usernamePlaceholder")}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={username}
@@ -138,18 +139,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Email */}
-            <View>
-              <Text className="text-white text-base mb-2">
+            <View style={styles.formField}>
+              <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("common.email")}
               </Text>
-              <View className="flex-row items-center gap-2 border border-[#3b3b3b] rounded-2xl px-4 py-1">
+              <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
                 <Ionicons
                   name="mail"
                   size={20}
                   color={theme.colors.textSecondary}
                 />
                 <TextInput
-                  className="bg-transparent text-soft-white text-base"
+                  style={[styles.input, { color: theme.colors.softWhite }]}
                   placeholder={t("login.emailPlaceholder")}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={email}
@@ -161,19 +162,19 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Password */}
-            <View>
-              <Text className="text-white text-base mb-2">
+            <View style={styles.formField}>
+              <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("login.passwordLabel")}
               </Text>
-              <View className="relative">
-                <View className="flex-row items-center gap-2 border border-[#3b3b3b] rounded-2xl px-4 py-1">
+              <View style={styles.passwordWrapper}>
+                <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
                   <Ionicons
                     name="lock-closed"
                     size={20}
                     color={theme.colors.textSecondary}
                   />
                   <TextInput
-                    className="bg-transparent text-soft-white text-base"
+                    style={[styles.input, { color: theme.colors.softWhite }]}
                     placeholder={t("login.passwordPlaceholder")}
                     placeholderTextColor={theme.colors.textSecondary}
                     value={password}
@@ -183,7 +184,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-4"
+                  style={styles.eyeButton}
                 >
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
@@ -195,19 +196,19 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Confirm Password */}
-            <View>
-              <Text className="text-white text-base mb-2">
+            <View style={styles.formField}>
+              <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("register.confirmPasswordLabel")}
               </Text>
-              <View className="relative">
-                <View className="flex-row items-center gap-2 border border-[#3b3b3b] rounded-2xl px-4 py-1">
+              <View style={styles.passwordWrapper}>
+                <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
                   <Ionicons
                     name="lock-closed"
                     size={20}
                     color={theme.colors.textSecondary}
                   />
                   <TextInput
-                    className="bg-transparent text-soft-white text-base"
+                    style={[styles.input, { color: theme.colors.softWhite }]}
                     placeholder={t("register.confirmPasswordPlaceholder")}
                     placeholderTextColor={theme.colors.textSecondary}
                     value={confirmPassword}
@@ -217,7 +218,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-4"
+                  style={styles.eyeButton}
                 >
                   <Ionicons
                     name={
@@ -231,26 +232,26 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Register Button */}
-            <View className="mt-6">
-              <NativeWindButton
+            <View style={styles.buttonContainer}>
+              <Button
                 title={t("common.buttons.register")}
                 onPress={handleRegister}
                 loading={loading}
                 variant="primary"
-                size="lg"
-                className="w-full"
+                size="large"
+                style={styles.fullWidth}
               />
             </View>
 
             {/* Divider với "hoặc đăng ký bằng" */}
-            <View className="flex-row items-center my-6">
-              <View className="flex-1 h-px bg-gray-700" />
-              <Text className="mx-4 text-gray-400">{t("login.or")}</Text>
-              <View className="flex-1 h-px bg-gray-700" />
+            <View style={styles.divider}>
+              <View style={[styles.dividerLine, { backgroundColor: '#374151' }]} />
+              <Text style={[styles.dividerText, { color: '#9ca3af' }]}>{t("login.or")}</Text>
+              <View style={[styles.dividerLine, { backgroundColor: '#374151' }]} />
             </View>
 
             {/* Social Login Buttons */}
-            <View className="flex-row justify-between px-6 mb-6">
+            <View style={styles.socialButtons}>
               {[
                 require("@assets/images/logo_google.png"),
                 require("@assets/images/logo_facebook.png"),
@@ -258,11 +259,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               ].map((logo, index) => (
                 <TouchableOpacity
                   key={`social-${index}`}
-                  className="w-16 h-16 rounded-2xl border border-[#2f2f2f] items-center justify-center bg-[#0f0f0f]"
+                  style={[styles.socialButton, { borderColor: '#2f2f2f', backgroundColor: '#0f0f0f' }]}
                 >
                   <Image
                     source={logo}
-                    className="w-8 h-8"
+                    style={styles.socialIcon}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
@@ -270,12 +271,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Link to Login */}
-            <View className="flex-row justify-center items-center mt-4 mb-8">
-              <Text className="text-gray-400">
+            <View style={styles.loginLink}>
+              <Text style={{ color: '#9ca3af' }}>
                 {t("register.alreadyHaveAccount")}{" "}
               </Text>
               <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                <Text className="text-neon-green font-semibold">
+                <Text style={[styles.loginLinkText, { color: theme.colors.neonGreen }]}>
                   {t("common.buttons.login")}
                 </Text>
               </TouchableOpacity>
@@ -286,5 +287,116 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  flex1: {
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+  },
+  title: {
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  form: {
+    gap: 16,
+  },
+  formField: {
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  input: {
+    backgroundColor: 'transparent',
+    fontSize: 16,
+    flex: 1,
+  },
+  passwordWrapper: {
+    position: 'relative',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+  },
+  buttonContainer: {
+    marginTop: 24,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+  },
+  socialButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  socialButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialIcon: {
+    width: 32,
+    height: 32,
+  },
+  loginLink: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 32,
+  },
+  loginLinkText: {
+    fontWeight: '600',
+  },
+});
 
 export default RegisterScreen;

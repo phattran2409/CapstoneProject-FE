@@ -9,16 +9,24 @@ import { StackNavigator } from './src/app/navigation';
 import { useAppStore } from './src/store';
 import { queryClient } from './src/shared/api/queryClient';
 import { TabBarVisibilityProvider } from './src/shared/context/TabBarVisibilityContext';
+import { AppToast } from './src/shared/toast';
+import { ActiveRoomBanner } from './src/shared/components/ActiveRoomBanner';
+import { useActiveRoomStore } from './src/features/rooms';
 import i18n from './src/shared/i18n';
-import './global.css';
 
 const AppContent: React.FC = () => {
   const { isDark } = useTheme();
   const language = useAppStore((state) => state.language);
+  const { loadActiveRoom } = useActiveRoomStore();
 
   useEffect(() => {
     i18n.changeLanguage(language);
   }, [language]);
+
+  // Load active room when app starts
+  useEffect(() => {
+    loadActiveRoom();
+  }, []);
 
   return (
     <>
@@ -26,6 +34,7 @@ const AppContent: React.FC = () => {
       <NavigationContainer>
         <StackNavigator />
       </NavigationContainer>
+      <AppToast />
     </>
   );
 };

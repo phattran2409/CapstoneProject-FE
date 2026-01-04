@@ -20,6 +20,8 @@ import {
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from './types';
+import { ActiveRoomBanner } from '@/shared/components/ActiveRoomBanner';
+import { View, StyleSheet } from 'react-native';
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -51,7 +53,8 @@ const StackNavigator: React.FC = () => {
   }
 
   return (
-    <Stack.Navigator>
+    <View style={styles.container}>
+      <Stack.Navigator>
       {!isAuthenticated ? (
         <>
           <Stack.Screen 
@@ -165,9 +168,17 @@ const StackNavigator: React.FC = () => {
           />
         </>
       )}
-    </Stack.Navigator>
+      </Stack.Navigator>
+      {isAuthenticated && <ActiveRoomBanner />}
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default StackNavigator;
 

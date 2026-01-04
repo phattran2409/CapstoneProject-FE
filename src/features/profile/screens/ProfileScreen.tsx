@@ -389,22 +389,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
         {/* Logout Button */}
         <TouchableOpacity
-          className="rounded-2xl py-4 mt-4"
-          style={{
-            backgroundColor: theme.colors.neonGreen,
-            shadowColor: theme.colors.neonGreen,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
+          style={[
+            styles.logoutButton,
+            {
+              backgroundColor: theme.colors.neonGreen,
+              shadowColor: theme.colors.neonGreen,
+              borderRadius: theme.radius.l,
+              paddingVertical: theme.spacing.m,
+              marginTop: theme.spacing.m,
+            },
+          ]}
           onPress={handleLogout}
         >
           <ThemedText 
             size="l" 
             weight="bold" 
-            className="text-center" 
-            style={{ color: theme.colors.background }}
+            style={{ color: theme.colors.background, textAlign: 'center' }}
           >
             {t('common.buttons.logout')}
           </ThemedText>
@@ -428,6 +428,12 @@ const styles = StyleSheet.create({
   },
   settingValue: {
     marginRight: 4,
+  },
+  logoutButton: {
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
 

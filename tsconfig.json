@@ -30,7 +30,7 @@
       "@shared/*": ["src/shared/*"]
     }
   },
-  "include": ["src/**/*", "App.tsx", "nativewind-env.d.ts"],
+  "include": ["src/**/*", "App.tsx"],
   "exclude": ["node_modules"]
 }
 
