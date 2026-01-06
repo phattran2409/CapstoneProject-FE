@@ -20,7 +20,7 @@ const getDeviceLanguage = (): SupportedLanguage => {
 const defaultLanguage = getDeviceLanguage();
 
 i18n.use(initReactI18next).init({
-  compatibilityJSON: 'v3',
+  compatibilityJSON: 'v4',
   resources,
   lng: defaultLanguage,
   fallbackLng: 'en',

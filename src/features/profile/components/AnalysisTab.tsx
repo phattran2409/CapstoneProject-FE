@@ -67,30 +67,7 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) =>
         >
           {t('personalPage.analysis.title', { defaultValue: 'Biểu đồ năng lực' })}
         </Text>
-        <View
-          style={[
-            styles.seasonTag,
-            {
-              backgroundColor: theme.colors.neonGreen,
-              borderRadius: theme.radius.s,
-              paddingVertical: theme.spacing.xs,
-              paddingHorizontal: theme.spacing.s,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.seasonText,
-              {
-                fontSize: theme.fontSizes.s,
-                color: theme.colors.white,
-                fontWeight: '600',
-              },
-            ]}
-          >
-            Season 2024
-          </Text>
-        </View>
+ 
       </View>
 
       {/* Radar Chart */}

@@ -9,6 +9,7 @@ export { default as OTPVerificationScreen } from '../features/auth/screens/OTPVe
 // Profile Feature Screens
 export { default as ProfileScreen } from '../features/profile/screens/ProfileScreen';
 export { default as PersonalPageScreen } from '../features/profile/screens/PersonalPageScreen';
+export { default as ProfileDetailScreen } from '../features/profile/screens/ProfileDetailScreen';
 
 // Rooms Feature Screens
 export { default as RoomInformation } from '../features/rooms/screens/RoomInformation';

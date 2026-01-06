@@ -170,7 +170,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike }) => {
                 styles.badgeText,
                 {
                   fontSize: theme.fontSizes.xs,
-                  color: theme.colors.white,
+                  color: theme.colors.background,
                   fontWeight: '700',
                 },
               ]}
