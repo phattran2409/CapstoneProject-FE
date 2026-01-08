@@ -23,7 +23,7 @@ const THEME_STORAGE_KEY = '@app_theme_mode';
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
   const [isLoading, setIsLoading] = useState(true);
 
   // Load saved theme preference

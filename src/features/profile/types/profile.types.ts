@@ -2,7 +2,6 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  username?: string;
   avatar?: string;
   bio?: string;
   phone?: string;
@@ -10,7 +9,7 @@ export interface UserProfile {
   gender?: 'male' | 'female' | 'other';
   position?: string; // Football position
   preferredFoot?: 'left' | 'right' | 'both';
-  
+  shirtNumber?: number;
   // Stats
   stats: PlayerStats;
   
@@ -58,13 +57,13 @@ export interface UserPreferences {
 
 export interface UpdateProfileData {
   name?: string;
-  username?: string;
   bio?: string;
   phone?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   position?: string;
   preferredFoot?: 'left' | 'right' | 'both';
+  shirtNumber?: number;
 }
 
 export interface UpdatePreferencesData {

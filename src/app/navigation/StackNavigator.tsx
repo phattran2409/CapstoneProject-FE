@@ -9,6 +9,7 @@ import {
   VenueSelectionScreen,
   RoomDetailScreen,
   PersonalPageScreen,
+  ProfileDetailScreen,
   ChatListScreen,
   ChatScreen,
   ProfileScreen,
@@ -161,6 +162,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="PersonalPage" 
             component={PersonalPageScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ProfileDetail" 
+            component={ProfileDetailScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',
