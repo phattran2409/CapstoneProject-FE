@@ -5,6 +5,7 @@ export { default as ChatInMatches } from './ChatInMatches';
 export { default as MatchItem } from './MatchItem';
 export { default as MatchList } from './MatchList';
 export { default as MatchDetailModal } from './MatchDetailModal';
+export { FormField } from './FormField';
 export type { MatchItemData, MatchItemProps } from './MatchItem';
 export type { MatchListProps } from './MatchList';
 export type { MatchDetailModalProps } from './MatchDetailModal';

@@ -7,22 +7,30 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
-  Alert,
   Image,
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTheme } from "@/shared/theme";
 import { useRegister } from "@/features/auth";
 import { Button } from "@/shared/components";
+import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { ThemedIcon } from "@/shared/components/themed";
+import {
+  registerSchema,
+  type RegisterFormData,
+} from "../validation/authSchemas";
 
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   OTPVerification: { email: string; username: string; password: string };
+  MainTabs: undefined;
 };
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<
@@ -37,151 +45,246 @@ interface RegisterScreenProps {
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // ✅ Use React Query register hook
+  // React Hook Form with Zod validation
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // React Query mutation
   const { mutate: register, isPending: loading } = useRegister();
 
-  const handleRegister = () => {
-    // Validation
-    if (!username || !email || !password || !confirmPassword) {
-      Alert.alert(t("register.errors.allFieldsRequired"));
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert(t("register.errors.passwordMismatch"));
-      return;
-    }
-
-    if (password.length < 8) {
-      Alert.alert(t("register.errors.passwordTooShort"));
-      return;
-    }
-
-    // ✅ Call register mutation
+  const onSubmit = (data: RegisterFormData) => {
+    // Transform to API request format (name instead of username)
     register(
       {
-        name: username,
-        email,
-        password,
+        name: data.username,
+        email: data.email,
+        password: data.password,
       },
       {
         onSuccess: () => {
-          Alert.alert("Success", "Account created successfully!");
-          // Navigate to Main or OTPVerification if needed
+          toast.success(
+            t("register.success.title", "Đăng ký thành công"),
+            t("register.success.message", "Tài khoản đã được tạo!")
+          );
           setTimeout(() => {
             navigation.replace("MainTabs" as any);
           }, 100);
         },
         onError: (error: any) => {
-          Alert.alert(t("register.errors.failed"), error.message);
+          toast.error(
+            t("register.errors.failed", "Đăng ký thất bại"),
+            error.message || t("register.errors.tryAgain", "Vui lòng thử lại.")
+          );
         },
       }
     );
   };
 
+  // Helper to get translated error message
+  const getErrorMessage = (message?: string) => {
+    if (!message) return "";
+    return message.startsWith("validation.") ? t(message) : message;
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex1}
       >
+        {/* Back Button */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <ThemedIcon name="arrow-back" size={24} variant="secondary" />
+        </TouchableOpacity>
+
         <ScrollView
           style={styles.flex1}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 40 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header với icon */}
+          {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.logoContainer, { backgroundColor: '#1c2a16' }]}>
+            <View style={[styles.logoContainer, { backgroundColor: "#1c2a16" }]}>
               <Image
                 source={require("../../../assets/kickify/logo_only.png")}
                 style={styles.logo}
                 resizeMode="contain"
               />
             </View>
-            <Text style={[styles.title, { color: theme.colors.softWhite, fontSize: theme.fontSizes.xxl * 1.5 }]}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme.colors.softWhite,
+                  fontSize: theme.fontSizes.xxl * 1.5,
+                },
+              ]}
+            >
               {t("register.title")}
             </Text>
-            <Text style={[styles.subtitle, { color: '#9ca3af' }]}>
+            <Text style={[styles.subtitle, { color: "#9ca3af" }]}>
               {t("register.subtitle")}
             </Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Username */}
+            {/* Username Field */}
             <View style={styles.formField}>
               <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("register.usernameLabel")}
               </Text>
-              <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
-                <Ionicons
-                  name="person"
-                  size={20}
-                  color={theme.colors.textSecondary}
-                />
-                <TextInput
-                  style={[styles.input, { color: theme.colors.softWhite }]}
-                  placeholder={t("register.usernamePlaceholder")}
-                  placeholderTextColor={theme.colors.textSecondary}
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                />
-              </View>
+              <Controller
+                control={control}
+                name="username"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      {
+                        borderColor: errors.username
+                          ? theme.colors.error
+                          : "#3b3b3b",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name="person"
+                      size={20}
+                      color={
+                        errors.username
+                          ? theme.colors.error
+                          : theme.colors.textSecondary
+                      }
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.colors.softWhite }]}
+                      placeholder={t("register.usernamePlaceholder")}
+                      placeholderTextColor={theme.colors.textSecondary}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                )}
+              />
+              {errors.username && (
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {getErrorMessage(errors.username.message)}
+                </Text>
+              )}
             </View>
 
-            {/* Email */}
+            {/* Email Field */}
             <View style={styles.formField}>
               <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("common.email")}
               </Text>
-              <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
-                <Ionicons
-                  name="mail"
-                  size={20}
-                  color={theme.colors.textSecondary}
-                />
-                <TextInput
-                  style={[styles.input, { color: theme.colors.softWhite }]}
-                  placeholder={t("login.emailPlaceholder")}
-                  placeholderTextColor={theme.colors.textSecondary}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      {
+                        borderColor: errors.email
+                          ? theme.colors.error
+                          : "#3b3b3b",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name="mail"
+                      size={20}
+                      color={
+                        errors.email
+                          ? theme.colors.error
+                          : theme.colors.textSecondary
+                      }
+                    />
+                    <TextInput
+                      style={[styles.input, { color: theme.colors.softWhite }]}
+                      placeholder={t("login.emailPlaceholder")}
+                      placeholderTextColor={theme.colors.textSecondary}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                )}
+              />
+              {errors.email && (
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {getErrorMessage(errors.email.message)}
+                </Text>
+              )}
             </View>
 
-            {/* Password */}
+            {/* Password Field */}
             <View style={styles.formField}>
               <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("login.passwordLabel")}
               </Text>
               <View style={styles.passwordWrapper}>
-                <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
-                  <Ionicons
-                    name="lock-closed"
-                    size={20}
-                    color={theme.colors.textSecondary}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: theme.colors.softWhite }]}
-                    placeholder={t("login.passwordPlaceholder")}
-                    placeholderTextColor={theme.colors.textSecondary}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                </View>
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View
+                      style={[
+                        styles.inputContainer,
+                        {
+                          borderColor: errors.password
+                            ? theme.colors.error
+                            : "#3b3b3b",
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name="lock-closed"
+                        size={20}
+                        color={
+                          errors.password
+                            ? theme.colors.error
+                            : theme.colors.textSecondary
+                        }
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.colors.softWhite }]}
+                        placeholder={t("login.passwordPlaceholder")}
+                        placeholderTextColor={theme.colors.textSecondary}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        secureTextEntry={!showPassword}
+                      />
+                    </View>
+                  )}
+                />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
@@ -193,49 +296,77 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                   />
                 </TouchableOpacity>
               </View>
+              {errors.password && (
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {getErrorMessage(errors.password.message)}
+                </Text>
+              )}
             </View>
 
-            {/* Confirm Password */}
+            {/* Confirm Password Field */}
             <View style={styles.formField}>
               <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("register.confirmPasswordLabel")}
               </Text>
               <View style={styles.passwordWrapper}>
-                <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
-                  <Ionicons
-                    name="lock-closed"
-                    size={20}
-                    color={theme.colors.textSecondary}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: theme.colors.softWhite }]}
-                    placeholder={t("register.confirmPasswordPlaceholder")}
-                    placeholderTextColor={theme.colors.textSecondary}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={!showConfirmPassword}
-                  />
-                </View>
+                <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View
+                      style={[
+                        styles.inputContainer,
+                        {
+                          borderColor: errors.confirmPassword
+                            ? theme.colors.error
+                            : "#3b3b3b",
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name="lock-closed"
+                        size={20}
+                        color={
+                          errors.confirmPassword
+                            ? theme.colors.error
+                            : theme.colors.textSecondary
+                        }
+                      />
+                      <TextInput
+                        style={[styles.input, { color: theme.colors.softWhite }]}
+                        placeholder={t("register.confirmPasswordPlaceholder")}
+                        placeholderTextColor={theme.colors.textSecondary}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        secureTextEntry={!showConfirmPassword}
+                      />
+                    </View>
+                  )}
+                />
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   style={styles.eyeButton}
                 >
                   <Ionicons
-                    name={
-                      showConfirmPassword ? "eye-off-outline" : "eye-outline"
-                    }
+                    name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
                     size={24}
                     color={theme.colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
+              {errors.confirmPassword && (
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {getErrorMessage(errors.confirmPassword.message)}
+                </Text>
+              )}
             </View>
 
             {/* Register Button */}
             <View style={styles.buttonContainer}>
               <Button
                 title={t("common.buttons.register")}
-                onPress={handleRegister}
+                onPress={handleSubmit(onSubmit)}
                 loading={loading}
                 variant="primary"
                 size="large"
@@ -243,11 +374,17 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               />
             </View>
 
-            {/* Divider với "hoặc đăng ký bằng" */}
+            {/* Divider */}
             <View style={styles.divider}>
-              <View style={[styles.dividerLine, { backgroundColor: '#374151' }]} />
-              <Text style={[styles.dividerText, { color: '#9ca3af' }]}>{t("login.or")}</Text>
-              <View style={[styles.dividerLine, { backgroundColor: '#374151' }]} />
+              <View
+                style={[styles.dividerLine, { backgroundColor: "#374151" }]}
+              />
+              <Text style={[styles.dividerText, { color: "#9ca3af" }]}>
+                {t("login.or")}
+              </Text>
+              <View
+                style={[styles.dividerLine, { backgroundColor: "#374151" }]}
+              />
             </View>
 
             {/* Social Login Buttons */}
@@ -259,7 +396,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               ].map((logo, index) => (
                 <TouchableOpacity
                   key={`social-${index}`}
-                  style={[styles.socialButton, { borderColor: '#2f2f2f', backgroundColor: '#0f0f0f' }]}
+                  style={[
+                    styles.socialButton,
+                    { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
+                  ]}
+                  disabled
                 >
                   <Image
                     source={logo}
@@ -270,13 +411,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               ))}
             </View>
 
-            {/* Link to Login */}
+            {/* Login Link */}
             <View style={styles.loginLink}>
-              <Text style={{ color: '#9ca3af' }}>
+              <Text style={{ color: "#9ca3af" }}>
                 {t("register.alreadyHaveAccount")}{" "}
               </Text>
               <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                <Text style={[styles.loginLinkText, { color: theme.colors.neonGreen }]}>
+                <Text
+                  style={[
+                    styles.loginLinkText,
+                    { color: theme.colors.neonGreen },
+                  ]}
+                >
                   {t("common.buttons.login")}
                 </Text>
               </TouchableOpacity>
@@ -289,6 +435,15 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 100,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginLeft: 20,
+  },
   container: {
     flex: 1,
   },
@@ -296,15 +451,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   logoContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 24,
   },
   logo: {
@@ -312,15 +467,15 @@ const styles = StyleSheet.create({
     height: 80,
   },
   title: {
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   form: {
-    gap: 16,
+    gap: 8,
   },
   formField: {
     marginBottom: 8,
@@ -330,8 +485,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    height: 48,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     borderWidth: 1,
     borderRadius: 16,
@@ -339,27 +495,27 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   input: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     fontSize: 16,
     flex: 1,
   },
   passwordWrapper: {
-    position: 'relative',
+    position: "relative",
   },
   eyeButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 16,
-    top: 16,
+    top: "25%",
   },
   buttonContainer: {
     marginTop: 24,
   },
   fullWidth: {
-    width: '100%',
+    width: "100%",
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 24,
   },
   dividerLine: {
@@ -370,8 +526,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     marginBottom: 24,
   },
@@ -380,22 +536,27 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 16,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   socialIcon: {
     width: 32,
     height: 32,
   },
   loginLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 16,
     marginBottom: 32,
   },
   loginLinkText: {
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  errorText: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 

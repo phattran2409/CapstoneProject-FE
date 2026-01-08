@@ -22,6 +22,29 @@ const vi = {
     },
     email: "Email",
   },
+  validation: {
+    required: "Trường này là bắt buộc",
+    invalid: "Giá trị không hợp lệ",
+    email: {
+      required: "Email là bắt buộc",
+      invalid: "Vui lòng nhập địa chỉ email hợp lệ",
+    },
+    password: {
+      required: "Mật khẩu là bắt buộc",
+      tooShort: "Mật khẩu phải có ít nhất 8 ký tự",
+      mismatch: "Mật khẩu không khớp",
+    },
+    username: {
+      required: "Tên người dùng là bắt buộc",
+      tooShort: "Tên người dùng phải có ít nhất 3 ký tự",
+      tooLong: "Tên người dùng phải ít hơn 30 ký tự",
+      invalid: "Tên người dùng chỉ có thể chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang",
+    },
+    otp: {
+      required: "Mã OTP là bắt buộc",
+      invalid: "Mã OTP phải có 6 chữ số",
+    },
+  },
   newsFeed: {
     title: "Bảng tin",
     view: "Xem tất cả",

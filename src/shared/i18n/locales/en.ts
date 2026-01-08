@@ -22,6 +22,29 @@ const en = {
     },
     email: "Email",
   },
+  validation: {
+    required: "This field is required",
+    invalid: "Invalid value",
+    email: {
+      required: "Email is required",
+      invalid: "Please enter a valid email address",
+    },
+    password: {
+      required: "Password is required",
+      tooShort: "Password must be at least 8 characters",
+      mismatch: "Passwords do not match",
+    },
+    username: {
+      required: "Username is required",
+      tooShort: "Username must be at least 3 characters",
+      tooLong: "Username must be less than 30 characters",
+      invalid: "Username can only contain letters, numbers, underscores, and hyphens",
+    },
+    otp: {
+      required: "OTP code is required",
+      invalid: "OTP code must be 6 digits",
+    },
+  },
   newsFeed: {
     title: "News Feed",
     view: "View All",

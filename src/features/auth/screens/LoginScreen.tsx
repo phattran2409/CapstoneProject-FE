@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Text,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
@@ -9,15 +8,19 @@ import {
   View,
   Image,
   StyleSheet,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTheme } from "@/shared/theme";
 import { useLogin, useGoogleSignIn } from "@/features/auth";
 import { Button } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { loginSchema, type LoginFormData } from "../validation/authSchemas";
 
 type RootStackParamList = {
   Login: undefined;
@@ -38,39 +41,34 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const toast = useToast();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Use React Query login hook
+  // React Hook Form with Zod validation
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // React Query mutations
   const { mutate: login, isPending: loading } = useLogin();
   const { mutate: signInWithGoogle, isPending: googleLoading } = useGoogleSignIn();
-  const handleLogin = () => {
-    if (!email || !password) {
-      // toast.error(
-      //   t("login.errors.emptyFields", "Lỗi"),
-      //   t("login.errors.pleaseEnter", "Vui lòng nhập email và mật khẩu")
-      // );
-      // toast.error("Lỗi", "Vui lòng nhập email và mật khẩu");
-      toast.show({
-        type: "error",
-        text1: "Lỗi",
-        text2: "Vui lòng nhập email và mật khẩu",
-        visibilityTime: 3000,
-        position: "bottom",
-      });
-      return;
-    }
 
+  const onSubmit = (data: LoginFormData) => {
     login(
-      { email, password },
+      { email: data.email, password: data.password },
       {
         onSuccess: () => {
           toast.success(
             t("login.success.title", "Đăng nhập thành công"),
             t("login.success.message", "Chào mừng bạn trở lại!")
           );
-          // Navigation will happen automatically via StackNavigator
           setTimeout(() => {
             navigation.replace("MainTabs");
           }, 100);
@@ -78,8 +76,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         onError: (error: any) => {
           toast.error(
             t("login.errors.failed", "Đăng nhập thất bại"),
-            error.message || t("login.errors.invalidCredentials", "Thông tin đăng nhập không hợp lệ") 
-            
+            error.message ||
+              t("login.errors.invalidCredentials", "Thông tin đăng nhập không hợp lệ")
           );
         },
       }
@@ -93,7 +91,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           t("login.success.title", "Đăng nhập thành công"),
           t("login.success.googleMessage", "Đăng nhập bằng Google thành công!")
         );
-        // Navigation will happen automatically via StackNavigator
         setTimeout(() => {
           navigation.replace("MainTabs");
         }, 100);
@@ -101,21 +98,43 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       onError: (error: any) => {
         toast.error(
           t("login.errors.googleFailed", "Đăng nhập Google thất bại"),
-          error.message || t("login.errors.googleTryAgain", "Không thể đăng nhập bằng Google. Vui lòng thử lại.")
+          error.message ||
+            t(
+              "login.errors.googleTryAgain",
+              "Không thể đăng nhập bằng Google. Vui lòng thử lại."
+            )
         );
       },
     });
   };
 
+  // Helper to get translated error message
+  const getErrorMessage = (message?: string) => {
+    if (!message) return "";
+    return message.startsWith("validation.") ? t(message) : message;
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex1}
       >
-        <View style={[styles.content, { paddingHorizontal: theme.spacing.l, paddingTop: theme.spacing.xl * 2, paddingBottom: theme.spacing.l }]}>
+        <View
+          style={[
+            styles.content,
+            {
+              paddingHorizontal: theme.spacing.l,
+              paddingTop: theme.spacing.xl * 2,
+              paddingBottom: theme.spacing.l,
+            },
+          ]}
+        >
+          {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.logoContainer, { backgroundColor: '#1c2a16' }]}>
+            <View style={[styles.logoContainer, { backgroundColor: "#1c2a16" }]}>
               <View style={styles.logoInner}>
                 <Image
                   source={require("../../../assets/kickify/logo_only.png")}
@@ -128,31 +147,63 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Text style={{ color: theme.colors.softWhite }}>kick</Text>
               <Text style={{ color: theme.colors.textSecondary }}>ify</Text>
             </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary, fontSize: theme.fontSizes.l }]}>
+            <Text
+              style={[
+                styles.subtitle,
+                { color: theme.colors.textSecondary, fontSize: theme.fontSizes.l },
+              ]}
+            >
               {t("login.subtitle", "Đăng nhập để tiếp tục sân chơi của bạn.")}
             </Text>
           </View>
 
+          {/* Email Field */}
           <View style={styles.formSection}>
-            <Text style={[styles.label, { color: theme.colors.softWhite }]}>Email</Text>
-            <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
-              <Ionicons
-                name="mail"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.softWhite }]}
-                placeholder={t("login.emailPlaceholder")}
-                placeholderTextColor={theme.colors.textSecondary}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            <Text style={[styles.label, { color: theme.colors.softWhite }]}>
+              Email
+            </Text>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      borderColor: errors.email ? theme.colors.error : "#3b3b3b",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="mail"
+                    size={20}
+                    color={
+                      errors.email
+                        ? theme.colors.error
+                        : theme.colors.textSecondary
+                    }
+                  />
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.softWhite }]}
+                    placeholder={t("login.emailPlaceholder")}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+              )}
+            />
+            {errors.email && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {getErrorMessage(errors.email.message)}
+              </Text>
+            )}
           </View>
 
+          {/* Password Field */}
           <View style={styles.formSection}>
             <View style={styles.passwordHeader}>
               <Text style={[styles.label, { color: theme.colors.softWhite }]}>
@@ -162,55 +213,88 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 {t("login.forgot", "Quên mật khẩu?")}
               </Text>
             </View>
-            <View style={[styles.inputContainer, { borderColor: '#3b3b3b' }]}>
-              <Ionicons
-                name="lock-closed"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-              <TextInput
-                style={[styles.input, styles.inputFlex, { color: theme.colors.softWhite }]}
-                placeholder={t("login.passwordPlaceholder")}
-                placeholderTextColor={theme.colors.textSecondary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={24}
-                  color={theme.colors.textSecondary}
-                />
-              </Pressable>
-            </View>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      borderColor: errors.password
+                        ? theme.colors.error
+                        : "#3b3b3b",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="lock-closed"
+                    size={20}
+                    color={
+                      errors.password
+                        ? theme.colors.error
+                        : theme.colors.textSecondary
+                    }
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.inputFlex,
+                      { color: theme.colors.softWhite },
+                    ]}
+                    placeholder={t("login.passwordPlaceholder")}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry={!showPassword}
+                  />
+                  <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={24}
+                      color={theme.colors.textSecondary}
+                    />
+                  </Pressable>
+                </View>
+              )}
+            />
+            {errors.password && (
+              <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                {getErrorMessage(errors.password.message)}
+              </Text>
+            )}
           </View>
 
+          {/* Login Button */}
           <Button
             title={t("common.buttons.login")}
-            onPress={handleLogin}
+            onPress={handleSubmit(onSubmit)}
             loading={loading}
             variant="primary"
             size="large"
             style={styles.loginButton}
           />
 
+          {/* Divider */}
           <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: '#2b2b2b' }]} />
-            <Text style={[styles.dividerText, { color: theme.colors.textSecondary }]}>
+            <View style={[styles.dividerLine, { backgroundColor: "#2b2b2b" }]} />
+            <Text
+              style={[styles.dividerText, { color: theme.colors.textSecondary }]}
+            >
               {t("login.or", "hoặc")}
             </Text>
-            <View style={[styles.dividerLine, { backgroundColor: '#2b2b2b' }]} />
+            <View style={[styles.dividerLine, { backgroundColor: "#2b2b2b" }]} />
           </View>
 
+          {/* Social Login Buttons */}
           <View style={styles.socialButtons}>
-            {/* Google Sign-In Button */}
             <TouchableOpacity
               style={[
                 styles.socialButton,
                 {
-                  borderColor: '#2f2f2f',
-                  backgroundColor: '#0f0f0f',
+                  borderColor: "#2f2f2f",
+                  backgroundColor: "#0f0f0f",
                   opacity: googleLoading ? 0.6 : 1,
                 },
               ]}
@@ -224,9 +308,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               />
             </TouchableOpacity>
 
-            {/* Facebook Sign-In Button (Placeholder) */}
             <TouchableOpacity
-              style={[styles.socialButton, { borderColor: '#2f2f2f', backgroundColor: '#0f0f0f' }]}
+              style={[
+                styles.socialButton,
+                { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
+              ]}
               disabled
             >
               <Image
@@ -236,9 +322,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               />
             </TouchableOpacity>
 
-            {/* Apple Sign-In Button (Placeholder) */}
             <TouchableOpacity
-              style={[styles.socialButton, { borderColor: '#2f2f2f', backgroundColor: '#0f0f0f' }]}
+              style={[
+                styles.socialButton,
+                { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
+              ]}
               disabled
             >
               <Image
@@ -249,13 +337,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Link to Register */}
+          {/* Register Link */}
           <View style={styles.registerLink}>
             <Text style={{ color: theme.colors.textSecondary }}>
               {t("login.noAccount", "Chưa có tài khoản?")}{" "}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={[styles.registerLinkText, { color: theme.colors.neonGreen }]}>
+              <Text
+                style={[styles.registerLinkText, { color: theme.colors.neonGreen }]}
+              >
                 {t("login.registerNow", "Đăng ký ngay")}
               </Text>
             </TouchableOpacity>
@@ -277,71 +367,72 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   logoContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 32,
   },
   logoInner: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   logo: {
     width: 80,
     height: 80,
   },
   title: {
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
   },
   subtitle: {
     marginBottom: 40,
-    textAlign: 'center',
-    fontWeight: '600',
+    textAlign: "center",
+    fontWeight: "600",
   },
   formSection: {
     marginTop: 8,
     marginBottom: 12,
   },
   label: {
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 4,
+    minHeight: 48,
   },
   input: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     fontSize: 16,
   },
   inputFlex: {
     flex: 1,
   },
   passwordHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   loginButton: {
     marginTop: 40,
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 32,
   },
   dividerLine: {
@@ -352,8 +443,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
   },
   socialButton: {
@@ -361,21 +452,26 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 16,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   socialIcon: {
     width: 32,
     height: 32,
   },
   registerLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 32,
   },
   registerLinkText: {
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  errorText: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 
