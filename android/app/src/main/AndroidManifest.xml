@@ -27,6 +27,7 @@
         <data android:scheme="kickify"/>
         <data android:scheme="com.kickyfi.app"/>
         <data android:scheme="exp+kickify"/>
+        <data android:scheme="com.kickify.app"/>
       </intent-filter>
     </activity>
   </application>

@@ -151,7 +151,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         {/* Ongoing Matches Section */}
         <MatchList
           matches={ongoingMatches}
-          title={t("home.ongoingMatches", "Trận đấu đang diễn ra")}
+          title={t("home.RecommendMatches")}
           variant="horizontal"
           itemVariant="card"
           onMatchPress={handleMatchPress}

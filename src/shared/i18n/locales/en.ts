@@ -35,7 +35,7 @@ const en = {
     welcomeTitle: "Welcome to your app!",
     welcomeBody:
       "This is a sample home screen with a neon-themed card component.",
-    ongoingMatches: "Ongoing Matches",
+    RecommendMatches: "Recommend Matches",
     recentMatches: "Recent Matches",
     createNewRoom: "Create New Room",
     matchStatus: {

@@ -22,7 +22,7 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.kickyfi.app",
+      "package": "com.kickify.app",
       "googleServicesFile": "./google-services.json"
     },
     "scheme": "kickify",

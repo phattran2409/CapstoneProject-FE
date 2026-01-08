@@ -35,7 +35,7 @@ const vi = {
     welcomeTitle: "Chào mừng đến với ứng dụng!",
     welcomeBody:
       "Đây là ví dụ màn hình chính với component thẻ mang phong cách neon.",
-    ongoingMatches: "Các trận đang diễn ra",
+    RecommendMatches: "Trận đấu gợi ý",
     recentMatches: "Các trận gần đây",
     createNewRoom: "Tạo phòng đấu mới",
     matchStatus: {

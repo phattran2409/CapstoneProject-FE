@@ -78,7 +78,7 @@ export const roomsApi = {
    * Join a room (create booking)
    */
   joinRoom: async (request: JoinRoomRequest): Promise<any> => {
-    const data = await apiClient.post('/bookings', request);
+    const data = await apiClient.post('/teams', request);
     return data;
   },
 

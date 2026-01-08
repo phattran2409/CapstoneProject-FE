@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Animated, Dimensions, Modal } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Animated, Dimensions, Modal, PanResponder } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,8 +10,9 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85;
+const BUTTON_SIZE = 60;
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -27,11 +28,11 @@ export const ActiveRoomBanner: React.FC = () => {
   // Animation for floating button
   const buttonScale = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const buttonTranslateY = useRef(new Animated.Value(0)).current;
   
-  // Animation for slide panel
-  const panelTranslateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
-  const panelOpacity = useRef(new Animated.Value(0)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  // Track button position
+  const buttonYOffset = useRef(0);
+  const initialButtonBottom = 100; // Default bottom position
 
   // Fetch room data if roomId exists
   const { data: room, isLoading } = useRoomDetail(roomId || '', {
@@ -45,24 +46,9 @@ export const ActiveRoomBanner: React.FC = () => {
   // Show button if user is authenticated, has roomId, and room is active
   const shouldShow = isAuthenticated && roomId && (!room || (room.status !== 'completed' && room.status !== 'cancelled'));
 
-  // Debug log
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('ActiveRoomBanner Debug:', {
-        roomId,
-        userId: user?.id,
-        hostId: room?.hostId,
-        isHost,
-        roomStatus: room?.status,
-        shouldShow,
-        isLoading,
-      });
-    }
-  }, [roomId, user?.id, room?.hostId, isHost, room?.status, shouldShow, isLoading]);
 
-  // Show/hide floating button (only if authenticated)
+  // Show/hide floating button
   useEffect(() => {
-    // Show button if user is authenticated and has roomId
     if (isAuthenticated && roomId) {
       setIsButtonVisible(true);
       Animated.parallel([
@@ -137,55 +123,99 @@ export const ActiveRoomBanner: React.FC = () => {
     return unsubscribe;
   }, [navigation, roomId, shouldShow, buttonScale, buttonOpacity]);
 
-  // Handle panel open/close
+  // Track if dragging to prevent tap
+  const isDragging = useRef(false);
+  const dragStartY = useRef(0);
+  
+  // PanResponder for dragging button
+  // Giải thích:
+  // - Button có position bottom-based: bottom = initialButtonBottom + insets.bottom
+  // - translateY > 0: di chuyển button LÊN TRÊN (giảm khoảng cách từ đáy)
+  // - translateY < 0: di chuyển button XUỐNG DƯỚI (tăng khoảng cách từ đáy)
+  // - Cần tính toán bounds để button không vượt quá top và bottom của màn hình
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Chỉ respond khi có di chuyển vertical đáng kể (>10px)
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderGrant: (evt) => {
+        // Khi bắt đầu drag: lưu vị trí ban đầu và set offset
+        isDragging.current = false;
+        dragStartY.current = evt.nativeEvent.pageY;
+        buttonTranslateY.setOffset(buttonYOffset.current);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (Math.abs(gestureState.dy) > 10) {
+          isDragging.current = true;
+        }
+        
+        // Tính toán vị trí tổng (current offset + gesture movement)
+        const currentOffset = buttonYOffset.current;
+        const totalOffset = currentOffset + gestureState.dy;
+        
+        // Tính toán bounds:
+        // Button vị trí ban đầu: bottom = initialButtonBottom + insets.bottom
+        // translateY = khoảng cách di chuyển từ vị trí ban đầu
+        // translateY > 0: button di chuyển LÊN (bottom giảm)
+        // translateY < 0: button di chuyển XUỐNG (bottom tăng)
+        //
+        // - maxY (di chuyển LÊN tối đa - translateY dương):
+        //   Vị trí cao nhất: bottom = insets.top + BUTTON_SIZE
+        //   maxY = (initialButtonBottom + insets.bottom) - (insets.top + BUTTON_SIZE)
+        const maxY = initialButtonBottom + insets.bottom - insets.top - BUTTON_SIZE;
+        
+        // - minY (di chuyển XUỐNG tối đa - translateY âm):
+        //   Button không được kéo ra khỏi màn hình dưới
+        //   Vị trí thấp nhất: bottom >= insets.bottom (sát đáy, không ra ngoài)
+        //   Cho phép kéo xuống một chút nhưng không quá nhiều
+        const minY = -initialButtonBottom;
+        
+        // Clamp tổng offset trong phạm vi cho phép
+        const clampedTotalOffset = Math.max(minY, Math.min(maxY, totalOffset));
+        
+        // Set giá trị relative (clamped - current) vì offset đã được set trong Grant
+        buttonTranslateY.setValue(clampedTotalOffset - currentOffset);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // Khi thả tay: tính toán vị trí cuối cùng và lưu lại
+        const currentOffset = buttonYOffset.current;
+        const newOffset = currentOffset + gestureState.dy;
+        
+        // Tính lại bounds giống như trong onMove
+        const maxY = initialButtonBottom + insets.bottom - insets.top - BUTTON_SIZE;
+        const minY = -initialButtonBottom;
+        
+        // Clamp vị trí cuối cùng trong phạm vi cho phép
+        const clampedOffset = Math.max(minY, Math.min(maxY, newOffset));
+        
+        // Lưu vị trí mới và flatten offset
+        buttonYOffset.current = clampedOffset;
+        buttonTranslateY.flattenOffset();
+        buttonTranslateY.setValue(clampedOffset);
+        
+        // Reset dragging flag sau một khoảng thời gian ngắn
+        setTimeout(() => {
+          isDragging.current = false;
+        }, 100);
+      },
+    })
+  ).current;
+
+  // Mở panel - không có animation
   const openPanel = () => {
     setShowPanel(true);
-    Animated.parallel([
-      Animated.spring(panelTranslateX, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 8,
-      }),
-      Animated.timing(panelOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
+  // Đóng panel - không có animation
   const closePanel = () => {
-    Animated.parallel([
-      Animated.spring(panelTranslateX, {
-        toValue: PANEL_WIDTH,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 8,
-      }),
-      Animated.timing(panelOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => setShowPanel(false));
+    setShowPanel(false);
   };
 
   const handleButtonPress = () => {
-    if (showPanel) {
-      closePanel();
-    } else {
-      openPanel();
+    if (!isDragging.current) {
+      showPanel ? closePanel() : openPanel();
     }
   };
 
@@ -211,81 +241,79 @@ export const ActiveRoomBanner: React.FC = () => {
     });
   };
 
-  // Only show if user is authenticated
+  // Auto-close modal khi roomId bị clear hoặc user logout
+  useEffect(() => {
+    if ((!roomId || !isAuthenticated) && showPanel) {
+      closePanel();
+    }
+  }, [roomId, isAuthenticated]);
+
+  // Render conditions
+  const shouldRenderButton = isAuthenticated && isButtonVisible && roomId && (!room || (room.status !== 'completed' && room.status !== 'cancelled'));
+  const shouldRenderModal = showPanel && roomId && isAuthenticated;
+
   if (!isAuthenticated) {
-    return null;
-  }
-  
-  // Show button if roomId exists (even while loading)
-  if (!isButtonVisible || !roomId) {
-    return null;
-  }
-  
-  // Hide if room is completed/cancelled (only after data loads)
-  if (room && (room.status === 'completed' || room.status === 'cancelled')) {
     return null;
   }
 
   return (
     <>
-      {/* Floating Button */}
-      <Animated.View
-        style={[
-          styles.floatingButton,
-          {
-            bottom: 100 + insets.bottom, // Above tab bar
-            right: 20,
-            opacity: buttonOpacity,
-            transform: [{ scale: buttonScale }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: theme.colors.neonGreen }]}
-          onPress={handleButtonPress}
-          activeOpacity={0.8}
+      {/* Floating Button - Only render if conditions are met */}
+      {shouldRenderButton && (
+        <Animated.View
+          style={[
+            styles.floatingButton,
+            {
+              bottom: initialButtonBottom + insets.bottom, // Above tab bar
+              right: 20,
+              opacity: buttonOpacity,
+              transform: [
+                { scale: buttonScale },
+                { translateY: buttonTranslateY },
+              ],
+            },
+          ]}
+          {...panResponder.panHandlers}
         >
-          <Ionicons name="football" size={24} color="#000" />
-          {room && room.currentPlayers > 0 && (
-            <View style={[styles.badge, { backgroundColor: '#FF4444' }]}>
-              <Text style={styles.badgeText}>{room.currentPlayers}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </Animated.View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleButtonPress}
+            activeOpacity={0.9}
+          >
+            <Ionicons name="football" size={24} color="#000" />
+            {room && room.currentPlayers > 0 && (
+              <View style={[styles.badge, { backgroundColor: '#FF4444' }]}>
+                <Text style={styles.badgeText}>{room.currentPlayers}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
-      {/* Slide Panel Modal */}
-      <Modal
-        visible={showPanel}
-        transparent
-        animationType="none"
-        onRequestClose={closePanel}
-      >
+      {/* Slide Panel Modal - Render independently of button visibility */}
+      {shouldRenderModal && (
+        <Modal
+          visible={showPanel}
+          transparent
+          animationType="none"
+          onRequestClose={closePanel}
+        >
         <View style={styles.modalContainer}>
           {/* Backdrop */}
-          <Animated.View
-            style={[
-              styles.backdrop,
-              {
-                opacity: backdropOpacity,
-              },
-            ]}
-          >
+          <View style={styles.backdrop}>
             <TouchableOpacity
               style={StyleSheet.absoluteFill}
               activeOpacity={1}
               onPress={closePanel}
             />
-          </Animated.View>
+          </View>
 
           {/* Slide Panel */}
-          <Animated.View
+          <View
             style={[
               styles.panel,
               {
                 backgroundColor: theme.colors.surface,
-                transform: [{ translateX: panelTranslateX }],
-                opacity: panelOpacity,
                 right: 0,
                 top: insets.top,
                 bottom: insets.bottom + 100, // Above tab bar
@@ -369,9 +397,10 @@ export const ActiveRoomBanner: React.FC = () => {
                 </TouchableOpacity>
               </View>
             </View>
-          </Animated.View>
+          </View>
         </View>
       </Modal>
+      )}
     </>
   );
 };
@@ -388,6 +417,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#66FF66',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

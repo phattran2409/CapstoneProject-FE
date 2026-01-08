@@ -7,18 +7,18 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:600662709460:android:b9a463f8fa185be1ac5741",
+        "mobilesdk_app_id": "1:600662709460:android:fc67847442f91bb7ac5741",
         "android_client_info": {
-          "package_name": "com.kickyfi.app"
+          "package_name": "com.kickify.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "600662709460-5v9aqgva0p671hs7062c32mg8hu8hteo.apps.googleusercontent.com",
+          "client_id": "600662709460-2u7v746k4l5jvj4g8ehcclbsj5itqf1i.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.kickyfi.app",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "package_name": "com.kickify.app",
+            "certificate_hash": "6d4541b67fc933af634ae89ffb6771bd6223ae53"
           }
         },
         {

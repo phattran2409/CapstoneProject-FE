@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as Localization from 'expo-localization';
-import { ThemeMode } from '../theme/types';
-import { SupportedLanguage } from '../i18n';
+import { ThemeMode } from '../shared/theme';
+import { SupportedLanguage } from '../shared/i18n';
 
 const getInitialLanguage = (): SupportedLanguage => {
   const locale = Localization.locale ?? 'en';
