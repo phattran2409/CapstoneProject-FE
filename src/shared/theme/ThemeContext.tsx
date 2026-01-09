@@ -36,11 +36,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const savedTheme = await getData(THEME_STORAGE_KEY);
       if (savedTheme) {
         setThemeMode(savedTheme as ThemeMode);
-      } else if (systemColorScheme) {
-        setThemeMode(systemColorScheme as ThemeMode);
+      } else {
+        // Default to dark theme for new installations
+        setThemeMode('dark');
       }
     } catch (error) {
       console.error('Error loading theme preference:', error);
+      // Default to dark theme on error
+      setThemeMode('dark');
     } finally {
       setIsLoading(false);
     }

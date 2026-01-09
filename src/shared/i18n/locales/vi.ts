@@ -79,6 +79,14 @@ const vi = {
     matches: "THÔNG BÁO TRẬN ĐẤU",
     leaderboard: "Bảng xếp hạng ELO",
   },
+  friends: {
+    title: "Bạn bè",
+    searchPlaceholder: "Tìm kiếm bạn bè...",
+    noResults: "Không tìm thấy bạn bè",
+    tryDifferentSearch: "Thử tìm kiếm với từ khóa khác",
+    inviteFriends: "Mời bạn bè tham gia cùng bạn!",
+    empty: "Chưa có bạn bè",
+  },
   home: {
     title: "Sân Cỏ",
     welcomeTitle: "Chào mừng đến với ứng dụng!",

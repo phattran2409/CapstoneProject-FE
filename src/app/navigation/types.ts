@@ -20,6 +20,7 @@ export type RootStackParamList = {
   PersonalPage: undefined;
   ProfileDetail: undefined;
   ChatList: undefined;
+  Friends: undefined;
   Chat: { chatId: string; chatName: string };
   Profile: undefined;
 };
@@ -27,6 +28,7 @@ export type RootStackParamList = {
 export type TabParamList = {
   Home: undefined;
   Matches: undefined;
+  Friends: undefined;
   Create: undefined;
   Profile: undefined;
 };

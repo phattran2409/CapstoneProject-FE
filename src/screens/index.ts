@@ -20,6 +20,9 @@ export { default as MatchesScreen } from '../features/rooms/screens/MatchesScree
 // Venues Feature Screens
 export { default as VenueSelectionScreen } from '../features/venues/screens/VenueSelectionScreen';
 
+// Friends Feature Screens
+export { default as FriendsScreen } from '../features/friends/screens/FriendsScreen';
+
 // Chat Feature Screens
 export { default as ChatListScreen } from '../features/chat/screens/ChatListScreen';
 export { default as ChatScreen } from '../features/chat/screens/ChatScreen';

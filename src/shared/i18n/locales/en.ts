@@ -79,6 +79,14 @@ const en = {
     matches: "MATCH ANNOUNCEMENT",
     leaderboard: "ELO Leaderboard",
   },
+  friends: {
+    title: "Friends",
+    searchPlaceholder: "Search friends...",
+    noResults: "No friends found",
+    tryDifferentSearch: "Try searching with a different keyword",
+    inviteFriends: "Invite friends to join you!",
+    empty: "No friends found",
+  },
   home: {
     title: "Football Field",
     welcomeTitle: "Welcome to your app!",

@@ -140,7 +140,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
             <View style={{ paddingHorizontal: 24, paddingTop: 48 }}>
               <TouchableOpacity
                 onPress={() => setLanguage(language === "vi" ? "en" : "vi")}
-                style={[styles.languageButton, { backgroundColor: '#1f2937', borderRadius: 40, width: 100 }]}
+                style={[styles.languageButton, { backgroundColor: '#1f2937', borderRadius: 40, width: 110 }]}
               >
                 <Text style={{ flex: 1, color: theme.colors.softWhite }}>
                   {language === "vi" ? "Tiếng Việt" : "English "}

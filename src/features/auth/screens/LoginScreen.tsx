@@ -21,6 +21,8 @@ import { Button } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { loginSchema, type LoginFormData } from "../validation/authSchemas";
+import { ScrollView } from "react-native";
+
 
 type RootStackParamList = {
   Login: undefined;
@@ -114,20 +116,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex1}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: theme.spacing.l, paddingTop: theme.spacing.xl * 2, paddingBottom: theme.spacing.l }}
       >
-        <View
-          style={[
-            styles.content,
-            {
-              paddingHorizontal: theme.spacing.l,
-              paddingTop: theme.spacing.xl * 2,
-              paddingBottom: theme.spacing.l,
-            },
-          ]}
-        >
           {/* Header */}
           <View style={styles.header}>
             <View style={[styles.logoContainer, { backgroundColor: "#1c2a16" }]}>
@@ -346,8 +338,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+      </ScrollView>
     </SafeAreaView>
   );
 };

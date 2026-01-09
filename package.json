@@ -13,7 +13,8 @@
     "kill:3000": "node scripts/kill-port.js 3000",
     "reset:metro": "node scripts/kill-port.js 8081 && npx expo start --clear",
     "fix:metro": "node scripts/fix-metro.js",
-    "fix:node": "node scripts/fix-node-modules.js"
+    "fix:node": "node scripts/fix-node-modules.js",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
@@ -65,6 +66,8 @@
     "@types/react": "~18.3.12",
     "@types/react-native": "^0.73.0",
     "babel-plugin-module-resolver": "^5.0.2",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "typescript": "~5.3.3"
   },
   "private": true,
