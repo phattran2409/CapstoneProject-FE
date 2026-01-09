@@ -5,7 +5,7 @@ import { useTheme } from '../../shared/theme';
 import { TabParamList } from './types';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { HomeScreen, MatchesScreen, ProfileScreen } from '@/screens';
+import { HomeScreen, MatchesScreen, ProfileScreen, FriendsScreen } from '@/screens';
 import { CustomTabBar } from './CustomTabBar';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -43,6 +43,20 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name={focused ? 'calendar' : 'calendar-outline'} 
+              size={size} 
+              color={color} 
+            />
+          ),
+        }}
+      />
+        <Tab.Screen 
+        name="Friends" 
+        component={FriendsScreen}
+        options={{
+          tabBarLabel: t('friends.title'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons 
+              name={focused ? 'people' : 'people-outline'} 
               size={size} 
               color={color} 
             />

@@ -57,12 +57,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleChatListPress = () => {
-    const parent = navigation.getParent();
-    if (parent) {
-      parent.navigate('ChatList');
-    }
-  };
+
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -88,22 +83,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             }}
           >
             {t('profile.title')}
-          </Text>
-          <TouchableOpacity
-            onPress={handleChatListPress}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: theme.colors.surface,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Ionicons name="chatbubbles-outline" size={23} color={theme.colors.neonGreen} />
-          </TouchableOpacity>
-        </View>
-        
+          </Text>     
+        </View>      
         {/* Compact Profile Section - rectangular card leading to personal page */}
         <TouchableOpacity
           onPress={handleAvatarPress}

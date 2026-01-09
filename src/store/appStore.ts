@@ -18,8 +18,8 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  theme: 'light',
-  language: getInitialLanguage(),
+  theme: 'dark', // Default to dark theme for new installations
+  language: 'vi', // Default to Vietnamese for new installations
   loading: false,
 
   // Set theme

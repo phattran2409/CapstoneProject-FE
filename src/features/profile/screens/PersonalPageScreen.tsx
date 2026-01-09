@@ -7,7 +7,7 @@ import { useTheme } from '@/shared/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ProfileHeader, AnalysisTab, PostCard, Post, FriendsList, Friend, EditProfileForm } from '../components';
+import { ProfileHeader, AnalysisTab, PostCard, Post, EditProfileForm } from '../components';
 import { ThemedText } from '@/shared/components/themed';
 import { UpdateProfileData } from '../types/profile.types';
 
@@ -17,7 +17,7 @@ interface PersonalPageScreenProps {
   navigation: PersonalPageScreenNavigationProp;
 }
 
-type TabType = 'posts' | 'history' | 'friends' | 'analysis';
+type TabType = 'posts' | 'history'  | 'analysis';
 
 const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -41,65 +41,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
     RoleFactor: 65,
   };
 
-  // Mock friends data
-  const [friends] = useState<Friend[]>([
-    {
-      id: '1',
-      name: 'Nguyễn Văn A',
-      username: 'nguyenvana',
-      elo: 2650,
-      position: 'ST',
-      isOnline: true,
-      mutualFriends: 5,
-    },
-    {
-      id: '2',
-      name: 'Trần Minh B',
-      username: 'tranminhb',
-      elo: 2400,
-      position: 'CM',
-      isOnline: true,
-      mutualFriends: 12,
-    },
-    {
-      id: '3',
-      name: 'Lê Hoàng C',
-      username: 'lehoangc',
-      elo: 2200,
-      position: 'CB',
-      isOnline: false,
-      lastActive: '2 giờ trước',
-      mutualFriends: 3,
-    },
-    {
-      id: '4',
-      name: 'Phạm Đức D',
-      username: 'phamducd',
-      elo: 3100,
-      position: 'GK',
-      isOnline: true,
-      mutualFriends: 8,
-    },
-    {
-      id: '5',
-      name: 'Hoàng Quốc E',
-      username: 'hoangquoce',
-      elo: 1950,
-      position: 'LW',
-      isOnline: false,
-      lastActive: '1 ngày trước',
-    },
-    {
-      id: '6',
-      name: 'Vũ Thành F',
-      username: 'vuthanhf',
-      elo: 2750,
-      position: 'CAM',
-      isOnline: true,
-      mutualFriends: 15,
-    },
-  ]);
-
   const handleEditProfile = () => {
     setShowEditForm(true);
   };
@@ -116,21 +57,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const handleFriendPress = (friend: Friend) => {
-    // TODO: Navigate to friend's profile
-    console.log('Friend pressed:', friend.name);
-  };
-
-  const handleMessagePress = (friend: Friend) => {
-    // TODO: Navigate to chat with friend
-    console.log('Message:', friend.name);
-  };
-
-  const handleInvitePress = (friend: Friend) => {
-    // TODO: Invite friend to match
-    console.log('Invite to match:', friend.name);
   };
 
   const [posts, setPosts] = useState<Post[]>([
@@ -207,8 +133,8 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing.xl }}>
-        {/* Profile Section */}
+      {/* Profile Section - Always visible */}
+      <View style={{ backgroundColor: theme.colors.background }}>
         <ProfileHeader
           name={user?.name || 'Mai Anh Tuấn'}
           elo={2450}       
@@ -230,7 +156,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
             borderBottomColor: theme.colors.border,
           }}
         >
-          {(['posts', 'analysis','friends', 'history', ] as TabType[]).map((tab) => (
+          {(['posts', 'analysis', 'history', ] as TabType[]).map((tab) => (
             <TouchableOpacity
               key={tab}
               onPress={() => setActiveTab(tab)}
@@ -254,44 +180,39 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
             </TouchableOpacity>
           ))}
         </View>
+      </View>
 
-        {/* Posts Content */}
-        {activeTab === 'posts' && (
-          <View>
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} onLike={handleLike} />
-            ))}
-          </View>
-        )}
+      {/* Tab Content */}
+     (
+        <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing.xl }}>
+          {/* Posts Content */}
+          {activeTab === 'posts' && (
+            <View>
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} onLike={handleLike} />
+              ))}
+            </View>
+          )}
 
-        {activeTab === 'history' && (
-          <View style={{ paddingHorizontal: theme.spacing.m, paddingTop: theme.spacing.l }}>
-            <Text
-              style={{
-                fontSize: theme.fontSizes.m,
-                color: theme.colors.textSecondary,
-                textAlign: 'center',
-              }}
-            >
-              {t('personalPage.comingSoon')}
-            </Text>
-          </View>
-        )}
+          {activeTab === 'history' && (
+            <View style={{ paddingHorizontal: theme.spacing.m, paddingTop: theme.spacing.l }}>
+              <Text
+                style={{
+                  fontSize: theme.fontSizes.m,
+                  color: theme.colors.textSecondary,
+                  textAlign: 'center',
+                }}
+              >
+                {t('personalPage.comingSoon')}
+              </Text>
+            </View>
+          )}
 
-        {activeTab === 'analysis' && (
-          <AnalysisTab stats={stats} radarData={radarData} />
-        )}
-
-        {activeTab === 'friends' && (
-          <FriendsList
-            friends={friends}
-            onFriendPress={handleFriendPress}
-            onMessagePress={handleMessagePress}
-            onInvitePress={handleInvitePress}
-          />
-        )}
-      </ScrollView>
-
+          {activeTab === 'analysis' && (
+            <AnalysisTab stats={stats} radarData={radarData} />
+          )}
+        </ScrollView>
+      ) 
       {/* Edit Profile Form Modal */}
       <EditProfileForm
         visible={showEditForm}
