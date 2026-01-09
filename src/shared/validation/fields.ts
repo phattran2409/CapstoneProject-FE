@@ -56,14 +56,18 @@ export const emailField = z
 
 /**
  * Password field schema
- * Basic validation - complex rules (special chars, numbers) should be on backend
+ * Yêu cầu: tối thiểu 8 ký tự, bao gồm cả chữ và số
  */
 export const passwordField = z
   .string({
     required_error: "validation.password.required",
   })
   .min(1, "validation.password.required")
-  .min(8, "validation.password.tooShort");
+  .min(8, "validation.password.tooShort")
+  .regex(
+    /^(?=.*[a-zA-Z])(?=.*\d)/,
+    "validation.password.alphanumeric"
+  );
 
 /**
  * Username/Display name field schema

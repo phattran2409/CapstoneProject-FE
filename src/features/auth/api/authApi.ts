@@ -12,6 +12,7 @@ import type {
   RefreshTokenResponse,
   User,
 } from '../types/auth.types';
+import { API_CONFIG } from '@/shared/constants/api';
 
 /**
  * Auth API functions
@@ -22,7 +23,7 @@ export const authApi = {
    * Login with email and password
    */
   login: async (request: LoginRequest): Promise<LoginResponse> => {
-    const data = await apiClient.post('/auth/login', { email: request.email, password: request.password });
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, { email: request.email, password: request.password });
     return data;
   },
 
@@ -30,7 +31,7 @@ export const authApi = {
    * Register new user
    */
   register: async (request: RegisterRequest): Promise<RegisterResponse> => {
-    const data = await apiClient.post('/auth/register', request);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.REGISTER, request);
     return data;
   },
 
@@ -85,13 +86,8 @@ export const authApi = {
    * Login/Register with Google
    * Backend will verify the ID token and create/login user
    */
-  googleLogin: async (request: { idToken: string; email: string; name: string; picture?: string }): Promise<LoginResponse> => {
-    const data = await apiClient.post('/auth/google', {
-      idToken: request.idToken,
-      email: request.email,
-      name: request.name,
-      picture: request.picture,
-    });
+  googleLogin: async (request: { uid: string }): Promise<LoginResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN, { uid: request.uid });
     return data;
   },
 };

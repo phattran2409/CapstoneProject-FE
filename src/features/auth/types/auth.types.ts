@@ -1,14 +1,18 @@
 // ==================== User Types ====================
 export interface User {
-  id: string;
-  name: string;
+  userId: string;
+  fullName: string;
   email: string;
-  phone?: string;
+  role?: string;
   avatar?: string;
   position?: string;
   rating?: number;
   totalMatches?: number;
   createdAt?: string;
+  isEmailVerified?: boolean;
+  isActive?: boolean;
+  accessToken?: string;
+  refreshToken?: string;
 }
 
 // ==================== Auth Request/Response Types ====================
@@ -18,16 +22,17 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  success: boolean;
-  token: string;
-  user: User;
-  message?: string;
+  // success: boolean;
+  // token: string;
+  // user: User;
+  // message?: string;
+  isSuccess: boolean;
+  data?: User;
 }
 
 export interface RegisterRequest {
-  name: string;
+  fullName: string;
   email: string;
-  phone?: string;
   password: string;
 }
 

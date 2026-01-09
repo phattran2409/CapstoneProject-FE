@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: "http://10.0.2.2:3000/api", // JSON Server URL
+  BASE_URL: "https://api.kickify.site/api", // JSON Server URL
   // For Android Emulator: 'http://10.0.2.2:3000/api'
   // For iOS Simulator: 'http://localhost:3000/api'
   // For Real Device: 'http://YOUR_IP:3000/api'
@@ -10,8 +10,9 @@ export const API_CONFIG = {
   // API Endpoints
   ENDPOINTS: {
     AUTH: {
-      LOGIN: "/auth/login",
-      REGISTER: "/auth/register",
+      LOGIN: "/auth/email/login",
+      GOOGLE_LOGIN: "/auth/firebase/login",
+      REGISTER: "/auth/register-player",
       LOGOUT: "/auth/logout",
       REFRESH_TOKEN: "/auth/refresh",
       SEND_OTP: "/auth/send-otp",

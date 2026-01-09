@@ -15,6 +15,7 @@ export const ValidationErrors = {
   passwordRequired: "validation.password.required",
   passwordTooShort: "validation.password.tooShort",
   passwordMismatch: "validation.password.mismatch",
+  passwordAlphanumeric: "validation.password.alphanumeric",
   
   // Username
   usernameRequired: "validation.username.required",

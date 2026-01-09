@@ -33,6 +33,7 @@ const vi = {
       required: "Mật khẩu là bắt buộc",
       tooShort: "Mật khẩu phải có ít nhất 8 ký tự",
       mismatch: "Mật khẩu không khớp",
+      alphanumeric: "Mật khẩu phải bao gồm cả chữ và số",
     },
     username: {
       required: "Tên người dùng là bắt buộc",
@@ -43,6 +44,31 @@ const vi = {
     otp: {
       required: "Mã OTP là bắt buộc",
       invalid: "Mã OTP phải có 6 chữ số",
+    },
+    profile: {
+      name: {
+        required: "Họ tên là bắt buộc",
+        tooShort: "Họ tên phải có ít nhất 2 ký tự",
+        tooLong: "Họ tên không được quá 50 ký tự",
+      },
+      bio: {
+        tooLong: "Giới thiệu không được quá 200 ký tự",
+      },
+      phone: {
+        invalid: "Số điện thoại không hợp lệ",
+      },
+      gender: {
+        invalid: "Giới tính không hợp lệ",
+      },
+      position: {
+        invalid: "Vị trí không hợp lệ",
+      },
+      preferredFoot: {
+        invalid: "Chân thuận không hợp lệ",
+      },
+      shirtNumber: {
+        invalid: "Số áo phải từ 1 đến 99",
+      },
     },
   },
   newsFeed: {

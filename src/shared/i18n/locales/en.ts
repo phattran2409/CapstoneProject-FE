@@ -33,6 +33,7 @@ const en = {
       required: "Password is required",
       tooShort: "Password must be at least 8 characters",
       mismatch: "Passwords do not match",
+      alphanumeric: "Password must contain both letters and numbers",
     },
     username: {
       required: "Username is required",
@@ -43,6 +44,31 @@ const en = {
     otp: {
       required: "OTP code is required",
       invalid: "OTP code must be 6 digits",
+    },
+    profile: {
+      name: {
+        required: "Name is required",
+        tooShort: "Name must be at least 2 characters",
+        tooLong: "Name cannot exceed 50 characters",
+      },
+      bio: {
+        tooLong: "Bio cannot exceed 200 characters",
+      },
+      phone: {
+        invalid: "Invalid phone number",
+      },
+      gender: {
+        invalid: "Invalid gender",
+      },
+      position: {
+        invalid: "Invalid position",
+      },
+      preferredFoot: {
+        invalid: "Invalid preferred foot",
+      },
+      shirtNumber: {
+        invalid: "Shirt number must be between 1 and 99",
+      },
     },
   },
   newsFeed: {

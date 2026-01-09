@@ -71,7 +71,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     // Transform to API request format (name instead of username)
     register(
       {
-        name: data.username,
+        fullName: data.username,
         email: data.email,
         password: data.password,
       },
@@ -81,9 +81,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             t("register.success.title", "Đăng ký thành công"),
             t("register.success.message", "Tài khoản đã được tạo!")
           );
-          setTimeout(() => {
-            navigation.replace("MainTabs" as any);
-          }, 100);
+          // Navigation tự động xảy ra khi isAuthenticated thay đổi
         },
         onError: (error: any) => {
           toast.error(
@@ -115,6 +113,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
           style={styles.backButton}
         >
           <ThemedIcon name="arrow-back" size={24} variant="secondary" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("OTPVerification", { email: 'test@gmail.com', username: 'phat tran', password: '12356789' })}
+          style={styles.backButton}
+        >
+          <Text style={{ color: '#9ca3af' }}>{t('otp.changeEmail')}</Text>
         </TouchableOpacity>
 
         <ScrollView

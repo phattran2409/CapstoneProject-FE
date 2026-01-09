@@ -27,11 +27,11 @@ export const useLogin = () => {
     
     onSuccess: (response) => {
       // Set token for API calls
-      setAuthToken(response.token);
-      
+      setAuthToken(response.data?.accessToken || null);
+
       // Update auth store
-      setUser(response.user);
-      setToken(response.token);
+      setUser(response.data || null);
+      setToken(response.data?.accessToken || null);
     },
     
     onError: (error) => {

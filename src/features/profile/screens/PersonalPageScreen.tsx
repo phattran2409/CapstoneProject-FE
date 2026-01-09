@@ -299,7 +299,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
         onSave={handleSaveProfile}
         isLoading={isUpdating}
         initialData={{
-          name: user?.name || 'Mai Anh Tuấn',
+          name: user?.fullName || 'Mai Anh Tuấn',
           bio: 'King of the Pitch',
           position: 'CAM',
           shirtNumber: 10,

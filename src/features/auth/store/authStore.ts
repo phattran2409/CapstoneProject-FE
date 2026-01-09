@@ -1,11 +1,12 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { User } from '../types/auth.types';
 
 /**
  * Auth Store
- * Manages authentication state
- * Note: This is client-side state only
- * Server state (user profile) is managed by React Query
+ * Manages authentication state with persistence
+ * User session survives app restarts
  */
 interface AuthState {
   // State
@@ -25,16 +26,30 @@ const initialState = {
   isAuthenticated: false,
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  ...initialState,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  setUser: (user) => set({ 
-    user, 
-    isAuthenticated: !!user 
-  }),
+      setUser: (user) => set({ 
+        user, 
+        isAuthenticated: !!user 
+      }),
 
-  setToken: (token) => set({ token }),
+      setToken: (token) => set({ token }),
 
-  reset: () => set(initialState),
-}));
+      reset: () => set(initialState),
+    }),
+    {
+      name: 'auth-storage', // Key trong AsyncStorage
+      storage: createJSONStorage(() => AsyncStorage),
+      // Chỉ persist những field cần thiết
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);
 

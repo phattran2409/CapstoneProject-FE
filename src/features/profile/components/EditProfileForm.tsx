@@ -1,25 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   Modal,
   Dimensions,
-} from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { UpdateProfileData } from '../types/profile.types';
-import DateTimePicker from '@react-native-community/datetimepicker';
+} from "react-native";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { ThemedText } from "@/shared/components/themed";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { UpdateProfileData } from "../types/profile.types";
+import { ProfileFormField } from "./ProfileFormField";
+import { ProfileSelectionField } from "./ProfileSelectionField";
+import {
+  editProfileSchema,
+  type EditProfileFormData,
+  POSITIONS,
+  GENDERS,
+  PREFERRED_FOOT_OPTIONS,
+} from "../validation/profileSchemas";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface EditProfileFormProps {
   visible: boolean;
@@ -29,164 +41,6 @@ interface EditProfileFormProps {
   isLoading?: boolean;
 }
 
-interface FormFieldProps {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  multiline?: boolean;
-  maxLength?: number;
-  keyboardType?: 'default' | 'phone-pad' | 'email-address';
-  error?: string;
-}
-
-const POSITIONS = [
-  { id: 'GK' },
-  { id: 'CB' },
-  { id: 'LB' },
-  { id: 'RB' },
-  { id: 'CDM' },
-  { id: 'CM' },
-  { id: 'CAM' },
-  { id: 'LW' },
-  { id: 'RW' },
-  { id: 'ST' },
-];
-
-const GENDERS = [
-  { id: 'male', label: 'Nam', icon: 'male' },
-  { id: 'female', label: 'Nữ', icon: 'female' },
-  { id: 'other', label: 'Khác', icon: 'ellipse' },
-];
-
-const PREFERRED_FOOT = [
-  { id: 'left', label: 'Chân trái', icon: 'arrow-back' },
-  { id: 'right', label: 'Chân phải', icon: 'arrow-forward' },
-  { id: 'both', label: 'Cả hai', icon: 'swap-horizontal' },
-];
-
-const FormField: React.FC<FormFieldProps> = ({
-  label,
-  icon,
-  value,
-  onChangeText,
-  placeholder,
-  multiline = false,
-  maxLength,
-  keyboardType = 'default',
-  error,
-}) => {
-  const { theme } = useTheme();
-  const [isFocused, setIsFocused] = useState(false);
-
-  return (
-    <View style={styles.fieldContainer}>
-      <View style={styles.labelContainer}>
-        <Ionicons name={icon} size={16} color={theme.colors.neonGreen} />
-        <Text style={[styles.label, { color: theme.colors.text }]}>{label}</Text>
-      </View>
-      <View
-        style={[
-          styles.inputContainer,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: error
-              ? theme.colors.error
-              : isFocused
-              ? theme.colors.neonGreen
-              : theme.colors.border,
-          },
-        ]}
-      >
-        <TextInput
-          style={[
-            styles.input,
-            {
-              color: theme.colors.text,
-              height: multiline ? 100 : 48,
-              textAlignVertical: multiline ? 'top' : 'center',
-            },
-          ]}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={theme.colors.textSecondary}
-          multiline={multiline}
-          maxLength={maxLength}
-          keyboardType={keyboardType}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-        {maxLength && (
-          <Text style={[styles.charCount, { color: theme.colors.textSecondary }]}>
-            {value.length}/{maxLength}
-          </Text>
-        )}
-      </View>
-      {error && (
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>{error}</Text>
-      )}
-    </View>
-  );
-};
-
-const SelectionField: React.FC<{
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  options: { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[];
-  value: string;
-  onSelect: (id: string) => void;
-}> = ({ label, icon, options, value, onSelect }) => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={styles.fieldContainer}>
-      <View style={styles.labelContainer}>
-        <Ionicons name={icon} size={16} color={theme.colors.neonGreen} />
-        <Text style={[styles.label, { color: theme.colors.text }]}>{label}</Text>
-      </View>
-      <View style={styles.optionsContainer}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.id}
-            onPress={() => onSelect(option.id)}
-            style={[
-              styles.optionButton,
-              {
-                backgroundColor:
-                  value === option.id
-                    ? theme.colors.neonGreen
-                    : theme.colors.surface,
-                borderColor:
-                  value === option.id
-                    ? theme.colors.neonGreen
-                    : theme.colors.border,
-              },
-            ]}
-          >
-            <Ionicons
-              name={option.icon as keyof typeof Ionicons.glyphMap}
-              size={16}
-              color={value === option.id ? theme.colors.black : theme.colors.text}
-            />
-            <Text
-              style={[
-                styles.optionText,
-                {
-                  color: value === option.id ? theme.colors.black : theme.colors.text,
-                },
-              ]}
-            >
-              {option.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-};
-
 export const EditProfileForm: React.FC<EditProfileFormProps> = ({
   visible,
   onClose,
@@ -194,90 +48,115 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
   initialData = {},
   isLoading = false,
 }) => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { t } = useTranslation();
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [formData, setFormData] = useState<UpdateProfileData>({
-    name: initialData.name || '',
-    bio: initialData.bio || '',
-    phone: initialData.phone || '',
-    dateOfBirth: initialData.dateOfBirth || '',
-    gender: initialData.gender || undefined,
-    position: initialData.position || '',
-    preferredFoot: initialData.preferredFoot || undefined,
-    shirtNumber: initialData.shirtNumber || undefined,
+  // React Hook Form with Zod validation
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<EditProfileFormData>({
+    resolver: zodResolver(editProfileSchema),
+    defaultValues: {
+      name: initialData.name || "",
+      bio: initialData.bio || "",
+      phone: initialData.phone || "",
+      dateOfBirth: initialData.dateOfBirth || "",
+      gender: initialData.gender,
+      position: initialData.position || "",
+      preferredFoot: initialData.preferredFoot,
+      shirtNumber: initialData.shirtNumber,
+    },
   });
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  // Watch dateOfBirth for display
+  const dateOfBirth = watch("dateOfBirth");
+  const position = watch("position");
+
+  // Reset form when initialData changes
+  useEffect(() => {
+    if (visible) {
+      reset({
+        name: initialData.name || "",
+        bio: initialData.bio || "",
+        phone: initialData.phone || "",
+        dateOfBirth: initialData.dateOfBirth || "",
+        gender: initialData.gender,
+        position: initialData.position || "",
+        preferredFoot: initialData.preferredFoot,
+        shirtNumber: initialData.shirtNumber,
+      });
+    }
+  }, [visible, initialData, reset]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(Platform.OS === "ios");
     if (selectedDate) {
-      const dateString = selectedDate.toISOString().split('T')[0];
-      setFormData({ ...formData, dateOfBirth: dateString });
+      const dateString = selectedDate.toISOString().split("T")[0];
+      setValue("dateOfBirth", dateString);
     }
   };
 
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.name?.trim()) {
-      newErrors.name = t('editProfile.errors.nameRequired', {
-        defaultValue: 'Tên không được để trống',
-      });
-    }
-
- 
-
-    if (formData.phone && !/^\d{10,11}$/.test(formData.phone)) {
-      newErrors.phone = t('editProfile.errors.invalidPhone', {
-        defaultValue: 'Số điện thoại không hợp lệ',
-      });
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = () => {
-    if (validateForm()) {
-      onSave(formData);
-    }
-  };
-
-  const formatDateDisplay = (dateString: string) => {
-    if (!dateString) return '';
+  const formatDateDisplay = (dateString?: string) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
+  };
+
+  const onSubmit = (data: EditProfileFormData) => {
+    // Transform to UpdateProfileData format
+    const profileData: UpdateProfileData = {
+      name: data.name,
+      bio: data.bio || undefined,
+      phone: data.phone || undefined,
+      dateOfBirth: data.dateOfBirth || undefined,
+      gender: data.gender,
+      position: data.position || undefined,
+      preferredFoot: data.preferredFoot,
+      shirtNumber: typeof data.shirtNumber === "number" ? data.shirtNumber : undefined,
+    };
+    onSave(profileData);
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalOverlay}>
-        <BlurView intensity={100} tint="dark" style={styles.blurContainer}>
+        <BlurView
+          intensity={100}
+          tint={isDark ? "dark" : "light"}
+          style={styles.blurContainer}
+        >
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.keyboardView}
           >
             {/* Header */}
             <LinearGradient
-              colors={['rgba(151, 251, 87, 0.2)', 'transparent']}
+              colors={
+                isDark
+                  ? [theme.colors.neonGreen, "transparent"]
+                  : ["rgb(255, 255, 255)", "transparent"]
+              }
               style={styles.headerGradient}
             >
               <View style={styles.header}>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <Ionicons name="close" size={28} color={theme.colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-                  {t('personalPage.editForm.title')}
-                </Text>
+                <ThemedText variant="primary" size="title" weight="bold">
+                  {t("personalPage.editForm.title")}
+                </ThemedText>
                 <TouchableOpacity
-                  onPress={handleSave}
+                  onPress={handleSubmit(onSubmit)}
                   disabled={isLoading}
                   style={[
                     styles.saveButton,
@@ -285,10 +164,16 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                   ]}
                 >
                   {isLoading ? (
-                    <Ionicons name="hourglass" size={20} color={theme.colors.black} />
+                    <Ionicons
+                      name="hourglass"
+                      size={20}
+                      color={theme.colors.black}
+                    />
                   ) : (
-                    <Text style={[styles.saveButtonText, { color: theme.colors.black }]}>
-                      {t('personalPage.editForm.save')}
+                    <Text
+                      style={[styles.saveButtonText, { color: theme.colors.black }]}
+                    >
+                      {t("personalPage.editForm.save")}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -312,7 +197,11 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                     },
                   ]}
                 >
-                  <Ionicons name="person" size={48} color={theme.colors.textSecondary} />
+                  <Ionicons
+                    name="person"
+                    size={48}
+                    color={theme.colors.textSecondary}
+                  />
                 </View>
                 <TouchableOpacity
                   style={[
@@ -326,35 +215,38 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
 
               {/* Personal Info Section */}
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.neonGreen }]}>
-                  {t('personalPage.editForm.sections.personal')}
+                <Text
+                  style={[styles.sectionTitle, { color: theme.colors.neonGreen }]}
+                >
+                  {t("personalPage.editForm.sections.personal")}
                 </Text>
 
-                <FormField
-                  label={t('personalPage.editForm.fields.name')}
+                <ProfileFormField
+                  control={control}
+                  name="name"
+                  label={t("personalPage.editForm.fields.name")}
                   icon="person"
-                  value={formData.name || ''}
-                  onChangeText={(text) => setFormData({ ...formData, name: text })}
-                  placeholder={t('personalPage.editForm.fields.namePlaceholder')}
+                  placeholder={t("personalPage.editForm.fields.namePlaceholder")}
                   maxLength={50}
                   error={errors.name}
                 />
 
-                <FormField
-                  label={t('personalPage.editForm.fields.bio')}
+                <ProfileFormField
+                  control={control}
+                  name="bio"
+                  label={t("personalPage.editForm.fields.bio")}
                   icon="document-text"
-                  value={formData.bio || ''}
-                  onChangeText={(text) => setFormData({ ...formData, bio: text })}
-                  placeholder={t('personalPage.editForm.fields.bioPlaceholder')}
+                  placeholder={t("personalPage.editForm.fields.bioPlaceholder")}
                   multiline
                   maxLength={200}
+                  error={errors.bio}
                 />
 
-                <FormField
-                  label={t('personalPage.editForm.fields.phone')}
+                <ProfileFormField
+                  control={control}
+                  name="phone"
+                  label={t("personalPage.editForm.fields.phone")}
                   icon="call"
-                  value={formData.phone || ''}
-                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
                   placeholder="0123456789"
                   keyboardType="phone-pad"
                   maxLength={11}
@@ -364,10 +256,14 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                 {/* Date of Birth */}
                 <View style={styles.fieldContainer}>
                   <View style={styles.labelContainer}>
-                    <Ionicons name="calendar" size={16} color={theme.colors.neonGreen} />
-                    <Text style={[styles.label, { color: theme.colors.text }]}>
-                      {t('personalPage.editForm.fields.dateOfBirth')}
-                    </Text>
+                    <Ionicons
+                      name="calendar"
+                      size={16}
+                      color={theme.colors.neonGreen}
+                    />
+                    <ThemedText variant="primary" size="s" weight="bold">
+                      {t("personalPage.editForm.fields.dateOfBirth")}
+                    </ThemedText>
                   </View>
                   <TouchableOpacity
                     onPress={() => setShowDatePicker(true)}
@@ -384,73 +280,79 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                       style={[
                         styles.dateText,
                         {
-                          color: formData.dateOfBirth
+                          color: dateOfBirth
                             ? theme.colors.text
                             : theme.colors.textSecondary,
                         },
                       ]}
                     >
-                      {formData.dateOfBirth
-                        ? formatDateDisplay(formData.dateOfBirth)
-                        : t('personalPage.editForm.fields.dateOfBirthPlaceholder')}
+                      {dateOfBirth
+                        ? formatDateDisplay(dateOfBirth)
+                        : t("personalPage.editForm.fields.dateOfBirthPlaceholder")}
                     </Text>
-                    <Ionicons name="chevron-down" size={20} color={theme.colors.textSecondary} />
+                    <Ionicons
+                      name="chevron-down"
+                      size={20}
+                      color={theme.colors.textSecondary}
+                    />
                   </TouchableOpacity>
                 </View>
 
                 {showDatePicker && (
                   <DateTimePicker
-                    value={
-                      formData.dateOfBirth
-                        ? new Date(formData.dateOfBirth)
-                        : new Date(2000, 0, 1)
-                    }
+                    value={dateOfBirth ? new Date(dateOfBirth) : new Date(2000, 0, 1)}
                     mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={handleDateChange}
                     maximumDate={new Date()}
                     minimumDate={new Date(1950, 0, 1)}
                   />
                 )}
 
-                <SelectionField
-                  label={t('personalPage.editForm.fields.gender')}
+                <ProfileSelectionField
+                  control={control}
+                  name="gender"
+                  label={t("personalPage.editForm.fields.gender")}
                   icon="male-female"
-                  options={GENDERS as { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[]}
-                  value={formData.gender || ''}
-                  onSelect={(id) =>
-                    setFormData({ ...formData, gender: id as 'male' | 'female' | 'other' })
-                  }
+                  options={GENDERS}
+                  error={errors.gender}
                 />
               </View>
 
               {/* Football Info Section */}
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.neonGreen }]}>
-                  {t('personalPage.editForm.sections.football')}
+                <Text
+                  style={[styles.sectionTitle, { color: theme.colors.neonGreen }]}
+                >
+                  {t("personalPage.editForm.sections.football")}
                 </Text>
 
+                {/* Position Grid */}
                 <View style={styles.fieldContainer}>
                   <View style={styles.labelContainer}>
-                    <Ionicons name="football" size={16} color={theme.colors.neonGreen} />
+                    <Ionicons
+                      name="football"
+                      size={16}
+                      color={theme.colors.neonGreen}
+                    />
                     <Text style={[styles.label, { color: theme.colors.text }]}>
-                      {t('personalPage.editForm.fields.position')}
+                      {t("personalPage.editForm.fields.position")}
                     </Text>
                   </View>
                   <View style={styles.positionsGrid}>
                     {POSITIONS.map((pos) => (
                       <TouchableOpacity
                         key={pos.id}
-                        onPress={() => setFormData({ ...formData, position: pos.id })}
+                        onPress={() => setValue("position", pos.id)}
                         style={[
                           styles.positionChip,
                           {
                             backgroundColor:
-                              formData.position === pos.id
+                              position === pos.id
                                 ? theme.colors.neonGreen
                                 : theme.colors.surface,
                             borderColor:
-                              formData.position === pos.id
+                              position === pos.id
                                 ? theme.colors.neonGreen
                                 : theme.colors.border,
                           },
@@ -461,7 +363,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                             styles.positionChipText,
                             {
                               color:
-                                formData.position === pos.id
+                                position === pos.id
                                   ? theme.colors.black
                                   : theme.colors.text,
                             },
@@ -472,27 +374,29 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                       </TouchableOpacity>
                     ))}
                   </View>
+                  {errors.position && (
+                    <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                      {t(errors.position.message || "")}
+                    </Text>
+                  )}
                 </View>
 
-                <SelectionField
-                  label={t('personalPage.editForm.fields.preferredFoot')}
+                <ProfileSelectionField
+                  control={control}
+                  name="preferredFoot"
+                  label={t("personalPage.editForm.fields.preferredFoot")}
                   icon="footsteps"
-                  options={PREFERRED_FOOT as { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[]}
-                  value={formData.preferredFoot || ''}
-                  onSelect={(id) =>
-                    setFormData({
-                      ...formData,
-                      preferredFoot: id as 'left' | 'right' | 'both',
-                    })
-                  }
+                  options={PREFERRED_FOOT_OPTIONS}
+                  error={errors.preferredFoot}
                 />
-                   <FormField
-                  label={t('personalPage.editForm.fields.shirtNumber')}
+
+                <ProfileFormField
+                  control={control}
+                  name="shirtNumber"
+                  label={t("personalPage.editForm.fields.shirtNumber")}
                   icon="shirt"
-                  value={formData.shirtNumber?.toString() || ''}
-                  onChangeText={(text) => setFormData({ ...formData, shirtNumber: parseInt(text) })}
-                  keyboardType="default"
-                  placeholder={t('personalPage.editForm.fields.shirtNumberPlaceholder')}
+                  placeholder={t("personalPage.editForm.fields.shirtNumberPlaceholder")}
+                  keyboardType="number-pad"
                   error={errors.shirtNumber}
                 />
               </View>
@@ -510,37 +414,30 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   blurContainer: {
     flex: 1,
     marginTop: 50,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   keyboardView: {
     flex: 1,
   },
   headerGradient: {
-    paddingTop: 8,
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   closeButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    padding: 4,
   },
   saveButton: {
     paddingHorizontal: 20,
@@ -549,124 +446,96 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "600",
   },
   formScroll: {
     flex: 1,
   },
   formContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 10,
   },
   avatarSection: {
-    alignItems: 'center',
-    marginBottom: 32,
-    position: 'relative',
+    alignItems: "center",
+    marginBottom: 30,
   },
   avatarContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
     borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
   },
   changeAvatarButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    right: SCREEN_WIDTH / 2 - 70,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    right: SCREEN_WIDTH / 2 - 65,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 16,
+    fontWeight: "700",
     marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   fieldContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   labelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
+    marginBottom: 8,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   inputContainer: {
+    borderWidth: 1,
     borderRadius: 12,
-    borderWidth: 1.5,
     paddingHorizontal: 16,
   },
-  input: {
-    fontSize: 16,
-    paddingVertical: 12,
-  },
-  charCount: {
-    position: 'absolute',
-    right: 12,
-    bottom: 8,
-    fontSize: 11,
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
-  },
   dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     height: 48,
   },
   dateText: {
     fontSize: 16,
   },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 6,
-  },
-  optionText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
   positionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   positionChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    minWidth: 60,
-    alignItems: 'center',
+    minWidth: 52,
+    alignItems: "center",
   },
   positionChipText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  errorText: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 
+export default EditProfileForm;

@@ -6,10 +6,8 @@ import { useAuthStore } from '../store/authStore';
 import type { User } from '../types/auth.types';
 
 interface GoogleLoginRequest {
-  idToken: string;
-  email: string;
-  name: string;
-  picture?: string;
+  uid: string;
+  
 }
 
 /**
@@ -50,28 +48,22 @@ export const useGoogleSignIn = () => {
       // Step 2: Send Firebase ID token to backend
       // Backend will verify the token with Firebase Admin SDK and return JWT
       const loginRequest: GoogleLoginRequest = {
-        idToken: googleResult.idToken, // Firebase ID token
-        email: googleResult.user.email,
-        name: googleResult.user.displayName,
-        picture: googleResult.user.photoURL,
+        uid: googleResult.user.uid,
       };
 
       // Call backend API to login/register with Firebase token
       const response = await authApi.googleLogin(loginRequest);
 
-      return {
-        ...response,
-        firebaseUser: googleResult.firebaseUser,
-      };
-    },
+      return response;
+    },  
 
     onSuccess: (response) => {
       // Set token for API calls
-      setAuthToken(response.token);
+      setAuthToken(response.data?.accessToken || null);
 
       // Update auth store
-      setUser(response.user);
-      setToken(response.token);
+      setUser(response.data || null);
+      setToken(response.data?.accessToken || null);
     },
 
     onError: (error: any) => {

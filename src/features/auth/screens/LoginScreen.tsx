@@ -69,9 +69,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             t("login.success.title", "Đăng nhập thành công"),
             t("login.success.message", "Chào mừng bạn trở lại!")
           );
-          setTimeout(() => {
-            navigation.replace("MainTabs");
-          }, 100);
+          // Navigation tự động xảy ra khi isAuthenticated thay đổi
         },
         onError: (error: any) => {
           toast.error(
@@ -91,9 +89,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           t("login.success.title", "Đăng nhập thành công"),
           t("login.success.googleMessage", "Đăng nhập bằng Google thành công!")
         );
-        setTimeout(() => {
-          navigation.replace("MainTabs");
-        }, 100);
+        // Navigation tự động xảy ra khi isAuthenticated thay đổi
       },
       onError: (error: any) => {
         toast.error(
