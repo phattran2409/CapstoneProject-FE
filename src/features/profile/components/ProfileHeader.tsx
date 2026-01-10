@@ -19,7 +19,9 @@ interface ProfileHeaderProps {
   position?: string;
   shirtNumber?: number;
   matchesCount?: number;
+  isCurrentUser?: boolean;
   onEditPress?: () => void;
+  onAddFriendPress?: () => void;
 }
 
 //SVG Jersey Badge
@@ -100,7 +102,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   position = 'Forward',
   shirtNumber = 10,
   matchesCount = 100,
+  isCurrentUser = false,
   onEditPress,
+  onAddFriendPress,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -194,7 +198,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           text={position}
         />
 
-      {/* Edit Button */}
+      {/* Edit Button or Add Friend Button */}
+      {!isCurrentUser ? (
       <TouchableOpacity
         onPress={onEditPress}
         style={[
@@ -205,11 +210,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             paddingVertical: theme.spacing.s,
             paddingHorizontal: theme.spacing.xl,
           },
-        ]}
+        ]}     
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.s }}>
          <Ionicons name="pencil" size={18} color={theme.colors.black} />
-       
         <Text
           style={[
             styles.editButtonText,
@@ -223,7 +227,36 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
            </Text>
            </View>
       </TouchableOpacity>
-      
+
+      ) : (
+        <TouchableOpacity
+        onPress={onAddFriendPress}
+        style={[
+          styles.addFriendButton,
+          {
+            backgroundColor: theme.colors.neonGreen,
+            borderRadius: theme.radius.m,
+            paddingVertical: theme.spacing.s,
+            paddingHorizontal: theme.spacing.xl,
+          },
+        ]}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.s }}>
+         <Ionicons name="person-add" size={18} color={theme.colors.background} />
+         <Text
+          style={[
+            styles.addFriendButtonText,
+            {
+              fontSize: theme.fontSizes.m,
+              color: theme.colors.background,
+            },
+          ]}
+         >
+          {t('personalPage.addFriend')}
+         </Text>
+         </View>
+      </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -261,6 +294,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   editButtonText: {
+    fontWeight: '600',
+  },
+  addFriendButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 32,
+  },
+  addFriendButtonText: {
     fontWeight: '600',
   },
   statsContainer: {

@@ -86,6 +86,10 @@ const vi = {
     tryDifferentSearch: "Thử tìm kiếm với từ khóa khác",
     inviteFriends: "Mời bạn bè tham gia cùng bạn!",
     empty: "Chưa có bạn bè",
+    friendRequests: "Lời mời kết bạn",
+    noFriendRequests: "Không có lời mời kết bạn",
+    noFriendRequestsDesc: "Bạn chưa có lời mời kết bạn nào",
+    mutualFriends: "{{count}} bạn chung",
   },
   home: {
     title: "Sân Cỏ",
@@ -233,6 +237,7 @@ const vi = {
   personalPage: {
     title: "Trang cá nhân",
     editProfile: "Chỉnh sửa trang cá nhân",
+    addFriend: "Thêm bạn bè",
     stats: {
       matches: "Số trận",
       goals: "Bàn thắng",

@@ -1,4 +1,5 @@
 export { default as Button } from './Button';
+export { default as IconButton } from './IconButton';
 export { default as Card } from './Card';
 export { default as Modal } from './Modal';
 export { default as ChatInMatches } from './ChatInMatches';
@@ -11,4 +12,5 @@ export type { MatchItemData, MatchItemProps } from './MatchItem';
 export type { MatchListProps } from './MatchList';
 export type { MatchDetailModalProps } from './MatchDetailModal';
 export type { Post, PostItemProps } from './PostItem';
+export type { IconButtonProps } from './IconButton';
 

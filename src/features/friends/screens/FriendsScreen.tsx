@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
@@ -12,6 +19,7 @@ import { ThemedView } from "@/shared/components/themed/ThemedView";
 import { ThemedText } from "@/shared/components/themed/ThemedText";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
 import { ThemedScrollView } from "@/shared/components/themed/ThemedScrollView";
+import { IconButton } from "@/shared/components";
 
 type FriendsScreenProps = BottomTabScreenProps<TabParamList, "Friends">;
 
@@ -20,69 +28,78 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
   const [searchQuery, setSearchQuery] = useState("");
+  const [friendRequestsCount] = useState(4); // TODO: Get from API/store
+
+  const handleFriendRequestsPress = () => {
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate("FriendRequests");
+    }
+  };
+
   const handleChatListPress = () => {
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('ChatList');
+      parent.navigate("ChatList");
     }
   };
   // TODO: Replace mock data with API data or store data
   const [friends] = useState<Friend[]>([
     {
-        id: '1',
-        name: 'Nguyễn Văn A',
-        username: 'nguyenvana',
-        elo: 2650,
-        position: 'ST',
-        isOnline: true,
-        mutualFriends: 5,
-      },
-      {
-        id: '2',
-        name: 'Trần Minh B',
-        username: 'tranminhb',
-        elo: 2400,
-        position: 'CM',
-        isOnline: true,
-        mutualFriends: 12,
-      },
-      {
-        id: '3',
-        name: 'Lê Hoàng C',
-        username: 'lehoangc',
-        elo: 2200,
-        position: 'CB',
-        isOnline: false,
-        lastActive: '2 giờ trước',
-        mutualFriends: 3,
-      },
-      {
-        id: '4',
-        name: 'Phạm Đức D',
-        username: 'phamducd',
-        elo: 3100,
-        position: 'GK',
-        isOnline: true,
-        mutualFriends: 8,
-      },
-      {
-        id: '5',
-        name: 'Hoàng Quốc E',
-        username: 'hoangquoce',
-        elo: 1950,
-        position: 'LW',
-        isOnline: false,
-        lastActive: '1 ngày trước',
-      },
-      {
-        id: '6',
-        name: 'Vũ Thành F',
-        username: 'vuthanhf',
-        elo: 2750,
-        position: 'CAM',
-        isOnline: true,
-        mutualFriends: 15,
-      },
+      id: "1",
+      name: "Nguyễn Văn A",
+      username: "nguyenvana",
+      elo: 2650,
+      position: "ST",
+      isOnline: true,
+      mutualFriends: 5,
+    },
+    {
+      id: "2",
+      name: "Trần Minh B",
+      username: "tranminhb",
+      elo: 2400,
+      position: "CM",
+      isOnline: true,
+      mutualFriends: 12,
+    },
+    {
+      id: "3",
+      name: "Lê Hoàng C",
+      username: "lehoangc",
+      elo: 2200,
+      position: "CB",
+      isOnline: false,
+      lastActive: "2 giờ trước",
+      mutualFriends: 3,
+    },
+    {
+      id: "4",
+      name: "Phạm Đức D",
+      username: "phamducd",
+      elo: 3100,
+      position: "GK",
+      isOnline: true,
+      mutualFriends: 8,
+    },
+    {
+      id: "5",
+      name: "Hoàng Quốc E",
+      username: "hoangquoce",
+      elo: 1950,
+      position: "LW",
+      isOnline: false,
+      lastActive: "1 ngày trước",
+    },
+    {
+      id: "6",
+      name: "Vũ Thành F",
+      username: "vuthanhf",
+      elo: 2750,
+      position: "CAM",
+      isOnline: true,
+      mutualFriends: 15,
+    },
   ]);
 
   const renderEmptyState = () => (
@@ -100,9 +117,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
         />
       </View>
       <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-        {searchQuery
-          ? t("friends.noResults")
-          : t("friends.empty")}
+        {searchQuery ? t("friends.noResults") : t("friends.empty")}
       </Text>
       <Text
         style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}
@@ -150,46 +165,46 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
     >
       {/* Header */}
       <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: theme.spacing.l,
+        style={[
+          styles.header,
+          {
             paddingHorizontal: theme.spacing.m,
-          }}
-        >
-          <Text
-            style={{
+            paddingBottom: theme.spacing.m,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            {
               fontSize: theme.fontSizes.xxl,
               color: theme.colors.text,
-              fontWeight: '700',
-            }}
-          >
-            {t('friends.title')}
-          </Text>
-          <TouchableOpacity
-            onPress={handleChatListPress}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: theme.colors.surface,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Ionicons name="chatbubbles-outline" size={23} color={theme.colors.neonGreen} />
-          </TouchableOpacity>
-        </View>
-      <ThemedView
-        variant="surface"
-        style={styles.searchContainer}
+            },
+          ]}
         >
-          {searchBar}
-        </ThemedView>
+          {t("friends.title")}
+        </Text>
+        <View style={styles.headerRight}>
+          <IconButton
+            icon="person-add-outline"
+            onPress={handleFriendRequestsPress}
+            size="medium"
+            notificationCount={friendRequestsCount > 0 ? friendRequestsCount : undefined}
+          />
+          <IconButton
+            icon="chatbubbles-outline"
+            onPress={handleChatListPress}
+            size="medium"
+            notificationCount={5}
+          />
+        </View>
+      </View>
+      <ThemedView variant="surface" style={styles.searchContainer}>
+        {searchBar}
+      </ThemedView>
 
       <FlatList
-      style={{ paddingHorizontal: theme.spacing.m }}
+        style={{ paddingHorizontal: theme.spacing.m }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         data={friends}
@@ -214,7 +229,6 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
-     
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
     </SafeAreaView>
@@ -227,6 +241,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  headerTitle: {
+    fontWeight: "700",
+  },
+
   listContent: {
     paddingBottom: 10,
   },
@@ -266,25 +294,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 10,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
   },
   iconButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+
 });

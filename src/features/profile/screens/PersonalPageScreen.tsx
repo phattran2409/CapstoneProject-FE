@@ -29,6 +29,8 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isCurrentUser, setIsCurrentUser] = useState(false);
+
 
   const stats = {
     matches: 88,
@@ -113,7 +115,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
     );
   };
 
-  // Recent matches data - tái sử dụng từ MatchesScreen
+  
   const recentMatches: MatchItemData[] = [
     {
       id: '1',
@@ -185,6 +187,11 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
     navigation.navigate('RoomInformation', { roomId: matchId });
   };
 
+  const handleAddFriend = () => {
+    // TODO: Implement add friend functionality
+    console.log('Add friend pressed');
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
@@ -213,8 +220,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
       >
-      
-
+    
         {/* Profile Section */}
         <View style={{ backgroundColor: theme.colors.background }}>
           <ProfileHeader
@@ -225,7 +231,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
             position="CAM"
             shirtNumber={10}
             matchesCount={88}
+            isCurrentUser={false}
             onEditPress={handleEditProfile}
+            onAddFriendPress={handleAddFriend}
           />
 
           {/* Navigation Tabs */}
@@ -266,7 +274,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
 
         {/* Tab Content */}
         <View style={{ paddingBottom: theme.spacing.xl }}>
-          {/* Posts Content */}
+          {/* Posts Tab */}
           {activeTab === 'posts' && (
             <View>
               {posts.map((post) => (
@@ -275,10 +283,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
             </View>
           )}
 
+          {/* History Tab */}
           {activeTab === 'history' && (
             <MatchList
-              matches={recentMatches}
-              title={t('personalPage.tabs.history')}
+              matches={recentMatches}         
               variant="vertical"
               itemVariant="list"
               onMatchPress={handleMatchPress}
@@ -287,6 +295,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({ navigation }) =
             />
           )}
 
+          {/* Analysis Tab */}
           {activeTab === 'analysis' && (
             <AnalysisTab stats={stats} radarData={radarData} />
           )}

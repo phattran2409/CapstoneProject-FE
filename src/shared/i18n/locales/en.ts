@@ -86,6 +86,10 @@ const en = {
     tryDifferentSearch: "Try searching with a different keyword",
     inviteFriends: "Invite friends to join you!",
     empty: "No friends found",
+    friendRequests: "Friend Requests",
+    noFriendRequests: "No friend requests",
+    noFriendRequestsDesc: "You don't have any friend requests",
+    mutualFriends: "{{count}} mutual friends",
   },
   home: {
     title: "Football Field",
@@ -236,6 +240,7 @@ const en = {
   personalPage: {
     title: "Personal Page",
     editProfile: "Edit Personal Page",
+    addFriend: "Add Friend",
     stats: {
       matches: "Matches",
       goals: "Goals",
