@@ -127,7 +127,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: theme.spacing.xs / 2,
               }}
             >
-              {user?.name || 'Tuấn Anh Nguyễn'}
+              {user?.fullName || 'Tuấn Anh Nguyễn'}
             </Text>
             <Text
               style={{
