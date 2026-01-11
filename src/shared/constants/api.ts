@@ -15,7 +15,7 @@ export const API_CONFIG = {
       REGISTER: "/auth/register-player",
       LOGOUT: "/auth/logout",
       REFRESH_TOKEN: "/auth/refresh",
-      SEND_OTP: "/auth/send-otp",
+      VERIFY_EMAIL: "/auth/verify-mail",
       VERIFY_OTP: "/auth/verify-otp",
     },
     ROOMS: {

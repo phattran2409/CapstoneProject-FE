@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => set({ 
         user, 
-        isAuthenticated: !!user 
+        isAuthenticated: !!user && user?.isEmailVerified === true
       }),
 
       setToken: (token) => set({ token }),

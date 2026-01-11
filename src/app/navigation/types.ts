@@ -1,7 +1,7 @@
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  OTPVerification: { email: string; username: string; password: string };
+  OTPVerification: { email: string , userId: string };
   MainTabs: undefined;
   Leaderboard: undefined;
   CreateRoom: {

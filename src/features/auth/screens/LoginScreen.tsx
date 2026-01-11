@@ -16,19 +16,13 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTheme } from "@/shared/theme";
-import { useLogin, useGoogleSignIn } from "@/features/auth";
+import { useLogin, useGoogleSignIn, useAuthStore } from "@/features/auth";
 import { Button } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { loginSchema, type LoginFormData } from "../validation/authSchemas";
 import { ScrollView } from "react-native";
-
-
-type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  MainTabs: undefined;
-};
+import { RootStackParamList } from "@/app/navigation/types";
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -44,6 +38,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const { user } = useAuthStore();
 
   // React Hook Form with Zod validation
   const {
@@ -74,11 +69,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           // Navigation tự động xảy ra khi isAuthenticated thay đổi
         },
         onError: (error: any) => {
+          
           toast.error(
             t("login.errors.failed", "Đăng nhập thất bại"),
             error.message ||
               t("login.errors.invalidCredentials", "Thông tin đăng nhập không hợp lệ")
           );
+          if(error.code  == "NotVerified") {
+            navigation.navigate("OTPVerification", {email: data.email, userId: error.userId});
+          }
+          console.log(error);
         },
       }
     );

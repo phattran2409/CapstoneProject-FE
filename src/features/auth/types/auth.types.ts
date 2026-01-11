@@ -38,8 +38,8 @@ export interface RegisterRequest {
 
 export interface RegisterResponse extends LoginResponse {}
 
-export interface OTPRequest {
-  email: string;
+export interface SendOTPRequest {
+  userId: string;
 }
 
 export interface OTPResponse {
@@ -49,13 +49,15 @@ export interface OTPResponse {
 }
 
 export interface VerifyOTPRequest {
-  phone: string;
+  userId: string;
   otp: string;
 }
 
 export interface VerifyOTPResponse {
-  success: boolean;
-  message: string;
+  isSuccess: boolean;
+  data: {
+    "userId": string;
+  };
 }
 
 export interface RefreshTokenRequest {

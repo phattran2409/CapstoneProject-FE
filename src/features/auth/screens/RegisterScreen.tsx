@@ -76,12 +76,14 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         password: data.password,
       },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          console.log(response.data);
           toast.success(
             t("register.success.title", "Đăng ký thành công"),
             t("register.success.message", "Tài khoản đã được tạo!")
           );
           // Navigation tự động xảy ra khi isAuthenticated thay đổi
+          navigation.navigate("OTPVerification", {email: data.email, userId: response.data?.userId});
         },
         onError: (error: any) => {
           toast.error(
