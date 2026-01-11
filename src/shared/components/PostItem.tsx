@@ -4,6 +4,7 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedView, ThemedText } from './themed';
+import { PostImages } from './PostImages';
 
 export interface Post {
   id: string;
@@ -16,7 +17,8 @@ export interface Post {
   timestamp: string;
   title: string;
   content: string;
-  image?: any;
+  image?: any; // Deprecated: use images instead
+  images?: any[]; // Support multiple images
   type?: 'post' | 'match' | 'announcement';
   likes: number;
   comments: number;
@@ -30,6 +32,7 @@ export interface PostItemProps {
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
   onMenuPress?: (postId: string) => void;
+  onPress?: (postId: string) => void; // Navigate to post detail
 }
 
 export const PostItem: React.FC<PostItemProps> = ({
@@ -38,9 +41,13 @@ export const PostItem: React.FC<PostItemProps> = ({
   onComment,
   onShare,
   onMenuPress,
+  onPress,
 }) => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { t } = useTranslation();
+  
+  // Support both image (single) and images (multiple) for backward compatibility
+  const images = post.images || (post.image ? [post.image] : []);
 
   const getPostTypeLabel = (type?: string) => {
     switch (type) {
@@ -71,9 +78,9 @@ export const PostItem: React.FC<PostItemProps> = ({
       style={[
         styles.postContainer,
         {
-          backgroundColor: theme.colors.darkBlack || theme.colors.surface,
+          backgroundColor: theme.colors.surface,
           borderBottomWidth: 1,
-          borderBottomColor: '#2a2a2a' || theme.colors.border,
+          borderBottomColor: theme.colors.border,
           paddingVertical: theme.spacing.m,
         },
       ]}
@@ -127,7 +134,7 @@ export const PostItem: React.FC<PostItemProps> = ({
               },
             ]}
           >
-            <Text style={[styles.postTypeText, { color: theme.colors.darkBlack || '#000' }]}>
+            <Text style={[styles.postTypeText, { color: isDark ? theme.colors.darkBlack : theme.colors.white }]}>
               {getPostTypeLabel(post.type)}
             </Text>
           </View>
@@ -135,22 +142,28 @@ export const PostItem: React.FC<PostItemProps> = ({
       )}
 
       {/* Post Content */}
-      <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}>
-        <Text style={[styles.postTitle, { color: theme.colors.softWhite || theme.colors.text }]}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => onPress?.(post.id)}
+        style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
+      >
+        <ThemedText variant="primary" size="l" weight="bold" style={styles.postTitle}>
           {post.title}
-        </Text>
-        <Text style={[styles.postContent, { color: theme.colors.textSecondary }]}>
+        </ThemedText>
+        <ThemedText variant="secondary" size="m" style={styles.postContent}>
           {post.content}
-        </Text>
-      </View>
+        </ThemedText>
+      </TouchableOpacity>
 
-      {/* Post Image */}
-      {post.image && (
-        <Image
-          source={post.image}
-          style={styles.postImage}
-          resizeMode="cover"
-        />
+      {/* Post Images */}
+      {images.length > 0 && (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => onPress?.(post.id)}
+          style={{ marginBottom: 12 }}
+        >
+          <PostImages images={images} />
+        </TouchableOpacity>
       )}
 
       {/* Post Actions */}
@@ -179,7 +192,10 @@ export const PostItem: React.FC<PostItemProps> = ({
 
         <TouchableOpacity
           style={styles.postAction}
-          onPress={() => onComment?.(post.id)}
+          onPress={() => {
+            onComment?.(post.id);
+            onPress?.(post.id);
+          }}
         >
           <Ionicons
             name="chatbubble-outline"
@@ -245,18 +261,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   postTitle: {
-    fontSize: 18,
-    fontWeight: '700',
     marginBottom: 8,
   },
   postContent: {
-    fontSize: 16,
     lineHeight: 24,
-  },
-  postImage: {
-    width: '100%',
-    height: 256,
-    marginBottom: 12,
   },
   postActions: {
     flexDirection: 'row',

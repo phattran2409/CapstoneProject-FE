@@ -25,6 +25,7 @@ export type RootStackParamList = {
   Chat: { chatId: string; chatName: string };
   Profile: undefined;
   Notifications: undefined;
+  PostDetail: { postId: string };
 };
 
 export type TabParamList = {

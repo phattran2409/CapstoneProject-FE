@@ -16,6 +16,7 @@ import {
   RoomInformation,
   FriendRequestsScreen,
   NotificationsScreen,
+  PostDetailScreen,
   SplashScreen,
   OnboardingScreen,
   checkOnboardingStatus,
@@ -188,6 +189,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="Notifications" 
             component={NotificationsScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="PostDetail" 
+            component={PostDetailScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',

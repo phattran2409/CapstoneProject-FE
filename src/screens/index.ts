@@ -27,6 +27,9 @@ export { default as FriendRequestsScreen } from '../features/friends/screens/Fri
 // Notification Feature Screens
 export { default as NotificationsScreen } from '../features/notification/screens/NotificationsScreen';
 
+// Post Feature Screens
+export { default as PostDetailScreen } from '../features/post/screens/PostDetailScreen';
+
 // Chat Feature Screens
 export { default as ChatListScreen } from '../features/chat/screens/ChatListScreen';
 export { default as ChatScreen } from '../features/chat/screens/ChatScreen';

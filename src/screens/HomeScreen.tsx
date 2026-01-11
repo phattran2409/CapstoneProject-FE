@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -9,14 +9,14 @@ import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { PostItem, Post, IconButton } from '@/shared/components';
 
-type RootStackParamList = {
-  Home: undefined;
-  Profile: undefined;
-  Matches: undefined;
-  Leaderboard: undefined;
-};
+import { TabParamList } from '@/app/navigation/types';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  NativeStackNavigationProp<any>
+>;
 
 interface HomeScreenProps {
   navigation: HomeScreenNavigationProp;
@@ -39,6 +39,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
+  
+  // Mock user data - replace with real user from auth store when available
+  const mockUser = {
+    fullName: 'Nguyễn Văn A',
+    avatar: undefined, // Can be set to require('../../assets/icon.png') if needed
+  };
 
   // Mock ELO Leaderboard data - replace with real data from API
   const topPlayers: ELOPlayer[] = [
@@ -105,23 +111,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   ];
 
   // Mock data - replace with real data from API
+  const mockImages = [
+    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
+    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
+    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
+  ];
+
   const [posts, setPosts] = useState<Post[]>([
     {
       id: '1',
       author: {
-        name: 'John Doe',
-        username: 'johndoe',
+        name: 'Nguyễn Văn A',
+        username: 'nguyenvana',
         avatar: require('../../assets/icon.png'),
       },
-      community: 'Saigon Football Community',
-      timestamp: '2 hours ago',
-      title: 'Team Alpha wins the weekly tournament!',
-      content: 'A stunning victory after a penalty shootout. The final goal was a masterpiece of teamwork and precision.',
-      image: require('../../assets/icon.png'),
-      type: 'post',
-      likes: 152,
+      community: 'Football Community',
+      timestamp: '2 giờ trước',
+      title: 'Trận đấu hôm qua thật tuyệt vời!',
+      content: 'Chúng ta đã có một trận đấu rất hay với nhiều pha bóng đẹp. Cảm ơn tất cả các bạn đã tham gia và cổ vũ nhiệt tình. Hẹn gặp lại ở trận tiếp theo!',
+      images: mockImages,
+      type: 'match',
+      likes: 125,
       comments: 23,
-      shares: 12,
+      shares: 8,
       isLiked: false,
     },
     {
@@ -250,8 +262,89 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
+
+        {/*What's on your mind Section */}
+        <ThemedView
+          style={[
+            styles.whatsOnMindContainer,
+            {
+              paddingHorizontal: theme.spacing.l,
+              paddingVertical: theme.spacing.m,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
+          <View style={styles.whatsOnMindContent}>
+            {/* Avatar */}
+            <TouchableOpacity
+              onPress={() => {
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate('PersonalPage');
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.avatarContainer,
+                  {
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 2,
+                    borderColor: theme.colors.neonGreen,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  },
+                ]}
+              >
+                {mockUser.avatar ? (
+                  typeof mockUser.avatar === 'string' ? (
+                    <Image
+                      source={{ uri: mockUser.avatar }}
+                      style={{ width: 36, height: 36, borderRadius: 18 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Image
+                      source={mockUser.avatar}
+                      style={{ width: 36, height: 36, borderRadius: 18 }}
+                      resizeMode="cover"
+                    />
+                  )
+                ) : (
+                  <Ionicons name="person" size={24} color={theme.colors.textSecondary} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Input Field */}
+            <TouchableOpacity
+              style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderRadius: theme.radius.l,
+                  paddingHorizontal: theme.spacing.m,
+                  paddingVertical: theme.spacing.s,
+                  flex: 1,
+                  marginLeft: theme.spacing.m,
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <ThemedText variant="secondary" size="m">
+                {t('newsFeed.whatsOnMind', { defaultValue: "Bạn đang nghĩ gì?" })}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ThemedView>
+
         {/* ELO Leaderboard Section */}
-        {/* <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
+        <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
           <View style={[styles.leaderboardHeader, { paddingHorizontal: theme.spacing.l, marginBottom: theme.spacing.m }]}>
             <View style={styles.leaderboardTitle}>
               <Ionicons
@@ -382,7 +475,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               );
             })}
           </ScrollView>
-        </ThemedView> */}
+        </ThemedView>
 
 
 
@@ -393,6 +486,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               key={post.id}
               post={post}
               onLike={handleLike}
+              onPress={(postId) => {
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate('PostDetail', { postId });
+                }
+              }}
             />
           ))}
         </ThemedView>
@@ -405,6 +504,20 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  whatsOnMindContainer: {
+    borderBottomWidth: 1,
+  },
+  whatsOnMindContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    overflow: 'hidden',
+  },
+  inputContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   headerLeft: {
