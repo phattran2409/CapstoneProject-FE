@@ -303,20 +303,15 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
         style={[styles.headerContainer, { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}
       >
         <ThemedView style={styles.headerRow}>
-          <ThemedView style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backButton}
-            >
-              <ThemedIcon name="arrow-back" size={24} variant="secondary" />
-            </TouchableOpacity>
-            <View style={styles.titleContainer}>
-              <ThemedIcon name="trophy" size={28} variant="primary" />
-              <ThemedText variant="primary" size="xl" weight="bold">
-                ELO Leaderboard
-              </ThemedText>
-            </View>
-          </ThemedView>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <ThemedText size="xl" weight="bold" variant="primary">
+            {t('leaderboard.title', { defaultValue: 'ELO Leaderboard' })}
+          </ThemedText>
+          <View style={{ width: 24 }} />
         </ThemedView>
 
         {/* Search Bar */}

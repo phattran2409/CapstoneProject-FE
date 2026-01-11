@@ -19,7 +19,7 @@ export const FriendCard: React.FC<{
     onMessagePress?: () => void;
     onInvitePress?: () => void;
   }> = ({ friend, onPress, onMessagePress, onInvitePress }) => {
-    const { theme } = useTheme();
+    const { theme, isDark } = useTheme();
     const { t } = useTranslation();
   
     const getRankColor = (elo: number) => {
@@ -28,12 +28,39 @@ export const FriendCard: React.FC<{
       if (elo >= 2000) return '#CD7F32'; // Bronze
       return theme.colors.neonGreen;
     };
+
+    // Adjust gradient colors based on theme
+    const gradientColors: [string, string] = isDark
+      ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']
+      : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.90)'];
+
+    // Border color based on theme and online status
+    const borderColor = friend.isOnline
+      ? `${theme.colors.neonGreen}${isDark ? '30' : '60'}`
+      : isDark
+      ? 'rgba(255,255,255,0.05)'
+      : theme.colors.border;
   
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-        <BlurView intensity={40} tint="dark" style={[styles.friendCard, { borderRadius: theme.radius.l }]}>
+        <BlurView 
+          intensity={isDark ? 40 : 80} 
+          tint={isDark ? "dark" : "light"} 
+          style={[
+            styles.friendCard, 
+            { 
+              borderRadius: theme.radius.l,
+              backgroundColor: isDark ? 'transparent' : theme.colors.surface,
+              shadowColor: isDark ? undefined : theme.colors.shadow,
+              shadowOffset: isDark ? undefined : { width: 0, height: 2 },
+              shadowOpacity: isDark ? undefined : 0.1,
+              shadowRadius: isDark ? undefined : 4,
+              elevation: isDark ? 0 : 2,
+            }
+          ]}
+        >
           <LinearGradient
-            colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']}
+            colors={gradientColors}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.cardGradient}
@@ -70,12 +97,18 @@ export const FriendCard: React.FC<{
               <Text style={[styles.username, { color: theme.colors.textSecondary }]}>@{friend.username}</Text>
   
               <View style={styles.statsRow}>
-                <View style={[styles.eloBadge, { backgroundColor: `${getRankColor(friend.elo)}20` }]}>
+                <View style={[
+                  styles.eloBadge, 
+                  { backgroundColor: isDark ? `${getRankColor(friend.elo)}20` : `${getRankColor(friend.elo)}15` }
+                ]}>
                   <Ionicons name="trophy" size={12} color={getRankColor(friend.elo)} />
                   <Text style={[styles.eloText, { color: getRankColor(friend.elo) }]}>{friend.elo}</Text>
                 </View>
                 {friend.position && (
-                  <View style={[styles.positionBadge, { backgroundColor: `${theme.colors.neonGreen}15` }]}>
+                  <View style={[
+                    styles.positionBadge, 
+                    { backgroundColor: isDark ? `${theme.colors.neonGreen}15` : `${theme.colors.neonGreen}10` }
+                  ]}>
                     <Text style={[styles.positionText, { color: theme.colors.neonGreen }]}>{friend.position}</Text>
                   </View>
                 )}
@@ -93,13 +126,19 @@ export const FriendCard: React.FC<{
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 onPress={onMessagePress}
-                style={[styles.actionBtn, { backgroundColor: `${theme.colors.neonGreen}20` }]}
+                style={[
+                  styles.actionBtn, 
+                  { backgroundColor: isDark ? `${theme.colors.neonGreen}20` : `${theme.colors.neonGreen}15` }
+                ]}
               >
                 <Ionicons name="chatbubble" size={18} color={theme.colors.neonGreen} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={onInvitePress}
-                style={[styles.actionBtn, { backgroundColor: `${theme.colors.info}20` }]}
+                style={[
+                  styles.actionBtn, 
+                  { backgroundColor: isDark ? `${theme.colors.info}20` : `${theme.colors.info}15` }
+                ]}
               >
                 <Ionicons name="football" size={18} color={theme.colors.info} />
               </TouchableOpacity>
@@ -110,7 +149,7 @@ export const FriendCard: React.FC<{
           <View
             style={[
               styles.cardBorder,
-              { borderColor: friend.isOnline ? `${theme.colors.neonGreen}30` : 'rgba(255,255,255,0.05)' },
+              { borderColor },
             ]}
           />
         </BlurView>

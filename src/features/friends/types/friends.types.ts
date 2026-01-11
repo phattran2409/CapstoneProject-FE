@@ -9,3 +9,14 @@ export interface Friend {
     mutualFriends?: number;
     lastActive?: string;
   }
+
+export interface FriendRequest {
+    id: string;
+    name: string;
+    username: string;
+    avatar?: string;
+    elo: number;
+    position?: string;
+    mutualFriends?: number;
+    sentAt: string;
+  }

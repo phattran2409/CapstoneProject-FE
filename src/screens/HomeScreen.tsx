@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -7,37 +7,19 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
+import { PostItem, Post, IconButton } from '@/shared/components';
 
-type RootStackParamList = {
-  Home: undefined;
-  Profile: undefined;
-  Matches: undefined;
-  Leaderboard: undefined;
-};
+import { TabParamList } from '@/app/navigation/types';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  NativeStackNavigationProp<any>
+>;
 
 interface HomeScreenProps {
   navigation: HomeScreenNavigationProp;
-}
-
-interface Post {
-  id: string;
-  author: {
-    name: string;
-    avatar: any;
-    username: string;
-  };
-  community?: string;
-  timestamp: string;
-  title: string;
-  content: string;
-  image?: any;
-  type?: 'post' | 'match' | 'announcement';
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
 }
 
 interface ELOPlayer {
@@ -57,6 +39,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
+  
+  // Mock user data - replace with real user from auth store when available
+  const mockUser = {
+    fullName: 'Nguyễn Văn A',
+    avatar: undefined, // Can be set to require('../../assets/icon.png') if needed
+  };
 
   // Mock ELO Leaderboard data - replace with real data from API
   const topPlayers: ELOPlayer[] = [
@@ -123,23 +111,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   ];
 
   // Mock data - replace with real data from API
+  const mockImages = [
+    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
+    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
+    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
+  ];
+
   const [posts, setPosts] = useState<Post[]>([
     {
       id: '1',
       author: {
-        name: 'John Doe',
-        username: 'johndoe',
+        name: 'Nguyễn Văn A',
+        username: 'nguyenvana',
         avatar: require('../../assets/icon.png'),
       },
-      community: 'Saigon Football Community',
-      timestamp: '2 hours ago',
-      title: 'Team Alpha wins the weekly tournament!',
-      content: 'A stunning victory after a penalty shootout. The final goal was a masterpiece of teamwork and precision.',
-      image: require('../../assets/icon.png'),
-      type: 'post',
-      likes: 152,
+      community: 'Football Community',
+      timestamp: '2 giờ trước',
+      title: 'Trận đấu hôm qua thật tuyệt vời!',
+      content: 'Chúng ta đã có một trận đấu rất hay với nhiều pha bóng đẹp. Cảm ơn tất cả các bạn đã tham gia và cổ vũ nhiệt tình. Hẹn gặp lại ở trận tiếp theo!',
+      images: mockImages,
+      type: 'match',
+      likes: 125,
       comments: 23,
-      shares: 12,
+      shares: 8,
       isLiked: false,
     },
     {
@@ -183,28 +177,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         ? { ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 }
         : post
     ));
-  };
-
-  const getPostTypeLabel = (type?: string) => {
-    switch (type) {
-      case 'match':
-        return t('newsFeed.matches');
-      case 'announcement':
-        return t('newsFeed.announcements');
-      default:
-        return null;
-    }
-  };
-
-  const getPostTypeBgColor = (type?: string) => {
-    switch (type) {
-      case 'match':
-        return theme.colors.neonGreen;
-      case 'announcement':
-        return '#3b82f6';
-      default:
-        return null;
-    }
   };
 
   const getRankColor = (rank: number) => {
@@ -251,7 +223,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {
             paddingHorizontal: theme.spacing.l,
             paddingVertical: theme.spacing.m,
-            marginTop: theme.spacing.l,
+            marginTop: theme.spacing.xl,
             borderBottomWidth: 1,
             borderBottomColor: theme.colors.border,
           },
@@ -270,13 +242,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons
-              name="notifications-outline"
-              size={24}
-              color={theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
+          <IconButton
+            icon="trophy-outline"
+            onPress={() => navigation.navigate("Leaderboard" as any)}
+            size="medium"
+          />
+          <IconButton
+            icon="notifications-outline"
+            onPress={() => navigation.navigate("Notifications" as any)}
+            size="medium"
+            notificationCount={5}
+          />
+         
         </View>
       </ThemedView>
 
@@ -285,6 +262,87 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
+
+        {/*What's on your mind Section */}
+        <ThemedView
+          style={[
+            styles.whatsOnMindContainer,
+            {
+              paddingHorizontal: theme.spacing.l,
+              paddingVertical: theme.spacing.m,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
+          <View style={styles.whatsOnMindContent}>
+            {/* Avatar */}
+            <TouchableOpacity
+              onPress={() => {
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate('PersonalPage');
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.avatarContainer,
+                  {
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 2,
+                    borderColor: theme.colors.neonGreen,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  },
+                ]}
+              >
+                {mockUser.avatar ? (
+                  typeof mockUser.avatar === 'string' ? (
+                    <Image
+                      source={{ uri: mockUser.avatar }}
+                      style={{ width: 36, height: 36, borderRadius: 18 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Image
+                      source={mockUser.avatar}
+                      style={{ width: 36, height: 36, borderRadius: 18 }}
+                      resizeMode="cover"
+                    />
+                  )
+                ) : (
+                  <Ionicons name="person" size={24} color={theme.colors.textSecondary} />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Input Field */}
+            <TouchableOpacity
+              style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderRadius: theme.radius.l,
+                  paddingHorizontal: theme.spacing.m,
+                  paddingVertical: theme.spacing.s,
+                  flex: 1,
+                  marginLeft: theme.spacing.m,
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <ThemedText variant="secondary" size="m">
+                {t('newsFeed.whatsOnMind', { defaultValue: "Bạn đang nghĩ gì?" })}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ThemedView>
+
         {/* ELO Leaderboard Section */}
         <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
           <View style={[styles.leaderboardHeader, { paddingHorizontal: theme.spacing.l, marginBottom: theme.spacing.m }]}>
@@ -338,7 +396,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     // Navigate to player profile
                   }}
                 >
-                  {/* Rank Badge */}
+               
                   <View
                     style={[
                       styles.rankBadge,
@@ -354,14 +412,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     </Text>
                   </View>
 
-                  {/* Avatar */}
+              
                   <Image
                     source={player.avatar}
                     style={styles.playerAvatar}
                     resizeMode="cover"
                   />
 
-                  {/* Player Name */}
+             
                   <Text style={[styles.playerName, { color: theme.colors.softWhite }]}>
                     {player.name}
                   </Text>
@@ -369,7 +427,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     @{player.username}
                   </Text>
 
-                  {/* ELO Score */}
                   <View style={[styles.eloContainer, { backgroundColor: '#0a0a0a', borderRadius: theme.radius.m, padding: 12, marginBottom: 8 }]}>
                     <Text style={[styles.eloLabel, { color: theme.colors.textSecondary }]}>
                       ELO Rating
@@ -379,8 +436,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     >
                       {player.elo}
                     </Text>
-
-                    {/* Trend Indicator */}
+                   
                     <View style={styles.trendContainer}>
                       <Ionicons
                         name={getTrendIcon(player.trend)}
@@ -395,8 +451,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       </Text>
                     </View>
                   </View>
-
-                  {/* Stats */}
+     
                   <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                       <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
@@ -422,144 +477,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </ScrollView>
         </ThemedView>
 
+
+
         {/* Posts Feed */}
         <ThemedView style={{ paddingBottom: theme.spacing.xxl * 2 }}>
-          {posts.map((post) => {
-            const postTypeBgColor = getPostTypeBgColor(post.type);
-            return (
-              <ThemedView
-                key={post.id}
-                style={[
-                  styles.postContainer,
-                  {
-                    backgroundColor: theme.colors.darkBlack,
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#2a2a2a',
-                    paddingVertical: theme.spacing.m,
-                  },
-                ]}
-              >
-                {/* Post Header */}
-                <View style={[styles.postHeader, { paddingHorizontal: theme.spacing.l, marginBottom: 12 }]}>
-                  <View style={styles.postAuthor}>
-                    <Image
-                      source={post.author.avatar}
-                      style={styles.postAvatar}
-                      resizeMode="cover"
-                    />
-                    <View style={{ marginLeft: 12, flex: 1 }}>
-                      <ThemedText variant="primary" size="m" weight="bold">
-                        {post.author.name}
-                        {post.community && (
-                          <Text style={{ color: theme.colors.textSecondary, fontWeight: '400' }}>
-                            {" "}
-                            posted in '{post.community}'
-                          </Text>
-                        )}
-                      </ThemedText>
-                      <Text style={[styles.postTimestamp, { color: theme.colors.textSecondary }]}>
-                        {post.timestamp}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.postMenuButton}>
-                    <Ionicons
-                      name="ellipsis-horizontal"
-                      size={20}
-                      color={theme.colors.textSecondary}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Post Type Badge */}
-                {getPostTypeLabel(post.type) && postTypeBgColor && (
-                  <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 8 }}>
-                    <View
-                      style={[
-                        styles.postTypeBadge,
-                        {
-                          backgroundColor: postTypeBgColor,
-                          paddingHorizontal: 12,
-                          paddingVertical: 4,
-                          borderRadius: 20,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.postTypeText, { color: theme.colors.darkBlack }]}>
-                        {getPostTypeLabel(post.type)}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {/* Post Content */}
-                <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}>
-                  <Text style={[styles.postTitle, { color: theme.colors.softWhite }]}>
-                    {post.title}
-                  </Text>
-                  <Text style={[styles.postContent, { color: theme.colors.textSecondary }]}>
-                    {post.content}
-                  </Text>
-                </View>
-
-                {/* Post Image */}
-                {post.image && (
-                  <Image
-                    source={post.image}
-                    style={styles.postImage}
-                    resizeMode="cover"
-                  />
-                )}
-
-                {/* Post Actions */}
-                <View style={[styles.postActions, { paddingHorizontal: theme.spacing.l }]}>
-                  <TouchableOpacity
-                    style={styles.postAction}
-                    onPress={() => handleLike(post.id)}
-                  >
-                    <Ionicons
-                      name={post.isLiked ? "heart" : "heart-outline"}
-                      size={22}
-                      color={post.isLiked ? "#ef4444" : theme.colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.postActionText,
-                        {
-                          color: post.isLiked ? "#ef4444" : theme.colors.textSecondary,
-                          fontWeight: post.isLiked ? '600' : '400',
-                        },
-                      ]}
-                    >
-                      {post.likes}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.postAction}>
-                    <Ionicons
-                      name="chatbubble-outline"
-                      size={22}
-                      color={theme.colors.textSecondary}
-                    />
-                    <Text style={[styles.postActionText, { color: theme.colors.textSecondary }]}>
-                      {post.comments}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.postAction}>
-                    <Ionicons
-                      name="share-social-outline"
-                      size={22}
-                      color={theme.colors.textSecondary}
-                    />
-                    <Text style={[styles.postActionText, { color: theme.colors.textSecondary }]}>
-                      {post.shares}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </ThemedView>
-            );
-          })}
+          {posts.map((post) => (
+            <PostItem
+              key={post.id}
+              post={post}
+              onLike={handleLike}
+              onPress={(postId) => {
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate('PostDetail', { postId });
+                }
+              }}
+            />
+          ))}
         </ThemedView>
       </ThemedScrollView>
     </ThemedSafeAreaView>
@@ -570,6 +504,20 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  whatsOnMindContainer: {
+    borderBottomWidth: 1,
+  },
+  whatsOnMindContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    overflow: 'hidden',
+  },
+  inputContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   headerLeft: {
@@ -678,67 +626,6 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-  },
-  postContainer: {
-    // Styles applied via inline
-  },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  postAuthor: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  postAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  postTimestamp: {
-    fontSize: 14,
-  },
-  postMenuButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  postTypeBadge: {
-    alignSelf: 'flex-start',
-  },
-  postTypeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  postTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  postContent: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  postImage: {
-    width: '100%',
-    height: 256,
-    marginBottom: 12,
-  },
-  postActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  postAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  postActionText: {
-    fontSize: 14,
   },
 });
 

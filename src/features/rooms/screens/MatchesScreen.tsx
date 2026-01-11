@@ -117,9 +117,18 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <ThemedSafeAreaView style={[styles.container, { paddingVertical: theme.spacing.l }]}>
+    <ThemedSafeAreaView>
       {/* Header */}
-      <ThemedView style={[styles.header, { paddingHorizontal: theme.spacing.l, paddingVertical: theme.spacing.m }]}>
+      <ThemedView
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.xl,
+          },
+        ]}
+      >
         <ThemedText size="xxl" weight="bold" variant="primary">
           {t("matches.title", "Trận đấu")}
         </ThemedText>

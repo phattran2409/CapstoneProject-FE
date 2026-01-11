@@ -27,8 +27,8 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  // ✅ Fetch chat rooms from API
-  const { data: chatRooms, isLoading, refetch } = useChatRooms();
+  // // ✅ Fetch chat rooms from API
+  // const { data: chatRooms, isLoading, refetch } = useChatRooms();
 
   // Mock data fallback
   const mockChats: ChatItem[] = [

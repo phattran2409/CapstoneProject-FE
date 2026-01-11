@@ -78,8 +78,8 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({ navigation })
 
   // Mock data - Replace with actual user data
   const profileData = {
-    name: user?.name || 'Mai Anh Tuấn',
-    email: user?.email || 'maianhtuan@gmail.com',
+    name: user?.fullName || 'Mai Anh Tuấn',
+    email: user?.email || 'tuanmaii@gmail.com',
     phone: '0912 345 678',
     dateOfBirth: '15/03/2002',
     gender: 'Nam',
