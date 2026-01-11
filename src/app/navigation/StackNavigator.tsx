@@ -15,6 +15,7 @@ import {
   ProfileScreen,
   RoomInformation,
   FriendRequestsScreen,
+  NotificationsScreen,
   SplashScreen,
   OnboardingScreen,
   checkOnboardingStatus,
@@ -179,6 +180,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="FriendRequests" 
             component={FriendRequestsScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Notifications" 
+            component={NotificationsScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',

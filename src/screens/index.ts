@@ -24,6 +24,9 @@ export { default as VenueSelectionScreen } from '../features/venues/screens/Venu
 export { default as FriendsScreen } from '../features/friends/screens/FriendsScreen';
 export { default as FriendRequestsScreen } from '../features/friends/screens/FriendRequestsScreen';
 
+// Notification Feature Screens
+export { default as NotificationsScreen } from '../features/notification/screens/NotificationsScreen';
+
 // Chat Feature Screens
 export { default as ChatListScreen } from '../features/chat/screens/ChatListScreen';
 export { default as ChatScreen } from '../features/chat/screens/ChatScreen';

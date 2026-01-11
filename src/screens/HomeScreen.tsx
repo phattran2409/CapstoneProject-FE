@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
-import { PostItem, Post } from '@/shared/components';
+import { PostItem, Post, IconButton } from '@/shared/components';
 
 type RootStackParamList = {
   Home: undefined;
@@ -211,7 +211,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {
             paddingHorizontal: theme.spacing.l,
             paddingVertical: theme.spacing.m,
-            marginTop: theme.spacing.l,
+            marginTop: theme.spacing.xl,
             borderBottomWidth: 1,
             borderBottomColor: theme.colors.border,
           },
@@ -230,13 +230,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons
-              name="notifications-outline"
-              size={24}
-              color={theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
+          <IconButton
+            icon="trophy-outline"
+            onPress={() => navigation.navigate("Leaderboard" as any)}
+            size="medium"
+          />
+          <IconButton
+            icon="notifications-outline"
+            onPress={() => navigation.navigate("Notifications" as any)}
+            size="medium"
+            notificationCount={5}
+          />
+         
         </View>
       </ThemedView>
 
@@ -246,7 +251,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         scrollEventThrottle={16}
       >
         {/* ELO Leaderboard Section */}
-        <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
+        {/* <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
           <View style={[styles.leaderboardHeader, { paddingHorizontal: theme.spacing.l, marginBottom: theme.spacing.m }]}>
             <View style={styles.leaderboardTitle}>
               <Ionicons
@@ -298,7 +303,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     // Navigate to player profile
                   }}
                 >
-                  {/* Rank Badge */}
+               
                   <View
                     style={[
                       styles.rankBadge,
@@ -314,14 +319,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     </Text>
                   </View>
 
-                  {/* Avatar */}
+              
                   <Image
                     source={player.avatar}
                     style={styles.playerAvatar}
                     resizeMode="cover"
                   />
 
-                  {/* Player Name */}
+             
                   <Text style={[styles.playerName, { color: theme.colors.softWhite }]}>
                     {player.name}
                   </Text>
@@ -329,7 +334,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     @{player.username}
                   </Text>
 
-                  {/* ELO Score */}
                   <View style={[styles.eloContainer, { backgroundColor: '#0a0a0a', borderRadius: theme.radius.m, padding: 12, marginBottom: 8 }]}>
                     <Text style={[styles.eloLabel, { color: theme.colors.textSecondary }]}>
                       ELO Rating
@@ -339,8 +343,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     >
                       {player.elo}
                     </Text>
-
-                    {/* Trend Indicator */}
+                   
                     <View style={styles.trendContainer}>
                       <Ionicons
                         name={getTrendIcon(player.trend)}
@@ -355,8 +358,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       </Text>
                     </View>
                   </View>
-
-                  {/* Stats */}
+     
                   <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                       <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
@@ -380,7 +382,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               );
             })}
           </ScrollView>
-        </ThemedView>
+        </ThemedView> */}
+
+
 
         {/* Posts Feed */}
         <ThemedView style={{ paddingBottom: theme.spacing.xxl * 2 }}>

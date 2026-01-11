@@ -24,6 +24,7 @@ export type RootStackParamList = {
   FriendRequests: undefined;
   Chat: { chatId: string; chatName: string };
   Profile: undefined;
+  Notifications: undefined;
 };
 
 export type TabParamList = {

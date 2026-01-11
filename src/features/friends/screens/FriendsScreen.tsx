@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TextInput,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -15,8 +14,7 @@ import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { TabParamList } from "@/app/navigation/types";
 import { Friend } from "../types/friends.types";
 import { FriendCard } from "../components";
-import { ThemedView } from "@/shared/components/themed/ThemedView";
-import { ThemedText } from "@/shared/components/themed/ThemedText";
+import { ThemedSafeAreaView, ThemedView, ThemedText } from "@/shared/components/themed";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
 import { ThemedScrollView } from "@/shared/components/themed/ThemedScrollView";
 import { IconButton } from "@/shared/components";
@@ -160,30 +158,21 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <ThemedSafeAreaView>
       {/* Header */}
-      <View
+      <ThemedView
         style={[
           styles.header,
           {
-            paddingHorizontal: theme.spacing.m,
-            paddingBottom: theme.spacing.m,
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.xl,
           },
         ]}
       >
-        <Text
-          style={[
-            styles.headerTitle,
-            {
-              fontSize: theme.fontSizes.xxl,
-              color: theme.colors.text,
-            },
-          ]}
-        >
+        <ThemedText variant="primary" size="xxl" weight="bold">
           {t("friends.title")}
-        </Text>
+        </ThemedText>
         <View style={styles.headerRight}>
           <IconButton
             icon="person-add-outline"
@@ -198,13 +187,13 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
             notificationCount={5}
           />
         </View>
-      </View>
+      </ThemedView>
       <ThemedView variant="surface" style={styles.searchContainer}>
         {searchBar}
       </ThemedView>
 
       <FlatList
-        style={{ paddingHorizontal: theme.spacing.m }}
+        style={{ paddingHorizontal: theme.spacing.l }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         data={friends}
@@ -226,12 +215,12 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
             }}
           />
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: theme.spacing.xxl * 2 }]}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 };
 
@@ -251,12 +240,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
   },
-  headerTitle: {
-    fontWeight: "700",
-  },
 
   listContent: {
-    paddingBottom: 10,
+    paddingHorizontal: 0,
   },
   searchContainer: {
     flexDirection: "row",

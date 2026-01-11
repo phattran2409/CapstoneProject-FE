@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
-import { ThemedText } from '@/shared/components/themed';
+import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { useMyProfile } from '@/features/profile/hooks';
 import { useAppStore } from '@/store/appStore';
@@ -60,31 +60,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView 
-        contentContainerStyle={{ padding: theme.spacing.m }}
+    <ThemedSafeAreaView>
+      {/* Header */}
+     
+
+      <ThemedScrollView 
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        {/* Header: title + chat icon */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: theme.spacing.l,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: theme.fontSizes.xxl,
-              color: theme.colors.text,
-              fontWeight: '700',
-            }}
-          >
-            {t('profile.title')}
-          </Text>     
-        </View>      
+         <ThemedView
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.xl,
+          },
+        ]}
+      >
+        <ThemedText variant="primary" size="xxl" weight="bold">
+          {t('profile.title')}
+        </ThemedText>
+      </ThemedView>
+        <ThemedView style={{ paddingHorizontal: theme.spacing.l, paddingTop: theme.spacing.l }}>      
         {/* Compact Profile Section - rectangular card leading to personal page */}
         <TouchableOpacity
           onPress={handleAvatarPress}
@@ -390,14 +388,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             {t('common.buttons.logout')}
           </ThemedText>
         </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        </ThemedView>
+      </ThemedScrollView>
+    </ThemedSafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   settingItem: {
     flexDirection: 'row',
