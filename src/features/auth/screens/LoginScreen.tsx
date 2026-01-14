@@ -9,6 +9,8 @@ import {
   Image,
   StyleSheet,
   TextInput,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -39,6 +41,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const { user } = useAuthStore();
+  
+  // Forgot Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // React Hook Form with Zod validation
   const {
@@ -110,6 +117,61 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const getErrorMessage = (message?: string) => {
     if (!message) return "";
     return message.startsWith("validation.") ? t(message) : message;
+  };
+
+  // Handle Forgot Password
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) {
+      toast.error(
+        t("login.forgot.error", "Lỗi"),
+        t("login.forgot.emailRequired", "Vui lòng nhập email")
+      );
+      return;
+    }
+
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(forgotEmail)) {
+      toast.error(
+        t("login.forgot.error", "Lỗi"),
+        t("login.forgot.invalidEmail", "Email không hợp lệ")
+      );
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const response = await fetch("https://api.kickify.site/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(
+          t("login.forgot.success", "Đã gửi email"),
+          t("login.forgot.successMessage", "Vui lòng kiểm tra email để đặt lại mật khẩu")
+        );
+        setShowForgotModal(false);
+        setForgotEmail("");
+      } else {
+        toast.error(
+          t("login.forgot.error", "Lỗi"),
+          data.message || t("login.forgot.errorMessage", "Không thể gửi email. Vui lòng thử lại.")
+        );
+      }
+    } catch (error) {
+      toast.error(
+        t("login.forgot.error", "Lỗi"),
+        t("login.forgot.networkError", "Lỗi kết nối. Vui lòng thử lại.")
+      );
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   return (
@@ -197,9 +259,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Text style={[styles.label, { color: theme.colors.softWhite }]}>
                 {t("login.passwordLabel", "Mật khẩu")}
               </Text>
-              <Text style={{ color: theme.colors.textSecondary }}>
-                {t("login.forgot", "Quên mật khẩu?")}
-              </Text>
+              <TouchableOpacity onPress={() => setShowForgotModal(true)}>
+                <Text style={{ color: theme.colors.neonGreen }}>
+                  {t("login.forgot", "Quên mật khẩu?")}
+                </Text>
+              </TouchableOpacity>
             </View>
             <Controller
               control={control}
@@ -339,6 +403,97 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
       </ScrollView>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={showForgotModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowForgotModal(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowForgotModal(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalKeyboardView}
+          >
+            <Pressable 
+              style={[styles.modalContent, { backgroundColor: theme.colors.darkBlack }]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: theme.colors.softWhite }]}>
+                  {t("login.forgot.title", "Quên mật khẩu")}
+                </Text>
+                <TouchableOpacity onPress={() => setShowForgotModal(false)}>
+                  <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Description */}
+              <Text style={[styles.modalDescription, { color: theme.colors.textSecondary }]}>
+                {t("login.forgot.description", "Nhập email của bạn để nhận link đặt lại mật khẩu")}
+              </Text>
+
+              {/* Email Input */}
+              <View
+                style={[
+                  styles.inputContainer,
+                  { borderColor: "#3b3b3b", marginTop: 16 },
+                ]}
+              >
+                <Ionicons
+                  name="mail"
+                  size={20}
+                  color={theme.colors.textSecondary}
+                />
+                <TextInput
+                  style={[styles.input, styles.inputFlex, { color: theme.colors.softWhite }]}
+                  placeholder={t("login.emailPlaceholder", "Nhập email của bạn")}
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={forgotEmail}
+                  onChangeText={setForgotEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoFocus
+                />
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  { backgroundColor: theme.colors.neonGreen },
+                  forgotLoading && { opacity: 0.7 },
+                ]}
+                onPress={handleForgotPassword}
+                disabled={forgotLoading}
+              >
+                {forgotLoading ? (
+                  <ActivityIndicator color={theme.colors.darkBlack} />
+                ) : (
+                  <Text style={[styles.modalButtonText, { color: theme.colors.darkBlack }]}>
+                    {t("login.forgot.submit", "Gửi email")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Cancel Button */}
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowForgotModal(false)}
+              >
+                <Text style={{ color: theme.colors.textSecondary }}>
+                  {t("common.buttons.cancel", "Hủy")}
+                </Text>
+              </TouchableOpacity>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -459,6 +614,55 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalKeyboardView: {
+    width: "100%",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "90%",
+    maxWidth: 400,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "#2b2b2b",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  modalDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  modalButton: {
+    marginTop: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalCancelButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
   },
 });
 

@@ -13,6 +13,15 @@ export type RootStackParamList = {
       rating: number;
       image: any;
     };
+    selectedField?: {
+      id: string;
+      name: string;
+      fieldType: string;
+      maxPlayers: number;
+      pricePerHour: number;
+      description: string;
+      status?: 'available' | 'booked' | 'maintenance';
+    };
   } | undefined;
   VenueSelection: undefined;
   RoomInformation: { roomId: string };
