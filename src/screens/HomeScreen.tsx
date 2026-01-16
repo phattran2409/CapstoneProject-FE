@@ -111,12 +111,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   ];
 
   // Mock data - replace with real data from API
-  const mockImages = [
-    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
-    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
-    require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png'),
-  ];
-
   const [posts, setPosts] = useState<Post[]>([
     {
       id: '1',
@@ -129,7 +123,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       timestamp: '2 giờ trước',
       title: 'Trận đấu hôm qua thật tuyệt vời!',
       content: 'Chúng ta đã có một trận đấu rất hay với nhiều pha bóng đẹp. Cảm ơn tất cả các bạn đã tham gia và cổ vũ nhiệt tình. Hẹn gặp lại ở trận tiếp theo!',
-      images: mockImages,
+      media: [
+        { type: 'image', source: { uri: 'https://res.cloudinary.com/deewfn3zq/image/upload/v1758543909/cafes/018b3971f82947db88e71f187d2b9f0c/ezvyqwywplzkj0ze6vcp.png' } },
+        { type: 'image', source: { uri: 'https://res.cloudinary.com/deewfn3zq/image/upload/v1758543909/cafes/018b3971f82947db88e71f187d2b9f0c/ezvyqwywplzkj0ze6vcp.png' } },
+        { type: 'image', source: { uri: 'https://res.cloudinary.com/deewfn3zq/image/upload/v1758543909/cafes/018b3971f82947db88e71f187d2b9f0c/ezvyqwywplzkj0ze6vcp.png' } },
+        { type: 'video', source: 'https://res.cloudinary.com/deewfn3zq/video/upload/v1758543915/cafes/018b3971f82947db88e71f187d2b9f0c/t0oxnzxjrzqxqoc6btvi.mp4', thumbnail: { uri: 'YOUR_CLOUDINARY_VIDEO_THUMBNAIL_URL' } },
+      ],
       type: 'match',
       likes: 125,
       comments: 23,
@@ -139,11 +138,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     {
       id: '2',
       author: {
-        name: 'Jane Smith',
-        username: 'janesmith',
+        name: 'Trần Minh B',
+        username: 'tranminhb',
         avatar: require('../../assets/icon.png'),
       },
-      timestamp: '8 hours ago',
+      timestamp: '8 giờ trước',
       title: 'Upcoming Match: Warriors vs. Legends',
       content: 'The highly anticipated 5v5 match is scheduled for this Saturday. Who are you cheering for? Drop your predictions below!',
       type: 'match',
@@ -159,10 +158,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         username: 'admin',
         avatar: require('../../assets/icon.png'),
       },
-      timestamp: '1 day ago',
+      timestamp: '1 ngày trước',
       title: 'New Feature Update: Instant Replays!',
       content: 'We\'re excited to announce that you can now view instant replays of key moments from your recorded matches. Update your app to the latest version to try it out!',
-      image: require('../../assets/icon.png'),
+      media: [
+        { type: 'image', source: { uri: 'YOUR_CLOUDINARY_IMAGE_URL_4' } },
+      ],
       type: 'announcement',
       likes: 543,
       comments: 88,

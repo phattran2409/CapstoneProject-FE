@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,6 +7,7 @@ import { useTheme } from '@/shared/theme';
 import { useChatRooms } from '@/features/chat';
 import { RootStackParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { ListSkeleton } from '@/shared/components';
 
 type ChatListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ChatList'>;
 
@@ -26,6 +27,7 @@ interface ChatItem {
 const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
 
   // // ✅ Fetch chat rooms from API
   // const { data: chatRooms, isLoading, refetch } = useChatRooms();
@@ -178,12 +180,16 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {isLoading ? (
+        <ListSkeleton />
+      ) : (
       <FlatList
         data={mockChats}
         renderItem={renderChatItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: theme.spacing.m }}
       />
+      )}
     </SafeAreaView>
   );
 };

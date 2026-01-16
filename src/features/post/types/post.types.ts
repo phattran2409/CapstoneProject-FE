@@ -1,3 +1,5 @@
+import { MediaItem } from '@/shared/components/PostImages';
+
 export interface PostAuthor {
   id: string;
   name: string;
@@ -12,8 +14,9 @@ export interface Post {
   timestamp: string;
   title: string;
   content: string;
-  image?: any; // Deprecated: use images instead
-  images?: any[]; // Support multiple images
+  image?: any; // Deprecated: use images or media instead
+  images?: any[]; // Deprecated: use media instead
+  media?: MediaItem[]; // Support multiple images and videos
   type?: 'post' | 'match' | 'announcement';
   likes: number;
   comments: number;

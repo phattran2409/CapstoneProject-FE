@@ -4,7 +4,7 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedView, ThemedText } from './themed';
-import { PostImages } from './PostImages';
+import { PostImages, MediaItem } from './PostImages';
 
 export interface Post {
   id: string;
@@ -17,8 +17,9 @@ export interface Post {
   timestamp: string;
   title: string;
   content: string;
-  image?: any; // Deprecated: use images instead
-  images?: any[]; // Support multiple images
+  image?: any; // Deprecated: use images or media instead
+  images?: any[]; // Deprecated: use media instead
+  media?: MediaItem[]; // Support multiple images and videos
   type?: 'post' | 'match' | 'announcement';
   likes: number;
   comments: number;
@@ -46,8 +47,11 @@ export const PostItem: React.FC<PostItemProps> = ({
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
   
-  // Support both image (single) and images (multiple) for backward compatibility
-  const images = post.images || (post.image ? [post.image] : []);
+  // Support media, images, and image (single) for backward compatibility
+  // Convert old format to new media format
+  const media: MediaItem[] = post.media || 
+    (post.images ? post.images.map((img: any) => ({ type: 'image' as const, source: img })) : []) ||
+    (post.image ? [{ type: 'image' as const, source: post.image }] : []);
 
   const getPostTypeLabel = (type?: string) => {
     switch (type) {
@@ -155,14 +159,14 @@ export const PostItem: React.FC<PostItemProps> = ({
         </ThemedText>
       </TouchableOpacity>
 
-      {/* Post Images */}
-      {images.length > 0 && (
+      {/* Post Media (Images/Videos) */}
+      {media.length > 0 && (
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => onPress?.(post.id)}
           style={{ marginBottom: 12 }}
         >
-          <PostImages images={images} />
+          <PostImages media={media} />
         </TouchableOpacity>
       )}
 

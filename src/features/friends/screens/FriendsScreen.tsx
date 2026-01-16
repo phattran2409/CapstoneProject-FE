@@ -17,7 +17,7 @@ import { FriendCard } from "../components";
 import { ThemedSafeAreaView, ThemedView, ThemedText } from "@/shared/components/themed";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
 import { ThemedScrollView } from "@/shared/components/themed/ThemedScrollView";
-import { IconButton } from "@/shared/components";
+import { IconButton, ListSkeleton } from "@/shared/components";
 
 type FriendsScreenProps = BottomTabScreenProps<TabParamList, "Friends">;
 
@@ -27,6 +27,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const [searchQuery, setSearchQuery] = useState("");
   const [friendRequestsCount] = useState(4); // TODO: Get from API/store
+  const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual API loading state
 
   const handleFriendRequestsPress = () => {
     const parent = navigation.getParent();
@@ -192,34 +193,38 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
         {searchBar}
       </ThemedView>
 
-      <FlatList
-        style={{ paddingHorizontal: theme.spacing.l }}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        data={friends}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <FriendCard
-            friend={item}
-            onPress={() => {
-              // TODO: Navigate to friend's profile
-              console.log("Friend pressed:", item.name);
-            }}
-            onMessagePress={() => {
-              // TODO: Navigate to chat
-              console.log("Message pressed:", item.name);
-            }}
-            onInvitePress={() => {
-              // TODO: Invite to match
-              console.log("Invite pressed:", item.name);
-            }}
-          />
-        )}
-        contentContainerStyle={[styles.listContent, { paddingBottom: theme.spacing.xxl * 2 }]}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={renderEmptyState}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-      />
+      {isLoading ? (
+        <ListSkeleton />
+      ) : (
+        <FlatList
+          style={{ paddingHorizontal: theme.spacing.l }}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          data={friends}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <FriendCard
+              friend={item}
+              onPress={() => {
+                // TODO: Navigate to friend's profile
+                console.log("Friend pressed:", item.name);
+              }}
+              onMessagePress={() => {
+                // TODO: Navigate to chat
+                console.log("Message pressed:", item.name);
+              }}
+              onInvitePress={() => {
+                // TODO: Invite to match
+                console.log("Invite pressed:", item.name);
+              }}
+            />
+          )}
+          contentContainerStyle={[styles.listContent, { paddingBottom: theme.spacing.xxl * 2 }]}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmptyState}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        />
+      )}
     </ThemedSafeAreaView>
   );
 };
