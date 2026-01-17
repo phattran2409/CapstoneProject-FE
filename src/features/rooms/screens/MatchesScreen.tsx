@@ -10,6 +10,7 @@ import { ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/
 import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
+import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -149,6 +150,9 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ThemedView>
+
+      {/* Active Room Banner - Chỉ hiển thị khi có active room */}
+      <ActiveRoomBannerV2 />
 
       <ScrollView 
         style={styles.flex1}

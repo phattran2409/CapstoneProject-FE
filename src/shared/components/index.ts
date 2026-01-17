@@ -9,6 +9,8 @@ export { default as MatchDetailModal } from './MatchDetailModal';
 export { FormField } from './FormField';
 export { PostItem, default as PostItemDefault } from './PostItem';
 export { PostImages, default as PostImagesDefault } from './PostImages';
+export { ActiveRoomBannerV2 } from './ActiveRoomBannerV2';
+export { TabBadge } from './TabBadge';
 export type { MatchItemData, MatchItemProps } from './MatchItem';
 export type { MatchListProps } from './MatchList';
 export type { MatchDetailModalProps } from './MatchDetailModal';

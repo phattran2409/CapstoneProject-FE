@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Image, ScrollView, Animated, Alert, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Image, ScrollView, Alert, StyleSheet, Share } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -12,9 +13,11 @@ import {
   ThemedCard 
 } from '@/shared/components/themed';
 import { RootStackParamList } from '@/app/navigation/types';
-import { useRoomDetail, useJoinRoom, type Player } from '@/features/rooms';
+import { useRoomDetail, useJoinRoom, useKickPlayer, useCancelRoom, type Player } from '@/features/rooms';
 import { useAuthStore } from '@/features/auth';
 import SplashScreen from '@/features/splash/screens/SplashScreen';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { HostMenuModal, PlayerCard } from '../components';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -31,17 +34,40 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { roomId } = route?.params || { roomId: '1' };
+  const nav = useNavigation<RoomInformationScreenNavigationProp>();
+
+  // ✅ Handle back navigation (supports deep link)
+  const handleGoBack = () => {
+    // Check if there's a previous screen in the stack
+    if (navigation?.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // No stack (came from deep link), navigate to MainTabs
+      nav.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
+    }
+  };
   
   // ✅ Use React Query hooks
   const { data: room, isLoading, error, refetch } = useRoomDetail(roomId);
   const { mutate: joinRoom, isPending: isJoining } = useJoinRoom();
+  const { mutate: kickPlayer, isPending: isKicking } = useKickPlayer();
+  const { mutate: cancelRoom, isPending: isCancelling } = useCancelRoom();
+
   const { user } = useAuthStore();
   
   console.log('room', room);
+  
+  // ✅ Check if user is the host
+  const isHost = room?.hostId === user?.userId;
+  console.log('isHost', user?.userId);
   // ✅ Local UI state
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'teams' | 'host' | 'venue'>('teams');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showMenuModal, setShowMenuModal] = useState(false);
 
   // ✅ Handle join team
   const handleJoinTeam = (teamId: string) => {
@@ -51,7 +77,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     }
 
     joinRoom(
-      { userId: user.id, roomId: room!.id, teamId },
+      { userId: user.userId, roomId: room!.id, teamId },
       {
         onSuccess: () => {
           Alert.alert('Success', 'You have joined the team!');
@@ -72,6 +98,62 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     }
     navigation?.navigate('RoomDetail', { roomId });
   };
+
+  // ✅ Handle kick player (host only)
+  const handleKickPlayer = (userId: string, playerName: string) => {
+    Alert.alert(
+      'Kick Player',
+      `Are you sure you want to kick ${playerName} from the room?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Kick',
+          style: 'destructive',
+          onPress: () => {
+            kickPlayer(
+              { roomId, playerId: userId },
+              {
+                onSuccess: () => {
+                  Alert.alert('Success', 'Player has been kicked from the room');
+                  refetch();
+                },
+                onError: (error: any) => {
+                  Alert.alert('Error', error.message || 'Failed to kick player');
+                },
+              }
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  // ✅ Handle cancel room (host only)
+  const handleCancelRoom = () => {
+    Alert.alert(
+      'Cancel Room',
+      'Are you sure you want to cancel this room? This action cannot be undone.',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: () => {
+            cancelRoom(roomId, {
+              onSuccess: () => {
+                Alert.alert('Success', 'Room has been cancelled');
+                navigation?.goBack();
+              },
+              onError: (error: any) => {
+                Alert.alert('Error', error.message || 'Failed to cancel room');
+              },
+            });
+          },
+        },
+      ]
+    );
+  };
+
 
   // ✅ Loading state
   if (isLoading) {
@@ -110,159 +192,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     );
   }
 
-  const renderPlayerCard = (player: Player | null, teamId: string, teamColor: string) => {
-    // ✅ Create animation value directly (not a hook, safe in render function)
-    const scaleAnim = new Animated.Value(1);
-
-    const handlePressIn = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        useNativeDriver: true,
-        speed: 50,
-        bounciness: 4,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 50,
-        bounciness: 8,
-      }).start();
-    };
-
-    if (!player) {
-      // Empty slot - Interactive add button
-      return (
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={() => handleJoinTeam(teamId)}
-            disabled={isJoining}
-          >
-            <View
-              style={[
-                styles.emptySlotCard,
-                { 
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface + '80',
-                  opacity: isJoining ? 0.5 : 1,
-                }
-              ]}
-            >
-              <View 
-                style={[
-                  styles.emptySlotIconContainer,
-                  { backgroundColor: theme.colors.neonGreen + '20' }
-                ]}
-              >
-                <ThemedIcon name={isJoining ? "hourglass" : "add"} size={32} variant="accent" />
-              </View>
-              <ThemedText variant="secondary" size="s" weight="medium">
-                {isJoining ? 'Joining...' : t('roomDetail.emptySlot')}
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-      );
-    }
-
-    // Player card with beautiful background and effects
-    return (
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          onPress={() => {
-            console.log('View player profile:', player.user?.id);
-            // Handle view player profile
-          }}
-        >
-          <View
-            style={[
-              styles.playerCard,
-              { 
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                shadowColor: teamColor,
-              }
-            ]}
-          >
-            {/* Gradient Background Effect */}
-            <View 
-              style={[
-                styles.playerCardGradient,
-                { backgroundColor: teamColor + '15' }
-              ]}
-            />
-            
-            {/* Avatar with Glow Effect */}
-            <View style={styles.playerAvatarContainer}>
-              <View 
-                style={[
-                  styles.playerAvatar,
-                  { 
-                    borderColor: teamColor,
-                    backgroundColor: theme.colors.background,
-                    shadowColor: teamColor,
-                  }
-                ]}
-              >
-                {player.user?.avatar ? (
-                  <Image
-                    source={{ uri: player.user.avatar }}
-                    style={styles.playerAvatarImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={[styles.playerAvatarPlaceholder, { backgroundColor: teamColor + '30' }]}>
-                    <ThemedIcon name="person" size={32} variant="accent" />
-                  </View>
-                )}
-              </View>
-              
-              {/* Confirmed Badge */}
-              {player.isConfirmed && (
-                <View 
-                  style={[
-                    styles.confirmedBadge,
-                    { 
-                      backgroundColor: teamColor,
-                      borderColor: theme.colors.surface,
-                    }
-                  ]}
-                >
-                  <ThemedIcon name="checkmark" size={14} color="#000" />
-                </View>
-              )}
-            </View>
-
-            {/* Player Name with better contrast */}
-            <View 
-              style={[
-                styles.playerNameContainer,
-                { backgroundColor: theme.colors.background + '80' }
-              ]}
-            >
-              <ThemedText 
-                variant="secondary" 
-                size="s" 
-                weight="medium"
-                style={styles.playerNameText}
-                numberOfLines={1}
-              >
-                {player.user?.name || 'Unknown'}
-              </ThemedText>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
 
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
@@ -275,7 +204,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       >
         <View style={styles.headerLeft}>
           <TouchableOpacity
-            onPress={() => navigation?.goBack()}
+            onPress={handleGoBack}
             style={styles.backButton}
           >
             <ThemedIcon name="arrow-back" size={24} variant="secondary" />
@@ -284,6 +213,16 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             {t('roomDetail.title')}
           </ThemedText>
         </View>
+        
+        {/* Menu Button (Host only) */}
+        {isHost && (
+          <TouchableOpacity
+            onPress={() => setShowMenuModal(true)}
+            style={styles.menuButton}
+          >
+            <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+        )}
       </ThemedView>
 
       {/* Tab Navigation */}
@@ -472,13 +411,37 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                 >
                   {team.players.map((player, index) => (
                     <View key={`${team.id}-player-${index}`}>
-                      {renderPlayerCard(player, team.id, team.color)}
+                      <PlayerCard
+                        player={player}
+                        teamId={team.id}
+                        teamColor={team.color}
+                        isHost={isHost}
+                        currentUserId={user?.userId}
+                        isJoining={isJoining}
+                        isKicking={isKicking}
+                        onJoinTeam={handleJoinTeam}
+                        onKickPlayer={handleKickPlayer}
+                        onPress={() => {
+                          console.log('View player profile:', player.user?.id);
+                          // Handle view player profile
+                        }}
+                      />
                     </View>
                   ))}
                   {/* Add empty slot if team not full */}
                   {team.players.length < room.totalPlayers / 2 && (
                     <View key={`${team.id}-empty-slot`}>
-                      {renderPlayerCard(null, team.id, team.color)}
+                      <PlayerCard
+                        player={null}
+                        teamId={team.id}
+                        teamColor={team.color}
+                        isHost={isHost}
+                        currentUserId={user?.userId}
+                        isJoining={isJoining}
+                        isKicking={isKicking}
+                        onJoinTeam={handleJoinTeam}
+                        onKickPlayer={handleKickPlayer}
+                      />
                     </View>
                   )}
                 </ScrollView>
@@ -688,6 +651,16 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         </View>
       </ThemedScrollView>
 
+      {/* Host Menu Modal */}
+      {isHost && (
+        <HostMenuModal
+          visible={showMenuModal}
+          handleShowMenuModal={() => setShowMenuModal(false)}
+          room={room}
+          handleCancelRoom={handleCancelRoom}
+          isCancelling={isCancelling}
+        />
+      )}
       {/* Join Button - Only show on Teams tab */}
       {activeTab === 'teams' && (
       <View 
@@ -754,89 +727,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emptySlotCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    width: 110,
-    height: 140,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-  },
-  emptySlotIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  playerCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    overflow: 'hidden',
-    width: 110,
-    height: 140,
-    borderWidth: 2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  playerCardGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 64,
-  },
-  playerAvatarContainer: {
-    marginTop: 12,
-  },
-  playerAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 3,
-    backgroundColor: '#121212',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  playerAvatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  playerAvatarPlaceholder: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  confirmedBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-  },
-  playerNameContainer: {
-    marginTop: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  playerNameText: {
-    textAlign: 'center',
-    letterSpacing: 0.3,
   },
   header: {
     flexDirection: 'row',
@@ -1054,6 +944,12 @@ const styles = StyleSheet.create({
   },
   joinButtonText: {
     textAlign: 'center',
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

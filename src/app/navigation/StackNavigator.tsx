@@ -24,7 +24,6 @@ import {
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from './types';
-import { ActiveRoomBanner } from '@/shared/components/ActiveRoomBanner';
 import { View, StyleSheet } from 'react-native';
 
 
@@ -205,7 +204,6 @@ const StackNavigator: React.FC = () => {
         </>
       )}
       </Stack.Navigator>
-      {isAuthenticated && <ActiveRoomBanner />}
     </View>
   );
 };

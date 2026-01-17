@@ -102,5 +102,19 @@ export const roomsApi = {
     });
     return data;
   },
+
+  /**
+   * Kick a player from a room (host only)
+   */
+  kickPlayer: async (roomId: string, playerId: string): Promise<void> => {
+    await apiClient.delete(`/rooms/${roomId}/players/${playerId}`);
+  },
+
+  /**
+   * Cancel/Delete a room (host only)
+   */
+  cancelRoom: async (roomId: string): Promise<void> => {
+    await apiClient.patch(`/rooms/${roomId}`, { status: 'cancelled' });
+  },
 };
 

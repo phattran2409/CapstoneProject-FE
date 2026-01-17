@@ -73,7 +73,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
           maxPlayers: 10,
           pricePerHour: 250000,
           description: "Sân cỏ nhân tạo, đèn chiếu sáng",
-          status: 'available',
+          status: 'available' as const,
           time: [
             {
               id: "1",
@@ -86,7 +86,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
               endTime: "13:00",
             } 
           ]
-        },
+        } as Field,
         {
           id: "2",
           name: "Sân B - Trung",
@@ -211,7 +211,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
   };
 
   const handleSelectVenue = (venue: Venue) => {
-    navigation?.navigate('CreateRoom', { selectedVenue: venue });
+    navigation?.replace('CreateRoom', { selectedVenue: venue });
   };
 
   const handleOpenFieldsModal = (venue: Venue) => {
@@ -226,7 +226,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
 
   const handleSelectField = (venue: Venue, field: Field) => {
     handleCloseFieldsModal();
-    navigation?.navigate('CreateRoom', { 
+    navigation?.replace('CreateRoom', { 
       selectedVenue: {
         id: venue.id,
         name: venue.name,
