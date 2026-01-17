@@ -86,8 +86,12 @@ apiClient.interceptors.response.use(
       const status = error.response.status;
       const data = error.response.data as any;
       
-      apiError.message = data?.message || data?.error || error.message;
+      apiError.message = data?.detail || data?.message || data?.error || error.message;
+      apiError.code = data?.title || data?.code
       apiError.details = data;
+      
+      console.log('🔍 API Error:', data);
+
 
       if (__DEV__) {
         console.error('📥 API Error:', status, error.config?.url, apiError.message);

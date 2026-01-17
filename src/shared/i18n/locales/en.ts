@@ -160,6 +160,12 @@ const en = {
     perHour: "Rental price / hour",
     distance: "km",
   },
+  fieldsModal: {
+    title: "Fields",
+    fields: "Fields",
+    fieldsCount: "{{count}} fields",
+    fieldsHint: "Click to view details & book field",
+  },
   roomDetail: {
     title: "Room Details",
     format: "Format",

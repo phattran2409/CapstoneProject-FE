@@ -21,7 +21,7 @@ export type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  OTPRequest,
+  SendOTPRequest,
   OTPResponse,
   VerifyOTPRequest,
   VerifyOTPResponse,

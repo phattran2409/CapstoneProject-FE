@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useVenues, Venue as VenueType } from '@/features/venues';
 import { RootStackParamList } from '@/app/navigation/types';
+import { FieldsModal, Field, VenueWithFields } from '../components';
 
 
 type VenueSelectionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VenueSelection'>;
@@ -15,25 +16,16 @@ interface VenueSelectionScreenProps {
   navigation?: VenueSelectionScreenNavigationProp;
 }
 
-interface Venue {
-  id: string;
-  name: string;
-  address: string;
-  district: string;
-  price: number;
-  rating: number;
-  reviews: number;
-  image: any;
-  facilities: string[];
-  availableFormats: string[];
-  distance?: number;
-}
+// Use types from FieldsModal component
+type Venue = VenueWithFields;
 
 const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | '5vs5' | '7vs7'>('all');
+  const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
+  const [selectedVenueForFields, setSelectedVenueForFields] = useState<Venue | null>(null);
 
   // ✅ Fetch venues from API
   const { 
@@ -73,72 +65,143 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
       reviews: 245,
       image: require('@assets/images/icon.png'),
       facilities: ['Parking', 'Shower', 'Locker'],
+      fields: [
+        {
+          id: "1",
+          name: "Sân A - Mini",
+          fieldType: "5vs5",
+          maxPlayers: 10,
+          pricePerHour: 250000,
+          description: "Sân cỏ nhân tạo, đèn chiếu sáng",
+          status: 'available',
+          time: [
+            {
+              id: "1",
+              startTime: "09:00",
+              endTime: "11:00",
+            },
+            {
+              id: "2",
+              startTime: "11:00",
+              endTime: "13:00",
+            } 
+          ]
+        },
+        {
+          id: "2",
+          name: "Sân B - Trung",
+          fieldType: "7vs7",
+          maxPlayers: 14,
+          pricePerHour: 450000,
+          description: "Sân cỏ nhân tạo cao cấp",
+          status: 'available',
+          time: [
+            {
+              id: "1",
+              startTime: "09:00",
+              endTime: "11:00",
+            }
+          ]
+        },
+        {
+          id: "3",
+          name: "Sân C - VIP",
+          fieldType: "7vs7",
+          maxPlayers: 14,
+          pricePerHour: 600000,
+          description: "Sân VIP có phòng thay đồ riêng",
+          status: 'booked',
+          time: [
+            {
+              id: "1",
+              startTime: "09:00",
+              endTime: "11:00",
+            }
+          ]
+        },
+        {
+          id: "4",
+          name: "Sân D - Mini",
+          fieldType: "5vs5",
+          maxPlayers: 10,
+          pricePerHour: 280000,
+          description: "Sân mới nâng cấp 2024",
+          status: 'available',
+          time: [
+            {
+              id: "1",
+              startTime: "09:00",
+              endTime: "11:00",
+            }
+          ]
+        },
+      ],
       availableFormats: ['5vs5', '7vs7'],
       distance: 2.5,
     },
-    {
-      id: '2',
-      name: 'Sân Bình Thạnh FC',
-      address: '456 Điện Biên Phủ',
-      district: 'Bình Thạnh',
-      price: 400000,
-      rating: 4.6,
-      reviews: 189,
-      image: require('@assets/images/icon.png'),
-      facilities: ['Parking', 'Canteen'],
-      availableFormats: ['5vs5'],
-      distance: 3.2,
-    },
-    {
-      id: '3',
-      name: 'Sân Long Biên Sports',
-      address: '789 Võ Văn Ngân',
-      district: 'Thủ Đức',
-      price: 450000,
-      rating: 4.7,
-      reviews: 312,
-      image: require('@assets/images/icon.png'),
-      facilities: ['Parking', 'Shower', 'Locker', 'Canteen'],
-      availableFormats: ['5vs5', '7vs7'],
-      distance: 4.1,
-    },
-    {
-      id: '4',
-      name: 'Sân Phú Nhuận Arena',
-      address: '321 Phan Đăng Lưu',
-      district: 'Phú Nhuận',
-      price: 550000,
-      rating: 4.9,
-      reviews: 428,
-      image: require('@assets/images/icon.png'),
-      facilities: ['Parking', 'Shower', 'Locker', 'Canteen', 'Referee'],
-      availableFormats: ['5vs5', '7vs7'],
-      distance: 1.8,
-    },
-    {
-      id: '5',
-      name: 'Sân Tân Bình Center',
-      address: '654 Cộng Hòa',
-      district: 'Tân Bình',
-      price: 380000,
-      rating: 4.5,
-      reviews: 156,
-      image: require('@assets/images/icon.png'),
-      facilities: ['Parking', 'Shower'],
-      availableFormats: ['5vs5'],
-      distance: 5.3,
-    },
+    // {
+    //   id: '2',
+    //   name: 'Sân Bình Thạnh FC',
+    //   address: '456 Điện Biên Phủ',
+    //   district: 'Bình Thạnh',
+    //   price: 400000,
+    //   rating: 4.6,
+    //   reviews: 189,
+    //   image: require('@assets/images/icon.png'),
+    //   facilities: ['Parking', 'Canteen'],
+    //   availableFormats: ['5vs5'],
+    //   distance: 3.2,
+    // },
+    // {
+    //   id: '3',
+    //   name: 'Sân Long Biên Sports',
+    //   address: '789 Võ Văn Ngân',
+    //   district: 'Thủ Đức',
+    //   price: 450000,
+    //   rating: 4.7,
+    //   reviews: 312,
+    //   image: require('@assets/images/icon.png'),
+    //   facilities: ['Parking', 'Shower', 'Locker', 'Canteen'],
+    //   availableFormats: ['5vs5', '7vs7'],
+    //   distance: 4.1,
+    // },
+    // {
+    //   id: '4',
+    //   name: 'Sân Phú Nhuận Arena',
+    //   address: '321 Phan Đăng Lưu',
+    //   district: 'Phú Nhuận',
+    //   price: 550000,
+    //   rating: 4.9,
+    //   reviews: 428,
+    //   image: require('@assets/images/icon.png'),
+    //   facilities: ['Parking', 'Shower', 'Locker', 'Canteen', 'Referee'],
+    //   availableFormats: ['5vs5', '7vs7'],
+    //   distance: 1.8,
+    // },
+    // {
+    //   id: '5',
+    //   name: 'Sân Tân Bình Center',
+    //   address: '654 Cộng Hòa',
+    //   district: 'Tân Bình',
+    //   price: 380000,
+    //   rating: 4.5,
+    //   reviews: 156,
+    //   image: require('@assets/images/icon.png'),
+    //   facilities: ['Parking', 'Shower'],
+    //   availableFormats: ['5vs5'],
+    //   distance: 5.3,
+    // },
   ];
 
-  const filteredVenues = venues.filter(venue => {
-    const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         venue.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         venue.district.toLowerCase().includes(searchQuery.toLowerCase());
+  // const filteredVenues = venues.filter(venue => {
+  //   const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //                        venue.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //                        venue.district.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesFilter = selectedFilter === 'all' || venue.availableFormats.includes(selectedFilter);
+  //   const matchesFilter = selectedFilter === 'all' || venue.availableFormats.includes(selectedFilter);
     
-    return matchesSearch && matchesFilter;
-  });
+  //   return matchesSearch && matchesFilter;
+  // });
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -149,6 +212,39 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
 
   const handleSelectVenue = (venue: Venue) => {
     navigation?.navigate('CreateRoom', { selectedVenue: venue });
+  };
+
+  const handleOpenFieldsModal = (venue: Venue) => {
+    setSelectedVenueForFields(venue);
+    setFieldsModalVisible(true);
+  };
+
+  const handleCloseFieldsModal = () => {
+    setFieldsModalVisible(false);
+    setSelectedVenueForFields(null);
+  };
+
+  const handleSelectField = (venue: Venue, field: Field) => {
+    handleCloseFieldsModal();
+    navigation?.navigate('CreateRoom', { 
+      selectedVenue: {
+        id: venue.id,
+        name: venue.name,
+        address: venue.address,
+        price: venue.price,
+        rating: venue.rating,
+        image: venue.image,
+      },
+      selectedField: {
+        id: field.id,
+        name: field.name,
+        fieldType: field.fieldType,
+        maxPlayers: field.maxPlayers,
+        pricePerHour: field.pricePerHour,
+        description: field.description,
+        status: field.status,
+      }
+    });
   };
 
   return (
@@ -317,6 +413,30 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
                   ))}
                 </View>
 
+                {/* Fields Count Indicator */}
+                {venue.fields && venue.fields.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.fieldsIndicator, { 
+                      backgroundColor: theme.colors.neonGreen + '15',
+                      borderColor: theme.colors.neonGreen + '30',
+                    }]}
+                    onPress={() => handleOpenFieldsModal(venue)}
+                  >
+                    <View style={styles.fieldsIndicatorLeft}>
+                      <Ionicons name="football-outline" size={20} color={theme.colors.neonGreen} />
+                      <View>
+                        <Text style={[styles.fieldsCount, { color: theme.colors.neonGreen }]}>
+                          {venue.fields.length} sân có sẵn
+                        </Text>
+                        <Text style={[styles.fieldsHint, { color: theme.colors.textSecondary }]}>
+                          Nhấn để xem chi tiết & đặt sân
+                        </Text>
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={theme.colors.neonGreen} />
+                  </TouchableOpacity>
+                )}
+
                 {/* Price and Formats */}
                 <View style={[styles.priceRow, { paddingTop: 12, borderTopWidth: 1, borderTopColor: '#2a2a2a' }]}>
                   <View>
@@ -345,7 +465,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
           ))}
         </View>
 
-        {filteredVenues.length === 0 && (
+        {venues.length === 0 && (
           <View style={styles.emptyState}>
             <Ionicons name="location-outline" size={64} color={theme.colors.textSecondary} />
             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
@@ -354,6 +474,15 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
           </View>
         )}
       </ScrollView>
+
+      {/* Fields Modal */}
+      <FieldsModal
+        visible={fieldsModalVisible}
+        venue={selectedVenueForFields}
+        onClose={handleCloseFieldsModal}
+        onSelectField={handleSelectField}
+        theme={theme}
+      />
     </SafeAreaView>
   );
 };
@@ -487,6 +616,29 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     marginTop: 16,
+  },
+  // Fields Indicator styles
+  fieldsIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  fieldsIndicatorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  fieldsCount: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  fieldsHint: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });
 

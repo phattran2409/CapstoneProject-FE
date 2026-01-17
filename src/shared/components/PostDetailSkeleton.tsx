@@ -46,12 +46,12 @@ export const PostDetailSkeleton: React.FC = () => {
       </View>
 
       {/* Comments Section Title */}
-      <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}>
+      {/* <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}>
         <Skeleton width={150} height={20} />
-      </View>
+      </View> */}
 
       {/* Comment Items */}
-      {[1, 2, 3].map((index) => (
+      {/* {[1, 2, 3].map((index) => (
         <View
           key={index}
           style={[
@@ -66,7 +66,7 @@ export const PostDetailSkeleton: React.FC = () => {
             <Skeleton width="80%" height={14} />
           </View>
         </View>
-      ))}
+      ))} */}
     </ThemedView>
   );
 };

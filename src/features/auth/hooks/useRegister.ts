@@ -31,11 +31,13 @@ export const useRegister = () => {
     
     onSuccess: (response) => {
       // Set token for API calls
-      setAuthToken(response.token);
+      // setAuthToken(response.token);
       
-      // Update auth store (auto-login after register)
-      setUser(response.user);
-      setToken(response.token);
+      // // Update auth store (auto-login after register)
+      setUser(response.data || null); 
+      
+      // setToken(response.token);
+      
     },
     
     onError: () => {

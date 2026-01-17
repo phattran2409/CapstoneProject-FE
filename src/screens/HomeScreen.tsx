@@ -1,20 +1,36 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
-import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
-import { PostItem, Post, IconButton } from '@/shared/components';
-
-import { TabParamList } from '@/app/navigation/types';
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  TextInput,
+  RefreshControl,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import {
+  ThemedSafeAreaView,
+  ThemedScrollView,
+  ThemedText,
+  ThemedView,
+} from "@/shared/components/themed";
+import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
+import { PostItem, Post, IconButton } from "@/shared/components";
+import { getPosts } from "@/features/post/api/postApi";
+import { PostDetailSkeleton, ErrorState } from "@/shared/components";
+import { TabParamList } from "@/app/navigation/types";
+import { CompositeNavigationProp } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<TabParamList, 'Home'>,
+  BottomTabNavigationProp<TabParamList, "Home">,
   NativeStackNavigationProp<any>
 >;
 
@@ -31,7 +47,7 @@ interface ELOPlayer {
   elo: number;
   matchesPlayed: number;
   winRate: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   eloChange: number;
 }
 
@@ -39,179 +55,174 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
-  
+
   // Mock user data - replace with real user from auth store when available
   const mockUser = {
-    fullName: 'Nguyễn Văn A',
+    fullName: "Nguyễn Văn A",
     avatar: undefined, // Can be set to require('../../assets/icon.png') if needed
   };
 
   // Mock ELO Leaderboard data - replace with real data from API
   const topPlayers: ELOPlayer[] = [
     {
-      id: '1',
+      id: "1",
       rank: 1,
-      name: 'Nguyễn Văn A',
-      username: 'nguyenvana',
-      avatar: require('../../assets/icon.png'),
+      name: "Nguyễn Văn A",
+      username: "nguyenvana",
+      avatar: require("../../assets/icon.png"),
       elo: 2450,
       matchesPlayed: 128,
       winRate: 78.5,
-      trend: 'up',
+      trend: "up",
       eloChange: 45,
     },
     {
-      id: '2',
+      id: "2",
       rank: 2,
-      name: 'Trần Minh B',
-      username: 'tranminhb',
-      avatar: require('../../assets/icon.png'),
+      name: "Trần Minh B",
+      username: "tranminhb",
+      avatar: require("../../assets/icon.png"),
       elo: 2380,
       matchesPlayed: 115,
       winRate: 74.2,
-      trend: 'up',
+      trend: "up",
       eloChange: 28,
     },
     {
-      id: '3',
+      id: "3",
       rank: 3,
-      name: 'Lê Hoàng C',
-      username: 'lehoangc',
-      avatar: require('../../assets/icon.png'),
+      name: "Lê Hoàng C",
+      username: "lehoangc",
+      avatar: require("../../assets/icon.png"),
       elo: 2310,
       matchesPlayed: 102,
       winRate: 71.8,
-      trend: 'down',
+      trend: "down",
       eloChange: -15,
     },
     {
-      id: '4',
+      id: "4",
       rank: 4,
-      name: 'Phạm Đức D',
-      username: 'phamducd',
-      avatar: require('../../assets/icon.png'),
+      name: "Phạm Đức D",
+      username: "phamducd",
+      avatar: require("../../assets/icon.png"),
       elo: 2285,
       matchesPlayed: 95,
       winRate: 69.5,
-      trend: 'stable',
+      trend: "stable",
       eloChange: 0,
     },
     {
-      id: '5',
+      id: "5",
       rank: 5,
-      name: 'Võ Thành E',
-      username: 'vothanhe',
-      avatar: require('../../assets/icon.png'),
+      name: "Võ Thành E",
+      username: "vothanhe",
+      avatar: require("../../assets/icon.png"),
       elo: 2240,
       matchesPlayed: 88,
       winRate: 67.3,
-      trend: 'up',
+      trend: "up",
       eloChange: 12,
     },
   ];
 
-  // Mock data - replace with real data from API
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      author: {
-        name: 'Nguyễn Văn A',
-        username: 'nguyenvana',
-        avatar: require('../../assets/icon.png'),
-      },
-      community: 'Football Community',
-      timestamp: '2 giờ trước',
-      title: 'Trận đấu hôm qua thật tuyệt vời!',
-      content: 'Chúng ta đã có một trận đấu rất hay với nhiều pha bóng đẹp. Cảm ơn tất cả các bạn đã tham gia và cổ vũ nhiệt tình. Hẹn gặp lại ở trận tiếp theo!',
-      media: [
-        { type: 'image', source: { uri: 'https://res.cloudinary.com/deewfn3zq/image/upload/v1758543909/cafes/018b3971f82947db88e71f187d2b9f0c/ezvyqwywplzkj0ze6vcp.png' } },
-        { type: 'image', source: { uri: 'https://res.cloudinary.com/deewfn3zq/image/upload/v1758543909/cafes/018b3971f82947db88e71f187d2b9f0c/ezvyqwywplzkj0ze6vcp.png' } },
-        { type: 'image', source: { uri: 'https://res.cloudinary.com/deewfn3zq/image/upload/v1758543909/cafes/018b3971f82947db88e71f187d2b9f0c/ezvyqwywplzkj0ze6vcp.png' } },
-        { type: 'video', source: 'https://res.cloudinary.com/deewfn3zq/video/upload/v1758543915/cafes/018b3971f82947db88e71f187d2b9f0c/t0oxnzxjrzqxqoc6btvi.mp4', thumbnail: { uri: 'YOUR_CLOUDINARY_VIDEO_THUMBNAIL_URL' } },
-      ],
-      type: 'match',
-      likes: 125,
-      comments: 23,
-      shares: 8,
-      isLiked: false,
-    },
-    {
-      id: '2',
-      author: {
-        name: 'Trần Minh B',
-        username: 'tranminhb',
-        avatar: require('../../assets/icon.png'),
-      },
-      timestamp: '8 giờ trước',
-      title: 'Upcoming Match: Warriors vs. Legends',
-      content: 'The highly anticipated 5v5 match is scheduled for this Saturday. Who are you cheering for? Drop your predictions below!',
-      type: 'match',
-      likes: 210,
-      comments: 45,
-      shares: 18,
-      isLiked: false,
-    },
-    {
-      id: '3',
-      author: {
-        name: 'Admin',
-        username: 'admin',
-        avatar: require('../../assets/icon.png'),
-      },
-      timestamp: '1 ngày trước',
-      title: 'New Feature Update: Instant Replays!',
-      content: 'We\'re excited to announce that you can now view instant replays of key moments from your recorded matches. Update your app to the latest version to try it out!',
-      media: [
-        { type: 'image', source: { uri: 'YOUR_CLOUDINARY_IMAGE_URL_4' } },
-      ],
-      type: 'announcement',
-      likes: 543,
-      comments: 88,
-      shares: 34,
-      isLiked: false,
-    },
-  ]);
+  // Posts state with API integration
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Fetch posts from API
+  const fetchPosts = async (
+    pageNum: number = 1,
+    isRefresh: boolean = false,
+  ) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+
+      const result = await getPosts(pageNum, 10);
+
+      if (isRefresh) {
+        setPosts(result.posts);
+      } else {
+        setPosts(result.posts);
+      }
+
+      setTotalPages(result.totalPages);
+      setPage(pageNum);
+    } catch (err: any) {
+      console.error("Error fetching posts:", err);
+      setError(err.message || "Không thể tải bài viết");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Load posts on mount
+  useEffect(() => {
+    fetchPosts(1);
+  }, []);
+
+  // Handle refresh
+  const handleRefresh = () => {
+    fetchPosts(1, true);
+  };
 
   const handleLike = (postId: string) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 }
-        : post
-    ));
+    // TODO: Implement like functionality with new Post type
+    // setPosts(
+    //   posts.map((post) =>
+    //     post.postId === postId
+    //       ? {
+    //           ...post,
+    //           isLiked: !post.isLiked,
+    //           totalLikes: post.isLiked ? post.totalLikes - 1 : post.totalLikes + 1,
+    //         }
+    //       : post,
+    //   ),
+    // );
   };
 
   const getRankColor = (rank: number) => {
     switch (rank) {
       case 1:
-        return '#FFD700'; // Gold
+        return "#FFD700"; // Gold
       case 2:
-        return '#C0C0C0'; // Silver
+        return "#C0C0C0"; // Silver
       case 3:
-        return '#CD7F32'; // Bronze
+        return "#CD7F32"; // Bronze
       default:
         return theme.colors.neonGreen;
     }
   };
 
-  const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
+  const getTrendIcon = (trend: "up" | "down" | "stable") => {
     switch (trend) {
-      case 'up':
-        return 'trending-up';
-      case 'down':
-        return 'trending-down';
-      case 'stable':
-        return 'remove';
+      case "up":
+        return "trending-up";
+      case "down":
+        return "trending-down";
+      case "stable":
+        return "remove";
     }
   };
 
-  const getTrendColor = (trend: 'up' | 'down' | 'stable') => {
+  const getTrendColor = (trend: "up" | "down" | "stable") => {
     switch (trend) {
-      case 'up':
-        return '#22c55e';
-      case 'down':
-        return '#ef4444';
-      case 'stable':
-        return '#6b7280';
+      case "up":
+        return "#22c55e";
+      case "down":
+        return "#ef4444";
+      case "stable":
+        return "#6b7280";
     }
   };
 
@@ -254,16 +265,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             size="medium"
             notificationCount={5}
           />
-         
         </View>
       </ThemedView>
 
-      <ThemedScrollView 
+      <ThemedScrollView
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.colors.neonGreen}
+            colors={[theme.colors.neonGreen]}
+          />
+        }
       >
-
         {/*What's on your mind Section */}
         <ThemedView
           style={[
@@ -282,7 +299,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => {
                 const parent = navigation.getParent();
                 if (parent) {
-                  parent.navigate('PersonalPage');
+                  parent.navigate("PersonalPage");
                 }
               }}
               activeOpacity={0.7}
@@ -297,13 +314,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     backgroundColor: theme.colors.surface,
                     borderWidth: 2,
                     borderColor: theme.colors.neonGreen,
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                    justifyContent: "center",
+                    alignItems: "center",
                   },
                 ]}
               >
                 {mockUser.avatar ? (
-                  typeof mockUser.avatar === 'string' ? (
+                  typeof mockUser.avatar === "string" ? (
                     <Image
                       source={{ uri: mockUser.avatar }}
                       style={{ width: 36, height: 36, borderRadius: 18 }}
@@ -317,7 +334,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     />
                   )
                 ) : (
-                  <Ionicons name="person" size={24} color={theme.colors.textSecondary} />
+                  <Ionicons
+                    name="person"
+                    size={24}
+                    color={theme.colors.textSecondary}
+                  />
                 )}
               </View>
             </TouchableOpacity>
@@ -338,15 +359,34 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               activeOpacity={0.7}
             >
               <ThemedText variant="secondary" size="m">
-                {t('newsFeed.whatsOnMind', { defaultValue: "Bạn đang nghĩ gì?" })}
+                {t("newsFeed.whatsOnMind", {
+                  defaultValue: "Bạn đang nghĩ gì?",
+                })}
               </ThemedText>
             </TouchableOpacity>
           </View>
         </ThemedView>
 
         {/* ELO Leaderboard Section */}
-        <ThemedView style={[styles.leaderboardSection, { paddingVertical: theme.spacing.l, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }]}>
-          <View style={[styles.leaderboardHeader, { paddingHorizontal: theme.spacing.l, marginBottom: theme.spacing.m }]}>
+        <ThemedView
+          style={[
+            styles.leaderboardSection,
+            {
+              paddingVertical: theme.spacing.l,
+              borderBottomWidth: 1,
+              borderBottomColor: "#2a2a2a",
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.leaderboardHeader,
+              {
+                paddingHorizontal: theme.spacing.l,
+                marginBottom: theme.spacing.m,
+              },
+            ]}
+          >
             <View style={styles.leaderboardTitle}>
               <Ionicons
                 name="trophy"
@@ -384,12 +424,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   style={[
                     styles.playerCard,
                     {
-                      backgroundColor: '#1a1a1a',
+                      backgroundColor: "#1a1a1a",
                       borderRadius: theme.radius.l,
                       padding: theme.spacing.m,
                       marginRight: theme.spacing.m,
                       borderWidth: 1,
-                      borderColor: '#2a2a2a',
+                      borderColor: "#2a2a2a",
                       width: 180,
                     },
                   ]}
@@ -397,7 +437,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     // Navigate to player profile
                   }}
                 >
-               
                   <View
                     style={[
                       styles.rankBadge,
@@ -413,31 +452,57 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     </Text>
                   </View>
 
-              
                   <Image
                     source={player.avatar}
                     style={styles.playerAvatar}
                     resizeMode="cover"
                   />
 
-             
-                  <Text style={[styles.playerName, { color: theme.colors.softWhite }]}>
+                  <Text
+                    style={[
+                      styles.playerName,
+                      { color: theme.colors.softWhite },
+                    ]}
+                  >
                     {player.name}
                   </Text>
-                  <Text style={[styles.playerUsername, { color: theme.colors.textSecondary }]}>
+                  <Text
+                    style={[
+                      styles.playerUsername,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
                     @{player.username}
                   </Text>
 
-                  <View style={[styles.eloContainer, { backgroundColor: '#0a0a0a', borderRadius: theme.radius.m, padding: 12, marginBottom: 8 }]}>
-                    <Text style={[styles.eloLabel, { color: theme.colors.textSecondary }]}>
+                  <View
+                    style={[
+                      styles.eloContainer,
+                      {
+                        backgroundColor: "#0a0a0a",
+                        borderRadius: theme.radius.m,
+                        padding: 12,
+                        marginBottom: 8,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.eloLabel,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
                       ELO Rating
                     </Text>
                     <Text
-                      style={[styles.eloValue, { color: theme.colors.neonGreen }]}
+                      style={[
+                        styles.eloValue,
+                        { color: theme.colors.neonGreen },
+                      ]}
                     >
                       {player.elo}
                     </Text>
-                   
+
                     <View style={styles.trendContainer}>
                       <Ionicons
                         name={getTrendIcon(player.trend)}
@@ -445,29 +510,57 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                         color={getTrendColor(player.trend)}
                       />
                       <Text
-                        style={[styles.trendText, { color: getTrendColor(player.trend) }]}
+                        style={[
+                          styles.trendText,
+                          { color: getTrendColor(player.trend) },
+                        ]}
                       >
                         {player.eloChange > 0 ? "+" : ""}
                         {player.eloChange}
                       </Text>
                     </View>
                   </View>
-     
+
                   <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
-                      <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                      <Text
+                        style={[
+                          styles.statLabel,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
                         Matches
                       </Text>
-                      <Text style={[styles.statValue, { color: theme.colors.softWhite }]}>
+                      <Text
+                        style={[
+                          styles.statValue,
+                          { color: theme.colors.softWhite },
+                        ]}
+                      >
                         {player.matchesPlayed}
                       </Text>
                     </View>
-                    <View style={[styles.statDivider, { backgroundColor: '#2a2a2a' }]} />
+                    <View
+                      style={[
+                        styles.statDivider,
+                        { backgroundColor: "#2a2a2a" },
+                      ]}
+                    />
                     <View style={styles.statItem}>
-                      <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                      <Text
+                        style={[
+                          styles.statLabel,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
                         Win Rate
                       </Text>
-                      <Text style={[styles.statValue, { color: theme.colors.softWhite }]}>
+                      <Text
+                        style={[
+                          styles.statValue,
+                          { color: theme.colors.softWhite },
+                        ]}
+                      >
                         {player.winRate}%
                       </Text>
                     </View>
@@ -478,24 +571,54 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </ScrollView>
         </ThemedView>
 
+        {/* Loading State */}
+        {loading && <PostDetailSkeleton />}
 
+        {/* Error State */}
+        {error && (
+          <ErrorState error={error} onRetry={() => fetchPosts(1)} />
+        )}
 
         {/* Posts Feed */}
-        <ThemedView style={{ paddingBottom: theme.spacing.xxl * 2 }}>
-          {posts.map((post) => (
-            <PostItem
-              key={post.id}
-              post={post}
-              onLike={handleLike}
-              onPress={(postId) => {
-                const parent = navigation.getParent();
-                if (parent) {
-                  parent.navigate('PostDetail', { postId });
-                }
-              }}
-            />
-          ))}
-        </ThemedView>
+        {!loading && !error && (
+          <ThemedView style={{ paddingBottom: theme.spacing.xxl * 2 }}>
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <PostItem
+                  key={post.postId}
+                  post={post}
+                  onLike={handleLike}
+                  onPress={(postId) => {
+                    const parent = navigation.getParent();
+                    if (parent) {
+                      parent.navigate("PostDetail", { postId });
+                    }
+                  }}
+                />
+              ))
+            ) : (
+              <ThemedView
+                style={{
+                  paddingVertical: theme.spacing.xxl,
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="document-text-outline"
+                  size={48}
+                  color={theme.colors.textSecondary}
+                />
+                <ThemedText
+                  variant="secondary"
+                  size="m"
+                  style={{ marginTop: theme.spacing.m }}
+                >
+                  Chưa có bài viết nào
+                </ThemedText>
+              </ThemedView>
+            )}
+          </ThemedView>
+        )}
       </ThemedScrollView>
     </ThemedSafeAreaView>
   );
@@ -503,86 +626,86 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   whatsOnMindContainer: {
     borderBottomWidth: 1,
   },
   whatsOnMindContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   avatarContainer: {
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
   },
   iconButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   leaderboardSection: {
     // Styles applied via inline
   },
   leaderboardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   leaderboardTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   playerCard: {
-    position: 'relative',
+    position: "relative",
   },
   rankBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     right: 12,
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   rankText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   playerAvatar: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: 12,
     marginTop: 8,
   },
   playerName: {
     fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 4,
   },
   playerUsername: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 12,
   },
   eloContainer: {
@@ -590,40 +713,40 @@ const styles = StyleSheet.create({
   },
   eloLabel: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 4,
   },
   eloValue: {
     fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
   },
   trendContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 4,
   },
   trendText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 4,
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   statItem: {
     flex: 1,
   },
   statLabel: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   statValue: {
     fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   statDivider: {
     width: 1,

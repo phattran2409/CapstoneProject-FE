@@ -4,7 +4,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  OTPRequest,
+  SendOTPRequest,
   OTPResponse,
   VerifyOTPRequest,
   VerifyOTPResponse,
@@ -36,10 +36,10 @@ export const authApi = {
   },
 
   /**
-   * Send OTP to phone number
+   * Send/Resend OTP to email
    */
-  sendOTP: async (request: OTPRequest): Promise<OTPResponse> => {
-    const data = await apiClient.post('/auth/send-otp', request);
+  sendOTP: async (request: SendOTPRequest): Promise<OTPResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL, request);
     return data;
   },
 
@@ -47,7 +47,8 @@ export const authApi = {
    * Verify OTP
    */
   verifyOTP: async (request: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
-    const data = await apiClient.post('/auth/verify-otp', request);
+    console.log(request);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL, request);
     return data;
   },
 

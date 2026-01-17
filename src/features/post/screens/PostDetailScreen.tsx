@@ -33,7 +33,7 @@ import {
   useToggleReplyLike,
 } from "../hooks";
 import { CommentItem, PostDetailImages } from "../components";
-import { Comment } from "../types/post.types";
+import { Comment, PostMedia, MediaItem } from "../types/post.types";
 import { PostDetailSkeleton } from "@/shared/components";
 
 type PostDetailScreenNavigationProp = NativeStackNavigationProp<
@@ -57,6 +57,28 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const { postId } = route.params;
 
   const { data: post, isLoading: postLoading } = usePostDetail(postId);
+
+  // Transform PostMedia[] to MediaItem[] for display
+  const transformMediaToMediaItems = (media: PostMedia[]): MediaItem[] => {
+    return media
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((m) => {
+        if (m.mediaType === 0) {
+          // Image
+          return {
+            type: "image" as const,
+            source: { uri: m.publicUrl },
+          };
+        } else {
+          // Video
+          return {
+            type: "video" as const,
+            source: m.publicUrl,
+            thumbnail: { uri: m.publicUrl },
+          };
+        }
+      });
+  };
   const {
     data: comments = [],
     isLoading: commentsLoading,
@@ -173,8 +195,8 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
             ]}
           >
             <View style={styles.postAuthor}>
-              {post.author.avatar ? (
-                typeof post.author.avatar === "string" ? (
+              {post.userAvatarUrl ? (
+                typeof post.userAvatarUrl === "string" ? (
                   <View
                     style={[
                       styles.postAvatar,
@@ -183,7 +205,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                   />
                 ) : (
                   <Image
-                    source={post.author.avatar}
+                    source={post.userAvatarUrl}
                     style={styles.postAvatar}
                     resizeMode="cover"
                   />
@@ -208,23 +230,23 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
               )}
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <ThemedText variant="primary" size="m" weight="bold">
-                  {post.author.name}
-                  {post.community && (
+                  {post.userFullName}
+                  {/* {post.community && (
                     <ThemedText variant="secondary" size="m" weight="regular">
                       {" "}
                       posted in '{post.community}'
                     </ThemedText>
-                  )}
+                  )} */}
                 </ThemedText>
                 <ThemedText variant="secondary" size="s">
-                  {post.timestamp}
+                  {/* {post.timestamp} */}
                 </ThemedText>
               </View>
             </View>
           </View>
 
           {/* Post Type Badge */}
-          {post.type && post.type !== "post" && (
+          {/* {post.type && post.type !== "post" && (
             <View
               style={{ paddingHorizontal: theme.spacing.l, marginBottom: 8 }}
             >
@@ -257,32 +279,33 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                 </ThemedText>
               </View>
             </View>
-          )}
+          )} */}
 
           {/* Post Title and Content */}
           <View
             style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
           >
-            <ThemedText
+            {/* <ThemedText
               variant="primary"
               size="l"
               weight="bold"
               style={styles.postTitle}
             >
               {post.title}
-            </ThemedText>
+            </ThemedText> */}
             <ThemedText variant="secondary" size="m" style={styles.postContent}>
               {post.content}
             </ThemedText>
           </View>
 
           {/* Post Media (Images/Videos) - Individual display */}
-          {((post.media && post.media.length > 0) ||
-            (post.images && post.images.length > 0)) && (
+          {post.media && post.media.length > 0 && (
             <View
               style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
             >
-              <PostDetailImages media={post.media} images={post.images} />
+              <PostDetailImages
+                media={transformMediaToMediaItems(post.media)}
+              />
             </View>
           )}
 
@@ -300,12 +323,16 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
           >
             <TouchableOpacity
               style={styles.postAction}
-              onPress={() => toggleLike(post.id)}
+              // onPress={() => toggleLike(post.postId)}
             >
               <Ionicons
-                name={post.isLiked ? "heart" : "heart-outline"}
+                name={/* post.isLiked */ false ? "heart" : "heart-outline"}
                 size={22}
-                color={post.isLiked ? "#ef4444" : theme.colors.textSecondary}
+                color={
+                  /* post.isLiked */ false
+                    ? "#ef4444"
+                    : theme.colors.textSecondary
+                }
               />
               <ThemedText
                 variant="secondary"
@@ -313,13 +340,13 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                 style={[
                   styles.postActionText,
                   {
-                    color: post.isLiked
+                    color: /* post.isLiked */ false
                       ? "#ef4444"
                       : theme.colors.textSecondary,
                   },
                 ]}
               >
-                {post.likes}
+                {post.totalLikes}
               </ThemedText>
             </TouchableOpacity>
 
@@ -349,7 +376,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                 size="m"
                 style={styles.postActionText}
               >
-                {post.shares}
+                {/* post.shares */ 0}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -398,7 +425,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                 renderItem={({ item }) => (
                   <CommentItem
                     comment={item}
-                    onLike={toggleCommentLike}
+                    onLike={() => {}}
                     onReply={handleReply}
                     onReplyLike={(commentId, replyId) =>
                       toggleReplyLike({ commentId, replyId })

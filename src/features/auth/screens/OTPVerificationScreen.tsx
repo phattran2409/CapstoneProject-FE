@@ -4,7 +4,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,11 +14,8 @@ import { Button } from '@/shared/components';
 import { useVerifyOTP, useSendOTP } from '@/features/auth';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
-
-type RootStackParamList = {
-  OTPVerification: { email: string; username: string; password: string };
-  MainTabs: undefined;
-};
+import { RootStackParamList } from '@/app/navigation/types';
+import { useToast } from "@/shared/toast";
 
 type OTPVerificationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,8 +30,9 @@ interface OTPVerificationScreenProps {
 
 const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigation, route }) => {
   const { t } = useTranslation();
-  const { email, username, password } = route.params;
+  const { email, userId } = route.params;
   const { theme } = useTheme();
+  const toast = useToast();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(60);
   const inputRefs = useRef<Array<TextInput | null>>([]);
@@ -80,25 +77,30 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
     const otpCode = otp.join('');
     
     if (otpCode.length < 6) {
-      Alert.alert(t('otp.errors.incomplete'));
+      toast.error(t('otp.errors.incomplete'));
       return;
     }
 
     // ✅ Call verify OTP mutation
     verifyOTP(
-      { phone: email , otp: otpCode },
+      { userId: userId , otp: otpCode },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Account verified successfully!');
-          setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'MainTabs' }],
-            });
-          }, 100);
+          toast.success(
+            t('otp.success.title', 'Xác thực thành công!'),
+            t('otp.success.message', 'Vui lòng đăng nhập để tiếp tục')
+          );
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
         },
         onError: (error: any) => {
-          Alert.alert(t('otp.errors.invalid'), error.message);
+          console.log(error);
+          toast.error(
+            t('otp.errors.invalidTitle', 'Mã OTP không hợp lệ'),
+            error.message || t('otp.errors.invalidMessage', 'Vui lòng thử lại')
+          );
           setOtp(['', '', '', '', '', '']);
           inputRefs.current[0]?.focus();
         },
@@ -109,14 +111,17 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
   const handleResend = () => {
     // ✅ Call send OTP mutation
     sendOTP(
-      { email: email },
+      { userId: userId },
       {
         onSuccess: () => {
           setResendTimer(60);
-          Alert.alert('Success', t('otp.resent'));
+          toast.success(
+            t('otp.resent.title', 'Đã gửi lại mã'),
+            t('otp.resent.message', 'Vui lòng kiểm tra email của bạn')
+          );
         },
         onError: (error: any) => {
-          Alert.alert('Error', error.message || 'Failed to resend OTP');
+          toast.error(t('otp.errors.resend'), error.message || 'Failed to resend OTP');
         },
       }
     );

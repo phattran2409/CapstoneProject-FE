@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/shared/theme';
-import { RootStackParamList } from '@/app/navigation/types';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/shared/theme";
+import { RootStackParamList } from "@/app/navigation/types";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-type ChatScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Chat'>;
-type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
+type ChatScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Chat"
+>;
+type ChatScreenRouteProp = RouteProp<RootStackParamList, "Chat">;
 
 interface ChatScreenProps {
   navigation: ChatScreenNavigationProp;
@@ -29,40 +41,40 @@ interface Message {
 const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const { chatName } = route.params;
 
   const messages: Message[] = [
     {
-      id: '1',
-      sender: 'john',
-      senderName: 'John Doe',
-      text: 'Hey team, are we ready for the 7v7 match this weekend?',
-      timestamp: '10:30 AM',
+      id: "1",
+      sender: "john",
+      senderName: "John Doe",
+      text: "Hey team, are we ready for the 7v7 match this weekend?",
+      timestamp: "10:30 AM",
       isOwn: false,
     },
     {
-      id: '2',
-      sender: 'me',
-      senderName: t('chat.you'),
-      text: 'Absolutely! I\'ve been practicing my free kicks. Can\'t wait!',
-      timestamp: '10:31 AM',
+      id: "2",
+      sender: "me",
+      senderName: t("chat.you"),
+      text: "Absolutely! I've been practicing my free kicks. Can't wait!",
+      timestamp: "10:31 AM",
       isOwn: true,
     },
     {
-      id: '3',
-      sender: 'sarah',
-      senderName: 'Sarah Lee',
-      text: 'Awesome! I\'ll bring some water for everyone. Let\'s make sure we have our formation sorted out before the game.',
-      timestamp: '10:32 AM',
+      id: "3",
+      sender: "sarah",
+      senderName: "Sarah Lee",
+      text: "Awesome! I'll bring some water for everyone. Let's make sure we have our formation sorted out before the game.",
+      timestamp: "10:32 AM",
       isOwn: false,
     },
     {
-      id: '4',
-      sender: 'me',
-      senderName: t('chat.you'),
-      text: 'Good call. I\'ll be there 15 minutes early to warm up.',
-      timestamp: '10:33 AM',
+      id: "4",
+      sender: "me",
+      senderName: t("chat.you"),
+      text: "Good call. I'll be there 15 minutes early to warm up.",
+      timestamp: "10:33 AM",
       isOwn: true,
     },
   ];
@@ -70,10 +82,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const renderMessage = ({ item }: { item: Message }) => (
     <View
       style={{
-        flexDirection: 'row',
+        flexDirection: "row",
         marginBottom: theme.spacing.m,
         paddingHorizontal: theme.spacing.m,
-        justifyContent: item.isOwn ? 'flex-end' : 'flex-start',
+        justifyContent: item.isOwn ? "flex-end" : "flex-start",
       }}
     >
       {!item.isOwn && (
@@ -83,15 +95,15 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
             height: 32,
             borderRadius: 16,
             backgroundColor: theme.colors.border,
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: "center",
+            alignItems: "center",
             marginRight: theme.spacing.xs,
           }}
         >
-          <Ionicons name="person" size={20} color={theme.colors.textSecondary} />
+          <Ionicons name="person" size={20} color={theme.colors.text} />
         </View>
       )}
-      <View style={{ flex: item.isOwn ? 0 : 1, maxWidth: '75%' }}>
+      <View style={{ flex: item.isOwn ? 0 : 1, maxWidth: "75%" }}>
         {!item.isOwn && (
           <Text
             style={{
@@ -106,16 +118,18 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         )}
         <View
           style={{
-            backgroundColor: item.isOwn ? theme.colors.neonGreen : theme.colors.surface,
+            backgroundColor: item.isOwn
+              ? theme.colors.neonGreen
+              : theme.colors.surface,
             borderRadius: theme.radius.m,
             padding: theme.spacing.s,
-            alignSelf: item.isOwn ? 'flex-end' : 'flex-start',
+            alignSelf: item.isOwn ? "flex-end" : "flex-start",
           }}
         >
           <Text
             style={{
               fontSize: theme.fontSizes.m,
-              color: item.isOwn ? theme.colors.white : theme.colors.text,
+              color: item.isOwn ? theme.colors.black : theme.colors.text,
             }}
           >
             {item.text}
@@ -123,10 +137,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         </View>
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: "row",
+            alignItems: "center",
             marginTop: theme.spacing.xs,
-            alignSelf: item.isOwn ? 'flex-end' : 'flex-start',
+            alignSelf: item.isOwn ? "flex-end" : "flex-start",
           }}
         >
           {item.isOwn && (
@@ -138,10 +152,19 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
                   marginRight: theme.spacing.xs,
                 }}
               >
-                {t('chat.sent')}
+                {t("chat.sent")}
               </Text>
-              <Ionicons name="checkmark-done" size={12} color={theme.colors.neonGreen} />
-              <Ionicons name="checkmark-done" size={12} color={theme.colors.neonGreen} style={{ marginLeft: -4 }} />
+              <Ionicons
+                name="checkmark-done"
+                size={12}
+                color={theme.colors.neonGreen}
+              />
+              <Ionicons
+                name="checkmark-done"
+                size={12}
+                color={theme.colors.neonGreen}
+                style={{ marginLeft: -4 }}
+              />
             </>
           )}
           <Text
@@ -161,24 +184,29 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const handleSend = () => {
     if (message.trim()) {
       // Handle send message
-      setMessage('');
+      setMessage("");
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {/* Header */}
       <View
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: "row",
+          alignItems: "center",
           paddingHorizontal: theme.spacing.m,
           paddingVertical: theme.spacing.m,
           borderBottomWidth: 1,
           borderBottomColor: theme.colors.border,
         }}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: theme.spacing.m }}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ marginRight: theme.spacing.m }}
+        >
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <View
@@ -187,25 +215,29 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
             height: 40,
             borderRadius: 20,
             backgroundColor: theme.colors.border,
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: "center",
+            alignItems: "center",
             marginRight: theme.spacing.s,
           }}
         >
-          <Ionicons name="person" size={24} color={theme.colors.textSecondary} />
+          <Ionicons name="person" size={24} color={theme.colors.text} />
         </View>
         <Text
           style={{
             flex: 1,
             fontSize: theme.fontSizes.l,
             color: theme.colors.text,
-            fontWeight: '600',
+            fontWeight: "600",
           }}
         >
           {chatName}
         </Text>
         <TouchableOpacity>
-          <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.text} />
+          <Ionicons
+            name="ellipsis-vertical"
+            size={24}
+            color={theme.colors.text}
+          />
         </TouchableOpacity>
       </View>
 
@@ -220,7 +252,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
 
       {/* Input Area */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{
           borderTopWidth: 1,
           borderTopColor: theme.colors.border,
@@ -230,8 +262,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
       >
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: "row",
+            alignItems: "center",
             backgroundColor: theme.colors.surface,
             borderRadius: theme.radius.l,
             paddingHorizontal: theme.spacing.s,
@@ -244,8 +276,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
                 height: 32,
                 borderRadius: 16,
                 backgroundColor: theme.colors.border,
-                justifyContent: 'center',
-                alignItems: 'center',
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
               <Ionicons name="add" size={20} color={theme.colors.text} />
@@ -258,7 +290,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               color: theme.colors.text,
               paddingVertical: theme.spacing.s,
             }}
-            placeholder={t('chat.inputPlaceholder')}
+            placeholder={t("chat.inputPlaceholder")}
             placeholderTextColor={theme.colors.textSecondary}
             value={message}
             onChangeText={setMessage}
@@ -271,8 +303,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               height: 40,
               borderRadius: 20,
               backgroundColor: theme.colors.neonGreen,
-              justifyContent: 'center',
-              alignItems: 'center',
+              justifyContent: "center",
+              alignItems: "center",
               marginLeft: theme.spacing.s,
             }}
           >
@@ -291,5 +323,3 @@ const styles = StyleSheet.create({
 });
 
 export default ChatScreen;
-
-

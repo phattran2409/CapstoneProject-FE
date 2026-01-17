@@ -1,30 +1,11 @@
-// export interface Venue {
-//   id: string;
-//   name: string;
-//   address: string;
-//   city: string;
-//   district: string;
-//   price: number;
-//   rating: number;
-//   totalReviews: number;
-//   image: string;
-//   latitude?: number;
-//   longitude?: number;
-//   facilities: string[];
-//   openingHours: {
-//     open: string;
-//     close: string;
-//   };
-//   availableFormats: ('5vs5' | '7vs7' | '11vs11')[];
-//   description?: string;
-//   contactPhone?: string;
-// }
+
 export interface Venue {
-  id: string;
+  ownerId: string;
   name: string;
   address: string;
-  lat: number;
-  lng: number;
+  latitude: number;
+  longitude: number;
+  description: string;
   images: string[];
   amenities: string[];
   pricePerHour: number;
