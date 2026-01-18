@@ -50,8 +50,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     null,
   );
   const [modalVisible, setModalVisible] = useState(false);
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual API loading state
+  const [posts, setPosts] = useState<Post[]>([]);
+  
 
   const stats = {
     matches: 88,
@@ -85,43 +86,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     }
   };
 
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      author: {
-        name: user?.fullName || "Mai Anh Tuấn",
-        username: "maianhtuan",
-        avatar: require("@assets/images/icon.png"),
-      },
-      timestamp: "2 giờ trước",
-      title: "Giao hữu cuối tuần",
-      content: "Một trận đấu tuyệt vời với những người anh em. Tỷ số 5-3!",
-      image: null,
-      type: "match",
-      likes: 45,
-      comments: 12,
-      shares: 5,
-      isLiked: false,
-    },
-    {
-      id: "2",
-      author: {
-        name: user?.fullName || "Mai Anh Tuấn",
-        username: "maianhtuan",
-        avatar: require("@assets/images/icon.png"),
-      },
-      timestamp: "1 ngày trước",
-      title: "Teamwork makes the dream work",
-      content: "Thắng lợi giòn giã! Cảm ơn cả đội đã chiến đấu hết mình.",
-      image: null,
-      type: "post",
-      likes: 78,
-      comments: 23,
-      shares: 8,
-      isLiked: true,
-    },
-  ]);
-
+ 
   const handleLike = (postId: string) => {
     setPosts(
       posts.map((post) =>

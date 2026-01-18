@@ -2,29 +2,32 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Image,
   StyleSheet,
-  TextInput,
-  RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   ThemedSafeAreaView,
-  ThemedScrollView,
   ThemedText,
   ThemedView,
 } from "@/shared/components/themed";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
-import { PostItem, Post, IconButton } from "@/shared/components";
-import { getPosts } from "@/features/post/api/postApi";
-import { PostDetailSkeleton, ErrorState } from "@/shared/components";
+import {
+  PostItem,
+  Post,
+  IconButton,
+  PostDetailSkeleton,
+  ErrorState,
+  EmptyState,
+  LoadingMoreIndicator,
+} from "@/shared/components";
+import { usePaginatedPosts } from "@/features/post/hooks";
 import { TabParamList } from "@/app/navigation/types";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -126,55 +129,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     },
   ];
 
-  // Posts state with API integration
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Fetch posts from API
-  const fetchPosts = async (
-    pageNum: number = 1,
-    isRefresh: boolean = false,
-  ) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-
-      const result = await getPosts(pageNum, 10);
-
-      if (isRefresh) {
-        setPosts(result.posts);
-      } else {
-        setPosts(result.posts);
-      }
-
-      setTotalPages(result.totalPages);
-      setPage(pageNum);
-    } catch (err: any) {
-      console.error("Error fetching posts:", err);
-      setError(err.message || "Không thể tải bài viết");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  // Load posts on mount
-  useEffect(() => {
-    fetchPosts(1);
-  }, []);
-
-  // Handle refresh
-  const handleRefresh = () => {
-    fetchPosts(1, true);
-  };
+  // Use paginated posts hook
+  const { posts, loading, refreshing, loadingMore, error, refresh, loadMore } =
+    usePaginatedPosts({ pageSize: 10 });
 
   const handleLike = (postId: string) => {
     // TODO: Implement like functionality with new Post type
@@ -226,6 +183,300 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+  // Render header component
+  const renderHeader = () => (
+    <>
+      {/*What's on your mind Section */}
+      <ThemedView
+        style={[
+          styles.whatsOnMindContainer,
+          {
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
+      >
+        <View style={styles.whatsOnMindContent}>
+          {/* Avatar */}
+          <TouchableOpacity
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("PersonalPage");
+              }
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.avatarContainer,
+                {
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: theme.colors.surface,
+                  borderWidth: 2,
+                  borderColor: theme.colors.neonGreen,
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              {mockUser.avatar ? (
+                typeof mockUser.avatar === "string" ? (
+                  <Image
+                    source={{ uri: mockUser.avatar }}
+                    style={{ width: 36, height: 36, borderRadius: 18 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Image
+                    source={mockUser.avatar}
+                    style={{ width: 36, height: 36, borderRadius: 18 }}
+                    resizeMode="cover"
+                  />
+                )
+              ) : (
+                <Ionicons
+                  name="person"
+                  size={24}
+                  color={theme.colors.textSecondary}
+                />
+              )}
+            </View>
+          </TouchableOpacity>
+
+          {/* Input Field */}
+          <TouchableOpacity
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                borderRadius: theme.radius.l,
+                paddingHorizontal: theme.spacing.m,
+                paddingVertical: theme.spacing.s,
+                flex: 1,
+                marginLeft: theme.spacing.m,
+              },
+            ]}
+            activeOpacity={0.7}
+          >
+            <ThemedText variant="secondary" size="m">
+              {t("newsFeed.whatsOnMind", {
+                defaultValue: "Bạn đang nghĩ gì?",
+              })}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+
+      {/* ELO Leaderboard Section */}
+      <ThemedView
+        style={[
+          styles.leaderboardSection,
+          {
+            paddingVertical: theme.spacing.l,
+            borderBottomWidth: 1,
+            borderBottomColor: "#2a2a2a",
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.leaderboardHeader,
+            {
+              paddingHorizontal: theme.spacing.l,
+              marginBottom: theme.spacing.m,
+            },
+          ]}
+        >
+          <View style={styles.leaderboardTitle}>
+            <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
+            <ThemedText
+              style={{ color: theme.colors.neonGreen, marginLeft: 8 }}
+              variant="primary"
+              size="xl"
+              weight="bold"
+            >
+              {t("newsFeed.leaderboard")}
+            </ThemedText>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate("Leaderboard")}>
+            <ThemedText variant="primary" size="s" weight="semiBold">
+              {t("newsFeed.view")}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+          data={topPlayers}
+          keyExtractor={(player) => player.id}
+          renderItem={({ item: player }) => {
+            const rankColor = getRankColor(player.rank);
+            return (
+              <TouchableOpacity
+                style={[
+                  styles.playerCard,
+                  {
+                    backgroundColor: "#1a1a1a",
+                    borderRadius: theme.radius.l,
+                    padding: theme.spacing.m,
+                    marginRight: theme.spacing.m,
+                    borderWidth: 1,
+                    borderColor: "#2a2a2a",
+                    width: 180,
+                  },
+                ]}
+                onPress={() => {
+                  // Navigate to player profile
+                }}
+              >
+                <View
+                  style={[
+                    styles.rankBadge,
+                    {
+                      backgroundColor: rankColor + "20",
+                      borderWidth: 2,
+                      borderColor: rankColor,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.rankText, { color: rankColor }]}>
+                    #{player.rank}
+                  </Text>
+                </View>
+
+                <Image
+                  source={player.avatar}
+                  style={styles.playerAvatar}
+                  resizeMode="cover"
+                />
+
+                <Text
+                  style={[styles.playerName, { color: theme.colors.softWhite }]}
+                >
+                  {player.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.playerUsername,
+                    { color: theme.colors.textSecondary },
+                  ]}
+                >
+                  @{player.username}
+                </Text>
+
+                <View
+                  style={[
+                    styles.eloContainer,
+                    {
+                      backgroundColor: "#0a0a0a",
+                      borderRadius: theme.radius.m,
+                      padding: 12,
+                      marginBottom: 8,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.eloLabel,
+                      { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    ELO Rating
+                  </Text>
+                  <Text
+                    style={[styles.eloValue, { color: theme.colors.neonGreen }]}
+                  >
+                    {player.elo}
+                  </Text>
+
+                  <View style={styles.trendContainer}>
+                    <Ionicons
+                      name={getTrendIcon(player.trend)}
+                      size={14}
+                      color={getTrendColor(player.trend)}
+                    />
+                    <Text
+                      style={[
+                        styles.trendText,
+                        { color: getTrendColor(player.trend) },
+                      ]}
+                    >
+                      {player.eloChange > 0 ? "+" : ""}
+                      {player.eloChange}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.statsContainer}>
+                  <View style={styles.statItem}>
+                    <Text
+                      style={[
+                        styles.statLabel,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Matches
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statValue,
+                        { color: theme.colors.softWhite },
+                      ]}
+                    >
+                      {player.matchesPlayed}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.statDivider, { backgroundColor: "#2a2a2a" }]}
+                  />
+                  <View style={styles.statItem}>
+                    <Text
+                      style={[
+                        styles.statLabel,
+                        { color: theme.colors.textSecondary },
+                      ]}
+                    >
+                      Win Rate
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statValue,
+                        { color: theme.colors.softWhite },
+                      ]}
+                    >
+                      {player.winRate}%
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </ThemedView>
+    </>
+  );
+
+  // Render footer component for loading more
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <LoadingMoreIndicator />;
+  };
+
+  // Render empty component
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <EmptyState icon="document-text-outline" title="Chưa có bài viết nào" />
+    );
+  };
+
   return (
     <ThemedSafeAreaView>
       {/* Header */}
@@ -268,358 +519,42 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       </ThemedView>
 
-      <ThemedScrollView
-        showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.neonGreen}
-            colors={[theme.colors.neonGreen]}
-          />
-        }
-      >
-        {/*What's on your mind Section */}
-        <ThemedView
-          style={[
-            styles.whatsOnMindContainer,
-            {
-              paddingHorizontal: theme.spacing.l,
-              paddingVertical: theme.spacing.m,
-              borderBottomWidth: 1,
-              borderBottomColor: theme.colors.border,
-            },
-          ]}
-        >
-          <View style={styles.whatsOnMindContent}>
-            {/* Avatar */}
-            <TouchableOpacity
-              onPress={() => {
+      {/* Loading State */}
+      {loading && <PostDetailSkeleton />}
+
+      {/* Error State */}
+      {error && <ErrorState error={error} onRetry={refresh} />}
+
+      {/* Posts Feed with FlatList */}
+      {!loading && !error && (
+        <FlatList
+          data={posts}
+          keyExtractor={(post) => post.postId}
+          renderItem={({ item: post }) => (
+            <PostItem
+              post={post}
+              onLike={handleLike}
+              onPress={(postId) => {
                 const parent = navigation.getParent();
                 if (parent) {
-                  parent.navigate("PersonalPage");
+                  parent.navigate("PostDetail", { postId });
                 }
               }}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.avatarContainer,
-                  {
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: theme.colors.surface,
-                    borderWidth: 2,
-                    borderColor: theme.colors.neonGreen,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  },
-                ]}
-              >
-                {mockUser.avatar ? (
-                  typeof mockUser.avatar === "string" ? (
-                    <Image
-                      source={{ uri: mockUser.avatar }}
-                      style={{ width: 36, height: 36, borderRadius: 18 }}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Image
-                      source={mockUser.avatar}
-                      style={{ width: 36, height: 36, borderRadius: 18 }}
-                      resizeMode="cover"
-                    />
-                  )
-                ) : (
-                  <Ionicons
-                    name="person"
-                    size={24}
-                    color={theme.colors.textSecondary}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
-
-            {/* Input Field */}
-            <TouchableOpacity
-              style={[
-                styles.inputContainer,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderRadius: theme.radius.l,
-                  paddingHorizontal: theme.spacing.m,
-                  paddingVertical: theme.spacing.s,
-                  flex: 1,
-                  marginLeft: theme.spacing.m,
-                },
-              ]}
-              activeOpacity={0.7}
-            >
-              <ThemedText variant="secondary" size="m">
-                {t("newsFeed.whatsOnMind", {
-                  defaultValue: "Bạn đang nghĩ gì?",
-                })}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </ThemedView>
-
-        {/* ELO Leaderboard Section */}
-        <ThemedView
-          style={[
-            styles.leaderboardSection,
-            {
-              paddingVertical: theme.spacing.l,
-              borderBottomWidth: 1,
-              borderBottomColor: "#2a2a2a",
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.leaderboardHeader,
-              {
-                paddingHorizontal: theme.spacing.l,
-                marginBottom: theme.spacing.m,
-              },
-            ]}
-          >
-            <View style={styles.leaderboardTitle}>
-              <Ionicons
-                name="trophy"
-                size={24}
-                color={theme.colors.neonGreen}
-              />
-              <ThemedText
-                style={{ color: theme.colors.neonGreen, marginLeft: 8 }}
-                variant="primary"
-                size="xl"
-                weight="bold"
-              >
-                {t("newsFeed.leaderboard")}
-              </ThemedText>
-            </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Leaderboard")}
-            >
-              <ThemedText variant="primary" size="s" weight="semiBold">
-                {t("newsFeed.view")}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-          >
-            {topPlayers.map((player) => {
-              const rankColor = getRankColor(player.rank);
-              return (
-                <TouchableOpacity
-                  key={player.id}
-                  style={[
-                    styles.playerCard,
-                    {
-                      backgroundColor: "#1a1a1a",
-                      borderRadius: theme.radius.l,
-                      padding: theme.spacing.m,
-                      marginRight: theme.spacing.m,
-                      borderWidth: 1,
-                      borderColor: "#2a2a2a",
-                      width: 180,
-                    },
-                  ]}
-                  onPress={() => {
-                    // Navigate to player profile
-                  }}
-                >
-                  <View
-                    style={[
-                      styles.rankBadge,
-                      {
-                        backgroundColor: rankColor + "20",
-                        borderWidth: 2,
-                        borderColor: rankColor,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.rankText, { color: rankColor }]}>
-                      #{player.rank}
-                    </Text>
-                  </View>
-
-                  <Image
-                    source={player.avatar}
-                    style={styles.playerAvatar}
-                    resizeMode="cover"
-                  />
-
-                  <Text
-                    style={[
-                      styles.playerName,
-                      { color: theme.colors.softWhite },
-                    ]}
-                  >
-                    {player.name}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.playerUsername,
-                      { color: theme.colors.textSecondary },
-                    ]}
-                  >
-                    @{player.username}
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.eloContainer,
-                      {
-                        backgroundColor: "#0a0a0a",
-                        borderRadius: theme.radius.m,
-                        padding: 12,
-                        marginBottom: 8,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.eloLabel,
-                        { color: theme.colors.textSecondary },
-                      ]}
-                    >
-                      ELO Rating
-                    </Text>
-                    <Text
-                      style={[
-                        styles.eloValue,
-                        { color: theme.colors.neonGreen },
-                      ]}
-                    >
-                      {player.elo}
-                    </Text>
-
-                    <View style={styles.trendContainer}>
-                      <Ionicons
-                        name={getTrendIcon(player.trend)}
-                        size={14}
-                        color={getTrendColor(player.trend)}
-                      />
-                      <Text
-                        style={[
-                          styles.trendText,
-                          { color: getTrendColor(player.trend) },
-                        ]}
-                      >
-                        {player.eloChange > 0 ? "+" : ""}
-                        {player.eloChange}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.statsContainer}>
-                    <View style={styles.statItem}>
-                      <Text
-                        style={[
-                          styles.statLabel,
-                          { color: theme.colors.textSecondary },
-                        ]}
-                      >
-                        Matches
-                      </Text>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          { color: theme.colors.softWhite },
-                        ]}
-                      >
-                        {player.matchesPlayed}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.statDivider,
-                        { backgroundColor: "#2a2a2a" },
-                      ]}
-                    />
-                    <View style={styles.statItem}>
-                      <Text
-                        style={[
-                          styles.statLabel,
-                          { color: theme.colors.textSecondary },
-                        ]}
-                      >
-                        Win Rate
-                      </Text>
-                      <Text
-                        style={[
-                          styles.statValue,
-                          { color: theme.colors.softWhite },
-                        ]}
-                      >
-                        {player.winRate}%
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </ThemedView>
-
-        {/* Loading State */}
-        {loading && <PostDetailSkeleton />}
-
-        {/* Error State */}
-        {error && (
-          <ErrorState error={error} onRetry={() => fetchPosts(1)} />
-        )}
-
-        {/* Posts Feed */}
-        {!loading && !error && (
-          <ThemedView style={{ paddingBottom: theme.spacing.xxl * 2 }}>
-            {posts.length > 0 ? (
-              posts.map((post) => (
-                <PostItem
-                  key={post.postId}
-                  post={post}
-                  onLike={handleLike}
-                  onPress={(postId) => {
-                    const parent = navigation.getParent();
-                    if (parent) {
-                      parent.navigate("PostDetail", { postId });
-                    }
-                  }}
-                />
-              ))
-            ) : (
-              <ThemedView
-                style={{
-                  paddingVertical: theme.spacing.xxl,
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name="document-text-outline"
-                  size={48}
-                  color={theme.colors.textSecondary}
-                />
-                <ThemedText
-                  variant="secondary"
-                  size="m"
-                  style={{ marginTop: theme.spacing.m }}
-                >
-                  Chưa có bài viết nào
-                </ThemedText>
-              </ThemedView>
-            )}
-          </ThemedView>
-        )}
-      </ThemedScrollView>
+            />
+          )}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmpty}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          refreshing={refreshing}
+          onRefresh={refresh}
+          showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingBottom: theme.spacing.xxl * 2 }}
+        />
+      )}
     </ThemedSafeAreaView>
   );
 };

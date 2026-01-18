@@ -1,2 +1,2 @@
-export * from './usePostDetail';
-
+export * from "./usePostDetail";
+export * from "./usePaginatedPosts";

@@ -25,11 +25,12 @@ import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
 import { RootStackParamList } from "@/app/navigation/types";
 import {
   usePostDetail,
-  usePostComments,
-  useTogglePostLike,
-  useCreateComment,
-  useCreateReply,
-  useToggleCommentLike,
+  // TODO: Uncomment when backend APIs are ready
+  // usePostComments,
+  // useTogglePostLike,
+  // useCreateComment,
+  // useCreateReply,
+  // useToggleCommentLike,
   useToggleReplyLike,
 } from "../hooks";
 import { CommentItem, PostDetailImages } from "../components";
@@ -79,43 +80,55 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
         }
       });
   };
-  const {
-    data: comments = [],
-    isLoading: commentsLoading,
-    refetch,
-  } = usePostComments(postId);
-  const { mutate: toggleLike } = useTogglePostLike();
-  const { mutate: createComment } = useCreateComment();
-  const { mutate: createReply } = useCreateReply(postId);
-  const { mutate: toggleCommentLike } = useToggleCommentLike();
+  // TODO: Uncomment when backend APIs are ready
+  // const {
+  //   data: comments = [],
+  //   isLoading: commentsLoading,
+  //   refetch,
+  // } = usePostComments(postId);
+  // const { mutate: toggleLike } = useTogglePostLike();
+  // const { mutate: createComment } = useCreateComment();
+  // const { mutate: createReply } = useCreateReply(postId);
+  // const { mutate: toggleCommentLike } = useToggleCommentLike();
   const { mutate: toggleReplyLike } = useToggleReplyLike();
+
+  // Mock data until APIs are ready
+  const comments: Comment[] = [];
+  const commentsLoading = false;
+  const refetch = () => {};
 
   const [commentContent, setCommentContent] = useState("");
 
   const handleSubmitComment = () => {
     if (commentContent.trim()) {
-      createComment(
-        { postId, content: commentContent.trim() },
-        {
-          onSuccess: () => {
-            setCommentContent("");
-            Keyboard.dismiss();
-            refetch();
-          },
-        },
-      );
+      // TODO: Implement when createComment API is ready
+      // createComment(
+      //   { postId, content: commentContent.trim() },
+      //   {
+      //     onSuccess: () => {
+      //       setCommentContent("");
+      //       Keyboard.dismiss();
+      //       refetch();
+      //     },
+      //   },
+      // );
+      console.log("Comment:", commentContent.trim());
+      setCommentContent("");
+      Keyboard.dismiss();
     }
   };
 
   const handleReply = (commentId: string, content: string) => {
-    createReply(
-      { commentId, content },
-      {
-        onSuccess: () => {
-          refetch();
-        },
-      },
-    );
+    // TODO: Implement when createReply API is ready
+    // createReply(
+    //   { commentId, content },
+    //   {
+    //     onSuccess: () => {
+    //       refetch();
+    //     },
+    //   },
+    // );
+    console.log("Reply to", commentId, ":", content);
   };
 
   if (postLoading || !post) {
