@@ -45,7 +45,7 @@ const Button: React.FC<ButtonProps> = ({
                          theme.spacing.xl,
       opacity: disabled ? 0.5 : 1,
     },
-    style,
+    style || {},
   ];
 
   const textStyles: TextStyle[] = [
@@ -58,7 +58,7 @@ const Button: React.FC<ButtonProps> = ({
              theme.colors.softWhite,
       fontWeight: '700',
     },
-    textStyle,
+    textStyle || {},
   ];
 
   return (

@@ -18,6 +18,7 @@ import {
   ThemedView,
 } from "@/shared/components/themed";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
+import { useAlert } from "@/shared/hooks/useAlert";
 import {
   PostItem,
   Post,
@@ -27,7 +28,7 @@ import {
   EmptyState,
   LoadingMoreIndicator,
 } from "@/shared/components";
-import { usePaginatedPosts } from "@/features/post/hooks";
+import { usePaginatedPosts, useTogglePostLike } from "@/features/post/hooks";
 import { TabParamList } from "@/app/navigation/types";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -58,6 +59,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
+ 
 
   // Mock user data - replace with real user from auth store when available
   const mockUser = {
@@ -130,22 +132,37 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   ];
 
   // Use paginated posts hook
-  const { posts, loading, refreshing, loadingMore, error, refresh, loadMore } =
-    usePaginatedPosts({ pageSize: 10 });
+  const {
+    posts,
+    loading,
+    refreshing,
+    loadingMore,
+    error,
+    refresh,
+    loadMore,
+    setPosts,
+  } = usePaginatedPosts({ pageSize: 10 });
+
+  // Use toggle post like mutation with callback to update local state
+  const { mutate: toggleLike } = useTogglePostLike({
+    onSuccess: (data) => {
+      // Update local state with new like data
+      setPosts((currentPosts) =>
+        currentPosts.map((post) =>
+          post.postId === data.postId
+            ? {
+                ...post,
+                isLiked: data.isLiked,
+                totalLikes: data.totalLikes,
+              }
+            : post,
+        ),
+      );
+    },
+  });
 
   const handleLike = (postId: string) => {
-    // TODO: Implement like functionality with new Post type
-    // setPosts(
-    //   posts.map((post) =>
-    //     post.postId === postId
-    //       ? {
-    //           ...post,
-    //           isLiked: !post.isLiked,
-    //           totalLikes: post.isLiked ? post.totalLikes - 1 : post.totalLikes + 1,
-    //         }
-    //       : post,
-    //   ),
-    // );
+    toggleLike(postId);
   };
 
   const getRankColor = (rank: number) => {
@@ -479,6 +496,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <ThemedSafeAreaView>
+
       {/* Header */}
       <ThemedView
         style={[
@@ -554,7 +572,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           scrollEventThrottle={16}
           contentContainerStyle={{ paddingBottom: theme.spacing.xxl * 2 }}
         />
+        
       )}
+      
     </ThemedSafeAreaView>
   );
 };

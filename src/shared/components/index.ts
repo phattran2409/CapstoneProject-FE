@@ -2,6 +2,8 @@ export { default as Button } from "./Button";
 export { default as IconButton } from "./IconButton";
 export { default as Card } from "./Card";
 export { default as Modal } from "./Modal";
+export { default as Alert } from "./Alert";
+export type { AlertType, AlertProps } from "./Alert";
 export { default as ChatInMatches } from "./ChatInMatches";
 export { default as MatchItem } from "./MatchItem";
 export { default as MatchList } from "./MatchList";

@@ -4,6 +4,7 @@ import {
   Comment,
   PostsResponse,
   PostDetailResponse,
+  PostLikeResponse,
 } from "../types/post.types";
 
 // Get posts with pagination
@@ -31,20 +32,59 @@ export const getPosts = async (
   }
 };
 
+export const getPostsByUserId = async (
+  userId: string,
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<{ posts: Post[]; totalPages: number; totalCount: number }> => {
+  try {
+    const response = (await apiClient.get(
+      `/posts?page=${page}&pageSize=${pageSize}&userId=${userId}`,
+    )) as PostsResponse;
+
+    if (response.isSuccess && response.data) {
+      return {
+        posts: response.data.posts,
+        totalPages: response.data.totalPages,
+        totalCount: response.data.totalCount,
+      };
+    }
+
+    throw new Error("Failed to fetch posts");
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error;
+  }
+};
+
 // Get post detail
 export const getPostDetail = async (id: string): Promise<Post> => {
   try {
     const response = (await apiClient.get(
       `/posts/${id}`,
     )) as PostDetailResponse;
-
     if (response.isSuccess && response.data) {
       return response.data;
     }
-
     throw new Error("Post not found");
   } catch (error) {
     console.error("Error fetching post detail:", error);
+    throw error;
+  }
+};
+
+// Like/Unlike post
+export const togglePostLike = async (postId: string): Promise<PostLikeResponse> => {
+  try {
+    const response = (await apiClient.post(
+      `/posts/${postId}/like`,
+    )) as PostLikeResponse;
+    if (response.isSuccess && response.data) {
+      return response;
+    }
+    throw new Error("Post like failed");
+  } catch (error) {
+    console.error("Error liking post:", error);
     throw error;
   }
 };
@@ -57,13 +97,7 @@ export const getPostDetail = async (id: string): Promise<Post> => {
 
 // };
 
-// // Like/Unlike post
-// export const togglePostLike = async (postId: string): Promise<Post> => {
-//   // TODO: Replace with real API call when backend is ready
-//   // const response = await apiClient.post<Post>(`/posts/${postId}/like`);
-//   // return response.data;
 
-// };
 
 // Create comment
 // export const createComment = async (

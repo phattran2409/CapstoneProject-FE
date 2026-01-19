@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   Image,
 } from "react-native";
@@ -24,7 +25,15 @@ import {
   PostItem,
   Post,
   ProfileSkeleton,
+  ErrorState,
+  EmptyState,
+  LoadingMoreIndicator,
 } from "@/shared/components";
+import {
+  usePaginatedPosts,
+  usePaginatedUserPosts,
+  useTogglePostLike,
+} from "@/features/post/hooks";
 
 type PersonalPageScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -51,8 +60,39 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   );
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual API loading state
-  const [posts, setPosts] = useState<Post[]>([]);
-  
+
+  // Fetch user's posts (currently returns empty until API is implemented)
+  const {
+    posts,
+    loading,
+    refreshing,
+    loadingMore,
+    error,
+    refresh,
+    loadMore,
+    setPosts,
+  } = usePaginatedUserPosts({
+    userId: user?.userId || "",
+    pageSize: 10,
+  });
+
+  // Use toggle post like mutation with callback to update local state
+  const { mutate: toggleLike } = useTogglePostLike({
+    onSuccess: (data) => {
+      // Update local state with new like data
+      setPosts((currentPosts) =>
+        currentPosts.map((post) =>
+          post.postId === data.postId
+            ? {
+                ...post,
+                isLiked: data.isLiked,
+                totalLikes: data.totalLikes,
+              }
+            : post,
+        ),
+      );
+    },
+  });
 
   const stats = {
     matches: 88,
@@ -86,19 +126,8 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     }
   };
 
- 
   const handleLike = (postId: string) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post,
-      ),
-    );
+    toggleLike(postId);
   };
 
   const recentMatches: MatchItemData[] = [
@@ -176,6 +205,32 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     // TODO: Implement add friend functionality
     console.log("Add friend pressed");
   };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <LoadingMoreIndicator />;
+  };
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <EmptyState
+        icon="document-text-outline"
+        title="Chưa có bài viết nào"
+        description="Người dùng này chưa đăng bài viết nào"
+      />
+    );
+  };
+
+  const renderPostItem = ({ item }: { item: Post }) => (
+    <PostItem
+      post={item}
+      onLike={handleLike}
+      onPress={(postId) => {
+        navigation.navigate("PostDetail", { postId });
+      }}
+    />
+  );
 
   return (
     <SafeAreaView
@@ -276,10 +331,29 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           <View style={{ paddingBottom: theme.spacing.xl }}>
             {/* Posts Tab */}
             {activeTab === "posts" && (
-              <View>
-                {posts.map((post) => (
-                  <PostItem key={post.id} post={post} onLike={handleLike} />
-                ))}
+              <View style={{ flex: 1 }}>
+                {/* Loading State */}
+                {loading && <ProfileSkeleton />}
+
+                {/* Error State */}
+                {error && <ErrorState error={error} onRetry={refresh} />}
+
+                {/* Posts List */}
+                {!loading && !error && (
+                  <FlatList
+                    data={posts}
+                    keyExtractor={(post) => post.postId}
+                    renderItem={renderPostItem}
+                    ListFooterComponent={renderFooter}
+                    ListEmptyComponent={renderEmpty}
+                    onEndReached={loadMore}
+                    onEndReachedThreshold={0.5}
+                    refreshing={refreshing}
+                    onRefresh={refresh}
+                    scrollEnabled={false}
+                    nestedScrollEnabled={true}
+                  />
+                )}
               </View>
             )}
 
