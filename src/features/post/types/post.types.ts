@@ -1,24 +1,51 @@
-export interface PostAuthor {
-  id: string;
-  name: string;
-  avatar: any;
-  username: string;
+import { ImageSourcePropType } from "react-native";
+
+// MediaItem type for displaying media in detail view
+export type MediaItem =
+  | { type: "image"; source: ImageSourcePropType }
+  | { type: "video"; source: string; thumbnail?: ImageSourcePropType };
+
+export interface PostMedia {
+  mediaId: string;
+  publicUrl: string;
+  mediaType: 0 | 1; // 0: image, 1: video
+  displayOrder: number;
+  width?: number | null;
+  height?: number | null;
+  duration?: number | null;
 }
 
 export interface Post {
-  id: string;
-  author: PostAuthor;
-  community?: string;
-  timestamp: string;
-  title: string;
+  postId: string;
+  userId: string;
+  userFullName: string;
+  userAvatarUrl: string | null;
   content: string;
-  image?: any; // Deprecated: use images instead
-  images?: any[]; // Support multiple images
-  type?: 'post' | 'match' | 'announcement';
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
+  totalMedia: number;
+  totalLikes: number;
+  totalComments: number;
+  visibility: number;
+  isEdited: boolean;
+  editedAt: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  media: PostMedia[];
+}
+
+export interface PostsResponse {
+  isSuccess: boolean;
+  data: {
+    posts: Post[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+export interface PostDetailResponse {
+  isSuccess: boolean;
+  data: Post;
 }
 
 export interface Comment {
@@ -56,4 +83,3 @@ export interface Reply {
     username: string;
   };
 }
-

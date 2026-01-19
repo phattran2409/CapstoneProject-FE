@@ -90,3 +90,8 @@ export interface MatchHistory {
   };
 }
 
+
+export interface UserProfileResponse {
+  isSuccess: boolean;
+  data: UserProfile;
+}

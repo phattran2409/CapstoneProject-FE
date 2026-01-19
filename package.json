@@ -43,6 +43,7 @@
     "expo-localization": "~16.0.1",
     "expo-status-bar": "~2.0.0",
     "expo-three": "^2.2.1",
+    "expo-video": "~2.0.6",
     "expo-web-browser": "~14.0.2",
     "firebase": "^12.7.0",
     "i18next": "^25.6.3",

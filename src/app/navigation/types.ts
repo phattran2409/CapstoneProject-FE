@@ -35,6 +35,9 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };
+  ChangePassword: {
+    email: string;
+  };
 };
 
 export type TabParamList = {

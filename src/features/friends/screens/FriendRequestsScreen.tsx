@@ -16,6 +16,7 @@ import { FriendRequest } from '../types/friends.types';
 import { FriendRequestCard } from '../components';
 import { ThemedText } from '@/shared/components/themed/ThemedText';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
+import { ListSkeleton } from '@/shared/components';
 
 type FriendRequestsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FriendRequests'>;
 
@@ -27,6 +28,7 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({ navigation 
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
+  const [isLoading, setIsLoading] = useState(false);
 
   // TODO: Replace mock data with API data or store data
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([
@@ -129,11 +131,14 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({ navigation 
         <View style={{ width: 24 }} />
       </View>
 
-      <FlatList
-        style={{ paddingHorizontal: theme.spacing.m }}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        data={friendRequests}
+      {isLoading ? (
+        <ListSkeleton />
+      ) : (
+        <FlatList
+          style={{ paddingHorizontal: theme.spacing.m }}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          data={friendRequests}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <FriendRequestCard
@@ -151,6 +156,7 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({ navigation 
         ListEmptyComponent={renderEmptyState}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
+      )}
     </SafeAreaView>
   );
 };

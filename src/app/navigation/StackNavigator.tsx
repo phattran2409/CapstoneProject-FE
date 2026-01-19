@@ -3,7 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { 
   LoginScreen, 
   RegisterScreen, 
-  OTPVerificationScreen, 
+  OTPVerificationScreen,
+  ChangePasswordScreen,
   LeaderboardScreen,
   CreateRoomScreen,
   VenueSelectionScreen,
@@ -81,6 +82,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="OTPVerification" 
             component={OTPVerificationScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ChangePassword" 
+            component={ChangePasswordScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',
@@ -196,6 +205,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="PostDetail" 
             component={PostDetailScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ChangePassword" 
+            component={ChangePasswordScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',

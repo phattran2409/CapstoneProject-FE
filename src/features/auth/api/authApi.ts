@@ -10,6 +10,10 @@ import type {
   VerifyOTPResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   User,
 } from '../types/auth.types';
 import { API_CONFIG } from '@/shared/constants/api';
@@ -89,6 +93,22 @@ export const authApi = {
    */
   googleLogin: async (request: { uid: string }): Promise<LoginResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN, { uid: request.uid });
+    return data;
+  },
+
+  /**
+   * Send forgot password email
+   */
+  forgotPassword: async (request: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, request);
+    return data;
+  },
+
+  /**
+   * Change user password
+   */
+  changePassword: async (request: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
     return data;
   },
 };

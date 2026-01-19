@@ -6,6 +6,7 @@ export type FieldPlayer = {
   id: string;
   name?: string;
   avatar?: any;
+  
 } | null;
 
 type lineUp = {
@@ -195,6 +196,7 @@ export const getAvailableLineups = (format: string): string[] => {
   }
 }
 
+
 const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress, format = '5vs5', lineUpName = '3-1' }) => {
   return (
     <View style={[styles.container, style]}>
@@ -213,7 +215,7 @@ const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress
           if (!player) {
             // Empty slot - dashed circle
             return (
-              <View
+              <TouchableOpacity
                 key={`empty-${index}`}
                 style={[
                   styles.playerCard,
@@ -223,9 +225,10 @@ const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress
                     top: pos.y as any,
                   },
                 ]}
+                onPress={() => onPlayerPress?.()}
               >
                 <ThemedText variant="secondary" size="xl" weight="bold">+</ThemedText>
-              </View>
+              </TouchableOpacity>
             );
           }
 

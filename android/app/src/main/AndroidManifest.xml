@@ -25,9 +25,8 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="kickify"/>
-        <data android:scheme="com.kickyfi.app"/>
-        <data android:scheme="exp+kickify"/>
         <data android:scheme="com.kickify.app"/>
+        <data android:scheme="exp+kickify"/>
       </intent-filter>
     </activity>
   </application>

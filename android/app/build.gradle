@@ -96,13 +96,7 @@ android {
     }
     signingConfigs {
         debug {
-            // Use system debug keystore to match Firebase SHA-1 fingerprint
-            def debugKeystorePath = file("${System.getProperty('user.home')}/.android/debug.keystore")
-            if (debugKeystorePath.exists()) {
-                storeFile debugKeystorePath
-            } else {
-                storeFile file('debug.keystore')
-            }
+            storeFile file('debug.keystore')
             storePassword 'android'
             keyAlias 'androiddebugkey'
             keyPassword 'android'

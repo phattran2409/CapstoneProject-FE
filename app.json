@@ -44,7 +44,8 @@
             "googleServicesFile": "./GoogleService-Info.plist"
           }
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "eas": {

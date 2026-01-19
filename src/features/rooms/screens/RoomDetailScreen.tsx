@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Modal, Animated, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -12,8 +12,9 @@ import {
   } from '@/shared/components/themed';
 import { RootStackParamList } from '@/app/navigation/types';
 import Field3DView, { FieldPlayer, getAvailableLineups } from '@/shared/components/Field3Dview';
-import { ChatInMatches } from '@/shared/components';
-
+import { Button, ChatInMatches } from '@/shared/components';
+import Field3DViewDraggable, { Field3DViewDraggableRef } from '@/shared/components/Field3DViewDraggable';
+import { useAuthStore } from '@/features/auth/store/authStore';
 type RoomDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomDetail'>;
 
 interface RoomDetailScreenProps {
@@ -44,10 +45,12 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   const { roomId } = route?.params || { roomId: '1' };
   const [showChat, setShowChat] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
-  
+  const fieldRef = useRef<Field3DViewDraggableRef>(null);
+  const [isCaptain, setIsCaptain] = useState<boolean>(false);
   const handleShowChat = () => {
     setShowChat(!showChat);
   };
+  const { user } = useAuthStore();
 
   // Animate modal when opening/closing
   useEffect(() => {
@@ -56,6 +59,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
       duration: 300,
       useNativeDriver: true,
     }).start();
+  
   }, [showChat]);
   // Mock data - replace with real data from API
   const roomData = {
@@ -73,10 +77,11 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
     teams: {
       name: 'Đội A',
       players: [
-        { id: '1', name: 'An Nguyễn', avatar: require('@assets/images/icon.png') },
-        { id: '2', name: 'Cường Phạm', avatar: require('@assets/images/icon.png') },
-        { id: '3', name: 'Emeka Okafor', avatar: require('@assets/images/icon.png') },
-        { id: '4', name: 'Giang Hoàng', avatar: require('@assets/images/icon.png') },
+        { id: 'd3b7b055-ec37-4956-b587-c2edb61b0171', name: 'An Nguyễn', avatar: require('@assets/images/icon.png'), isCaptain : true },
+        { id: '2', name: 'Cường Phạm', avatar: require('@assets/images/icon.png'), isCaptain : false },
+        { id: '3', name: 'Emeka Okafor', avatar: require('@assets/images/icon.png'), isCaptain : false },
+        { id: '4', name: 'Giang Hoàng', avatar: require('@assets/images/icon.png'), isCaptain : false },
+        { id: '5', name: 'Phat Tran', avatar: require('@assets/images/icon.png'), isCaptain : false },
       ],
     }
   };
@@ -96,6 +101,16 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
     }
   }, [roomData.format, selectedLineup]);
 
+  useEffect(() => {
+    roomData.teams.players.forEach(player => {  
+      if (player?.id === user?.userId && player?.isCaptain === true) {
+        setIsCaptain(true);
+      }else{
+        setIsCaptain(false);
+      }
+    });
+  }, [roomData.teams.players, user?.userId]);
+
   const getPlayers = (team: FieldPlayer[]) : FieldPlayer[] => {
     const players : FieldPlayer[] = [];  
     const format = roomData.format === '5vs5' ? 5 : 7;
@@ -105,12 +120,22 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
     return players;
   }
 
-  const handlePlayerPress = (player: any) => {
+  const handlePlayerPress = (player: FieldPlayer | null) => {
     if (player) {
-      console.log('Player pressed:', player.name);
+      console.log('Player pressed:', player?.name);
       // TODO: Navigate to player profile hoặc show modal
+    } else {
+      console.log('Player pressed empty slot');
     }
   };
+ 
+  const handleSaveLineUp = async () => {
+    const positions =  fieldRef.current?.getAllPositions();
+    
+    if (positions) { 
+      // api Save line up
+    }
+  }
 
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
@@ -279,7 +304,8 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
             </ThemedView>
 
             {/* Lineup Selector Dropdown */}
-            <View style={styles.lineupSelectorContainer}>
+            {isCaptain && (
+              <View style={styles.lineupSelectorContainer}>
               <ThemedText variant="secondary" size="s" style={styles.lineupLabel}>
                 Chọn đội hình:
               </ThemedText>
@@ -350,7 +376,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                   </View>
                 )}
               </View>
-            </View>
+            </View> )}
 
             {/* Field Layout - 3D View */}
             <View 
@@ -361,14 +387,29 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 }
               ]}
             >
-              <Field3DView 
+              {/* <Field3DView 
                 players={getPlayers(roomData.teams.players) as FieldPlayer[]} 
                 style={{ borderRadius: 24 }}
                 onPlayerPress={handlePlayerPress}
                 format={roomData.format}
                 lineUpName={selectedLineup}
+              /> */}
+              <Field3DViewDraggable
+                players={getPlayers(roomData.teams.players) as FieldPlayer[]}
+                style={{ borderRadius: 24 }}
+                onPlayerPress={handlePlayerPress}
+                format={roomData.format}
+                lineUpName={selectedLineup}
+                onPositionsChange={(positions) => console.log('positions', positions)}
               />
             </View>
+            {isCaptain && ( 
+              <View>
+              <Button
+                title="Save"
+                onPress={handleSaveLineUp}
+              />
+            </View> )}
 
             {/* Check-in & Payment */}
             <View style={styles.paymentSection}>

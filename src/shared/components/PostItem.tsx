@@ -1,30 +1,11 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedView, ThemedText } from './themed';
-import { PostImages } from './PostImages';
-
-export interface Post {
-  id: string;
-  author: {
-    name: string;
-    avatar: any;
-    username: string;
-  };
-  community?: string;
-  timestamp: string;
-  title: string;
-  content: string;
-  image?: any; // Deprecated: use images instead
-  images?: any[]; // Support multiple images
-  type?: 'post' | 'match' | 'announcement';
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-}
+import React from "react";
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { ThemedView, ThemedText } from "./themed";
+import { PostMediaGrid } from "./PostMediaGrid";
+import { Post } from "@/features/post/types/post.types";
 
 export interface PostItemProps {
   post: Post;
@@ -45,33 +26,24 @@ export const PostItem: React.FC<PostItemProps> = ({
 }) => {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
-  
-  // Support both image (single) and images (multiple) for backward compatibility
-  const images = post.images || (post.image ? [post.image] : []);
 
-  const getPostTypeLabel = (type?: string) => {
-    switch (type) {
-      case 'match':
-        return t('newsFeed.matches');
-      case 'announcement':
-        return t('newsFeed.announcements');
-      default:
-        return null;
-    }
+  // Calculate relative time from createdAt
+  const getRelativeTime = (dateString: string): string => {
+    const now = new Date();
+    const postDate = new Date(dateString);
+    const diffInMs = now.getTime() - postDate.getTime();
+    const diffInMinutes = Math.floor(diffInMs / 60000);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMinutes < 1) return "Vừa xong";
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    if (diffInDays < 7) return `${diffInDays} ngày trước`;
+    return postDate.toLocaleDateString("vi-VN");
   };
 
-  const getPostTypeBgColor = (type?: string) => {
-    switch (type) {
-      case 'match':
-        return theme.colors.neonGreen;
-      case 'announcement':
-        return '#3b82f6';
-      default:
-        return null;
-    }
-  };
-
-  const postTypeBgColor = getPostTypeBgColor(post.type);
+  const timestamp = getRelativeTime(post.createdAt);
 
   return (
     <ThemedView
@@ -86,31 +58,54 @@ export const PostItem: React.FC<PostItemProps> = ({
       ]}
     >
       {/* Post Header */}
-      <View style={[styles.postHeader, { paddingHorizontal: theme.spacing.l, marginBottom: 12 }]}>
+      <View
+        style={[
+          styles.postHeader,
+          { paddingHorizontal: theme.spacing.l, marginBottom: 12 },
+        ]}
+      >
         <View style={styles.postAuthor}>
-          <Image
-            source={post.author.avatar}
-            style={styles.postAvatar}
-            resizeMode="cover"
-          />
+          {post.userAvatarUrl ? (
+            <Image
+              source={{ uri: post.userAvatarUrl }}
+              style={styles.postAvatar}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={[
+                styles.postAvatar,
+                {
+                  backgroundColor: theme.colors.border,
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <Ionicons
+                name="person"
+                size={24}
+                color={theme.colors.textSecondary}
+              />
+            </View>
+          )}
           <View style={{ marginLeft: 12, flex: 1 }}>
             <ThemedText variant="primary" size="m" weight="bold">
-              {post.author.name}
-              {post.community && (
-                <Text style={{ color: theme.colors.textSecondary, fontWeight: '400' }}>
-                  {' '}
-                  posted in '{post.community}'
-                </Text>
-              )}
+              {post.userFullName}
             </ThemedText>
-            <Text style={[styles.postTimestamp, { color: theme.colors.textSecondary }]}>
-              {post.timestamp}
+            <Text
+              style={[
+                styles.postTimestamp,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
+              {timestamp}
             </Text>
           </View>
         </View>
         <TouchableOpacity
           style={styles.postMenuButton}
-          onPress={() => onMenuPress?.(post.id)}
+          onPress={() => onMenuPress?.(post.postId)}
         >
           <Ionicons
             name="ellipsis-horizontal"
@@ -120,81 +115,62 @@ export const PostItem: React.FC<PostItemProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Post Type Badge */}
-      {getPostTypeLabel(post.type) && postTypeBgColor && (
-        <View style={{ paddingHorizontal: theme.spacing.l, marginBottom: 8 }}>
-          <View
-            style={[
-              styles.postTypeBadge,
-              {
-                backgroundColor: postTypeBgColor,
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-                borderRadius: 20,
-              },
-            ]}
-          >
-            <Text style={[styles.postTypeText, { color: isDark ? theme.colors.darkBlack : theme.colors.white }]}>
-              {getPostTypeLabel(post.type)}
-            </Text>
-          </View>
-        </View>
-      )}
-
       {/* Post Content */}
       <TouchableOpacity
         activeOpacity={0.9}
-        onPress={() => onPress?.(post.id)}
+        onPress={() => onPress?.(post.postId)}
         style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
       >
-        <ThemedText variant="primary" size="l" weight="bold" style={styles.postTitle}>
-          {post.title}
-        </ThemedText>
         <ThemedText variant="secondary" size="m" style={styles.postContent}>
           {post.content}
         </ThemedText>
       </TouchableOpacity>
 
-      {/* Post Images */}
-      {images.length > 0 && (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => onPress?.(post.id)}
-          style={{ marginBottom: 12 }}
-        >
-          <PostImages images={images} />
-        </TouchableOpacity>
+      {/* Post Media (Images/Videos) */}
+      {post.media && post.media.length > 0 && (
+        <View style={{ marginBottom: 12 }}>
+          <PostMediaGrid
+            media={post.media}
+            onMediaPress={() => onPress?.(post.postId)}
+          />
+        </View>
       )}
 
       {/* Post Actions */}
-      <View style={[styles.postActions, { paddingHorizontal: theme.spacing.l }]}>
+      <View
+        style={[styles.postActions, { paddingHorizontal: theme.spacing.l }]}
+      >
         <TouchableOpacity
           style={styles.postAction}
-          onPress={() => onLike?.(post.id)}
+          onPress={() => onLike?.(post.postId)}
         >
           <Ionicons
-            name={post.isLiked ? 'heart' : 'heart-outline'}
+            name={/* post.isLiked */ false ? "heart" : "heart-outline"}
             size={22}
-            color={post.isLiked ? '#ef4444' : theme.colors.textSecondary}
+            color={
+              /* post.isLiked */ false ? "#ef4444" : theme.colors.textSecondary
+            }
           />
           <Text
             style={[
               styles.postActionText,
               {
-                color: post.isLiked ? '#ef4444' : theme.colors.textSecondary,
-                fontWeight: post.isLiked ? '600' : '400',
+                color: /* post.isLiked */ false
+                  ? "#ef4444"
+                  : theme.colors.textSecondary,
+                fontWeight: /* post.isLiked */ false ? "600" : "400",
               },
             ]}
           >
-            {post.likes}
+            {post.totalLikes}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.postAction}
           onPress={() => {
-            onComment?.(post.id);
-            onPress?.(post.id);
+            onComment?.(post.postId);
+            onPress?.(post.postId);
           }}
         >
           <Ionicons
@@ -202,22 +178,32 @@ export const PostItem: React.FC<PostItemProps> = ({
             size={22}
             color={theme.colors.textSecondary}
           />
-          <Text style={[styles.postActionText, { color: theme.colors.textSecondary }]}>
-            {post.comments}
+          <Text
+            style={[
+              styles.postActionText,
+              { color: theme.colors.textSecondary },
+            ]}
+          >
+            {post.totalComments}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.postAction}
-          onPress={() => onShare?.(post.id)}
+          onPress={() => onShare?.(post.postId)}
         >
           <Ionicons
             name="share-social-outline"
             size={22}
             color={theme.colors.textSecondary}
           />
-          <Text style={[styles.postActionText, { color: theme.colors.textSecondary }]}>
-            {post.shares}
+          <Text
+            style={[
+              styles.postActionText,
+              { color: theme.colors.textSecondary },
+            ]}
+          >
+            {/* post.shares */ 0}
           </Text>
         </TouchableOpacity>
       </View>
@@ -230,13 +216,13 @@ const styles = StyleSheet.create({
     // Styles applied via inline
   },
   postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   postAuthor: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   postAvatar: {
@@ -250,15 +236,15 @@ const styles = StyleSheet.create({
   postMenuButton: {
     width: 32,
     height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   postTypeBadge: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   postTypeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   postTitle: {
     marginBottom: 8,
@@ -267,13 +253,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   postActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   postAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   postActionText: {
@@ -282,4 +268,3 @@ const styles = StyleSheet.create({
 });
 
 export default PostItem;
-
