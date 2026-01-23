@@ -3,7 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { 
   LoginScreen, 
   RegisterScreen, 
-  OTPVerificationScreen, 
+  OTPVerificationScreen,
+  ChangePasswordScreen,
   LeaderboardScreen,
   CreateRoomScreen,
   VenueSelectionScreen,
@@ -24,7 +25,6 @@ import {
 import TabNavigator from './TabNavigator';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from './types';
-import { ActiveRoomBanner } from '@/shared/components/ActiveRoomBanner';
 import { View, StyleSheet } from 'react-native';
 import { WalletScreen, WalletTopUpScreen } from '@/features/wallet';
 import { PaymentSuccessScreen } from '@/features/payment';
@@ -84,6 +84,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="OTPVerification" 
             component={OTPVerificationScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ChangePassword" 
+            component={ChangePasswordScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',
@@ -228,10 +236,17 @@ const StackNavigator: React.FC = () => {
             animation: 'slide_from_right',
           }}
           />
+          <Stack.Screen 
+            name="ChangePassword" 
+            component={ChangePasswordScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
         </>
       )}
       </Stack.Navigator>
-      {isAuthenticated && <ActiveRoomBanner />}
     </View>
   );
 };

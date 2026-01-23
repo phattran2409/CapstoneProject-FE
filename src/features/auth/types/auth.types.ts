@@ -69,6 +69,28 @@ export interface RefreshTokenResponse {
   refreshToken?: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  isSuccess: boolean;
+  data : {
+    email: string;
+  }
+}
+
+export interface ChangePasswordRequest {
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  isSuccess: boolean;
+  message?: string;
+}
+
 // ==================== Auth State ====================
 export interface AuthState {
   user: User | null;

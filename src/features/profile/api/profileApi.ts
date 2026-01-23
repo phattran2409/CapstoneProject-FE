@@ -4,20 +4,22 @@ import {
   UpdateProfileData,
   UpdatePreferencesData,
   MatchHistory,
+  UserProfileResponse,
 } from '../types/profile.types';
 import { useAuthStore } from '@/features/auth';
 
 // Get my profile
-export const getMyProfile = async (): Promise<UserProfile> => {
-  // const response = await apiClient.get<UserProfile>('/users/me'); 
-  const response = useAuthStore().user;
-  return response;
-};
+// export const getMyProfile = async (): Promise<UserProfile> => {
+//   const response = await apiClient.get<UserProfile>('/users/me'); 
+//   // const response = useAuthStore.getState().user;
+//   return response as unknown as UserProfile;
+// };
 
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<UserProfile> => {
-  const response = await apiClient.get<UserProfile>(`/users/${userId}`);
-  return response.data;
+  const response = await apiClient.get<UserProfileResponse>(`/users/${userId}`);
+  console.log('response :', response.data);
+  return response.data as UserProfile;
 };
 
 // Update my profile

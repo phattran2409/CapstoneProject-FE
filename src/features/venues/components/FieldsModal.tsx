@@ -14,13 +14,11 @@ export interface Field {
   pricePerHour: number;
   description: string;
   status?: 'available' | 'booked' | 'maintenance';
-  time : [
-    {
-      id: string;
-      startTime: string;
-      endTime: string;
-    }
-  ]
+  time: {
+    id: string;
+    startTime: string;
+    endTime: string;
+  }[]
 }
 
 

@@ -11,6 +11,8 @@ export {
   useRoomMessages,
   useSendMessage,
   useCreateRoom,
+  useKickPlayer,
+  useCancelRoom,
 } from './hooks';
 
 // ============ Types ============

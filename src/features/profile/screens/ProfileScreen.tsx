@@ -33,31 +33,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [newsUpdates, setNewsUpdates] = useState(false);
 
   // ✅ Fetch user profile from API
-  const { data: profile, isLoading: isLoadingProfile } = useMyProfile();
-  
-  // ✅ Use logout mutation
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const { data: profile, isLoading: isLoadingProfile } = useMyProfile(user?.userId || '');
+  // ✅ Use logout
+  const { logout } = useLogout();
   const scrollHandler = useScrollToHideTabBar();
 
   const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () => {
-        const parent = navigation.getParent();
-        if (parent) {
-          parent.navigate('Login');
-        }
-      },
-    });
+    logout();
   };
 
   const handleAvatarPress = () => {
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('PersonalPage');
+      parent.navigate('PersonalPage', { userId: user?.userId });
     }
   };
-
-
 
   return (
     <ThemedSafeAreaView>
@@ -125,7 +115,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: theme.spacing.xs / 2,
               }}
             >
-              {user?.fullName || 'Tuấn Anh Nguyễn'}
+              {profile?.fullName || 'Tuấn Anh Nguyễn'}
             </Text>
             <Text
               style={{

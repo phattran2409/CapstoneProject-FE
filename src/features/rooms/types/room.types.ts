@@ -86,6 +86,7 @@ export interface CreateRoomRequest {
   name: string;
   datetime: string;
   venueId: string;
+  hostId: string;
   totalPlayers?: number;
   pricePerPlayer?: number;
   description?: string;

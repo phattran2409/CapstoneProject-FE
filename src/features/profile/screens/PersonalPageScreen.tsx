@@ -9,7 +9,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -35,23 +35,22 @@ import {
   useTogglePostLike,
 } from "@/features/post/hooks";
 
-type PersonalPageScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "PersonalPage"
->;
-
-interface PersonalPageScreenProps {
-  navigation: PersonalPageScreenNavigationProp;
-}
+type PersonalPageScreenProps = NativeStackScreenProps<RootStackParamList, "PersonalPage">;
 
 type TabType = "posts" | "history" | "analysis";
 
 const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   navigation,
+  route,
 }) => {
   const { theme } = useTheme();
-  const { user } = useAuthStore();
+  const { user: currentUser } = useAuthStore();
   const { t } = useTranslation();
+  
+  // Get userId from params or fallback to current user
+  const userId = route.params?.userId || currentUser?.userId;
+  const isCurrentUser = userId === currentUser?.userId;
+  console.log("isCurrentUser", isCurrentUser);
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [showEditForm, setShowEditForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -72,7 +71,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     loadMore,
     setPosts,
   } = usePaginatedUserPosts({
-    userId: user?.userId || "",
+    userId: currentUser?.userId || "",
     pageSize: 10,
   });
 
@@ -273,14 +272,14 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           {/* Profile Section */}
           <View style={{ backgroundColor: theme.colors.background }}>
             <ProfileHeader
-              name={user?.fullName || "Mai Anh Tuấn"}
+              name={currentUser?.fullName || "Mai Anh Tuấn"}
               elo={2450}
               description="King of the Pitch"
               age={22}
               position="CAM"
               shirtNumber={10}
               matchesCount={88}
-              isCurrentUser={false}
+              isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}
               onAddFriendPress={handleAddFriend}
             />
@@ -395,7 +394,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         onSave={handleSaveProfile}
         isLoading={isUpdating}
         initialData={{
-          name: user?.fullName || "Mai Anh Tuấn",
+          name: currentUser?.fullName || "Mai Anh Tuấn",
           bio: "King of the Pitch",
           position: "CAM",
           shirtNumber: 10,

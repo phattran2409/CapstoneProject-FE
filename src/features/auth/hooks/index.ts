@@ -4,4 +4,6 @@ export { useSendOTP, useVerifyOTP } from './useOTP';
 export { useLogout } from './useLogout';
 export { useProfile, useUpdateProfile } from './useProfile';
 export { useGoogleSignIn } from './useGoogleSignIn';
+export { useForgotPassword } from './useForgotPassword';
+export { useChangePassword } from './useChangePassword';
 

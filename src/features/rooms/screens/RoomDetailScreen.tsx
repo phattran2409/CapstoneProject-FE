@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Modal, Animated, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
@@ -11,9 +11,15 @@ import {
   ThemedIcon,
   } from '@/shared/components/themed';
 import { RootStackParamList } from '@/app/navigation/types';
-import Field3DView, { FieldPlayer, getAvailableLineups } from '@/shared/components/Field3Dview';
-import { ChatInMatches } from '@/shared/components';
-
+import { Button, ChatInMatches } from '@/shared/components';
+import { 
+  FormationField, 
+  FormationFieldRef, 
+  FormationPlayer, 
+  FormationData,
+  getFormationNames,
+} from '@/shared/components/formation';
+import { useAuthStore } from '@/features/auth/store/authStore';
 type RoomDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomDetail'>;
 
 interface RoomDetailScreenProps {
@@ -25,17 +31,6 @@ interface RoomDetailScreenProps {
   };
 }
 
-interface Player {
-  id: string;
-  name: string;
-  avatar: any;
-}
-
-interface Team {
-  name: string;
-  players: (Player | null)[];
-}
-
 type SelectedTeam = 'teamA' | 'teamB';
 
 const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }) => {
@@ -44,10 +39,13 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   const { roomId } = route?.params || { roomId: '1' };
   const [showChat, setShowChat] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
-  
+  const formationRef = useRef<FormationFieldRef>(null);
+  const [isCaptain, setIsCaptain] = useState<boolean>(false);
+  const [currentFormationData, setCurrentFormationData] = useState<FormationData | null>(null);
   const handleShowChat = () => {
     setShowChat(!showChat);
   };
+  const { user } = useAuthStore();
 
   // Animate modal when opening/closing
   useEffect(() => {
@@ -56,11 +54,12 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
       duration: 300,
       useNativeDriver: true,
     }).start();
+  
   }, [showChat]);
   // Mock data - replace with real data from API
   const roomData = {
     id: roomId,
-    format: '7vs7', 
+    format: '7vs7' as '5vs5' | '7vs7', 
     datetime: '19:00 - 20:30, 28/08',
     venue: {
       name: 'Sân bóng ABC',
@@ -73,44 +72,65 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
     teams: {
       name: 'Đội A',
       players: [
-        { id: '1', name: 'An Nguyễn', avatar: require('@assets/images/icon.png') },
-        { id: '2', name: 'Cường Phạm', avatar: require('@assets/images/icon.png') },
-        { id: '3', name: 'Emeka Okafor', avatar: require('@assets/images/icon.png') },
-        { id: '4', name: 'Giang Hoàng', avatar: require('@assets/images/icon.png') },
+        { id: 'd3b7b055-ec37-4956-b587-c2edb61b0171', name: 'An Nguyễn', avatar: require('@assets/images/icon.png'), isCaptain: true, role: 'GK' as const },
+        { id: '2', name: 'Cường Phạm', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'DF' as const },
+        { id: '3', name: 'Emeka Okafor', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'DF' as const },
+        { id: '4', name: 'Giang Hoàng', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'MF' as const },
+        { id: '5', name: 'Phat Tran', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'FW' as const },
+        { id: '6', name: 'Minh Lê', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'DF' as const },
+        { id: '7', name: 'Hùng Trần', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'FW' as const },
       ],
     }
   };
 
   const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>('teamA');
-  const [selectedLineup, setSelectedLineup] = useState<string>('3-1');
+  const [selectedFormation, setSelectedFormation] = useState<string>('3-3');
   const [isLineupDropdownOpen, setIsLineupDropdownOpen] = useState(false);
 
-  // Get available lineups based on format
-  const availableLineups = getAvailableLineups(roomData.format);
+  // Get available formations based on format
+  const availableFormations = getFormationNames(roomData.format);
 
-  // Update selected lineup when format changes
+  // Update selected formation when format changes
   useEffect(() => {
-    const lineups = getAvailableLineups(roomData.format);
-    if (!lineups.includes(selectedLineup)) {
-      setSelectedLineup(lineups[0]);
+    const formations = getFormationNames(roomData.format);
+    if (!formations.includes(selectedFormation)) {
+      setSelectedFormation(formations[0]);
     }
-  }, [roomData.format, selectedLineup]);
+  }, [roomData.format, selectedFormation]);
 
-  const getPlayers = (team: FieldPlayer[]) : FieldPlayer[] => {
-    const players : FieldPlayer[] = [];  
-    const format = roomData.format === '5vs5' ? 5 : 7;
-    for (let i = 0; i < format; i++) {
-        players.push(team[i] ? team[i] : null);
-    }
-    return players;
-  }
+  useEffect(() => {
+    const currentUserPlayer = roomData.teams.players.find(player => player?.id === user?.userId);
+    setIsCaptain(currentUserPlayer?.isCaptain === true);
+  }, [roomData.teams.players, user?.userId]);
 
-  const handlePlayerPress = (player: any) => {
-    if (player) {
-      console.log('Player pressed:', player.name);
-      // TODO: Navigate to player profile hoặc show modal
-    }
+  // Convert team players to FormationPlayer type
+  const formationPlayers: FormationPlayer[] = roomData.teams.players.map(player => ({
+    id: player.id,
+    name: player.name,
+    avatar: player.avatar,
+    role: player.role,
+    isCaptain: player.isCaptain,
+  }));
+
+  const handlePlayerPress = (player: FormationPlayer, slotId: string) => {
+    console.log('Player pressed:', player.name, 'at slot:', slotId);
+    // TODO: Navigate to player profile or show modal
   };
+
+  const handleFormationChange = (data: FormationData) => {
+    setCurrentFormationData(data);
+    console.log('Formation changed:', data);
+  };
+ 
+  const handleSaveFormation = async () => {
+    const formationData = formationRef.current?.getFormationData();
+    
+    if (formationData) { 
+      console.log('Saving formation:', formationData);
+      // TODO: API call to save formation
+      // api.saveFormation(roomId, formationData);
+    }
+  }
 
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
@@ -278,8 +298,9 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
               </View>
             </ThemedView>
 
-            {/* Lineup Selector Dropdown */}
-            <View style={styles.lineupSelectorContainer}>
+            {/* Formation Selector Dropdown */}
+            {isCaptain && (
+              <View style={styles.lineupSelectorContainer}>
               <ThemedText variant="secondary" size="s" style={styles.lineupLabel}>
                 Chọn đội hình:
               </ThemedText>
@@ -295,7 +316,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                   onPress={() => setIsLineupDropdownOpen(!isLineupDropdownOpen)}
                 >
                   <ThemedText variant="primary" size="m" weight="semiBold">
-                    {selectedLineup}
+                    {selectedFormation}
                   </ThemedText>
                   <ThemedIcon 
                     name={isLineupDropdownOpen ? "chevron-up" : "chevron-down"} 
@@ -315,44 +336,44 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                       }
                     ]}
                   >
-                    {availableLineups.map((lineup) => (
+                    {availableFormations.map((formation) => (
                       <TouchableOpacity
-                        key={lineup}
+                        key={formation}
                         style={[
                           styles.dropdownItem,
                           {
-                            backgroundColor: selectedLineup === lineup 
+                            backgroundColor: selectedFormation === formation 
                               ? theme.colors.neonGreen + '20' 
                               : 'transparent',
-                            borderBottomWidth: lineup !== availableLineups[availableLineups.length - 1] ? 1 : 0,
+                            borderBottomWidth: formation !== availableFormations[availableFormations.length - 1] ? 1 : 0,
                             borderBottomColor: theme.colors.border,
                           }
                         ]}
                         onPress={() => {
-                          setSelectedLineup(lineup);
+                          setSelectedFormation(formation);
                           setIsLineupDropdownOpen(false);
                         }}
                       >
                         <ThemedText 
                           variant="primary" 
                           size="m" 
-                          weight={selectedLineup === lineup ? "bold" : "medium"}
+                          weight={selectedFormation === formation ? "bold" : "medium"}
                           style={{ 
-                            color: selectedLineup === lineup 
+                            color: selectedFormation === formation 
                               ? theme.colors.neonGreen 
                               : theme.colors.textPrimary 
                           }}
                         >
-                          {lineup}
+                          {formation}
                         </ThemedText>
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
               </View>
-            </View>
+            </View> )}
 
-            {/* Field Layout - 3D View */}
+            {/* Field Layout - Formation View */}
             <View 
               style={[
                 styles.fieldContainer,
@@ -361,14 +382,25 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
                 }
               ]}
             >
-              <Field3DView 
-                players={getPlayers(roomData.teams.players) as FieldPlayer[]} 
-                style={{ borderRadius: 24 }}
-                onPlayerPress={handlePlayerPress}
+              <FormationField
+                ref={formationRef}
+                players={formationPlayers}
                 format={roomData.format}
-                lineUpName={selectedLineup}
+                formationName={selectedFormation}
+                editable={isCaptain}
+                onPlayerPress={handlePlayerPress}
+                onFormationChange={handleFormationChange}
+                showBench={isCaptain}
               />
             </View>
+            {isCaptain && ( 
+              <View style={styles.saveButtonContainer}>
+                <Button
+                  title="Lưu đội hình"
+                  onPress={handleSaveFormation}
+                />
+              </View>
+            )}
 
             {/* Check-in & Payment */}
             <View style={styles.paymentSection}>
@@ -663,6 +695,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#111',
     padding: 16,
+  },
+  saveButtonContainer: {
+    marginTop: 16,
   },
   paymentSection: {
     marginTop: 24,

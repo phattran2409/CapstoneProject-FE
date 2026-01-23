@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileKeys } from '../api/profileKeys';
 import {
-  getMyProfile,
   getUserProfile,
   updateMyProfile,
   updateAvatar,
@@ -10,10 +9,11 @@ import {
 import { UpdateProfileData, UpdatePreferencesData } from '../types/profile.types';
 
 // Get my profile
-export const useMyProfile = () => {
+export const useMyProfile = (userId : string) => {
   return useQuery({
     queryKey: profileKeys.me(),
-    queryFn: getMyProfile,
+    queryFn: () => getUserProfile(userId),
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

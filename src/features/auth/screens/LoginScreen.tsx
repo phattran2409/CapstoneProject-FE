@@ -18,11 +18,11 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTheme } from "@/shared/theme";
-import { useLogin, useGoogleSignIn, useAuthStore } from "@/features/auth";
+import { useLogin, useGoogleSignIn, useAuthStore, useForgotPassword } from "@/features/auth";
 import { Button } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { loginSchema, type LoginFormData } from "../validation/authSchemas";
+import { loginSchema, forgotPasswordSchema, type LoginFormData } from "../validation/authSchemas";
 import { ScrollView } from "react-native";
 import { RootStackParamList } from "@/app/navigation/types";
 
@@ -45,7 +45,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotEmailError, setForgotEmailError] = useState("");
+  
+  // Forgot Password mutation
+  const { mutate: forgotPassword, isPending: forgotLoading } = useForgotPassword();
 
   // React Hook Form with Zod validation
   const {
@@ -119,59 +122,45 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     return message.startsWith("validation.") ? t(message) : message;
   };
 
-  // Handle Forgot Password
-  const handleForgotPassword = async () => {
-    if (!forgotEmail.trim()) {
-      toast.error(
-        t("login.forgot.error", "Lỗi"),
-        t("login.forgot.emailRequired", "Vui lòng nhập email")
-      );
+  // Handle Forgot Password - Using Zod validation and useForgotPassword hook
+  const handleForgotPassword = () => {
+    // Validate email using Zod schema
+    const result = forgotPasswordSchema.safeParse({ email: forgotEmail });
+    
+    if (!result.success) {
+      const errorMessage = result.error.errors[0]?.message;
+      const translatedError = errorMessage?.startsWith("validation.") 
+        ? t(errorMessage) 
+        : t("login.forgot.invalidEmail", "Email không hợp lệ");
+      setForgotEmailError(translatedError);
       return;
     }
-
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(forgotEmail)) {
-      toast.error(
-        t("login.forgot.error", "Lỗi"),
-        t("login.forgot.invalidEmail", "Email không hợp lệ")
-      );
-      return;
-    }
-
-    setForgotLoading(true);
-    try {
-      const response = await fetch("https://api.kickify.site/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    
+    // Clear error on valid input
+    setForgotEmailError("");
+    
+    // Call forgot password API using hook
+    forgotPassword(
+      { email: result.data.email },
+      {
+        onSuccess: () => {
+          toast.success(
+            t("login.forgot.success", "Đã gửi email"),
+            t("login.forgot.successMessage", "Vui lòng kiểm tra email để đặt lại mật khẩu")
+          );
+          navigation.navigate("ChangePassword", { email: result.data.email });
+          setShowForgotModal(false);
+          setForgotEmail("");
+          setForgotEmailError("");
         },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(
-          t("login.forgot.success", "Đã gửi email"),
-          t("login.forgot.successMessage", "Vui lòng kiểm tra email để đặt lại mật khẩu")
-        );
-        setShowForgotModal(false);
-        setForgotEmail("");
-      } else {
-        toast.error(
-          t("login.forgot.error", "Lỗi"),
-          data.message || t("login.forgot.errorMessage", "Không thể gửi email. Vui lòng thử lại.")
-        );
+        onError: (error: any) => {
+          toast.error(
+            t("login.forgot.error", "Lỗi"),
+            error.message || t("login.forgot.errorMessage", "Không thể gửi email. Vui lòng thử lại.")
+          );
+        },
       }
-    } catch (error) {
-      toast.error(
-        t("login.forgot.error", "Lỗi"),
-        t("login.forgot.networkError", "Lỗi kết nối. Vui lòng thử lại.")
-      );
-    } finally {
-      setForgotLoading(false);
-    }
+    );
   };
 
   return (
@@ -409,11 +398,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         visible={showForgotModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowForgotModal(false)}
+        onRequestClose={() => {
+          setShowForgotModal(false);
+          setForgotEmailError("");
+        }}
       >
         <Pressable 
           style={styles.modalOverlay}
-          onPress={() => setShowForgotModal(false)}
+          onPress={() => {
+            setShowForgotModal(false);
+            setForgotEmailError("");
+          }}
         >
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -428,7 +423,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <Text style={[styles.modalTitle, { color: theme.colors.softWhite }]}>
                   {t("login.forgot.title", "Quên mật khẩu")}
                 </Text>
-                <TouchableOpacity onPress={() => setShowForgotModal(false)}>
+                <TouchableOpacity onPress={() => {
+                  setShowForgotModal(false);
+                  setForgotEmailError("");
+                }}>
                   <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
                 </TouchableOpacity>
               </View>
@@ -442,25 +440,36 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <View
                 style={[
                   styles.inputContainer,
-                  { borderColor: "#3b3b3b", marginTop: 16 },
+                  { 
+                    borderColor: forgotEmailError ? theme.colors.error : "#3b3b3b", 
+                    marginTop: 16 
+                  },
                 ]}
               >
                 <Ionicons
                   name="mail"
                   size={20}
-                  color={theme.colors.textSecondary}
+                  color={forgotEmailError ? theme.colors.error : theme.colors.textSecondary}
                 />
                 <TextInput
                   style={[styles.input, styles.inputFlex, { color: theme.colors.softWhite }]}
                   placeholder={t("login.emailPlaceholder", "Nhập email của bạn")}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={forgotEmail}
-                  onChangeText={setForgotEmail}
+                  onChangeText={(text) => {
+                    setForgotEmail(text);
+                    if (forgotEmailError) setForgotEmailError("");
+                  }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoFocus
                 />
               </View>
+              {forgotEmailError && (
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {forgotEmailError}
+                </Text>
+              )}
 
               {/* Submit Button */}
               <TouchableOpacity
@@ -484,7 +493,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               {/* Cancel Button */}
               <TouchableOpacity
                 style={styles.modalCancelButton}
-                onPress={() => setShowForgotModal(false)}
+                onPress={() => {
+                  setShowForgotModal(false);
+                  setForgotEmailError("");
+                }}
               >
                 <Text style={{ color: theme.colors.textSecondary }}>
                   {t("common.buttons.cancel", "Hủy")}

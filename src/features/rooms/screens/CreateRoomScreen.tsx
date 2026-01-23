@@ -13,6 +13,7 @@ import {
 } from '@/shared/components/themed';
 import { useCreateRoom, useActiveRoomStore } from '@/features/rooms';
 import { RootStackParamList } from '@/app/navigation/types';
+import { useAuthStore } from '@/features/auth';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 
@@ -39,7 +40,7 @@ type MatchFormat = '5vs5' | '7vs7';
 const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-
+  const { user } = useAuthStore();
   const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('5vs5');
   const [roomName, setRoomName] = useState('');
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(
@@ -95,6 +96,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         datetime: datetime.toISOString(),
         venueId: selectedVenue.id,
         name: roomName,
+        hostId: user?.userId || '',
         isPrivate,
         password: isPrivate ? password : undefined,
       },

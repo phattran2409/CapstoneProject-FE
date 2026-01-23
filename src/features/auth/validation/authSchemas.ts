@@ -65,6 +65,34 @@ export const otpSchema = z.object({
   otp: otpField,
 });
 
+/**
+ * Forgot password schema
+ * Only requires email field
+ */
+export const forgotPasswordSchema = z.object({
+  email: emailField,
+});
+
+/**
+ * Change password schema
+ * Requires current password and new password with confirmation
+ */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "validation.password.required"),
+    newPassword: passwordField,
+    confirmNewPassword: z.string().min(1, "validation.password.required"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmNewPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "validation.password.mismatch",
+        path: ["confirmNewPassword"],
+      });
+    }
+  });
+
 // ============================================
 // API Request Schemas (derived from form schemas)
 // ============================================
@@ -91,6 +119,8 @@ export const loginRequestSchema = loginSchema;
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type OTPFormData = z.infer<typeof otpSchema>;
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 

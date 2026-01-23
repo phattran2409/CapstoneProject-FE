@@ -102,7 +102,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   position = 'Forward',
   shirtNumber = 10,
   matchesCount = 100,
-  isCurrentUser = false,
+  isCurrentUser,
   onEditPress,
   onAddFriendPress,
 }) => {
@@ -199,7 +199,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         />
 
       {/* Edit Button or Add Friend Button */}
-      {!isCurrentUser ? (
+      {isCurrentUser ? (
       <TouchableOpacity
         onPress={onEditPress}
         style={[

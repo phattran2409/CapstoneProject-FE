@@ -25,6 +25,8 @@ export {
   PostMediaGrid,
   default as PostMediaGridDefault,
 } from "./PostMediaGrid";
+export { ActiveRoomBannerV2 } from './ActiveRoomBannerV2';
+export { TabBadge } from './TabBadge';
 export { EmptyState } from "./EmptyState";
 export { LoadingMoreIndicator } from "./LoadingMoreIndicator";
 export type { MatchItemData, MatchItemProps } from "./MatchItem";

@@ -6,6 +6,7 @@ export type FieldPlayer = {
   id: string;
   name?: string;
   avatar?: any;
+  
 } | null;
 
 type lineUp = {
@@ -176,7 +177,7 @@ const lineUp_7vs7 : lineUp[]  = [
   },
 ]
 
-const getFormatPosition = (format: '5vs5' | '7vs7' , index: number, lineUpName : string)  => {
+const getFormatPosition = (format: '5vs5' | '7vs7'  , index: number, lineUpName : string)  => {
   if (format === '5vs5') {
     const lineup = lineUp_5vs5.find(lineUp => lineUp.name === lineUpName);
     return lineup?.positions[index] || SLOT_POSITIONS[index];
@@ -194,6 +195,7 @@ export const getAvailableLineups = (format: string): string[] => {
     return lineUp_7vs7.map(lineup => lineup.name);
   }
 }
+
 
 const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress, format = '5vs5', lineUpName = '3-1' }) => {
   return (
@@ -213,7 +215,7 @@ const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress
           if (!player) {
             // Empty slot - dashed circle
             return (
-              <View
+              <TouchableOpacity
                 key={`empty-${index}`}
                 style={[
                   styles.playerCard,
@@ -223,9 +225,10 @@ const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress
                     top: pos.y as any,
                   },
                 ]}
+                onPress={() => onPlayerPress?.()}
               >
                 <ThemedText variant="secondary" size="xl" weight="bold">+</ThemedText>
-              </View>
+              </TouchableOpacity>
             );
           }
 

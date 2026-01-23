@@ -1,6 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface UsePaginationOptions<T> {
+  queryKey: readonly unknown[];
   fetchFunction: (
     page: number,
     pageSize: number,
@@ -10,6 +12,8 @@ interface UsePaginationOptions<T> {
     totalCount: number;
   }>;
   pageSize?: number;
+  staleTime?: number;
+  enabled?: boolean;
   onError?: (error: Error) => void;
 }
 
@@ -28,86 +32,122 @@ interface UsePaginationResult<T> {
 }
 
 export function usePagination<T>({
+  queryKey,
   fetchFunction,
   pageSize = 10,
+  staleTime = 5 * 60 * 1000, // 5 minutes default
+  enabled = true,
   onError,
 }: UsePaginationOptions<T>): UsePaginationResult<T> {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
+
+  // Local state for accumulated data and pagination
+  const [accumulatedData, setAccumulatedData] = useState<T[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const fetchData = useCallback(
-    async (
-      pageNum: number = 1,
-      isRefresh: boolean = false,
-      isLoadMore: boolean = false,
-    ) => {
-      try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else if (isLoadMore) {
-          setLoadingMore(true);
-        } else {
-          setLoading(true);
-        }
-        setError(null);
+  // Track if this is initial load
+  const isInitialLoad = useRef(true);
 
-        const result = await fetchFunction(pageNum, pageSize);
+  // Create query key with page
+  const paginatedQueryKey = [...queryKey, { page: currentPage, pageSize }];
 
-        if (isRefresh) {
-          setData(result.data);
-        } else if (isLoadMore) {
-          setData((prevData) => [...prevData, ...result.data]);
-        } else {
-          setData(result.data);
-        }
+  // Main query for current page
+  const {
+    data: queryData,
+    isLoading,
+    isFetching,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: paginatedQueryKey,
+    queryFn: () => fetchFunction(currentPage, pageSize),
+    staleTime,
+    enabled,
+  });
 
-        setTotalPages(result.totalPages);
-        setPage(pageNum);
-      } catch (err: any) {
-        const errorMessage = err.message || "Không thể tải dữ liệu";
-        setError(errorMessage);
-        onError?.(err);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-        setLoadingMore(false);
-      }
-    },
-    [fetchFunction, pageSize, onError],
-  );
-
-  const refresh = useCallback(() => {
-    fetchData(1, true);
-  }, [fetchData]);
-
-  const loadMore = useCallback(() => {
-    if (!loadingMore && page < totalPages) {
-      fetchData(page + 1, false, true);
-    }
-  }, [loadingMore, page, totalPages, fetchData]);
-
-  // Initial load
+  // Handle query data changes
   useEffect(() => {
-    fetchData(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (queryData) {
+      setTotalPages(queryData.totalPages);
+
+      if (isInitialLoad.current) {
+        // Initial load - replace data
+        setAccumulatedData(queryData.data);
+        isInitialLoad.current = false;
+      } else if (isRefreshing) {
+        // Refresh - replace data and reset
+        setAccumulatedData(queryData.data);
+        setIsRefreshing(false);
+      } else if (isLoadingMore) {
+        // Load more - append data
+        setAccumulatedData((prev) => [...prev, ...queryData.data]);
+        setIsLoadingMore(false);
+      } else if (currentPage === 1) {
+        // Page 1 refetch (e.g., from cache invalidation)
+        setAccumulatedData(queryData.data);
+      }
+    }
+  }, [queryData, isRefreshing, isLoadingMore, currentPage]);
+
+  // Handle errors
+  useEffect(() => {
+    if (queryError) {
+      onError?.(queryError as Error);
+      setIsRefreshing(false);
+      setIsLoadingMore(false);
+    }
+  }, [queryError, onError]);
+
+  // Refresh function - reset to page 1 and refetch
+  const refresh = useCallback(() => {
+    setIsRefreshing(true);
+    setCurrentPage(1);
+    isInitialLoad.current = false;
+
+    // Invalidate all pages for this query
+    queryClient.invalidateQueries({
+      queryKey,
+      exact: false,
+    });
+
+    // If already on page 1, manually refetch
+    if (currentPage === 1) {
+      refetch();
+    }
+  }, [queryClient, queryKey, currentPage, refetch]);
+
+  // Load more function - increment page
+  const loadMore = useCallback(() => {
+    if (!isFetching && !isLoadingMore && currentPage < totalPages) {
+      setIsLoadingMore(true);
+      setCurrentPage((prev) => prev + 1);
+    }
+  }, [isFetching, isLoadingMore, currentPage, totalPages]);
+
+  // Determine loading states
+  const loading = isLoading && isInitialLoad.current;
+  const refreshing = isRefreshing && isFetching;
+  const loadingMore = isLoadingMore && isFetching;
+
+  // Error message
+  const errorMessage = queryError
+    ? (queryError as Error).message || "Không thể tải dữ liệu"
+    : null;
 
   return {
-    data,
+    data: accumulatedData,
     loading,
     refreshing,
     loadingMore,
-    error,
-    page,
+    error: errorMessage,
+    page: currentPage,
     totalPages,
-    hasMore: page < totalPages,
+    hasMore: currentPage < totalPages,
     refresh,
     loadMore,
-    setData,
+    setData: setAccumulatedData,
   };
 }

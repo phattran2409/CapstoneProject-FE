@@ -5,6 +5,7 @@
 export { default as LoginScreen } from '../features/auth/screens/LoginScreen';
 export { default as RegisterScreen } from '../features/auth/screens/RegisterScreen';
 export { default as OTPVerificationScreen } from '../features/auth/screens/OTPVerificationScreen';
+export { default as ChangePasswordScreen } from '../features/auth/screens/ChangePasswordScreen';
 
 // Profile Feature Screens
 export { default as ProfileScreen } from '../features/profile/screens/ProfileScreen';

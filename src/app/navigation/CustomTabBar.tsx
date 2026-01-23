@@ -6,6 +6,7 @@ import Animated from 'react-native-reanimated';
 import { useTheme } from '@/shared/theme';
 import { useTabBarVisibility } from '@/shared/context/TabBarVisibilityContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { TabBadge } from '@/shared/components/TabBadge';
 
 export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const { theme } = useTheme();
@@ -98,6 +99,8 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
             >
               <View style={[styles.iconContainer, isFocused && styles.iconContainerActive]}>
                 {iconElement}
+                {/* Hiển thị badge khi có active room ở tab Matches */}
+                {route.name === 'Matches' && <TabBadge />}
                 {isFocused && (
                   <View style={[styles.activeIndicator, { backgroundColor: theme.colors.neonGreen }]} />
                 )}

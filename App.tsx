@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, useTheme } from './src/shared/theme';
 import { StackNavigator } from './src/app/navigation';
+import { linking } from './src/app/navigation/linking';
 import { useAppStore } from './src/store';
 import { queryClient } from './src/shared/api/queryClient';
 import { TabBarVisibilityProvider } from './src/shared/context/TabBarVisibilityContext';
@@ -31,7 +32,7 @@ const AppContent: React.FC = () => {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <StackNavigator />
       </NavigationContainer>
       <AppToast />
