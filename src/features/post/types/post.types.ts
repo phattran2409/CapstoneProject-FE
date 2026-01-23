@@ -30,6 +30,7 @@ export interface Post {
   createdAt: string;
   updatedAt?: string;
   media: PostMedia[];
+  isLiked?: boolean;
 }
 
 export interface PostsResponse {
@@ -46,6 +47,15 @@ export interface PostsResponse {
 export interface PostDetailResponse {
   isSuccess: boolean;
   data: Post;
+}
+
+export interface PostLikeResponse {
+  isSuccess: boolean;
+  data: {
+    postId: string;
+    isLiked: boolean;
+    totalLikes: number;
+  };
 }
 
 export interface Comment {

@@ -29,169 +29,170 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
 
   // ✅ Fetch venues from API
   const { 
-    data: venuesData, 
+    data: venues, 
     isLoading, 
     isError,
     refetch 
   } = useVenues({
-    format: selectedFilter !== 'all' ? selectedFilter : undefined,
+    page: 1,
+    pageSize: 10,
   });
 
   // Filter venues by search query
-  const venues = useMemo(() => {
-    if (!venuesData) return [];
-    console.log('venuesData', venuesData);
-    if (!searchQuery.trim()) return venuesData;
+  // const venues = useMemo(() => {
+  //   if (!venuesData) return [];
+  //   console.log('venuesData', venuesData);
+  //   if (!searchQuery.trim()) return venuesData;
     
-    const query = searchQuery.toLowerCase();
-    // return venuesData.filter(
-    //   (venue) =>
-    //     venue.name.toLowerCase().includes(query) ||
-    //     venue.address.toLowerCase().includes(query) ||
-    //     venue.district?.toLowerCase().includes(query)
-    // );
-    return venuesData;
-  }, [venuesData, searchQuery]);
+  //   const query = searchQuery.toLowerCase();
+  //   // return venuesData.filter(
+  //   //   (venue) =>
+  //   //     venue.name.toLowerCase().includes(query) ||
+  //   //     venue.address.toLowerCase().includes(query) ||
+  //   //     venue.district?.toLowerCase().includes(query)
+  //   // );
+  //   return venuesData;
+  // }, [venuesData, searchQuery]);
 
   // Mock data fallback - will be removed once API is ready
-  const mockVenues: Venue[] = [
-    {
-      id: '1',
-      name: 'Sân bóng Thảo Điền',
-      address: '123 Đường Xuân Thủy, Thảo Điền',
-      district: 'Quận 2',
-      price: 500000,
-      rating: 4.8,
-      reviews: 245,
-      image: require('@assets/images/icon.png'),
-      facilities: ['Parking', 'Shower', 'Locker'],
-      fields: [
-        {
-          id: "1",
-          name: "Sân A - Mini",
-          fieldType: "5vs5",
-          maxPlayers: 10,
-          pricePerHour: 250000,
-          description: "Sân cỏ nhân tạo, đèn chiếu sáng",
-          status: 'available' as const,
-          time: [
-            {
-              id: "1",
-              startTime: "09:00",
-              endTime: "11:00",
-            },
-            {
-              id: "2",
-              startTime: "11:00",
-              endTime: "13:00",
-            } 
-          ]
-        } as Field,
-        {
-          id: "2",
-          name: "Sân B - Trung",
-          fieldType: "7vs7",
-          maxPlayers: 14,
-          pricePerHour: 450000,
-          description: "Sân cỏ nhân tạo cao cấp",
-          status: 'available',
-          time: [
-            {
-              id: "1",
-              startTime: "09:00",
-              endTime: "11:00",
-            }
-          ]
-        },
-        {
-          id: "3",
-          name: "Sân C - VIP",
-          fieldType: "7vs7",
-          maxPlayers: 14,
-          pricePerHour: 600000,
-          description: "Sân VIP có phòng thay đồ riêng",
-          status: 'booked',
-          time: [
-            {
-              id: "1",
-              startTime: "09:00",
-              endTime: "11:00",
-            }
-          ]
-        },
-        {
-          id: "4",
-          name: "Sân D - Mini",
-          fieldType: "5vs5",
-          maxPlayers: 10,
-          pricePerHour: 280000,
-          description: "Sân mới nâng cấp 2024",
-          status: 'available',
-          time: [
-            {
-              id: "1",
-              startTime: "09:00",
-              endTime: "11:00",
-            }
-          ]
-        },
-      ],
-      availableFormats: ['5vs5', '7vs7'],
-      distance: 2.5,
-    },
-    // {
-    //   id: '2',
-    //   name: 'Sân Bình Thạnh FC',
-    //   address: '456 Điện Biên Phủ',
-    //   district: 'Bình Thạnh',
-    //   price: 400000,
-    //   rating: 4.6,
-    //   reviews: 189,
-    //   image: require('@assets/images/icon.png'),
-    //   facilities: ['Parking', 'Canteen'],
-    //   availableFormats: ['5vs5'],
-    //   distance: 3.2,
-    // },
-    // {
-    //   id: '3',
-    //   name: 'Sân Long Biên Sports',
-    //   address: '789 Võ Văn Ngân',
-    //   district: 'Thủ Đức',
-    //   price: 450000,
-    //   rating: 4.7,
-    //   reviews: 312,
-    //   image: require('@assets/images/icon.png'),
-    //   facilities: ['Parking', 'Shower', 'Locker', 'Canteen'],
-    //   availableFormats: ['5vs5', '7vs7'],
-    //   distance: 4.1,
-    // },
-    // {
-    //   id: '4',
-    //   name: 'Sân Phú Nhuận Arena',
-    //   address: '321 Phan Đăng Lưu',
-    //   district: 'Phú Nhuận',
-    //   price: 550000,
-    //   rating: 4.9,
-    //   reviews: 428,
-    //   image: require('@assets/images/icon.png'),
-    //   facilities: ['Parking', 'Shower', 'Locker', 'Canteen', 'Referee'],
-    //   availableFormats: ['5vs5', '7vs7'],
-    //   distance: 1.8,
-    // },
-    // {
-    //   id: '5',
-    //   name: 'Sân Tân Bình Center',
-    //   address: '654 Cộng Hòa',
-    //   district: 'Tân Bình',
-    //   price: 380000,
-    //   rating: 4.5,
-    //   reviews: 156,
-    //   image: require('@assets/images/icon.png'),
-    //   facilities: ['Parking', 'Shower'],
-    //   availableFormats: ['5vs5'],
-    //   distance: 5.3,
-    // },
-  ];
+  // const mockVenues: Venue[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Sân bóng Thảo Điền',
+  //     address: '123 Đường Xuân Thủy, Thảo Điền',
+  //     district: 'Quận 2',
+  //     price: 500000,
+  //     rating: 4.8,
+  //     reviews: 245,
+  //     image: require('@assets/images/icon.png'),
+  //     facilities: ['Parking', 'Shower', 'Locker'],
+  //     fields: [
+  //       {
+  //         id: "1",
+  //         name: "Sân A - Mini",
+  //         fieldType: "5vs5",
+  //         maxPlayers: 10,
+  //         pricePerHour: 250000,
+  //         description: "Sân cỏ nhân tạo, đèn chiếu sáng",
+  //         status: 'available' as const,
+  //         time: [
+  //           {
+  //             id: "1",
+  //             startTime: "09:00",
+  //             endTime: "11:00",
+  //           },
+  //           {
+  //             id: "2",
+  //             startTime: "11:00",
+  //             endTime: "13:00",
+  //           } 
+  //         ]
+  //       } as Field,
+  //       {
+  //         id: "2",
+  //         name: "Sân B - Trung",
+  //         fieldType: "7vs7",
+  //         maxPlayers: 14,
+  //         pricePerHour: 450000,
+  //         description: "Sân cỏ nhân tạo cao cấp",
+  //         status: 'available',
+  //         time: [
+  //           {
+  //             id: "1",
+  //             startTime: "09:00",
+  //             endTime: "11:00",
+  //           }
+  //         ]
+  //       },
+  //       {
+  //         id: "3",
+  //         name: "Sân C - VIP",
+  //         fieldType: "7vs7",
+  //         maxPlayers: 14,
+  //         pricePerHour: 600000,
+  //         description: "Sân VIP có phòng thay đồ riêng",
+  //         status: 'booked',
+  //         time: [
+  //           {
+  //             id: "1",
+  //             startTime: "09:00",
+  //             endTime: "11:00",
+  //           }
+  //         ]
+  //       },
+  //       {
+  //         id: "4",
+  //         name: "Sân D - Mini",
+  //         fieldType: "5vs5",
+  //         maxPlayers: 10,
+  //         pricePerHour: 280000,
+  //         description: "Sân mới nâng cấp 2024",
+  //         status: 'available',
+  //         time: [
+  //           {
+  //             id: "1",
+  //             startTime: "09:00",
+  //             endTime: "11:00",
+  //           }
+  //         ]
+  //       },
+  //     ],
+  //     availableFormats: ['5vs5', '7vs7'],
+  //     distance: 2.5,
+  //   },
+  //   // {
+  //   //   id: '2',
+  //   //   name: 'Sân Bình Thạnh FC',
+  //   //   address: '456 Điện Biên Phủ',
+  //   //   district: 'Bình Thạnh',
+  //   //   price: 400000,
+  //   //   rating: 4.6,
+  //   //   reviews: 189,
+  //   //   image: require('@assets/images/icon.png'),
+  //   //   facilities: ['Parking', 'Canteen'],
+  //   //   availableFormats: ['5vs5'],
+  //   //   distance: 3.2,
+  //   // },
+  //   // {
+  //   //   id: '3',
+  //   //   name: 'Sân Long Biên Sports',
+  //   //   address: '789 Võ Văn Ngân',
+  //   //   district: 'Thủ Đức',
+  //   //   price: 450000,
+  //   //   rating: 4.7,
+  //   //   reviews: 312,
+  //   //   image: require('@assets/images/icon.png'),
+  //   //   facilities: ['Parking', 'Shower', 'Locker', 'Canteen'],
+  //   //   availableFormats: ['5vs5', '7vs7'],
+  //   //   distance: 4.1,
+  //   // },
+  //   // {
+  //   //   id: '4',
+  //   //   name: 'Sân Phú Nhuận Arena',
+  //   //   address: '321 Phan Đăng Lưu',
+  //   //   district: 'Phú Nhuận',
+  //   //   price: 550000,
+  //   //   rating: 4.9,
+  //   //   reviews: 428,
+  //   //   image: require('@assets/images/icon.png'),
+  //   //   facilities: ['Parking', 'Shower', 'Locker', 'Canteen', 'Referee'],
+  //   //   availableFormats: ['5vs5', '7vs7'],
+  //   //   distance: 1.8,
+  //   // },
+  //   // {
+  //   //   id: '5',
+  //   //   name: 'Sân Tân Bình Center',
+  //   //   address: '654 Cộng Hòa',
+  //   //   district: 'Tân Bình',
+  //   //   price: 380000,
+  //   //   rating: 4.5,
+  //   //   reviews: 156,
+  //   //   image: require('@assets/images/icon.png'),
+  //   //   facilities: ['Parking', 'Shower'],
+  //   //   availableFormats: ['5vs5'],
+  //   //   distance: 5.3,
+  //   // },
+  // ];
 
   // const filteredVenues = venues.filter(venue => {
   //   const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -341,7 +342,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
       {/* Venues List */}
       <ScrollView style={styles.flex1} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: theme.spacing.l, paddingVertical: theme.spacing.m }}>
-          {mockVenues?.map((venue) => (
+          {venues?.map((venue) => (
             <TouchableOpacity
               key={venue.id}
               style={[

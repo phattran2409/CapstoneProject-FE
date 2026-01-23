@@ -6,6 +6,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedView, ThemedText } from "./themed";
 import { PostMediaGrid } from "./PostMediaGrid";
 import { Post } from "@/features/post/types/post.types";
+import { useAuthStore } from "@/features/auth";
+import auth from "../firebase";
 
 export interface PostItemProps {
   post: Post;
@@ -26,6 +28,7 @@ export const PostItem: React.FC<PostItemProps> = ({
 }) => {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
+   const { user } = useAuthStore();
 
   // Calculate relative time from createdAt
   const getRelativeTime = (dateString: string): string => {
@@ -35,6 +38,7 @@ export const PostItem: React.FC<PostItemProps> = ({
     const diffInMinutes = Math.floor(diffInMs / 60000);
     const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
+   
 
     if (diffInMinutes < 1) return "Vừa xong";
     if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
@@ -103,6 +107,7 @@ export const PostItem: React.FC<PostItemProps> = ({
             </Text>
           </View>
         </View>
+        {/* {post.userId === user?.userId && (
         <TouchableOpacity
           style={styles.postMenuButton}
           onPress={() => onMenuPress?.(post.postId)}
@@ -113,6 +118,7 @@ export const PostItem: React.FC<PostItemProps> = ({
             color={theme.colors.textSecondary}
           />
         </TouchableOpacity>
+        )} */}
       </View>
 
       {/* Post Content */}
@@ -145,20 +151,18 @@ export const PostItem: React.FC<PostItemProps> = ({
           onPress={() => onLike?.(post.postId)}
         >
           <Ionicons
-            name={/* post.isLiked */ false ? "heart" : "heart-outline"}
+            name={post.isLiked ? "heart" : "heart-outline"}
             size={22}
-            color={
-              /* post.isLiked */ false ? "#ef4444" : theme.colors.textSecondary
-            }
+            color={post.isLiked ? "#ef4444" : theme.colors.textSecondary}
           />
           <Text
             style={[
               styles.postActionText,
               {
-                color: /* post.isLiked */ false
+                color: post.isLiked
                   ? "#ef4444"
                   : theme.colors.textSecondary,
-                fontWeight: /* post.isLiked */ false ? "600" : "400",
+                fontWeight: post.isLiked ? "600" : "400",
               },
             ]}
           >

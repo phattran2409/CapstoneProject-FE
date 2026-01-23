@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
-  // BASE_URL: "https://api.kickify.site/api",
-  BASE_URL :  'http://10.0.2.2:3000/api', // JSON Server URL 
+  BASE_URL: "https://api.kickify.site/api",
+  // BASE_URL :  'http://10.0.2.2:3000/api', // JSON Server URL 
   // For Android Emulator: 'http://10.0.2.2:3000/api'
   // For iOS Simulator: 'http://localhost:3000/api'
   // For Real Device: 'http://YOUR_IP:3000/api'
