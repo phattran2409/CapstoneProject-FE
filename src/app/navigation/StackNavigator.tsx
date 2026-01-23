@@ -26,6 +26,8 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from './types';
 import { ActiveRoomBanner } from '@/shared/components/ActiveRoomBanner';
 import { View, StyleSheet } from 'react-native';
+import { WalletScreen, WalletTopUpScreen } from '@/features/wallet';
+import { PaymentSuccessScreen } from '@/features/payment';
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -201,6 +203,30 @@ const StackNavigator: React.FC = () => {
               headerShown: false,
               animation: 'slide_from_right',
             }}
+          />
+          <Stack.Screen 
+            name="PaymentSuccess" 
+            component={PaymentSuccessScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+          name="Wallet"
+          component={WalletScreen}        
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+          name="WalletTopUp"
+          component={WalletTopUpScreen}
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
           />
         </>
       )}
