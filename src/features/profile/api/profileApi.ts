@@ -16,9 +16,10 @@ import { useAuthStore } from '@/features/auth';
 // };
 
 // Get user profile by ID
-export const getUserProfile = async (userId: string): Promise<UserProfileResponse> => {
+export const getUserProfile = async (userId: string): Promise<UserProfile> => {
   const response = await apiClient.get<UserProfileResponse>(`/users/${userId}`);
-  return response.data;
+  console.log('response :', response.data);
+  return response.data as UserProfile;
 };
 
 // Update my profile

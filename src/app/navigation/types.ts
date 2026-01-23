@@ -26,7 +26,7 @@ export type RootStackParamList = {
   VenueSelection: undefined;
   RoomInformation: { roomId: string };
   RoomDetail: { roomId: string };
-  PersonalPage: undefined;
+  PersonalPage: { userId?: string };
   ProfileDetail: undefined;
   ChatList: undefined;
   Friends: undefined;

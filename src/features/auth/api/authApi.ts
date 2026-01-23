@@ -108,6 +108,7 @@ export const authApi = {
    * Change user password
    */
   changePassword: async (request: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    console.log('request change password :', request);
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
     return data;
   },

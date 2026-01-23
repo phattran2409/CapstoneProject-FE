@@ -5,12 +5,12 @@ import { Venue, VenueFilters, VenueReview, VenueBooking } from '../types/venue.t
 export const getVenues = async (filters?: VenueFilters): Promise<Venue[]> => {
   const params = new URLSearchParams();
   
-  if (filters?.city) params.append('city', filters.city);
-  if (filters?.district) params.append('district', filters.district);
-  if (filters?.format) params.append('availableFormats_like', filters.format);
-  if (filters?.minPrice) params.append('price_gte', filters.minPrice.toString());
-  if (filters?.maxPrice) params.append('price_lte', filters.maxPrice.toString());
-  if (filters?.minRating) params.append('rating_gte', filters.minRating.toString());
+  // if (filters?.city) params.append('city', filters.city);
+  // if (filters?.district) params.append('district', filters.district);
+  // if (filters?.format) params.append('availableFormats_like', filters.format);
+  // if (filters?.minPrice) params.append('price_gte', filters.minPrice.toString());
+  // if (filters?.maxPrice) params.append('price_lte', filters.maxPrice.toString());
+  // if (filters?.minRating) params.append('rating_gte', filters.minRating.toString());
 
   // const response = await apiClient.get<Venue[]>(`/venues?${params.toString()}`);
   const response = await apiClient.get<Venue[]>('/venues');

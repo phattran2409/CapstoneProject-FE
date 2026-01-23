@@ -177,7 +177,7 @@ const lineUp_7vs7 : lineUp[]  = [
   },
 ]
 
-const getFormatPosition = (format: '5vs5' | '7vs7' , index: number, lineUpName : string)  => {
+const getFormatPosition = (format: '5vs5' | '7vs7'  , index: number, lineUpName : string)  => {
   if (format === '5vs5') {
     const lineup = lineUp_5vs5.find(lineUp => lineUp.name === lineUpName);
     return lineup?.positions[index] || SLOT_POSITIONS[index];

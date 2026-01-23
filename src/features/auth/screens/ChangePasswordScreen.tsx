@@ -61,8 +61,9 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ navigation,
   };
 
   const onSubmit = (data: ChangePasswordFormData) => {
-    if (!user?.email) {
-      toast.error(
+    console.log('Data change password :', data);
+    if (!user?.email && !email) {
+      toast.error( 
         t("changePassword.errors.title"),
         t("changePassword.errors.failed")
       );
@@ -71,7 +72,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ navigation,
 
     changePassword(
       {
-        email: user.email,
+        email: user?.email || email,
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       },

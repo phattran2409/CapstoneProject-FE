@@ -34,7 +34,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   // ✅ Fetch user profile from API
   const { data: profile, isLoading: isLoadingProfile } = useMyProfile(user?.userId || '');
-  
   // ✅ Use logout
   const { logout } = useLogout();
   const scrollHandler = useScrollToHideTabBar();
@@ -46,7 +45,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const handleAvatarPress = () => {
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('PersonalPage');
+      parent.navigate('PersonalPage', { userId: user?.userId });
     }
   };
 
@@ -116,7 +115,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: theme.spacing.xs / 2,
               }}
             >
-              {user?.fullName || 'Tuấn Anh Nguyễn'}
+              {profile?.fullName || 'Tuấn Anh Nguyễn'}
             </Text>
             <Text
               style={{

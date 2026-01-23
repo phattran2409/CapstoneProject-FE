@@ -35,7 +35,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { t } = useTranslation();
   const { roomId } = route?.params || { roomId: '1' };
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
-
+  
   // ✅ Handle back navigation (supports deep link)
   const handleGoBack = () => {
     // Check if there's a previous screen in the stack
