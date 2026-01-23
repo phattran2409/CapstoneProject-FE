@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '../api/authApi';
-import type { SendOTPRequest, VerifyOTPRequest } from '../types/auth.types';
+import type { ReSendOTPRequest, SendOTPRequest, VerifyOTPRequest } from '../types/auth.types';
 
 /**
  * Hook to send OTP to phone number
@@ -18,9 +18,15 @@ import type { SendOTPRequest, VerifyOTPRequest } from '../types/auth.types';
  *   }
  * );
  */
-export const useSendOTP = () => {
+// export const useSendOTP = () => {
+//   return useMutation({
+//     mutationFn: (request: SendOTPRequest) => authApi.sendOTP(request),
+//   });
+// };
+
+export const useResendOTP = () => {
   return useMutation({
-    mutationFn: (request: SendOTPRequest) => authApi.sendOTP(request),
+    mutationFn: (request: ReSendOTPRequest) => authApi.reSendOTP(request),
   });
 };
 

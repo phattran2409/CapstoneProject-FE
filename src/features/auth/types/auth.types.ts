@@ -38,7 +38,7 @@ export interface RegisterRequest {
 
 export interface RegisterResponse extends LoginResponse {}
 
-export interface SendOTPRequest {
+export interface ReSendOTPRequest {
   userId: string;
 }
 

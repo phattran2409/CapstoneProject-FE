@@ -29,7 +29,7 @@ import {
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  OTPVerification: { email: string; username: string; password: string };
+  OTPVerification: { email: string; userId: string };
   MainTabs: undefined;
 };
 
@@ -83,7 +83,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             t("register.success.message", "Tài khoản đã được tạo!")
           );
           // Navigation tự động xảy ra khi isAuthenticated thay đổi
-          navigation.navigate("OTPVerification", {email: data.email, userId: response.data?.userId});
+          navigation.navigate("OTPVerification", {email: data.email, userId: response.data?.userId as string});
         },
         onError: (error: any) => {
           toast.error(
@@ -115,12 +115,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
           style={styles.backButton}
         >
           <ThemedIcon name="arrow-back" size={24} variant="secondary" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("OTPVerification", { email: 'test@gmail.com', username: 'phat tran', password: '12356789' })}
-          style={styles.backButton}
-        >
-          <Text style={{ color: '#9ca3af' }}>{t('otp.changeEmail')}</Text>
         </TouchableOpacity>
 
         <ScrollView
