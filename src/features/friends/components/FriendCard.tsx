@@ -12,6 +12,7 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Friend } from '../types/friends.types';
+import { getRelativeTime } from '@/shared/utils';
 
 export const FriendCard: React.FC<{
     friend: Friend;
@@ -35,11 +36,11 @@ export const FriendCard: React.FC<{
       : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.90)'];
 
     // Border color based on theme and online status
-    const borderColor = friend.isOnline
-      ? `${theme.colors.neonGreen}${isDark ? '30' : '60'}`
-      : isDark
-      ? 'rgba(255,255,255,0.05)'
-      : theme.colors.border;
+    // const borderColor = friend.isOnline
+    //   ? `${theme.colors.neonGreen}${isDark ? '30' : '60'}`
+    //   : isDark
+    //   ? 'rgba(255,255,255,0.05)'
+    //   : theme.colors.border;
   
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
@@ -72,12 +73,12 @@ export const FriendCard: React.FC<{
                   styles.avatar,
                   {
                     backgroundColor: theme.colors.surface,
-                    borderColor: getRankColor(friend.elo),
+                    // borderColor: getRankColor(friend.elo),
                   },
                 ]}
               >
-                {friend.avatar ? (
-                  <Image source={{ uri: friend.avatar }} style={styles.avatarImage} />
+                {friend.avatarUrl ? (
+                  <Image source={{ uri: friend.avatarUrl }} style={styles.avatarImage} />
                 ) : (
                   <Ionicons name="person" size={28} color={theme.colors.textSecondary} />
                 )}
@@ -88,15 +89,15 @@ export const FriendCard: React.FC<{
             <View style={styles.friendInfo}>
               <View style={styles.nameRow}>
                 <Text style={[styles.friendName, { color: theme.colors.text }]} numberOfLines={1}>
-                  {friend.name}
+                  {friend.fullName}
                 </Text>
-                {friend.elo >= 2500 && (
+                {/* {friend.elo >= 2500 && (
                   <Ionicons name="checkmark-circle" size={16} color={theme.colors.neonGreen} style={{ marginLeft: 4 }} />
-                )}
+                )} */}
               </View>
-              <Text style={[styles.username, { color: theme.colors.textSecondary }]}>@{friend.username}</Text>
+              <Text style={[styles.username, { color: theme.colors.textSecondary }]}>@{friend.fullName}</Text>
   
-              <View style={styles.statsRow}>
+              {/* <View style={styles.statsRow}>
                 <View style={[
                   styles.eloBadge, 
                   { backgroundColor: isDark ? `${getRankColor(friend.elo)}20` : `${getRankColor(friend.elo)}15` }
@@ -112,14 +113,17 @@ export const FriendCard: React.FC<{
                     <Text style={[styles.positionText, { color: theme.colors.neonGreen }]}>{friend.position}</Text>
                   </View>
                 )}
-              </View>
+              </View> */}
   
-              {friend.mutualFriends && friend.mutualFriends > 0 && (
+              {/* {friend.mutualFriends && friend.mutualFriends > 0 && (
                 <Text style={[styles.mutualFriends, { color: theme.colors.textSecondary }]}>
                   <Ionicons name="people" size={12} color={theme.colors.textSecondary} />{' '}
                   {t('friends.mutualFriends', { count: friend.mutualFriends, defaultValue: `${friend.mutualFriends} bạn chung` })}
                 </Text>
-              )}
+              )} */}
+               <Text style={[styles.sentAt, { color: theme.colors.textTertiary }]}>
+                          Bạn bè kể từ - {getRelativeTime(friend.friendsSince)}
+                          </Text>
             </View>
   
             {/* Action buttons */}
@@ -149,7 +153,7 @@ export const FriendCard: React.FC<{
           <View
             style={[
               styles.cardBorder,
-              { borderColor },
+              { borderColor: theme.colors.neonGreen },
             ]}
           />
         </BlurView>
@@ -163,113 +167,116 @@ export const FriendCard: React.FC<{
       paddingHorizontal: 16,
     },
     friendCard: {
-        overflow: 'hidden',
-        position: 'relative',
-      },
-      cardGradient: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-      },
-      avatarContainer: {
-        position: 'relative',
-      },
-      avatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        overflow: 'hidden',
-      },
-      avatarImage: {
-        width: '100%',
-        height: '100%',
-      },
-      friendInfo: {
-        flex: 1,
-        marginLeft: 12,
-      },
-      nameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-      },
-      friendName: {
-        fontSize: 16,
-        fontWeight: '700',
-        maxWidth: '80%',
-      },
-      username: {
-        fontSize: 13,
-        marginTop: 2,
-      },
-      statsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginTop: 8,
-      },
-      eloBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        gap: 4,
-      },
-      eloText: {
-        fontSize: 12,
-        fontWeight: '700',
-      },
-      positionBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-      },
-      positionText: {
-        fontSize: 11,
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-      },
-      mutualFriends: {
-        fontSize: 12,
-        marginTop: 6,
-      },
-      actionButtons: {
-        flexDirection: 'column',
-        gap: 8,
-      },
-      actionBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      cardBorder: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        borderRadius: 16,
-        borderWidth: 1,
-        pointerEvents: 'none',
-      },
-      emptyState: {
-        alignItems: 'center',
-        paddingVertical: 48,
-      },
-      emptyIconContainer: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      
+      overflow: "hidden",
+      position: "relative",
+    },
+    cardGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+    },
+    avatarContainer: {
+      position: "relative",
+    },
+    avatar: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 2,
+      overflow: "hidden",
+    },
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+    },
+    friendInfo: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    friendName: {
+      fontSize: 16,
+      fontWeight: "700",
+      maxWidth: "80%",
+    },
+    username: {
+      fontSize: 13,
+      marginTop: 2,
+    },
+    statsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 8,
+    },
+    eloBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      gap: 4,
+    },
+    eloText: {
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    positionBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    positionText: {
+      fontSize: 11,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    mutualFriends: {
+      fontSize: 12,
+      marginTop: 6,
+    },
+    actionButtons: {
+      flexDirection: "column",
+      gap: 8,
+    },
+    actionBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    cardBorder: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: 16,
+      borderWidth: 1,
+      pointerEvents: "none",
+    },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: 48,
+    },
+    emptyIconContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    sentAt: {
+      fontSize: 11,
+      marginTop: 4,
+    },
   });
   
   

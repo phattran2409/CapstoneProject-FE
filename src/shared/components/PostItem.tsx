@@ -7,6 +7,7 @@ import { ThemedView, ThemedText } from "./themed";
 import { PostMediaGrid } from "./PostMediaGrid";
 import { Post } from "@/features/post/types/post.types";
 import { useAuthStore } from "@/features/auth";
+import { getRelativeTime } from "@/shared/utils";
 import auth from "../firebase";
 
 export interface PostItemProps {
@@ -16,6 +17,7 @@ export interface PostItemProps {
   onShare?: (postId: string) => void;
   onMenuPress?: (postId: string) => void;
   onPress?: (postId: string) => void; // Navigate to post detail
+  onAvatarPress?: (userId: string) => void; // Navigate to user profile
 }
 
 export const PostItem: React.FC<PostItemProps> = ({
@@ -25,27 +27,11 @@ export const PostItem: React.FC<PostItemProps> = ({
   onShare,
   onMenuPress,
   onPress,
+  onAvatarPress,
 }) => {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
-   const { user } = useAuthStore();
-
-  // Calculate relative time from createdAt
-  const getRelativeTime = (dateString: string): string => {
-    const now = new Date();
-    const postDate = new Date(dateString);
-    const diffInMs = now.getTime() - postDate.getTime();
-    const diffInMinutes = Math.floor(diffInMs / 60000);
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
-   
-
-    if (diffInMinutes < 1) return "Vừa xong";
-    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
-    if (diffInHours < 24) return `${diffInHours} giờ trước`;
-    if (diffInDays < 7) return `${diffInDays} ngày trước`;
-    return postDate.toLocaleDateString("vi-VN");
-  };
+  const { user } = useAuthStore();
 
   const timestamp = getRelativeTime(post.createdAt);
 
@@ -69,30 +55,35 @@ export const PostItem: React.FC<PostItemProps> = ({
         ]}
       >
         <View style={styles.postAuthor}>
-          {post.userAvatarUrl ? (
-            <Image
-              source={{ uri: post.userAvatarUrl }}
-              style={styles.postAvatar}
-              resizeMode="cover"
-            />
-          ) : (
-            <View
-              style={[
-                styles.postAvatar,
-                {
-                  backgroundColor: theme.colors.border,
-                  justifyContent: "center",
-                  alignItems: "center",
-                },
-              ]}
-            >
-              <Ionicons
-                name="person"
-                size={24}
-                color={theme.colors.textSecondary}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => onAvatarPress?.(post.userId)}
+          >
+            {post.userAvatarUrl ? (
+              <Image
+                source={{ uri: post.userAvatarUrl }}
+                style={styles.postAvatar}
+                resizeMode="cover"
               />
-            </View>
-          )}
+            ) : (
+              <View
+                style={[
+                  styles.postAvatar,
+                  {
+                    backgroundColor: theme.colors.border,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="person"
+                  size={24}
+                  color={theme.colors.textSecondary}
+                />
+              </View>
+            )}
+          </TouchableOpacity>
           <View style={{ marginLeft: 12, flex: 1 }}>
             <ThemedText variant="primary" size="m" weight="bold">
               {post.userFullName}
@@ -159,9 +150,7 @@ export const PostItem: React.FC<PostItemProps> = ({
             style={[
               styles.postActionText,
               {
-                color: post.isLiked
-                  ? "#ef4444"
-                  : theme.colors.textSecondary,
+                color: post.isLiked ? "#ef4444" : theme.colors.textSecondary,
                 fontWeight: post.isLiked ? "600" : "400",
               },
             ]}

@@ -1,27 +1,24 @@
 export interface UserProfile {
   userId: string;
-  fullName: string;
   email: string;
+  fullName: string;
   avatarUrl?: string;
-  bio?: string;
   phone?: string;
+  bio?: string;
   dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
-  position?: string; // Football position
-  preferredFoot?: 'left' | 'right' | 'both';
-  shirtNumber?: number;
-  // Stats
-  stats: PlayerStats;
-  
-  // Preferences
-  preferences: UserPreferences;
-  
-  // Social
-  followers: number;
-  following: number;
-  
+  gender?: "male" | "female" | "other";
+  role?: number;
+  isEmailVerified: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  playerProfile?: PlayerProfile;
+}
+
+export interface PlayerProfile {
+  position?: string;
+  preferredFoot?: 'left' | 'right' | 'both';
+  shirtNumber?: number;
 }
 
 export interface PlayerStats {

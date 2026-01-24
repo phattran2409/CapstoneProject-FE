@@ -130,7 +130,7 @@ export function usePagination<T>({
   // Determine loading states
   const loading = isLoading && isInitialLoad.current;
   const refreshing = isRefreshing && isFetching;
-  const loadingMore = isLoadingMore && isFetching;
+  const loadingMore = isLoadingMore;
 
   // Error message
   const errorMessage = queryError

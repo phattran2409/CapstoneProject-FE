@@ -8,15 +8,7 @@ import {
 } from '../api/profileApi';
 import { UpdateProfileData, UpdatePreferencesData } from '../types/profile.types';
 
-// Get my profile
-export const useMyProfile = (userId : string) => {
-  return useQuery({
-    queryKey: profileKeys.me(),
-    queryFn: () => getUserProfile(userId),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+
 
 // Get user profile by ID
 export const useUserProfile = (userId: string) => {

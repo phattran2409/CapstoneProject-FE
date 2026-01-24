@@ -14,10 +14,21 @@ import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { TabParamList } from "@/app/navigation/types";
 import { Friend } from "../types/friends.types";
 import { FriendCard } from "../components";
-import { ThemedSafeAreaView, ThemedView, ThemedText } from "@/shared/components/themed";
+import {
+  ThemedSafeAreaView,
+  ThemedView,
+  ThemedText,
+} from "@/shared/components/themed";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
 import { ThemedScrollView } from "@/shared/components/themed/ThemedScrollView";
-import { IconButton, ListSkeleton } from "@/shared/components";
+import {
+  EmptyState,
+  ErrorState,
+  IconButton,
+  ListSkeleton,
+  LoadingMoreIndicator,
+} from "@/shared/components";
+import { usePaginatedFriends } from "../hooks";
 
 type FriendsScreenProps = BottomTabScreenProps<TabParamList, "Friends">;
 
@@ -27,7 +38,6 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const [searchQuery, setSearchQuery] = useState("");
   const [friendRequestsCount] = useState(4); // TODO: Get from API/store
-  const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual API loading state
 
   const handleFriendRequestsPress = () => {
     const parent = navigation.getParent();
@@ -42,93 +52,27 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
       parent.navigate("ChatList");
     }
   };
-  // TODO: Replace mock data with API data or store data
-  const [friends] = useState<Friend[]>([
-    {
-      id: "1",
-      name: "Nguyễn Văn A",
-      username: "nguyenvana",
-      elo: 2650,
-      position: "ST",
-      isOnline: true,
-      mutualFriends: 5,
-    },
-    {
-      id: "2",
-      name: "Trần Minh B",
-      username: "tranminhb",
-      elo: 2400,
-      position: "CM",
-      isOnline: true,
-      mutualFriends: 12,
-    },
-    {
-      id: "3",
-      name: "Lê Hoàng C",
-      username: "lehoangc",
-      elo: 2200,
-      position: "CB",
-      isOnline: false,
-      lastActive: "2 giờ trước",
-      mutualFriends: 3,
-    },
-    {
-      id: "4",
-      name: "Phạm Đức D",
-      username: "phamducd",
-      elo: 3100,
-      position: "GK",
-      isOnline: true,
-      mutualFriends: 8,
-    },
-    {
-      id: "5",
-      name: "Hoàng Quốc E",
-      username: "hoangquoce",
-      elo: 1950,
-      position: "LW",
-      isOnline: false,
-      lastActive: "1 ngày trước",
-    },
-    {
-      id: "6",
-      name: "Vũ Thành F",
-      username: "vuthanhf",
-      elo: 2750,
-      position: "CAM",
-      isOnline: true,
-      mutualFriends: 15,
-    },
-  ]);
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <View
-        style={[
-          styles.emptyIconContainer,
-          { backgroundColor: `${theme.colors.neonGreen}15` },
-        ]}
-      >
-        <Ionicons
-          name="people-outline"
-          size={48}
-          color={theme.colors.neonGreen}
-        />
-      </View>
-      <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-        {searchQuery ? t("friends.noResults") : t("friends.empty")}
-      </Text>
-      <Text
-        style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}
-      >
-        {searchQuery
-          ? t("friends.tryDifferentSearch", {
-              defaultValue: t("friends.tryDifferentSearch"),
-            })
-          : t("friends.inviteFriends")}
-      </Text>
-    </View>
-  );
+  const {
+    friends,
+    loading,
+    refreshing,
+    loadingMore,
+    error,
+    refresh,
+    loadMore,
+    setFriends,
+  } = usePaginatedFriends({ pageSize: 10 });
+
+  const filteredFriends = React.useMemo(() => {
+    if (!searchQuery.trim()) return friends;
+
+    const query = searchQuery.toLowerCase();
+    return friends.filter((friend) =>
+      friend.fullName?.toLowerCase().includes(query),
+    );
+  }, [friends, searchQuery]);
+
   const searchBar = (
     <View
       style={[
@@ -140,7 +84,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
       <TextInput
         style={[styles.searchInput, { color: theme.colors.text }]}
         placeholder={t("friends.searchPlaceholder", {
-          defaultValue: `${t("friends.searchPlaceholder")} (${friends.length})`,
+          defaultValue: `${t("friends.searchPlaceholder")} (${filteredFriends.length})`,
         })}
         placeholderTextColor={theme.colors.textSecondary}
         value={searchQuery}
@@ -157,6 +101,22 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
       )}
     </View>
   );
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <EmptyState
+        icon="people-outline"
+        title={t("friends.empty")}
+        description={t("friends.inviteFriends")}
+      />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <LoadingMoreIndicator />;
+  };
 
   return (
     <ThemedSafeAreaView>
@@ -179,13 +139,11 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
             icon="person-add-outline"
             onPress={handleFriendRequestsPress}
             size="medium"
-            notificationCount={friendRequestsCount > 0 ? friendRequestsCount : undefined}
           />
           <IconButton
             icon="chatbubbles-outline"
             onPress={handleChatListPress}
             size="medium"
-            notificationCount={5}
           />
         </View>
       </ThemedView>
@@ -193,36 +151,50 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
         {searchBar}
       </ThemedView>
 
-      {isLoading ? (
-        <ListSkeleton />
-      ) : (
+      {loading && <ListSkeleton />}
+
+      {error && <ErrorState error={error} onRetry={refresh} />}
+
+      {!loading && !error && (
         <FlatList
           style={{ paddingHorizontal: theme.spacing.l }}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
-          data={friends}
-          keyExtractor={(item) => item.id}
+          data={filteredFriends}
+          keyExtractor={(item) => item.userId}
           renderItem={({ item }) => (
             <FriendCard
               friend={item}
               onPress={() => {
-                // TODO: Navigate to friend's profile
-                console.log("Friend pressed:", item.name);
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate("PersonalPage", { userId: item.userId });
+                }
               }}
               onMessagePress={() => {
-                // TODO: Navigate to chat
-                console.log("Message pressed:", item.name);
+                console.log("Message pressed:", item.fullName);
               }}
               onInvitePress={() => {
                 // TODO: Invite to match
-                console.log("Invite pressed:", item.name);
+                console.log("Invite pressed:", item.fullName);
               }}
             />
           )}
-          contentContainerStyle={[styles.listContent, { paddingBottom: theme.spacing.xxl * 2 }]}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: theme.spacing.xxl * 2 },
+          ]}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={renderEmptyState}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          refreshing={refreshing}
+          onRefresh={refresh}
+          ListEmptyComponent={renderEmpty}
+          ListFooterComponent={renderFooter}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
         />
       )}
     </ThemedSafeAreaView>
@@ -296,5 +268,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
 });

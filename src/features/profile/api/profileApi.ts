@@ -1,84 +1,97 @@
-import { apiClient } from '@/shared/api/client';
+import { apiClient } from "@/shared/api/client";
 import {
   UserProfile,
   UpdateProfileData,
   UpdatePreferencesData,
   MatchHistory,
   UserProfileResponse,
-} from '../types/profile.types';
-import { useAuthStore } from '@/features/auth';
+} from "../types/profile.types";
 
-// Get my profile
-// export const getMyProfile = async (): Promise<UserProfile> => {
-//   const response = await apiClient.get<UserProfile>('/users/me'); 
-//   // const response = useAuthStore.getState().user;
-//   return response as unknown as UserProfile;
-// };
 
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<UserProfile> => {
-  const response = await apiClient.get<UserProfileResponse>(`/users/${userId}`);
-  console.log('response :', response.data);
-  return response.data as UserProfile;
+  try {
+    const response = await apiClient.get<UserProfile>(`/users/${userId}`);
+    console.log("response :", response.data);
+
+    // Ensure we have valid data before returning
+    if (!response.data) {
+      throw new Error("Invalid response: User profile data is missing");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
 };
 
 // Update my profile
-export const updateMyProfile = async (data: UpdateProfileData): Promise<UserProfile> => {
-  const response = await apiClient.patch<UserProfile>('/users/me', data);
+export const updateMyProfile = async (
+  data: UpdateProfileData,
+): Promise<UserProfile> => {
+  const response = await apiClient.patch<UserProfile>("/users/me", data);
   return response.data;
 };
 
 // Update avatar
 export const updateAvatar = async (avatarUri: string): Promise<UserProfile> => {
   const formData = new FormData();
-  formData.append('avatar', {
+  formData.append("avatar", {
     uri: avatarUri,
-    type: 'image/jpeg',
-    name: 'avatar.jpg',
+    type: "image/jpeg",
+    name: "avatar.jpg",
   } as any);
 
-  const response = await apiClient.patch<UserProfile>('/users/me/avatar', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
+  const response = await apiClient.patch<UserProfile>(
+    "/users/me/avatar",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     },
-  });
+  );
   return response.data;
 };
 
 // Get match history
-export const getMatchHistory = async (userId?: string): Promise<MatchHistory[]> => {
-  const endpoint = userId ? `/users/${userId}/matches` : '/users/me/matches';
+export const getMatchHistory = async (
+  userId?: string,
+): Promise<MatchHistory[]> => {
+  const endpoint = userId ? `/users/${userId}/matches` : "/users/me/matches";
   const response = await apiClient.get<MatchHistory[]>(endpoint);
   return response.data;
 };
 
 // Update preferences
 export const updatePreferences = async (
-  data: UpdatePreferencesData
+  data: UpdatePreferencesData,
 ): Promise<UserProfile> => {
-  const response = await apiClient.patch<UserProfile>('/users/me/preferences', data);
+  const response = await apiClient.patch<UserProfile>(
+    "/users/me/preferences",
+    data,
+  );
   return response.data;
 };
 
-// Follow user
-export const followUser = async (userId: string): Promise<void> => {
-  await apiClient.post(`/users/${userId}/follow`);
+// Send friend request
+export const sendFriendRequest = async (addresseeId: string): Promise<void> => {
+  try {
+    await apiClient.post(`/friendships/request/${addresseeId}`);
+  } catch (error) {
+    console.error("Error sending friend request:", error);
+    throw error;
+  }
 };
 
-// Unfollow user
-export const unfollowUser = async (userId: string): Promise<void> => {
-  await apiClient.delete(`/users/${userId}/follow`);
-};
-
-// Get followers
-export const getFollowers = async (userId: string): Promise<UserProfile[]> => {
-  const response = await apiClient.get<UserProfile[]>(`/users/${userId}/followers`);
-  return response.data;
-};
-
-// Get following
-export const getFollowing = async (userId: string): Promise<UserProfile[]> => {
-  const response = await apiClient.get<UserProfile[]>(`/users/${userId}/following`);
-  return response.data;
+//Remove Friend
+export const removeFriend = async (friendId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/friendships/${friendId}`);
+  } catch (error) {
+    console.error("Error removing friend:", error);
+    throw error;
+  }
 };
 

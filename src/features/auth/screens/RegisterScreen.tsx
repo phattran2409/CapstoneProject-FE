@@ -116,12 +116,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         >
           <ThemedIcon name="arrow-back" size={24} variant="secondary" />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("OTPVerification", { email: 'test@gmail.com', username: 'phat tran', password: '12356789' })}
-          style={styles.backButton}
-        >
-          <Text style={{ color: '#9ca3af' }}>{t('otp.changeEmail')}</Text>
-        </TouchableOpacity>
 
         <ScrollView
           style={styles.flex1}

@@ -59,7 +59,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
- 
 
   // Mock user data - replace with real user from auth store when available
   const mockUser = {
@@ -141,7 +140,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     refresh,
     loadMore,
     setPosts,
-  } = usePaginatedPosts({ pageSize: 10 });
+  } = usePaginatedPosts({ pageSize: 2 });
 
   // Use toggle post like mutation with callback to update local state
   const { mutate: toggleLike } = useTogglePostLike({
@@ -496,7 +495,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <ThemedSafeAreaView>
-
       {/* Header */}
       <ThemedView
         style={[
@@ -563,6 +561,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   parent.navigate("PostDetail", { postId });
                 }
               }}
+              onAvatarPress={(userId) => {
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate("PersonalPage", { userId });
+                  console.log(userId);
+                }
+              }}
             />
           )}
           ListHeaderComponent={renderHeader}
@@ -575,11 +580,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
           contentContainerStyle={{ paddingBottom: theme.spacing.xxl * 2 }}
         />
-        
       )}
-      
     </ThemedSafeAreaView>
   );
 };
