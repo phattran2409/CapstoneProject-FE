@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -16,6 +15,11 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { MessageList, Message } from "@/shared/components";
+import { getRelativeTime } from "@/shared/utils/dateUtils";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useChatMessages, useSendChatMessage, useMarkChatAsRead } from "../hooks";
+import { useChatSignalR } from "../hooks/useChatSignalR";
 
 type ChatScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,163 +32,54 @@ interface ChatScreenProps {
   route: ChatScreenRouteProp;
 }
 
-interface Message {
-  id: string;
-  sender: string;
-  senderName: string;
-  text: string;
-  timestamp: string;
-  isOwn: boolean;
-  avatar?: any;
-}
-
 const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   const [message, setMessage] = useState("");
-  const { chatName } = route.params;
+  const { chatName, chatId: otherUserId } = route.params;
+  const currentUserId = user?.userId;
 
-  const messages: Message[] = [
-    {
-      id: "1",
-      sender: "john",
-      senderName: "John Doe",
-      text: "Hey team, are we ready for the 7v7 match this weekend?",
-      timestamp: "10:30 AM",
-      isOwn: false,
-    },
-    {
-      id: "2",
-      sender: "me",
-      senderName: t("chat.you"),
-      text: "Absolutely! I've been practicing my free kicks. Can't wait!",
-      timestamp: "10:31 AM",
-      isOwn: true,
-    },
-    {
-      id: "3",
-      sender: "sarah",
-      senderName: "Sarah Lee",
-      text: "Awesome! I'll bring some water for everyone. Let's make sure we have our formation sorted out before the game.",
-      timestamp: "10:32 AM",
-      isOwn: false,
-    },
-    {
-      id: "4",
-      sender: "me",
-      senderName: t("chat.you"),
-      text: "Good call. I'll be there 15 minutes early to warm up.",
-      timestamp: "10:33 AM",
-      isOwn: true,
-    },
-  ];
+  // Fetch conversation messages via REST API
+  const { data, isLoading } = useChatMessages(otherUserId);
+  const { mutateAsync: sendChatMessage, isPending: isSending } = useSendChatMessage();
+  const { mutate: markChatAsRead } = useMarkChatAsRead();
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <View
-      style={{
-        flexDirection: "row",
-        marginBottom: theme.spacing.m,
-        paddingHorizontal: theme.spacing.m,
-        justifyContent: item.isOwn ? "flex-end" : "flex-start",
-      }}
-    >
-      {!item.isOwn && (
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: theme.colors.border,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: theme.spacing.xs,
-          }}
-        >
-          <Ionicons name="person" size={20} color={theme.colors.text} />
-        </View>
-      )}
-      <View style={{ flex: item.isOwn ? 0 : 1, maxWidth: "75%" }}>
-        {!item.isOwn && (
-          <Text
-            style={{
-              fontSize: theme.fontSizes.xs,
-              color: item.isOwn ? theme.colors.neonGreen : theme.colors.text,
-              marginBottom: theme.spacing.xs,
-              marginLeft: theme.spacing.xs,
-            }}
-          >
-            {item.senderName}
-          </Text>
-        )}
-        <View
-          style={{
-            backgroundColor: item.isOwn
-              ? theme.colors.neonGreen
-              : theme.colors.surface,
-            borderRadius: theme.radius.m,
-            padding: theme.spacing.s,
-            alignSelf: item.isOwn ? "flex-end" : "flex-start",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: theme.fontSizes.m,
-              color: item.isOwn ? theme.colors.black : theme.colors.text,
-            }}
-          >
-            {item.text}
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: theme.spacing.xs,
-            alignSelf: item.isOwn ? "flex-end" : "flex-start",
-          }}
-        >
-          {item.isOwn && (
-            <>
-              <Text
-                style={{
-                  fontSize: theme.fontSizes.xs,
-                  color: theme.colors.textSecondary,
-                  marginRight: theme.spacing.xs,
-                }}
-              >
-                {t("chat.sent")}
-              </Text>
-              <Ionicons
-                name="checkmark-done"
-                size={12}
-                color={theme.colors.neonGreen}
-              />
-              <Ionicons
-                name="checkmark-done"
-                size={12}
-                color={theme.colors.neonGreen}
-                style={{ marginLeft: -4 }}
-              />
-            </>
-          )}
-          <Text
-            style={{
-              fontSize: theme.fontSizes.xs,
-              color: theme.colors.textSecondary,
-              marginLeft: item.isOwn ? theme.spacing.xs : 0,
-            }}
-          >
-            {item.timestamp}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
+  // Optional: giữ kết nối SignalR để nhận realtime / online status sau này
+  const { isConnected } = useChatSignalR();
 
-  const handleSend = () => {
-    if (message.trim()) {
-      // Handle send message
+  // Map dữ liệu API -> UI MessageList
+  const messages: Message[] = useMemo(() => {
+    if (!data?.messages) return [];
+    return data.messages.map((m) => ({
+      id: m.messageId,
+      sender: m.senderId,
+      senderName: m.senderName,
+      text: m.messageText,
+      timestamp: getRelativeTime(m.sentAt),
+      isOwn: m.isMine,
+    }));
+  }, [data]);
+
+  // Đánh dấu đã đọc khi mở màn hình
+  useEffect(() => {
+    if (otherUserId) {
+      markChatAsRead(otherUserId);
+    }
+  }, [otherUserId, markChatAsRead]);
+
+  const handleSend = async () => {
+    if (!message.trim() || !otherUserId || !currentUserId || isSending) return;
+    try {
+      await sendChatMessage({
+        senderId: currentUserId,
+        receiverId: otherUserId,
+        messageText: message.trim(),
+        messageType: "Text",
+      });
       setMessage("");
+    } catch (e) {
+      console.log("❌ sendChatMessage error:", e);
     }
   };
 
@@ -241,14 +136,31 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
+      {/* SignalR status */}
+      <View
+        style={{
+          paddingHorizontal: theme.spacing.m,
+          paddingVertical: theme.spacing.xs,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: theme.fontSizes.xs,
+            color: theme.colors.textSecondary,
+          }}
+        >
+          SignalR: {isConnected ? "CONNECTED" : "CONNECTING..."}
+        </Text>
+      </View>
+
       {/* Messages List */}
-      <FlatList
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: theme.spacing.m }}
-        inverted={false}
-      />
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: theme.colors.textSecondary }}>{t("common.loading")}</Text>
+        </View>
+      ) : (
+        <MessageList messages={messages} />
+      )}
 
       {/* Input Area */}
       <KeyboardAvoidingView
@@ -307,6 +219,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               alignItems: "center",
               marginLeft: theme.spacing.s,
             }}
+          disabled={isSending || !message.trim()}
           >
             <Ionicons name="send" size={20} color={theme.colors.white} />
           </TouchableOpacity>

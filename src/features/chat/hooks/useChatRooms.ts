@@ -1,20 +1,32 @@
-import { useQuery } from '@tanstack/react-query';
-import { chatKeys } from '../api/chatKeys';
-import { getChatRooms, getChatRoom } from '../api/chatApi';
+import { useQuery } from "@tanstack/react-query";
+import { chatKeys } from "../api/chatKeys";
+import { getConversations, getConversationMessages } from "../api/chatApi";
 
-export const useChatRooms = () => {
+/**
+ * Lấy danh sách các cuộc trò chuyện hiện có
+ * GET /api/chat/conversations?page=&pageSize=
+ */
+export const useChatRooms = (page = 1, pageSize = 20) => {
   return useQuery({
-    queryKey: chatKeys.rooms(),
-    queryFn: getChatRooms,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    queryKey: [...chatKeys.conversations(), { page, pageSize }],
+    queryFn: () => getConversations({ page, pageSize }),
   });
 };
 
-export const useChatRoom = (chatRoomId: string) => {
+/**
+ * Lấy nội dung cuộc trò chuyện với 1 user cụ thể
+ * GET /api/chat/conversation/{otherUserId}?pageNumber=&pageSize=
+ *  - otherUserId: id của người còn lại trong cuộc trò chuyện
+ */
+export const useChatRoom = (
+  otherUserId: string,
+  pageNumber = 1,
+  pageSize = 50,
+) => {
   return useQuery({
-    queryKey: chatKeys.room(chatRoomId),
-    queryFn: () => getChatRoom(chatRoomId),
-    enabled: !!chatRoomId,
+    queryKey: [...chatKeys.conversation(otherUserId), { pageNumber, pageSize }],
+    queryFn: () => getConversationMessages(otherUserId, pageNumber, pageSize),
+    enabled: !!otherUserId,
   });
 };
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -27,42 +27,18 @@ interface ChatItem {
 const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [isLoading, setIsLoading] = useState(false);
 
-  // // ✅ Fetch chat rooms from API
-  // const { data: chatRooms, isLoading, refetch } = useChatRooms();
+  const { data, isLoading } = useChatRooms();
 
-  // Mock data fallback
-  const mockChats: ChatItem[] = [
-    {
-      id: '1',
-      name: 'Đội bóng The Avengers',
-      lastMessage: 'Tuyệt vời! Hẹn gặp lại vào cuối tuần.',
-      timestamp: '10:42 AM',
-      isOnline: true,
-    },
-    {
-      id: '2',
-      name: 'Ronaldo',
-      lastMessage: 'Bạn sẵn sàng cho trận đấu tối nay...',
-      timestamp: '9:15 AM',
-      isOnline: true,
-    },
-    {
-      id: '3',
-      name: 'Messi',
-      lastMessage: 'Kế hoạch cho trận 5vs5 thế nào?',
-      timestamp: t('chat.yesterday'),
-      isOnline: false,
-    },
-    {
-      id: '4',
-      name: 'Neymar Jr',
-      lastMessage: 'Đã nhận được lời mời của bạn.',
-      timestamp: t('chat.friday'),
-      isOnline: false,
-    },
-  ];
+  const chats: ChatItem[] =
+    data?.conversations?.map((c) => ({
+      id: c.otherUserId,
+      name: c.otherUserName,
+      lastMessage: c.lastMessage,
+      timestamp: c.lastMessageAt,
+      isOnline: c.isOnline,
+      avatar: c.otherUserAvatarUrl,
+    })) ?? [];
 
   const renderChatItem = ({ item }: { item: ChatItem }) => (
     <TouchableOpacity
@@ -183,12 +159,24 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
       {isLoading ? (
         <ListSkeleton />
       ) : (
-      <FlatList
-        data={mockChats}
-        renderItem={renderChatItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: theme.spacing.m }}
-      />
+        <FlatList
+          data={chats}
+          renderItem={renderChatItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: theme.spacing.m }}
+          ListEmptyComponent={
+            <View style={{ padding: theme.spacing.m }}>
+              <Text
+                style={{
+                  fontSize: theme.fontSizes.s,
+                  color: theme.colors.textSecondary,
+                }}
+              >
+                {t('chat.noConversations')}
+              </Text>
+            </View>
+          }
+        />
       )}
     </SafeAreaView>
   );

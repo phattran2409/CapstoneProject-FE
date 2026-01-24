@@ -25,8 +25,8 @@ export {
   PostMediaGrid,
   default as PostMediaGridDefault,
 } from "./PostMediaGrid";
-export { ActiveRoomBannerV2 } from './ActiveRoomBannerV2';
-export { TabBadge } from './TabBadge';
+export { ActiveRoomBannerV2 } from "./ActiveRoomBannerV2";
+export { TabBadge } from "./TabBadge";
 export { EmptyState } from "./EmptyState";
 export { LoadingMoreIndicator } from "./LoadingMoreIndicator";
 export type { MatchItemData, MatchItemProps } from "./MatchItem";
@@ -36,3 +36,5 @@ export type { PostItemProps } from "./PostItem";
 export type { Post } from "@/features/post/types/post.types";
 export type { IconButtonProps } from "./IconButton";
 export type { SkeletonProps } from "./Skeleton";
+export { MessageList } from "./MessageList";
+export type { Message } from "./MessageList";

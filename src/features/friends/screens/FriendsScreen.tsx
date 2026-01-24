@@ -172,7 +172,13 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
                 }
               }}
               onMessagePress={() => {
-                console.log("Message pressed:", item.fullName);
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate("Chat", {
+                    chatId: item.userId,
+                    chatName: item.fullName,
+                  });
+                }
               }}
               onInvitePress={() => {
                 // TODO: Invite to match

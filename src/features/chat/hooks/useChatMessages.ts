@@ -1,63 +1,39 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { chatKeys } from '../api/chatKeys';
-import {
-  getChatMessages,
-  sendMessage,
-  markMessagesAsRead,
-  deleteMessage,
-} from '../api/chatApi';
-import { SendMessageData } from '../types/chat.types';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { chatKeys } from "../api/chatKeys";
+import { getConversationMessages, sendChatMessage, markChatAsRead } from "../api/chatApi";
+import type { SendChatRequestBody } from "../types/chat.types";
 
-export const useChatMessages = (chatRoomId: string) => {
+/**
+ * Lấy danh sách tin nhắn với 1 user (conversation detail)
+ * GET /api/chat/conversation/{otherUserId}?pageNumber=&pageSize=
+ */
+export const useChatMessages = (
+  otherUserId: string,
+  pageNumber = 1,
+  pageSize = 50,
+) => {
   return useQuery({
-    queryKey: chatKeys.messages(chatRoomId),
-    queryFn: () => getChatMessages(chatRoomId),
-    enabled: !!chatRoomId,
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time feel
+    queryKey: [...chatKeys.conversation(otherUserId), { pageNumber, pageSize }],
+    queryFn: () => getConversationMessages(otherUserId, pageNumber, pageSize),
+    enabled: !!otherUserId,
   });
 };
 
-export const useSendMessage = () => {
-  const queryClient = useQueryClient();
-
+/**
+ * Gửi tin nhắn sử dụng API thực tế: POST /api/chat/send
+ */
+export const useSendChatMessage = () => {
   return useMutation({
-    mutationFn: sendMessage,
-    onSuccess: (newMessage) => {
-      // Invalidate messages for this chat room
-      queryClient.invalidateQueries({
-        queryKey: chatKeys.messages(newMessage.chatRoomId),
-      });
-      
-      // Invalidate chat rooms list to update last message
-      queryClient.invalidateQueries({
-        queryKey: chatKeys.rooms(),
-      });
-    },
+    mutationFn: (payload: SendChatRequestBody) => sendChatMessage(payload),
   });
 };
 
-export const useMarkAsRead = () => {
-  const queryClient = useQueryClient();
-
+/**
+ * Đánh dấu đã đọc tin nhắn bằng API thực tế: POST /api/chat/read/{fromUserId}
+ * fromUserId: id của NGƯỜI ĐÃ GỬI tin (đối thủ trong đoạn chat).
+ */
+export const useMarkChatAsRead = () => {
   return useMutation({
-    mutationFn: markMessagesAsRead,
-    onSuccess: (_data, chatRoomId) => {
-      // Invalidate chat rooms to update unread count
-      queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
-      queryClient.invalidateQueries({ queryKey: chatKeys.room(chatRoomId) });
-    },
+    mutationFn: (fromUserId: string) => markChatAsRead(fromUserId),
   });
 };
-
-export const useDeleteMessage = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteMessage,
-    onSuccess: () => {
-      // Invalidate all messages queries
-      queryClient.invalidateQueries({ queryKey: chatKeys.all });
-    },
-  });
-};
-
