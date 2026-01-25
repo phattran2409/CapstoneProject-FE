@@ -347,9 +347,13 @@ const vi = {
     title: "Trò chuyện",
     you: "Bạn",
     sent: "Đã gửi",
+    seen: "Đã xem",
     inputPlaceholder: "Nhập tin nhắn...",
     yesterday: "Hôm qua",
     friday: "Thứ Sáu",
+    online: "Đang online",
+    offline: "Offline",
+    isTyping: "đang nhập",
   },
   onboarding_1: {
     title: "Đặt Sân Chỉ Trong Vài Giây",

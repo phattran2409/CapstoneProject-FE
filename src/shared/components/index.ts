@@ -20,6 +20,7 @@ export {
   default as ProfileSkeletonDefault,
 } from "./ProfileSkeleton";
 export { ListSkeleton, default as ListSkeletonDefault } from "./ListSkeleton";
+export { ChatSkeleton, default as ChatSkeletonDefault } from "./ChatSkeleton";
 export { ErrorState, default as ErrorStateDefault } from "./ErrorState";
 export {
   PostMediaGrid,
@@ -37,4 +38,5 @@ export type { Post } from "@/features/post/types/post.types";
 export type { IconButtonProps } from "./IconButton";
 export type { SkeletonProps } from "./Skeleton";
 export { MessageList } from "./MessageList";
-export type { Message } from "./MessageList";
+export type { Message, MessageListRef } from "./MessageList";
+export { TypingIndicator } from "./TypingIndicator";

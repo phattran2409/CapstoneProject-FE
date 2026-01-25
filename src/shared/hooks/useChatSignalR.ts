@@ -14,23 +14,12 @@ export interface UseChatSignalROptions {
   onUserTyping?: (payload: any) => void; // "UserTyping"
   onUserStopTyping?: (payload: any) => void; // "UserStopTyping"
   onReceiveConversation?: (payload: any) => void; // "ReceiveConversation"
+  onReceiveMessage?: (payload: any) => void; // "ReceiveMessage"
+  onMessagesRead?: (payload: any) => void; // "MessagesRead"
   onOnlineUsers?: (payload: any) => void; // "OnlineUsers"
   onError?: (payload: any) => void; // "Error"
 }
 
-/**
- * Hook khởi tạo kết nối SignalR tới hub chat.
- *
- * Lưu ý:
- * - Cần cài package: @microsoft/signalr
- *   yarn add @microsoft/signalr
- *   hoặc
- *   npm install @microsoft/signalr
- *
- * - Tuỳ backend mà method / event name có thể khác:
- *   + Ví dụ phổ biến: "ReceiveMessage", "MessageRead", "SendMessageToUser" ...;
- *   + Hãy sửa lại cho đúng với hub bên server.
- */
 export const useChatSignalR = (options: UseChatSignalROptions = {}) => {
   const [connection, setConnection] = useState<HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -70,6 +59,16 @@ export const useChatSignalR = (options: UseChatSignalROptions = {}) => {
         // Nhận conversation (GetConversation)
         newConnection.on("ReceiveConversation", (payload: any) => {
           options.onReceiveConversation?.(payload);
+        });
+
+        // Một số event khác từ backend (log hiển thị dưới dạng 'messagesread', 'receivemessage')
+        newConnection.on("MessagesRead", (payload: any) => {
+          console.log("📩 MessagesRead:", payload);
+          options.onMessagesRead?.(payload);
+        });
+        newConnection.on("ReceiveMessage", (payload: any) => {
+          console.log("📩 ReceiveMessage:", payload);
+          options.onReceiveMessage?.(payload);
         });
 
         // Danh sách online
@@ -184,5 +183,4 @@ export const useChatSignalR = (options: UseChatSignalROptions = {}) => {
     getOnlineUsers,
   };
 };
-
 

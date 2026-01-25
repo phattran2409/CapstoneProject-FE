@@ -8,20 +8,6 @@ import type {
   MarkAsReadData,
 } from "../types/chat.types";
 
-/**
- * ===========================
- *  REAL BACKEND CHAT API
- * ===========================
- *
- * Swagger:
- *  - GET  /api/chat/conversations?page=&pageSize=
- *  - GET  /api/chat/conversation/{otherUserId}?pageNumber=&pageSize=
- *  - POST /api/chat/send
- *    body: { senderId, receiverId, messageText, messageType }
- *  - POST /api/chat/read/{fromUserId}
- */
-
-// -------- Conversations (danh sách các cuộc trò chuyện) --------
 
 export interface GetConversationsParams {
   page?: number;
@@ -41,8 +27,6 @@ export const getConversations = async (
   return res.data;
 };
 
-// -------- Conversation detail (tin nhắn với 1 user cụ thể) --------
-
 export const getConversationMessages = async (
   otherUserId: string,
   pageNumber = 1,
@@ -56,7 +40,6 @@ export const getConversationMessages = async (
   return res.data;
 };
 
-// Gửi tin nhắn qua REST API thực tế
 export const sendChatMessage = async (
   payload: SendChatRequestBody,
 ): Promise<SendChatMessageData> => {
@@ -67,7 +50,6 @@ export const sendChatMessage = async (
   return res.data;
 };
 
-// Đánh dấu đã đọc tất cả tin nhắn từ 1 user
 export const markChatAsRead = async (
   fromUserId: string,
 ): Promise<MarkAsReadData> => {
