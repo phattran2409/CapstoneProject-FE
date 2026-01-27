@@ -23,6 +23,9 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };
+  PaymentSuccess: undefined;
+  Wallet: undefined;
+  WalletTopUp: undefined;
   ChangePassword: {
     email: string;
   };

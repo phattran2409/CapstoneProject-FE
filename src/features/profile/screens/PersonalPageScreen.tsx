@@ -34,8 +34,18 @@ import {
   usePaginatedUserPosts,
   useTogglePostLike,
 } from "@/features/post/hooks";
+import { useProfile } from "@/features/auth";
+import { useSendFriendRequest, useUserProfile } from "../hooks";
+import {
+  useGetFriendshipStatus,
+  useRemoveFriend,
+  useRespondToFriendRequest,
+} from "@/features/friends/hooks";
 
-type PersonalPageScreenProps = NativeStackScreenProps<RootStackParamList, "PersonalPage">;
+type PersonalPageScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  "PersonalPage"
+>;
 
 type TabType = "posts" | "history" | "analysis";
 
@@ -46,9 +56,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const { theme } = useTheme();
   const { user: currentUser } = useAuthStore();
   const { t } = useTranslation();
-  
+
   // Get userId from params or fallback to current user
-  const userId = route.params?.userId || currentUser?.userId;
+  const userId = route.params?.userId || currentUser?.userId || "";
   const isCurrentUser = userId === currentUser?.userId;
   console.log("isCurrentUser", isCurrentUser);
   const [activeTab, setActiveTab] = useState<TabType>("posts");
@@ -58,7 +68,24 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     null,
   );
   const [modalVisible, setModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual API loading state
+  const { data: profile, isLoading: profileLoading } = useUserProfile(userId);
+
+  // Friendship status and mutations
+  const {
+    friendshipStatus,
+    isLoading: isLoadingStatus,
+    refetch: refetchStatus,
+  } = useGetFriendshipStatus({
+    userId,
+    enabled: !isCurrentUser,
+  });
+
+  const { mutate: sendFriendRequest, isPending: isSendingFriendRequest } =
+    useSendFriendRequest();
+  const { mutate: removeFriend, isPending: isRemovingFriend } =
+    useRemoveFriend();
+  const { mutate: respondToRequest, isPending: isRespondingToRequest } =
+    useRespondToFriendRequest();
 
   // Fetch user's posts (currently returns empty until API is implemented)
   const {
@@ -116,7 +143,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     try {
       // TODO: Call API to update profile
       console.log("Saving profile:", data);
-      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000)); // Simulate API call
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
       setShowEditForm(false);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -201,8 +228,47 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   };
 
   const handleAddFriend = () => {
-    // TODO: Implement add friend functionality
-    console.log("Add friend pressed");
+    sendFriendRequest(userId, {
+      onSuccess: () => {
+        console.log("Friend request sent successfully");
+        refetchStatus();
+      },
+      onError: (error) => {
+        console.error("Failed to send friend request:", error);
+      },
+    });
+  };
+
+  const handleRemoveFriend = () => {
+    removeFriend(userId, {
+      onSuccess: () => {
+        console.log("Friend removed successfully");
+        refetchStatus();
+      },
+      onError: (error) => {
+        console.error("Failed to remove friend:", error);
+      },
+    });
+  };
+
+  const handleAcceptRequest = () => {
+    respondToRequest(
+      { requesterId: userId, accept: true },
+      {
+        onSuccess: () => {
+          console.log("Friend request accepted");
+          refetchStatus();
+        },
+        onError: (error) => {
+          console.error("Failed to accept friend request:", error);
+        },
+      },
+    );
+  };
+
+  const handleCancelRequest = () => {
+    // TODO: Implement cancel request API if available
+    console.log("Cancel request not implemented yet");
   };
 
   const renderFooter = () => {
@@ -227,6 +293,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
       onLike={handleLike}
       onPress={(postId) => {
         navigation.navigate("PostDetail", { postId });
+      }}
+      onAvatarPress={(userId) => {
+        navigation.navigate("PersonalPage", { userId });
       }}
     />
   );
@@ -260,7 +329,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         </TouchableOpacity>
       </View>
 
-      {isLoading ? (
+      {profileLoading ? (
         <ProfileSkeleton />
       ) : (
         <ScrollView
@@ -272,16 +341,25 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           {/* Profile Section */}
           <View style={{ backgroundColor: theme.colors.background }}>
             <ProfileHeader
-              name={currentUser?.fullName || "Mai Anh Tuấn"}
+              name={profile?.fullName || "Unknown User"}
               elo={2450}
-              description="King of the Pitch"
+              description={profile?.bio || ""}
               age={22}
-              position="CAM"
-              shirtNumber={10}
+              position={profile?.playerProfile?.position || "N/A"}
+              shirtNumber={profile?.playerProfile?.shirtNumber || 0}
               matchesCount={88}
               isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}
-              onAddFriendPress={handleAddFriend}
+              friendshipStatus={friendshipStatus?.status}
+              onAddFriend={handleAddFriend}
+              onRemoveFriend={handleRemoveFriend}
+              onAcceptRequest={handleAcceptRequest}
+              onCancelRequest={handleCancelRequest}
+              isFriendshipLoading={
+                isSendingFriendRequest ||
+                isRemovingFriend ||
+                isRespondingToRequest
+              }
             />
 
             {/* Navigation Tabs */}
@@ -394,10 +472,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         onSave={handleSaveProfile}
         isLoading={isUpdating}
         initialData={{
-          name: currentUser?.fullName || "Mai Anh Tuấn",
-          bio: "King of the Pitch",
-          position: "CAM",
-          shirtNumber: 10,
+          name: profile?.fullName || currentUser?.fullName || "",
+          bio: profile?.bio || "",
+          position: profile?.playerProfile?.position || "",
+          shirtNumber: profile?.playerProfile?.shirtNumber || 0,
         }}
       />
     </SafeAreaView>

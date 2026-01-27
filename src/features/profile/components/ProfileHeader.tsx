@@ -1,35 +1,43 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import Svg, { 
-  Path, 
-  Text as SvgText, 
-  Defs, 
-  LinearGradient as SvgLinearGradient, 
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Svg, {
+  Path,
+  Text as SvgText,
+  Defs,
+  LinearGradient as SvgLinearGradient,
   Stop,
-} from 'react-native-svg';
+} from "react-native-svg";
+import { FriendshipActionButton } from "./FriendshipActionButton";
+import { FriendshipStatus } from "@/features/friends/types/friends.types";
 
 interface ProfileHeaderProps {
   name: string;
   elo: number;
   description?: string;
-  age?: number; 
+  age?: number;
   position?: string;
   shirtNumber?: number;
   matchesCount?: number;
   isCurrentUser?: boolean;
   onEditPress?: () => void;
-  onAddFriendPress?: () => void;
+  // Friendship actions
+  friendshipStatus?: FriendshipStatus;
+  onAddFriend?: () => void;
+  onRemoveFriend?: () => void;
+  onAcceptRequest?: () => void;
+  onCancelRequest?: () => void;
+  isFriendshipLoading?: boolean;
 }
 
 //SVG Jersey Badge
-const JerseyBadge: React.FC<{ number: number; accent: string; text: string }> = ({
-  number,
-  accent,
-  text,
-}) => {
+const JerseyBadge: React.FC<{
+  number: number;
+  accent: string;
+  text: string;
+}> = ({ number, accent, text }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   return (
@@ -50,10 +58,7 @@ const JerseyBadge: React.FC<{ number: number; accent: string; text: string }> = 
         />
 
         {/* Left Sleeve */}
-        <Path
-          d="M15 25 L5 32 Q2 35 4 40 L12 48 L15 42"
-          fill="url(#jerseyBg)"
-        />
+        <Path d="M15 25 L5 32 Q2 35 4 40 L12 48 L15 42" fill="url(#jerseyBg)" />
 
         {/* Right Sleeve */}
         <Path
@@ -82,29 +87,33 @@ const JerseyBadge: React.FC<{ number: number; accent: string; text: string }> = 
 
       {/* Position Text */}
       <View style={styles.positionContainer}>
-        <Text style={[styles.positionLabel, { color: theme.colors.textSecondary }]}>
-          {t('personalPage.position')}
+        <Text
+          style={[styles.positionLabel, { color: theme.colors.textSecondary }]}
+        >
+          {t("personalPage.position")}
         </Text>
-        <Text style={[styles.positionText, { color: accent }]}>
-          {text}
-        </Text>
+        <Text style={[styles.positionText, { color: accent }]}>{text}</Text>
       </View>
     </View>
   );
 };
 
-
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   name,
   elo,
-  description = 'King of the Pitch - Chuyên gia kiến tạo',
+  description = "King of the Pitch - Chuyên gia kiến tạo",
   age = 20,
-  position = 'Forward',
+  position = "Forward",
   shirtNumber = 10,
   matchesCount = 100,
   isCurrentUser,
   onEditPress,
-  onAddFriendPress,
+  friendshipStatus,
+  onAddFriend,
+  onRemoveFriend,
+  onAcceptRequest,
+  onCancelRequest,
+  isFriendshipLoading = false,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -117,7 +126,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           styles.avatar,
           {
             borderColor: theme.colors.neonGreen,
-            backgroundColor: '#E8D5C4',
+            backgroundColor: "#E8D5C4",
             marginBottom: theme.spacing.m,
           },
         ]}
@@ -126,7 +135,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       </View>
 
       {/* Name */}
-      <View style={{ alignItems: 'center', marginBottom: theme.spacing.m }}>
+      <View style={{ alignItems: "center", marginBottom: theme.spacing.m }}>
         <Text
           style={[
             styles.name,
@@ -140,18 +149,18 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {name}
         </Text>
         {/* Description */}
-      <Text
-        style={[
-          styles.quote,
-          {
-            fontSize: theme.fontSizes.m,
-            color: theme.colors.textSecondary,
-            textAlign: 'center',
-          },
-        ]}
-      >
-        {description} 
-      </Text>
+        <Text
+          style={[
+            styles.quote,
+            {
+              fontSize: theme.fontSizes.m,
+              color: theme.colors.textSecondary,
+              textAlign: "center",
+            },
+          ]}
+        >
+          {description}
+        </Text>
       </View>
 
       {/* Rank Badge */}
@@ -159,7 +168,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         style={[
           styles.badge,
           {
-            backgroundColor: theme.colors.border === '#E0E0E0' ? '#2C2C2C' : '#2C2C2C',
+            backgroundColor:
+              theme.colors.border === "#E0E0E0" ? "#2C2C2C" : "#2C2C2C",
             borderRadius: theme.radius.m,
             paddingVertical: theme.spacing.s,
             paddingHorizontal: theme.spacing.m,
@@ -193,69 +203,57 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </Text>
       </View>
       <JerseyBadge
-          number={shirtNumber}
-          accent={theme.colors.neonGreen}
-          text={position}
-        />
+        number={shirtNumber}
+        accent={theme.colors.neonGreen}
+        text={position}
+      />
 
-      {/* Edit Button or Add Friend Button */}
+      {/* Edit Button or Friendship Action Button */}
       {isCurrentUser ? (
-      <TouchableOpacity
-        onPress={onEditPress}
-        style={[
-          styles.editButton,
-          {
-            backgroundColor: theme.colors.neonGreen,
-            borderRadius: theme.radius.m,
-            paddingVertical: theme.spacing.s,
-            paddingHorizontal: theme.spacing.xl,
-          },
-        ]}     
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.s }}>
-         <Ionicons name="pencil" size={18} color={theme.colors.black} />
-        <Text
+        <TouchableOpacity
+          onPress={onEditPress}
           style={[
-            styles.editButtonText,
+            styles.editButton,
             {
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.background,
+              backgroundColor: theme.colors.neonGreen,
+              borderRadius: theme.radius.m,
+              paddingVertical: theme.spacing.s,
+              paddingHorizontal: theme.spacing.xl,
             },
           ]}
         >
-           {t('personalPage.editProfile')}
-           </Text>
-           </View>
-      </TouchableOpacity>
-
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: theme.spacing.s,
+            }}
+          >
+            <Ionicons name="pencil" size={18} color={theme.colors.black} />
+            <Text
+              style={[
+                styles.editButtonText,
+                {
+                  fontSize: theme.fontSizes.m,
+                  color: theme.colors.background,
+                },
+              ]}
+            >
+              {t("personalPage.editProfile")}
+            </Text>
+          </View>
+        </TouchableOpacity>
       ) : (
-        <TouchableOpacity
-        onPress={onAddFriendPress}
-        style={[
-          styles.addFriendButton,
-          {
-            backgroundColor: theme.colors.neonGreen,
-            borderRadius: theme.radius.m,
-            paddingVertical: theme.spacing.s,
-            paddingHorizontal: theme.spacing.xl,
-          },
-        ]}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.s }}>
-         <Ionicons name="person-add" size={18} color={theme.colors.background} />
-         <Text
-          style={[
-            styles.addFriendButtonText,
-            {
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.background,
-            },
-          ]}
-         >
-          {t('personalPage.addFriend')}
-         </Text>
-         </View>
-      </TouchableOpacity>
+        friendshipStatus && (
+          <FriendshipActionButton
+            status={friendshipStatus}
+            onAddFriend={onAddFriend || (() => {})}
+            onRemoveFriend={onRemoveFriend || (() => {})}
+            onAcceptRequest={onAcceptRequest}
+            onCancelRequest={onCancelRequest}
+            isLoading={isFriendshipLoading}
+          />
+        )
       )}
     </View>
   );
@@ -263,83 +261,82 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
   },
   name: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   elo: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   rank: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   quote: {
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   editButton: {
     paddingVertical: 8,
     paddingHorizontal: 32,
   },
   editButtonText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   addFriendButton: {
     paddingVertical: 8,
     paddingHorizontal: 32,
   },
   addFriendButtonText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statsContainer: {
     marginTop: 20,
     marginHorizontal: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   jerseyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     gap: 12,
   },
   positionContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   positionLabel: {
     fontSize: 11,
-    fontWeight: '500',
-    textTransform: 'uppercase',
+    fontWeight: "500",
+    textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 2,
   },
   positionText: {
-    fontWeight: '800',
+    fontWeight: "800",
     fontSize: 18,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   innerBorder: {
-    position: 'absolute',
+    position: "absolute",
     top: 1,
     left: 1,
     right: 1,
     bottom: 1,
     borderRadius: 15,
     borderWidth: 1,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   },
 });
-

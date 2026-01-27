@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -16,6 +21,25 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import {
+  MessageList,
+  Message,
+  MessageListRef,
+  EmptyState,
+  LoadingMoreIndicator,
+  ErrorState,
+  ChatSkeleton,
+  TypingIndicator,
+} from "@/shared/components";
+import { getRelativeTime } from "@/shared/utils/dateUtils";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import {
+  useChatMessages,
+  useSendChatMessage,
+  useMarkChatAsRead,
+} from "../hooks";
+import { useChatSignalR } from "@/shared/hooks/useChatSignalR";
+import { useChatSignalRHandlers } from "@/shared/hooks/useChatSignalRHandlers";
 
 type ChatScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,164 +52,196 @@ interface ChatScreenProps {
   route: ChatScreenRouteProp;
 }
 
-interface Message {
-  id: string;
-  sender: string;
-  senderName: string;
-  text: string;
-  timestamp: string;
-  isOwn: boolean;
-  avatar?: any;
-}
-
 const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   const [message, setMessage] = useState("");
-  const { chatName } = route.params;
+  const { chatName, chatId: otherUserId } = route.params;
+  const currentUserId = user?.userId;
 
-  const messages: Message[] = [
-    {
-      id: "1",
-      sender: "john",
-      senderName: "John Doe",
-      text: "Hey team, are we ready for the 7v7 match this weekend?",
-      timestamp: "10:30 AM",
-      isOwn: false,
-    },
-    {
-      id: "2",
-      sender: "me",
-      senderName: t("chat.you"),
-      text: "Absolutely! I've been practicing my free kicks. Can't wait!",
-      timestamp: "10:31 AM",
-      isOwn: true,
-    },
-    {
-      id: "3",
-      sender: "sarah",
-      senderName: "Sarah Lee",
-      text: "Awesome! I'll bring some water for everyone. Let's make sure we have our formation sorted out before the game.",
-      timestamp: "10:32 AM",
-      isOwn: false,
-    },
-    {
-      id: "4",
-      sender: "me",
-      senderName: t("chat.you"),
-      text: "Good call. I'll be there 15 minutes early to warm up.",
-      timestamp: "10:33 AM",
-      isOwn: true,
-    },
-  ];
+  // State for typing indicator and online status
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+  const [isOtherUserOnline, setIsOtherUserOnline] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingTimeRef = useRef<number>(0);
+  const messageListRef = useRef<MessageListRef>(null);
+  const isAtBottomRef = useRef(true);
+  const hasScrolledToBottomRef = useRef(false);
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <View
-      style={{
-        flexDirection: "row",
-        marginBottom: theme.spacing.m,
-        paddingHorizontal: theme.spacing.m,
-        justifyContent: item.isOwn ? "flex-end" : "flex-start",
-      }}
-    >
-      {!item.isOwn && (
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: theme.colors.border,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: theme.spacing.xs,
-          }}
-        >
-          <Ionicons name="person" size={20} color={theme.colors.text} />
-        </View>
-      )}
-      <View style={{ flex: item.isOwn ? 0 : 1, maxWidth: "75%" }}>
-        {!item.isOwn && (
-          <Text
-            style={{
-              fontSize: theme.fontSizes.xs,
-              color: item.isOwn ? theme.colors.neonGreen : theme.colors.text,
-              marginBottom: theme.spacing.xs,
-              marginLeft: theme.spacing.xs,
-            }}
-          >
-            {item.senderName}
-          </Text>
-        )}
-        <View
-          style={{
-            backgroundColor: item.isOwn
-              ? theme.colors.neonGreen
-              : theme.colors.surface,
-            borderRadius: theme.radius.m,
-            padding: theme.spacing.s,
-            alignSelf: item.isOwn ? "flex-end" : "flex-start",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: theme.fontSizes.m,
-              color: item.isOwn ? theme.colors.black : theme.colors.text,
-            }}
-          >
-            {item.text}
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: theme.spacing.xs,
-            alignSelf: item.isOwn ? "flex-end" : "flex-start",
-          }}
-        >
-          {item.isOwn && (
-            <>
-              <Text
-                style={{
-                  fontSize: theme.fontSizes.xs,
-                  color: theme.colors.textSecondary,
-                  marginRight: theme.spacing.xs,
-                }}
-              >
-                {t("chat.sent")}
-              </Text>
-              <Ionicons
-                name="checkmark-done"
-                size={12}
-                color={theme.colors.neonGreen}
-              />
-              <Ionicons
-                name="checkmark-done"
-                size={12}
-                color={theme.colors.neonGreen}
-                style={{ marginLeft: -4 }}
-              />
-            </>
-          )}
-          <Text
-            style={{
-              fontSize: theme.fontSizes.xs,
-              color: theme.colors.textSecondary,
-              marginLeft: item.isOwn ? theme.spacing.xs : 0,
-            }}
-          >
-            {item.timestamp}
-          </Text>
-        </View>
-      </View>
-    </View>
+  // Fetch conversation messages via REST API
+  const {
+    chatMessages,
+    loading,
+    refreshing,
+    loadingMore,
+    error,
+    refresh,
+    loadMore,
+    setChatMessages,
+  } = useChatMessages({ otherUserId, pageSize: 50 });
+  const { mutateAsync: sendChatMessage, isPending: isSending } =
+    useSendChatMessage();
+  const { mutate: markChatAsRead } = useMarkChatAsRead();
+
+  // Tạo SignalR handlers với logic phổ biến
+  const signalRHandlers = useChatSignalRHandlers({
+    otherUserId,
+    currentUserId,
+    chatName,
+    setChatMessages,
+    setIsOtherUserTyping,
+    typingTimeoutRef,
+    setIsOtherUserOnline,
+    isAtBottomRef,
+    messageListRef: messageListRef.current || undefined,
+  });
+
+  // SignalR connection với handlers
+  const { isConnected, typing, stopTyping, getOnlineStatus } = useChatSignalR(signalRHandlers);
+
+  // Map dữ liệu API -> UI MessageList
+  const messages: Message[] = useMemo(() => {
+    if (!chatMessages) return [];
+    return chatMessages.map((m) => ({
+      id: m.messageId,
+      sender: m.senderId,
+      senderName: m.senderName,
+      text: m.messageText,
+      timestamp: getRelativeTime(m.sentAt),
+      isOwn: m.isMine,
+      isRead: m.isRead,
+    }));
+  }, [chatMessages]);
+
+  // Đánh dấu đã đọc khi mở màn hình
+  useEffect(() => {
+    if (otherUserId) {
+      markChatAsRead(otherUserId);
+    }
+  }, [otherUserId, markChatAsRead]);
+
+  // Lấy online status khi mở màn hình
+  useEffect(() => {
+    if (isConnected && otherUserId) {
+      getOnlineStatus(otherUserId);
+    }
+  }, [isConnected, otherUserId, getOnlineStatus]);
+
+  // Auto scroll đến tin nhắn mới nhất khi load xong messages lần đầu
+  useEffect(() => {
+    if (!loading && chatMessages && chatMessages.length > 0 && !hasScrolledToBottomRef.current) {
+      hasScrolledToBottomRef.current = true;
+      // Delay để đảm bảo FlatList đã render xong
+      // Với non-inverted mode, cần delay lâu hơn để content được render
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(false);
+        isAtBottomRef.current = true;
+      }, 500);
+    }
+  }, [loading, chatMessages]);
+
+  // Reset scroll flag khi chuyển conversation
+  useEffect(() => {
+    hasScrolledToBottomRef.current = false;
+    isAtBottomRef.current = true;
+  }, [otherUserId]);
+
+  // Handle scroll position tracking
+  const handleScrollToBottom = useCallback((isAtBottom: boolean) => {
+    isAtBottomRef.current = isAtBottom;
+  }, []);
+
+  // Handle layout để scroll khi FlatList đã render xong
+  const handleMessageListLayout = useCallback(() => {
+    if (!hasScrolledToBottomRef.current && chatMessages && chatMessages.length > 0) {
+      // Scroll ngay khi layout được render
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(false);
+        isAtBottomRef.current = true;
+        hasScrolledToBottomRef.current = true;
+      }, 100);
+    }
+  }, [chatMessages]);
+
+  // Cleanup typing timeout
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Xử lý typing detection với debounce
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setMessage(text);
+
+      const now = Date.now();
+      // Chỉ gửi typing signal mỗi 2 giây một lần
+      if (now - lastTypingTimeRef.current > 2000) {
+        if (isConnected && otherUserId && text.trim().length > 0) {
+          typing(otherUserId);
+          lastTypingTimeRef.current = now;
+        }
+      }
+
+      // Gửi stopTyping sau 3 giây không gõ
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      typingTimeoutRef.current = setTimeout(() => {
+        if (isConnected && otherUserId) {
+          stopTyping(otherUserId);
+        }
+      }, 3000);
+    },
+    [isConnected, otherUserId, typing, stopTyping],
   );
 
-  const handleSend = () => {
-    if (message.trim()) {
-      // Handle send message
-      setMessage("");
+  const handleSend = async () => {
+    if (!message.trim() || !otherUserId || !currentUserId || isSending) return;
+
+    // Gửi stopTyping khi gửi tin nhắn
+    if (isConnected) {
+      stopTyping(otherUserId);
     }
+
+    try {
+      await sendChatMessage({
+        senderId: currentUserId,
+        receiverId: otherUserId,
+        messageText: message.trim(),
+        messageType: "Text",
+      });
+      setMessage("");
+      
+      // Auto scroll sau khi gửi tin nhắn
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(true);
+        isAtBottomRef.current = true;
+      }, 100);
+    } catch (e) {
+      console.log("❌ sendChatMessage error:", e);
+    }
+  };
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <EmptyState
+        icon="chatbubble-ellipses-outline"
+        title={t("chat.empty")}
+        description={t("chat.inviteFriends")}
+      />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <LoadingMoreIndicator />;
   };
 
   return (
@@ -222,9 +278,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         >
           <Ionicons name="person" size={24} color={theme.colors.text} />
         </View>
+        <View style={{ flex: 1 }}>
         <Text
           style={{
-            flex: 1,
             fontSize: theme.fontSizes.l,
             color: theme.colors.text,
             fontWeight: "600",
@@ -232,23 +288,54 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         >
           {chatName}
         </Text>
-        <TouchableOpacity>
-          <Ionicons
-            name="ellipsis-vertical"
-            size={24}
-            color={theme.colors.text}
-          />
-        </TouchableOpacity>
+          <View
+            style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}
+          >
+            {isOtherUserOnline && (
+      <View
+        style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: theme.colors.neonGreen,
+                  marginRight: theme.spacing.xs,
+        }}
+              />
+            )}
+        <Text
+          style={{
+            fontSize: theme.fontSizes.xs,
+            color: theme.colors.textSecondary,
+          }}
+        >
+              {isOtherUserOnline ? t("chat.online") : t("chat.offline")}
+        </Text>
+      </View>
+        </View>
       </View>
 
+      {/* Typing Indicator */}
+      {isOtherUserTyping && <TypingIndicator userName={chatName} />}
+
+      {loading && <ChatSkeleton messageCount={5} />}
+
+      {error && <ErrorState error={error} onRetry={refresh} />}
+
       {/* Messages List */}
-      <FlatList
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: theme.spacing.m }}
-        inverted={false}
-      />
+      {!loading && !error && (
+        <MessageList
+          ref={messageListRef}
+          messages={messages}
+          inverted={false}
+          loadMore={loadMore}
+          refreshing={refreshing}
+          onRefresh={refresh}
+          renderEmpty={renderEmpty}
+          renderFooter={renderFooter}
+          onScrollToBottom={handleScrollToBottom}
+          onLayout={handleMessageListLayout}
+        />
+      )}
 
       {/* Input Area */}
       <KeyboardAvoidingView
@@ -269,20 +356,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
             paddingHorizontal: theme.spacing.s,
           }}
         >
-          <TouchableOpacity style={{ marginRight: theme.spacing.s }}>
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: theme.colors.border,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Ionicons name="add" size={20} color={theme.colors.text} />
-            </View>
-          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ marginRight: theme.spacing.s }}
+          ></TouchableOpacity>
           <TextInput
             style={{
               flex: 1,
@@ -293,7 +369,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
             placeholder={t("chat.inputPlaceholder")}
             placeholderTextColor={theme.colors.textSecondary}
             value={message}
-            onChangeText={setMessage}
+            onChangeText={handleTextChange}
             multiline
           />
           <TouchableOpacity
@@ -307,8 +383,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               alignItems: "center",
               marginLeft: theme.spacing.s,
             }}
+          disabled={isSending || !message.trim()}
           >
-            <Ionicons name="send" size={20} color={theme.colors.white} />
+            <Ionicons name="send" size={20} color={theme.colors.black} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -59,7 +59,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
- 
 
   // Mock user data - replace with real user from auth store when available
   const mockUser = {
@@ -496,7 +495,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <ThemedSafeAreaView>
-
       {/* Header */}
       <ThemedView
         style={[
@@ -524,8 +522,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             />
           </TouchableOpacity>
           <IconButton
-            icon="trophy-outline"
-            onPress={() => navigation.navigate("Leaderboard" as any)}
+            icon="cart-outline"
+            onPress={() => navigation.navigate("PaymentSuccess" as any)}
+            size="medium"
+          />
+          <IconButton
+            icon="wallet-outline"
+            onPress={() => navigation.navigate("Wallet" as any)}
             size="medium"
           />
           <IconButton
@@ -558,6 +561,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   parent.navigate("PostDetail", { postId });
                 }
               }}
+              onAvatarPress={(userId) => {
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate("PersonalPage", { userId });
+                  console.log(userId);
+                }
+              }}
             />
           )}
           ListHeaderComponent={renderHeader}
@@ -570,11 +580,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
           contentContainerStyle={{ paddingBottom: theme.spacing.xxl * 2 }}
         />
-        
       )}
-      
     </ThemedSafeAreaView>
   );
 };

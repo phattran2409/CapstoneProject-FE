@@ -8,11 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
 import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 import { useAuthStore, useLogout } from '@/features/auth';
-import { useMyProfile } from '@/features/profile/hooks';
+
 import { useAppStore } from '@/store/appStore';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
+import { use } from 'i18next';
 
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Profile'>,
@@ -32,8 +33,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [matchNotifications, setMatchNotifications] = useState(true);
   const [newsUpdates, setNewsUpdates] = useState(false);
 
-  // ✅ Fetch user profile from API
-  const { data: profile, isLoading: isLoadingProfile } = useMyProfile(user?.userId || '');
+
   // ✅ Use logout
   const { logout } = useLogout();
   const scrollHandler = useScrollToHideTabBar();
@@ -115,7 +115,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: theme.spacing.xs / 2,
               }}
             >
-              {profile?.fullName || 'Tuấn Anh Nguyễn'}
+              {user?.fullName || 'Tuấn Anh Nguyễn'}
             </Text>
             <Text
               style={{

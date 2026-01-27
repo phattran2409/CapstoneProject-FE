@@ -374,9 +374,13 @@ const en = {
     title: "Chats",
     you: "You",
     sent: "Sent",
+    seen: "Seen",
     inputPlaceholder: "Enter message...",
     yesterday: "Yesterday",
     friday: "Friday",
+    online: "Online",
+    offline: "Offline",
+    isTyping: "is typing",
   },
   onboarding_1: {
     skip: "Skip",
