@@ -21,6 +21,7 @@ export const ValidationErrors = {
   usernameRequired: "validation.username.required",
   usernameTooShort: "validation.username.tooShort",
   usernameInvalid: "validation.username.invalid",
+  
 } as const;
 
 /**

@@ -1,3 +1,5 @@
+import { Venue, Field, TimeSlot } from '@/features/venues/types/venue.types';
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -5,23 +7,9 @@ export type RootStackParamList = {
   MainTabs: undefined;
   Leaderboard: undefined;
   CreateRoom: {
-    selectedVenue?: {
-      id: string;
-      name: string;
-      address: string;
-      price: number;
-      rating: number;
-      image: any;
-    };
-    selectedField?: {
-      id: string;
-      name: string;
-      fieldType: string;
-      maxPlayers: number;
-      pricePerHour: number;
-      description: string;
-      status?: 'available' | 'booked' | 'maintenance';
-    };
+    selectedVenue?: Venue;
+    selectedField?: Field;
+    selectedTimeSlot?: TimeSlot;
   } | undefined;
   VenueSelection: undefined;
   RoomInformation: { roomId: string };

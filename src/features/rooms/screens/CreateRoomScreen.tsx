@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Switch, Alert, StyleSheet } from 'react-native';
+import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -14,37 +15,52 @@ import {
 import { useCreateRoom, useActiveRoomStore } from '@/features/rooms';
 import { RootStackParamList } from '@/app/navigation/types';
 import { useAuthStore } from '@/features/auth';
+import { Venue, Field, TimeSlot } from '@/features/venues/types/venue.types';
+import Alert from '@/shared/components/Alert';
+import { useAlert } from '@/shared/hooks/useAlert';
+import { Controller, useForm } from 'react-hook-form';
+import { RoomFormData, roomSchema } from '../validation/roomSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
+type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
 
 interface CreateRoomScreenProps {
   navigation?: CreateRoomScreenNavigationProp;
-  route?: {
-    params?: {
-      selectedVenue?: Venue;
-    };
-  };
-}
-
-interface Venue {
-  id: string;
-  name: string;
-  address: string;
-  price: number;
-  rating: number;
-  image: any;
+  route?: CreateRoomScreenRouteProp;
 }
 
 type MatchFormat = '5vs5' | '7vs7';
+type DurationMinutes = 30 | 60 | 90 | 120;
+
+const DURATION_OPTIONS: DurationMinutes[] = [ 60, 90, 120];
 
 const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const { visible, alertOptions, showInfo, showSuccess, showDanger, hideAlert } = useAlert();
   const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('5vs5');
-  const [roomName, setRoomName] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState<DurationMinutes>(60);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RoomFormData>({
+    resolver: zodResolver(roomSchema),
+    defaultValues: {
+      roomName: '',
+      description: '',
+    },
+  });
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(
     route?.params?.selectedVenue || null
+  );
+  const [selectedField, setSelectedField] = useState<Field | null>(
+    route?.params?.selectedField || null
+  );
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
+    route?.params?.selectedTimeSlot || null
   );
   const [matchDate, setMatchDate] = useState(new Date());
   const [matchTime, setMatchTime] = useState(new Date());
@@ -57,30 +73,48 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   // ✅ Use React Query mutation
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
   const { setActiveRoom } = useActiveRoomStore();
+  
+  const FormatMatch = (format: MatchFormat) : string => {
+    switch (format) {
+      case '5vs5':
+        return 'FiveVsFive';
+      case '7vs7':
+        return 'SevenVsSeven';
+      default:
+        return '';
+    }
+  }
 
-  // Update venue when returning from VenueSelection
+  // Update data when returning from VenueSelection
   React.useEffect(() => {
     if (route?.params?.selectedVenue) {
       setSelectedVenue(route.params.selectedVenue);
     }
-  }, [route?.params?.selectedVenue]);
-
-  const handleCreateRoom = () => {
-    // Validate
-    if (!roomName.trim()) {
-      Alert.alert(t('createRoom.title'), t('createRoom.validation.nameRequired'));
-      return;
+    if (route?.params?.selectedField) {
+      setSelectedField(route.params.selectedField);
     }
+    if (route?.params?.selectedTimeSlot) {
+      setSelectedTimeSlot(route.params.selectedTimeSlot);
+      // Auto-set match time from selected time slot
+      const [hours, minutes] = route.params.selectedTimeSlot.startTime.split(':').map(Number);
+      const newTime = new Date();
+      newTime.setHours(hours, minutes, 0, 0);
+      setMatchTime(newTime);
+    }
+  }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot]);
+
+  const handleCreateRoom = (data: RoomFormData) => {
+    // Validate
+
     if (!selectedVenue) {
-      Alert.alert(t('createRoom.title'), t('createRoom.validation.venueRequired'));
+      showInfo(t('createRoom.title'), t('createRoom.validation.venueRequired'));
       return;
     }
     if (isPrivate && !password.trim()) {
-      Alert.alert(t('createRoom.title'), t('createRoom.validation.passwordRequired'));
+      showInfo(t('createRoom.title'), t('createRoom.validation.passwordRequired'));
       return;
     }
-
-    // Combine date and time
+    
     const datetime = new Date(
       matchDate.getFullYear(),
       matchDate.getMonth(),
@@ -89,30 +123,32 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       matchTime.getMinutes()
     );
 
-    // ✅ Call create room mutation
     createRoom(
       {
-        format: selectedFormat,
-        datetime: datetime.toISOString(),
-        venueId: selectedVenue.id,
-        name: roomName,
-        hostId: user?.userId || '',
-        isPrivate,
-        password: isPrivate ? password : undefined,
+        matchDate: datetime.toISOString(),
+        startTime: formatTime(matchTime),
+        durationMinutes,
+        matchFormat: FormatMatch(selectedFormat),
+        roomName: data.roomName,
+        description: data.description,
+        rules: '',
+        depositPerPerson: 0,
+        fieldId: selectedField?.fieldId || '',
       },
       {
         onSuccess: async (newRoom) => {
-          Alert.alert('Success', 'Room created successfully!');
-          // Save active room ID to storage
-          if (newRoom?.id) {
-            await setActiveRoom(newRoom.id);
-            navigation?.navigate('RoomInformation', { roomId: newRoom.id });
-          } else {
-            navigation?.goBack();
-          }
+          showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
+            // Save active room ID to storage
+            if (newRoom?.id) {
+              await setActiveRoom(newRoom.id);
+              navigation?.navigate('RoomInformation', { roomId: newRoom.id });
+            } else {
+              navigation?.goBack();
+            }
+          });
         },
         onError: (error: any) => {
-          Alert.alert('Error', error.message || 'Failed to create room');
+          showDanger(t('common.error'), error.message || t('createRoom.errorMessage'), () => {});
         },
       }
     );
@@ -133,6 +169,10 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       hour12: false,
     });
   };
+  const getErrorMessage = (message?: string) => {
+    if (!message) return '';
+    return message.startsWith('createRoom.validation.') ? t(message) : message;
+  }
 
   const styles = StyleSheet.create({
     safeArea: {
@@ -176,6 +216,20 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       borderRadius: 16,
     },
     formatButtonText: {
+      textAlign: 'center',
+    },
+    durationRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    durationButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    durationButtonText: {
       textAlign: 'center',
     },
     inputContainer: {
@@ -239,6 +293,11 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     createButtonText: {
       textAlign: 'center',
     },
+    errorText: {
+      fontSize: 12,
+      marginTop: 4,
+      marginLeft: 4,
+    },
   });
 
   return (
@@ -295,26 +354,48 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             </View>
           </View>
 
-          {/* Room Name */}
+          {/* Duration Selection */}
           <View style={styles.section}>
             <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
-              {t('createRoom.roomName')}
+              {t('createRoom.duration')}
             </ThemedText>
-            <ThemedView 
-              variant="surface"
-              style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
-            >
-              <TextInput
-                style={{ color: theme.colors.text, fontSize: 16 }}
-                placeholder={t('createRoom.roomNamePlaceholder')}
-                placeholderTextColor={theme.colors.textSecondary}
-                value={roomName}
-                onChangeText={setRoomName}
-              />
-            </ThemedView>
+            <View style={styles.durationRow}>
+              {DURATION_OPTIONS.map((duration) => (
+                <TouchableOpacity
+                  key={duration}
+                  style={[
+                    styles.durationButton, 
+                    { 
+                      backgroundColor: durationMinutes === duration 
+                        ? theme.colors.neonGreen 
+                        : theme.colors.surface,
+                      borderWidth: 1,
+                      borderColor: durationMinutes === duration 
+                        ? theme.colors.neonGreen 
+                        : theme.colors.border,
+                    }
+                  ]}
+                  onPress={() => setDurationMinutes(duration)}
+                >
+                  <ThemedText 
+                    size="m" 
+                    weight="semiBold" 
+                    style={[
+                      styles.durationButtonText, 
+                      { 
+                        color: durationMinutes === duration 
+                          ? '#000' 
+                          : theme.colors.textSecondary 
+                      }
+                    ]}
+                  >
+                    {duration} {t('createRoom.minutes')}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-
-          {/* Venue Selection */}
+            {/* Venue Selection */}
           <View style={styles.section}>
             <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.venue')}
@@ -343,6 +424,67 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               )}
               <ThemedIcon name="location" size={24} variant="accent" />
             </TouchableOpacity>
+          </View>
+
+          {/* Room Name */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('createRoom.roomName')}
+            </ThemedText>
+            <Controller
+              control={control}
+              name="roomName"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ThemedView 
+                  variant="surface"
+                  style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
+                >
+                  <TextInput
+                    style={{ color: theme.colors.text, fontSize: 16 }}
+                    placeholder={t('createRoom.roomNamePlaceholder')}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </ThemedView>
+              )}
+            />
+          {errors.roomName && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {getErrorMessage(errors.roomName.message)}
+            </Text>
+          )}
+          </View>
+          {/* Description */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('createRoom.description')}
+            </ThemedText>
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ThemedView 
+                  variant="surface"
+                  style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
+                >
+                  <TextInput
+                    style={{ color: theme.colors.text, fontSize: 16 }}
+                    placeholder={t('createRoom.descriptionPlaceholder')}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </ThemedView>
+              )}
+            />
+          {errors.description && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {getErrorMessage(errors.description.message)}
+            </Text>
+          )}
           </View>
 
           {/* Date and Time */}
@@ -479,14 +621,31 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 shadowRadius: 8,
                 elevation: 8,
               }]}
-              onPress={handleCreateRoom}
+              onPress={handleSubmit(handleCreateRoom)}
             >
               <ThemedText size="l" weight="bold" style={[styles.createButtonText, { color: '#000' }]}>
                 {t('createRoom.createButton')}
               </ThemedText>
             </TouchableOpacity>
           </View>
-        </ThemedScrollView> 
+        </ThemedScrollView>
+
+        {/* Custom Alert */}
+        {alertOptions && (
+          <Alert
+            visible={visible}
+            type={alertOptions.type}
+            title={alertOptions.title}
+            message={alertOptions.message}
+            confirmText={alertOptions.confirmText}
+            cancelText={alertOptions.cancelText}
+            onConfirm={alertOptions.onConfirm}
+            onCancel={alertOptions.onCancel}
+            onClose={hideAlert}
+            autoClose={alertOptions.autoClose}
+            autoCloseDelay={alertOptions.autoCloseDelay}
+          />
+        )}
     </ThemedSafeAreaView>
    
   );

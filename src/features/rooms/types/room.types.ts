@@ -66,6 +66,46 @@ export interface RoomFullInfo extends Room {
   host: User;
 }
 
+// ==================== Match Room Types (from API) ====================
+export interface MatchRoom {
+  roomId: string;
+  hostId: string;
+  hostName: string;
+  hostAvatar: string | null;
+  fieldId: string;
+  fieldName: string;
+  venueName: string;
+  venueAddress: string;
+  matchDate: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  matchFormat: 'FiveVsFive' | 'SevenVsSeven' | string;
+  totalSlots: number;
+  filledSlots: number;
+  depositPerPerson: number;
+  status: 'Open' | 'Full' | 'Closed' | 'Completed' | 'Cancelled';
+  createdAt: string;
+}
+
+export interface MatchRoomsResponse {
+  isSuccess: boolean;
+  data: {
+    rooms: MatchRoom[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+export interface MatchRoomFilters {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  matchFormat?: string;
+}
+
 // ==================== Query/Filter Types ====================
 export interface RoomFilters {
   status?: RoomStatus;
@@ -82,16 +122,28 @@ export interface RoomFilters {
 
 // ==================== Create/Update Types ====================
 export interface CreateRoomRequest {
-  format: string;
-  name: string;
-  datetime: string;
-  venueId: string;
-  hostId: string;
-  totalPlayers?: number;
-  pricePerPlayer?: number;
-  description?: string;
-  isPrivate?: boolean;
-  password?: string;
+  // format: string;
+  // name: string;
+  // datetime: string;
+  // venueId: string;
+  // fieldId?: string;
+  // durationMinutes?: number;
+  // hostId: string;
+  // totalPlayers?: number;
+  // pricePerPlayer?: number;
+  // description?: string;
+  // isPrivate?: boolean;
+  // password?: string;
+
+  fieldId: string;
+  matchDate: string;
+  startTime: string;
+  durationMinutes: number;
+  roomName: string;
+  matchFormat: string;
+  description: string;
+  rules: string;
+  depositPerPerson: number;
 }
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {

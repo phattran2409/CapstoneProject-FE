@@ -8,6 +8,8 @@ import type {
   JoinRoomRequest,
   Message,
   SendMessageRequest,
+  MatchRoomsResponse,
+  MatchRoomFilters,
 } from '../types/room.types';
 
 /**
@@ -20,6 +22,20 @@ export const roomsApi = {
    */
   getRooms: async (filters?: RoomFilters): Promise<Room[]> => {
     const data = await apiClient.get('/rooms', { params: filters });
+    return data;
+  },
+
+  /**
+   * Get paginated list of match rooms
+   */
+  getMatchRooms: async (filters?: MatchRoomFilters): Promise<MatchRoomsResponse> => {
+    const params = {
+      page: filters?.page || 1,
+      pageSize: filters?.pageSize || 10,
+      ...(filters?.status && { status: filters.status }),
+      ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
+    };
+    const data = await apiClient.get('/match-rooms', { params });
     return data;
   },
 
@@ -50,13 +66,13 @@ export const roomsApi = {
    * Create a new room
    */
   createRoom: async (room: CreateRoomRequest): Promise<Room> => {
-    const data = await apiClient.post('/rooms', {
-      ...room,
-      currentPlayers: 0,
-      status: 'open',
-      createdAt: new Date().toISOString(),
-    });
-    return data;
+    try {
+      const response = await apiClient.post('/match-rooms', room);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create room:', error);
+      throw error;
+    }
   },
 
   /**

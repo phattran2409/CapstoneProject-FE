@@ -1,29 +1,16 @@
 import { apiClient } from '@/shared/api/client';
-import { Venue, VenueFilters, VenueReview, VenueBooking, PaginatedVenueResponse } from '../types/venue.types';
+import { Venue, VenueFilters, VenueReview, VenueBooking, PaginatedVenueResponse, FieldAvailability, FieldAvailabilityResponse } from '../types/venue.types';
 import { API_CONFIG } from '@/shared/constants/api';
+import axios from 'axios';
 
 
 // Get all venues with optional filters
 export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueResponse> => {
-try { 
-  const params = new URLSearchParams();
-
-  if(filters?.page) params.append('page', filters.page.toString());
-  if(filters?.pageSize) params.append('limit', filters.pageSize.toString());
-  // if (filters?.city) params.append('city', filters.city);
-  // if (filters?.district) params.append('district', filters.district);
-  // if (filters?.format) params.append('availableFormats_like', filters.format);
-  // if (filters?.minPrice) params.append('price_gte', filters.minPrice.toString());
-  // if (filters?.maxPrice) params.append('price_lte', filters.maxPrice.toString());
-  // if (filters?.minRating) params.append('rating_gte', filters.minRating.toString());
-
-  // const response = await apiClient.get<Venue[]>(`/venues?${params.toString()}`);
-  const response = await apiClient.get<PaginatedVenueResponse>(API_CONFIG.ENDPOINTS.VENUES.LIST, { params: filters });
-  if (response.status === 200 || response.data.isSuccess == true) {
-    return response.data as PaginatedVenueResponse;
-  }
-  throw new Error('Failed to fetch venues');
-  }catch (error) {    
+  try { 
+    const response = await apiClient.get<PaginatedVenueResponse>(API_CONFIG.ENDPOINTS.VENUES.LIST, { params: filters });
+    // Interceptor returns response.data, so response is already the data
+    return response as unknown as PaginatedVenueResponse;
+  } catch (error) {    
     console.error('Error fetching venues:', error);
     throw error;
   }
@@ -77,5 +64,20 @@ export const createVenueBooking = async (
 // Cancel booking
 export const cancelBooking = async (bookingId: string): Promise<void> => {
   await apiClient.patch(`/bookings/${bookingId}`, { status: 'cancelled' });
+};
+
+// Get field availability (time slots)
+export const getFieldAvailability = async (fieldId: string, date: string): Promise<FieldAvailability> => {
+  try {
+    const response = await axios.get<FieldAvailabilityResponse>(
+      `https://api.kickify.site/api/fields/${fieldId}/availability`,
+      { params: { date } }
+    );
+    console.log('response', response.data);
+    return response.data.data as unknown as FieldAvailability;   
+  } catch (error) {
+    console.error('Error fetching field availability:', error);
+    throw error;
+  }
 };
 

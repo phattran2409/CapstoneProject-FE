@@ -48,6 +48,7 @@ export const registerSchema = baseRegisterFields
     confirmPassword: z.string().min(1, "validation.password.required"),
   })
   .superRefine((data, ctx) => {
+    
     if (data.password !== data.confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

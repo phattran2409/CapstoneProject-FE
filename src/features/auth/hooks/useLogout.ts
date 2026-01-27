@@ -19,9 +19,9 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
   const reset = useAuthStore((state) => state.reset);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     // Clear auth token from API client
-    setAuthToken(null);
+    await setAuthToken(null);
     
     // Reset auth store (clears user, token, isAuthenticated)
     reset();
