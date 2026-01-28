@@ -1,7 +1,6 @@
 export { default as Button } from "./Button";
 export { default as IconButton } from "./IconButton";
 export { default as Card } from "./Card";
-export { default as Modal } from "./Modal";
 export { default as Alert } from "./Alert";
 export type { AlertType, AlertProps } from "./Alert";
 export { default as ChatInMatches } from "./ChatInMatches";
@@ -40,3 +39,5 @@ export type { SkeletonProps } from "./Skeleton";
 export { MessageList } from "./MessageList";
 export type { Message, MessageListRef } from "./MessageList";
 export { TypingIndicator } from "./TypingIndicator";
+export { AnimatedSearchBar } from "./AnimatedSearchBar";
+export type { AnimatedSearchBarProps } from "./AnimatedSearchBar";

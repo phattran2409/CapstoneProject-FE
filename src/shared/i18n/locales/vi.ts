@@ -39,7 +39,8 @@ const vi = {
       required: "Tên người dùng là bắt buộc",
       tooShort: "Tên người dùng phải có ít nhất 3 ký tự",
       tooLong: "Tên người dùng phải ít hơn 30 ký tự",
-      invalid: "Tên người dùng chỉ có thể chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang",
+      invalid:
+        "Tên người dùng chỉ có thể chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang",
     },
     otp: {
       required: "Mã OTP là bắt buộc",
@@ -82,6 +83,7 @@ const vi = {
   friends: {
     title: "Bạn bè",
     searchPlaceholder: "Tìm kiếm bạn bè...",
+    searchPlaceholderRequests: "Tìm kiếm lời mời kết bạn...",
     noResults: "Không tìm thấy bạn bè",
     tryDifferentSearch: "Thử tìm kiếm với từ khóa khác",
     inviteFriends: "Mời bạn bè tham gia cùng bạn!",
@@ -344,6 +346,7 @@ const vi = {
     reportIssue: "Báo cáo vấn đề",
   },
   chat: {
+    searchPlaceholder: "Tìm kiếm trò chuyện",
     title: "Trò chuyện",
     you: "Bạn",
     sent: "Đã gửi",
@@ -398,7 +401,16 @@ const vi = {
       "Tối ưu và nhanh chóng",
     ],
   },
+  search: {
+    placeholder: "Tìm kiếm...",
+    all: "Tất cả",
+    players: "Mọi người",
+    posts: "Bài viết",
+    emptyTitle: "Tìm kiếm",
+    emptyDescription: "Nhập từ khóa để tìm kiếm người chơi hoặc bài viết",
+    noResults: "Không tìm thấy kết quả",
+    tryDifferent: "Thử tìm kiếm với từ khóa khác",
+  },
 };
 
 export default vi;
-

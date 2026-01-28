@@ -1,28 +1,30 @@
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  OTPVerification: { email: string , userId: string };
+  OTPVerification: { email: string; userId: string };
   MainTabs: undefined;
   Leaderboard: undefined;
-  CreateRoom: {
-    selectedVenue?: {
-      id: string;
-      name: string;
-      address: string;
-      price: number;
-      rating: number;
-      image: any;
-    };
-    selectedField?: {
-      id: string;
-      name: string;
-      fieldType: string;
-      maxPlayers: number;
-      pricePerHour: number;
-      description: string;
-      status?: 'available' | 'booked' | 'maintenance';
-    };
-  } | undefined;
+  CreateRoom:
+    | {
+        selectedVenue?: {
+          id: string;
+          name: string;
+          address: string;
+          price: number;
+          rating: number;
+          image: any;
+        };
+        selectedField?: {
+          id: string;
+          name: string;
+          fieldType: string;
+          maxPlayers: number;
+          pricePerHour: number;
+          description: string;
+          status?: "available" | "booked" | "maintenance";
+        };
+      }
+    | undefined;
   VenueSelection: undefined;
   RoomInformation: { roomId: string };
   RoomDetail: { roomId: string };
@@ -41,6 +43,7 @@ export type RootStackParamList = {
   ChangePassword: {
     email: string;
   };
+  Search: undefined;
 };
 
 export type TabParamList = {
@@ -50,4 +53,3 @@ export type TabParamList = {
   Create: undefined;
   Profile: undefined;
 };
-

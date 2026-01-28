@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  TextInput,
 } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
@@ -27,17 +26,23 @@ import {
   IconButton,
   ListSkeleton,
   LoadingMoreIndicator,
+  AnimatedSearchBar,
 } from "@/shared/components";
 import { usePaginatedFriends } from "../hooks";
+import { useDebounce } from "@/shared/hooks";
 
 type FriendsScreenProps = BottomTabScreenProps<TabParamList, "Friends">;
+
+
 
 const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
   const [searchQuery, setSearchQuery] = useState("");
-  const [friendRequestsCount] = useState(4); // TODO: Get from API/store
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const handleFriendRequestsPress = () => {
     const parent = navigation.getParent();
@@ -62,45 +67,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
     refresh,
     loadMore,
     setFriends,
-  } = usePaginatedFriends({ pageSize: 10 });
-
-  const filteredFriends = React.useMemo(() => {
-    if (!searchQuery.trim()) return friends;
-
-    const query = searchQuery.toLowerCase();
-    return friends.filter((friend) =>
-      friend.fullName?.toLowerCase().includes(query),
-    );
-  }, [friends, searchQuery]);
-
-  const searchBar = (
-    <View
-      style={[
-        styles.searchContainer,
-        { backgroundColor: theme.colors.surface },
-      ]}
-    >
-      <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
-      <TextInput
-        style={[styles.searchInput, { color: theme.colors.text }]}
-        placeholder={t("friends.searchPlaceholder", {
-          defaultValue: `${t("friends.searchPlaceholder")} (${filteredFriends.length})`,
-        })}
-        placeholderTextColor={theme.colors.textSecondary}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-      {searchQuery.length > 0 && (
-        <TouchableOpacity onPress={() => setSearchQuery("")}>
-          <Ionicons
-            name="close-circle"
-            size={20}
-            color={theme.colors.textSecondary}
-          />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  } = usePaginatedFriends({ pageSize: 10, searchTerm: debouncedSearchQuery });
 
   const renderEmpty = () => {
     if (loading) return null;
@@ -135,6 +102,16 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
           {t("friends.title")}
         </ThemedText>
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setIsSearchVisible(!isSearchVisible)}
+          >
+            <Ionicons
+              name="search"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
           <IconButton
             icon="person-add-outline"
             onPress={handleFriendRequestsPress}
@@ -147,9 +124,17 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
           />
         </View>
       </ThemedView>
-      <ThemedView variant="surface" style={styles.searchContainer}>
-        {searchBar}
-      </ThemedView>
+
+      {/* Animated Search Bar */}
+      <AnimatedSearchBar
+        visible={isSearchVisible}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onClose={() => setIsSearchVisible(false)}
+        placeholder={t("friends.searchPlaceholder", {
+          defaultValue: "Search friends",
+        })}
+      />
 
       {loading && <ListSkeleton />}
 
@@ -160,7 +145,7 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
           style={{ paddingHorizontal: theme.spacing.l }}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
-          data={filteredFriends}
+          data={friends}
           keyExtractor={(item) => item.userId}
           renderItem={({ item }) => (
             <FriendCard

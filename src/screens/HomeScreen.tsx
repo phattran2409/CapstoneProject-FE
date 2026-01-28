@@ -27,11 +27,13 @@ import {
   ErrorState,
   EmptyState,
   LoadingMoreIndicator,
+  AnimatedSearchBar,
 } from "@/shared/components";
 import { usePaginatedPosts, useTogglePostLike } from "@/features/post/hooks";
 import { TabParamList } from "@/app/navigation/types";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { useDebounce } from "@/shared/hooks";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, "Home">,
@@ -140,7 +142,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     refresh,
     loadMore,
     setPosts,
-  } = usePaginatedPosts({ pageSize: 2 });
+  } = usePaginatedPosts({ pageSize: 10 });
 
   // Use toggle post like mutation with callback to update local state
   const { mutate: toggleLike } = useTogglePostLike({
@@ -514,7 +516,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </ThemedText>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate("Search" as any)}
+          >
             <Ionicons
               name="search"
               size={24}

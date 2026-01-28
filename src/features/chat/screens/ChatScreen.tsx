@@ -98,7 +98,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   });
 
   // SignalR connection với handlers
-  const { isConnected, typing, stopTyping, getOnlineStatus } = useChatSignalR(signalRHandlers);
+  const { isConnected, typing, stopTyping, getOnlineStatus } =
+    useChatSignalR(signalRHandlers);
 
   // Map dữ liệu API -> UI MessageList
   const messages: Message[] = useMemo(() => {
@@ -130,7 +131,12 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
 
   // Auto scroll đến tin nhắn mới nhất khi load xong messages lần đầu
   useEffect(() => {
-    if (!loading && chatMessages && chatMessages.length > 0 && !hasScrolledToBottomRef.current) {
+    if (
+      !loading &&
+      chatMessages &&
+      chatMessages.length > 0 &&
+      !hasScrolledToBottomRef.current
+    ) {
       hasScrolledToBottomRef.current = true;
       // Delay để đảm bảo FlatList đã render xong
       // Với non-inverted mode, cần delay lâu hơn để content được render
@@ -154,7 +160,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
 
   // Handle layout để scroll khi FlatList đã render xong
   const handleMessageListLayout = useCallback(() => {
-    if (!hasScrolledToBottomRef.current && chatMessages && chatMessages.length > 0) {
+    if (
+      !hasScrolledToBottomRef.current &&
+      chatMessages &&
+      chatMessages.length > 0
+    ) {
       // Scroll ngay khi layout được render
       setTimeout(() => {
         messageListRef.current?.scrollToBottom(false);
@@ -217,7 +227,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         messageType: "Text",
       });
       setMessage("");
-      
+
       // Auto scroll sau khi gửi tin nhắn
       setTimeout(() => {
         messageListRef.current?.scrollToBottom(true);
@@ -279,38 +289,39 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
           <Ionicons name="person" size={24} color={theme.colors.text} />
         </View>
         <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontSize: theme.fontSizes.l,
-            color: theme.colors.text,
-            fontWeight: "600",
-          }}
-        >
-          {chatName}
-        </Text>
+          <Text
+            style={{
+              fontSize: theme.fontSizes.l,
+              color: theme.colors.text,
+              fontWeight: "600",
+            }}
+          >
+            {chatName}
+          </Text>
+
           <View
             style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}
           >
             {isOtherUserOnline && (
-      <View
-        style={{
+              <View
+                style={{
                   width: 8,
                   height: 8,
                   borderRadius: 4,
                   backgroundColor: theme.colors.neonGreen,
                   marginRight: theme.spacing.xs,
-        }}
+                }}
               />
             )}
-        <Text
-          style={{
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.textSecondary,
-          }}
-        >
+            <Text
+              style={{
+                fontSize: theme.fontSizes.xs,
+                color: theme.colors.textSecondary,
+              }}
+            >
               {isOtherUserOnline ? t("chat.online") : t("chat.offline")}
-        </Text>
-      </View>
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -383,7 +394,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
               alignItems: "center",
               marginLeft: theme.spacing.s,
             }}
-          disabled={isSending || !message.trim()}
+            disabled={isSending || !message.trim()}
           >
             <Ionicons name="send" size={20} color={theme.colors.black} />
           </TouchableOpacity>
@@ -396,6 +407,17 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

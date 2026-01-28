@@ -11,11 +11,14 @@ import {
 export const getPosts = async (
   page: number = 1,
   pageSize: number = 10,
+  searchTerm?: string,
 ): Promise<{ posts: Post[]; totalPages: number; totalCount: number }> => {
   try {
-    const response = (await apiClient.get(
-      `/posts?page=${page}&pageSize=${pageSize}`,
-    )) as PostsResponse;
+    let url = `/posts?page=${page}&pageSize=${pageSize}`;
+    if (searchTerm && searchTerm.trim()) {
+      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
+    const response = (await apiClient.get(url)) as PostsResponse;
 
     if (response.isSuccess && response.data) {
       return {

@@ -12,16 +12,17 @@ import type {
 export interface GetConversationsParams {
   page?: number;
   pageSize?: number;
+  searchTerm?: string;
 }
 
 export const getConversations = async (
   params: GetConversationsParams = {},
 ): Promise<ConversationListData> => {
-  const { page = 1, pageSize = 20 } = params;
+  const { page = 1, pageSize = 20, searchTerm } = params;
 
   const res = (await apiClient.get<ChatApiResponse<ConversationListData>>(
     "/chat/conversations",
-    { params: { page, pageSize } },
+    { params: { searchTerm, page, pageSize } },
   )) as unknown as ChatApiResponse<ConversationListData>;
 
   return res.data;
