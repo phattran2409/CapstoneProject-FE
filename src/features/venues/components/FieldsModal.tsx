@@ -1,49 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import { Venue, Field, TimeSlot, FieldAvailability } from '../types/venue.types';
+import { getFieldAvailability } from '../api/venuesApi';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Types
-export interface Field {
-  id: string;
-  name: string;
-  fieldType: string;
-  maxPlayers: number;
-  pricePerHour: number;
-  description: string;
-  status?: 'available' | 'booked' | 'maintenance';
-  time: {
-    id: string;
-    startTime: string;
-    endTime: string;
-  }[]
-}
-
-
-export interface VenueWithFields {
-  id: string;
-  name: string;
-  address: string;
-  district: string;
-  price: number;
-  rating: number;
-  reviews: number;
-  image: any;
-  fields: Field[];
-  facilities: string[];
-  availableFormats: string[];
-  distance?: number;
-}
-
 interface FieldsModalProps {
   visible: boolean;
-  venue: VenueWithFields | null;
+  venue: Venue | null;
   onClose: () => void;
-  onSelectField: (venue: VenueWithFields, field: Field) => void;
+  onSelectField: (venue: Venue, field: Field, selectedSlot: TimeSlot) => void;
   theme: any;
 }
+
+// Cache for field availability to avoid redundant API calls
+type AvailabilityCache = Record<string, FieldAvailability>;
 
 const FieldsModal: React.FC<FieldsModalProps> = ({ 
   visible, 
@@ -54,6 +27,77 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [selectedTimeKey, setSelectedTimeKey] = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
+  const [availabilityCache, setAvailabilityCache] = useState<AvailabilityCache>({});
+  const [loadingFields, setLoadingFields] = useState<Record<string, boolean>>({});
+
+  
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+  
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setSelectedTimeKey(null);
+      setSelectedSlot(null);
+      setExpandedFieldId(null);
+      setAvailabilityCache({});
+      setLoadingFields({});
+    }
+  }, [visible]);
+
+  // Fetch availability when a field is expanded
+  const fetchFieldAvailability = useCallback(async (fieldId: string) => {
+    const cacheKey = `${fieldId}-${selectedDate}`;
+    
+    // Skip if already cached or loading
+    if (availabilityCache[cacheKey] || loadingFields[fieldId]) {
+      return;
+    }
+
+    setLoadingFields(prev => ({ ...prev, [fieldId]: true }));
+    
+    try {
+      const availability = await getFieldAvailability(fieldId, selectedDate);
+      console.log('availability', availability);
+      setAvailabilityCache(prev => ({ ...prev, [cacheKey]: availability }));
+    } catch (error) {
+      console.error('Failed to fetch availability for field:', fieldId, error);
+    } finally {
+      setLoadingFields(prev => ({ ...prev, [fieldId]: false }));
+    }
+  }, [selectedDate, availabilityCache, loadingFields]);
+
+  // Handle field expansion toggle
+  const handleToggleField = useCallback((fieldId: string) => {
+    if (expandedFieldId === fieldId) {
+      setExpandedFieldId(null);
+    } else {
+      setExpandedFieldId(fieldId);
+      fetchFieldAvailability(fieldId);
+    }
+  }, [expandedFieldId, fetchFieldAvailability]);
+
+  // Handle time slot selection
+  const handleSelectTimeSlot = useCallback((fieldId: string, slot: TimeSlot, index: number) => {
+    const key = `${fieldId}-${index}`;
+    setSelectedTimeKey(key);
+    setSelectedSlot(slot);
+  }, []);
+
+  // Handle book button press
+  const handleBookField = useCallback((field: Field) => {
+    if (venue && selectedSlot) {
+      onSelectField(venue, field, selectedSlot);
+    }
+  }, [venue, selectedSlot, onSelectField]);
+
   if (!venue) return null;
 
   const formatPrice = (price: number) => {
@@ -102,6 +146,128 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     }
   };
 
+  // Get availability for a field
+  const getFieldTimeSlots = (fieldId: string): TimeSlot[] => {
+    const cacheKey = `${fieldId}-${selectedDate}`;
+    console.log('availabilityCache', availabilityCache[cacheKey]);
+    return availabilityCache[cacheKey]?.timeSlots || [];
+  };
+
+  // Check if field is loading
+  const isFieldLoading = (fieldId: string): boolean => {
+    return loadingFields[fieldId] || false;
+  };
+
+  // Render time slots grid
+  const renderTimeSlots = (field: Field) => {
+    const timeSlots = getFieldTimeSlots(field.fieldId);
+    const isLoading = isFieldLoading(field.fieldId);
+    console.log('timeSlots', timeSlots);
+    if (isLoading) {
+      return (
+        <View style={styles.timeSlotsLoading}>
+          <ActivityIndicator size="small" color={theme.colors.neonGreen} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+            Đang tải khung giờ...
+          </Text>
+        </View>
+      );
+    }
+
+    if (timeSlots.length === 0) {
+      return (
+        <View style={styles.noSlotsContainer}>
+          <Text style={[styles.noSlotsText, { color: theme.colors.textSecondary }]}>
+            Không có khung giờ khả dụng
+          </Text>
+        </View>
+      );
+    }
+
+    // Group slots into rows for better display
+    const availableSlots = timeSlots.filter(slot => slot.isAvailable);
+    const bookedSlots = timeSlots.filter(slot => !slot.isAvailable);
+
+    return (
+      <View style={styles.timeSlotsSection}>
+        {/* Available slots */}
+        {availableSlots.length > 0 && (
+          <View style={styles.slotGroup}>
+            <Text style={[styles.slotGroupTitle, { color: theme.colors.neonGreen }]}>
+              Còn trống ({availableSlots.length})
+            </Text>
+            <View style={styles.timeSlotsGrid}>
+              {availableSlots.map((slot, index) => {
+                const globalIndex = timeSlots.indexOf(slot);
+                const key = `${field.fieldId}-${globalIndex}`;
+                const isSelected = selectedTimeKey === key;
+                
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.timeSlotChip,
+                      {
+                        backgroundColor: isSelected ? theme.colors.neonGreen : '#2a2a2a',
+                        borderColor: isSelected ? theme.colors.neonGreen : '#3a3a3a',
+                      },
+                    ]}
+                    onPress={() => handleSelectTimeSlot(field.fieldId, slot, globalIndex)}
+                  >
+                    <Text
+                      style={[
+                        styles.timeSlotText,
+                        { color: isSelected ? theme.colors.darkBlack : theme.colors.softWhite },
+                      ]}
+                    >
+                      {slot.startTime}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.timeSlotPrice,
+                        { color: isSelected ? theme.colors.darkBlack : theme.colors.textSecondary },
+                      ]}
+                    >
+                      {formatPrice(slot.hourlyRate)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Booked slots */}
+        {bookedSlots.length > 0 && (
+          <View style={styles.slotGroup}>
+            <Text style={[styles.slotGroupTitle, { color: '#EF4444' }]}>
+              Đã đặt ({bookedSlots.length})
+            </Text>
+            <View style={styles.timeSlotsGrid}>
+              {bookedSlots.map((slot, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.timeSlotChip,
+                    styles.timeSlotBooked,
+                    { backgroundColor: '#1a1a1a', borderColor: '#3a3a3a' },
+                  ]}
+                >
+                  <Text style={[styles.timeSlotText, { color: '#666' }]}>
+                    {slot.startTime}
+                  </Text>
+                  <Text style={[styles.timeSlotPrice, { color: '#555' }]}>
+                    Đã đặt
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <Modal
       visible={visible}
@@ -134,6 +300,19 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* Date Display */}
+          <View style={[styles.dateContainer, { backgroundColor: '#1a1a1a' }]}>
+            <Ionicons name="calendar" size={18} color={theme.colors.neonGreen} />
+            <Text style={[styles.dateText, { color: theme.colors.softWhite }]}>
+              {new Date(selectedDate).toLocaleDateString('vi-VN', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              })}
+            </Text>
+          </View>
+
           {/* Fields List */}
           <ScrollView 
             style={styles.fieldsScrollView}
@@ -141,25 +320,27 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
             contentContainerStyle={{ paddingBottom: 20 }}
           >
             {venue.fields.map((field, index) => {
+              const isExpanded = expandedFieldId === field.fieldId;
               const isAvailable = field.status !== 'booked' && field.status !== 'maintenance';
+              const hasSelectedSlot = selectedTimeKey?.startsWith(field.fieldId + '-');
               
               return (
-                <TouchableOpacity
-                  key={field.id}
+                <View
+                  key={field.fieldId}
                   style={[
                     styles.fieldCard,
                     { 
                       backgroundColor: '#1a1a1a',
-                      borderColor: isAvailable ? '#2a2a2a' : '#3a3a3a',
-                      opacity: isAvailable ? 1 : 0.6,
+                      borderColor: isExpanded ? theme.colors.neonGreen + '50' : '#2a2a2a',
                     }
                   ]}
-                  onPress={() => isAvailable && onSelectField(venue, field)}
-                  disabled={!isAvailable}
-                  activeOpacity={0.7}
                 >
-                  {/* Field Header */}
-                  <View style={styles.fieldCardHeader}>
+                  {/* Field Header - Clickable to expand */}
+                  <TouchableOpacity
+                    style={styles.fieldCardHeader}
+                    onPress={() => handleToggleField(field.fieldId)}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.fieldNameSection}>
                       <View style={[
                         styles.fieldNumberBadge,
@@ -171,120 +352,91 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                       </View>
                       <View style={styles.fieldNameContainer}>
                         <Text style={[styles.fieldName, { color: theme.colors.softWhite }]}>
-                          {field.name}
+                          {field.fieldName}
                         </Text>
-                        <Text style={[styles.fieldDescription, { color: theme.colors.textSecondary }]}>
-                          {field.description}
-                        </Text>
+                        {field.description && (
+                          <Text style={[styles.fieldDescription, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                            {field.description}
+                          </Text>
+                        )}
                       </View>
                     </View>
                     
-                    {/* Status Badge */}
-                    <View style={[
-                      styles.statusBadge,
-                      { backgroundColor: getStatusColor(field.status) + '20' }
-                    ]}>
-                      <View style={[styles.statusDot, { backgroundColor: getStatusColor(field.status) }]} />
-                      <Text style={[styles.statusText, { color: getStatusColor(field.status) }]}>
-                        {getStatusText(field.status)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Field Info */}
-                  <View style={styles.fieldInfoRow}>
-                    {/* Field Type */}
-                    <View style={styles.fieldInfoItem}>
-                      <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
-                      <Text style={[styles.fieldInfoText, { color: theme.colors.textSecondary }]}>
-                        Loại sân
-                      </Text>
+                    <View style={styles.fieldHeaderRight}>
+                      {/* Field Type Badge */}
                       <View style={[
                         styles.fieldTypeBadge,
                         { backgroundColor: getFieldTypeColor(field.fieldType) }
                       ]}>
                         <Text style={styles.fieldTypeText}>{field.fieldType}</Text>
                       </View>
+                      
+                      {/* Expand Icon */}
+                      <Ionicons 
+                        name={isExpanded ? "chevron-up" : "chevron-down"} 
+                        size={20} 
+                        color={theme.colors.textSecondary} 
+                      />
                     </View>
+                  </TouchableOpacity>
 
-                    {/* Max Players */}
-                    {field.maxPlayers > 0 && (
-                      <View style={styles.fieldInfoItem}>
-                        <Ionicons name="person" size={16} color={theme.colors.textSecondary} />
-                        <Text style={[styles.fieldInfoText, { color: theme.colors.textSecondary }]}>
-                          Tối đa
-                        </Text>
-                        <Text style={[styles.fieldInfoValue, { color: theme.colors.softWhite }]}>
-                          {field.maxPlayers} người
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <View>
-                    <Text style={[styles.timeTitle, { color: theme.colors.softWhite }]}>
-                      Các khung giờ
-                    </Text>
-                    <View style={styles.timeItemContainer}>
-                        {field.time.map((time) => {
-                        const key = `${field.id}-${time.id}`;
-                        const isSelected = selectedTimeKey === key;
-                        return (
-                            <TouchableOpacity
-                            key={time.id}
-                            style={[
-                                styles.itemTimeButton,
-                                { 
-                                backgroundColor: isSelected ? theme.colors.neonGreen + '20' : theme.colors.surface,
-                                borderColor: isSelected ? theme.colors.neonGreen : 'transparent',
-                                borderWidth: 1,
-                                },
-                            ]}
-                            onPress={() => setSelectedTimeKey(key)}
-                            >
-                            <Text
-                                style={[
-                                styles.timeItemText,
-                                { color: isSelected ? theme.colors.neonGreen : theme.colors.textSecondary },
-                                ]}
-                            >
-                                {time.startTime} ~ {time.endTime}
+                  {/* Expanded Content - Time Slots */}
+                  {isExpanded && (
+                    <View style={styles.expandedContent}>
+                      {/* Field Info */}
+                      <View style={styles.fieldInfoRow}>
+                        <View style={styles.fieldInfoItem}>
+                          <Ionicons name="cash-outline" size={16} color={theme.colors.textSecondary} />
+                          <Text style={[styles.fieldInfoText, { color: theme.colors.textSecondary }]}>
+                            Từ {formatPrice(field.pricePerHour)}/giờ
+                          </Text>
+                        </View>
+                        {field.maxPlayers && (
+                          <View style={styles.fieldInfoItem}>
+                            <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
+                            <Text style={[styles.fieldInfoText, { color: theme.colors.textSecondary }]}>
+                              Tối đa {field.maxPlayers} người
                             </Text>
-                            </TouchableOpacity>
-                        );
-                        })}
-                    </View>
-                  </View>
-                  {/* Price and Action */}
-                  <View style={styles.fieldFooter}>
-                    <View style={styles.priceSection}>
-                      <Text style={[styles.pricePerHourLabel, { color: theme.colors.textSecondary }]}>
-                        Giá thuê
-                      </Text>
-                      <Text style={[styles.pricePerHour, { color: theme.colors.neonGreen }]}>
-                        {formatPrice(field.pricePerHour)}/giờ
-                      </Text>
-                    </View>
-                    
-                    {isAvailable && (
-                      <TouchableOpacity
-                        style={[
-                          styles.bookButton,
-                          { 
-                            backgroundColor: theme.colors.neonGreen,
-                            opacity: selectedTimeKey?.startsWith(field.id + '-') ? 1 : 0.5,
-                          },
-                        ]}
-                        disabled={!selectedTimeKey?.startsWith(field.id + '-')}
-                        onPress={() => onSelectField(venue, field)}
-                      >
-                        <Ionicons name="calendar-outline" size={18} color={theme.colors.darkBlack} />
-                        <Text style={[styles.bookButtonText, { color: theme.colors.darkBlack }]}>
-                          Đặt sân
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Time Slots */}
+                      <View style={styles.timeSlotsWrapper}>
+                        <Text style={[styles.timeTitle, { color: theme.colors.softWhite }]}>
+                          Chọn khung giờ
                         </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </TouchableOpacity>
+                        {renderTimeSlots(field)}
+                      </View>
+
+                      {/* Book Button */}
+                      {isAvailable && (
+                        <TouchableOpacity
+                          style={[
+                            styles.bookButton,
+                            { 
+                              backgroundColor: hasSelectedSlot ? theme.colors.neonGreen : '#3a3a3a',
+                            },
+                          ]}
+                          disabled={!hasSelectedSlot}
+                          onPress={() => handleBookField(field)}
+                        >
+                          <Ionicons 
+                            name="calendar-outline" 
+                            size={18} 
+                            color={hasSelectedSlot ? theme.colors.darkBlack : '#666'} 
+                          />
+                          <Text style={[
+                            styles.bookButtonText, 
+                            { color: hasSelectedSlot ? theme.colors.darkBlack : '#666' }
+                          ]}>
+                            {hasSelectedSlot ? 'Đặt sân ngay' : 'Chọn khung giờ trước'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </View>
               );
             })}
           </ScrollView>
@@ -345,6 +497,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Date Container
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   fieldsScrollView: {
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -352,15 +518,15 @@ const styles = StyleSheet.create({
   // Field Card styles
   fieldCard: {
     borderRadius: 16,
-    padding: 16,
     marginBottom: 12,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   fieldCardHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    padding: 16,
   },
   fieldNameSection: {
     flexDirection: 'row',
@@ -390,40 +556,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
   },
-  statusBadge: {
+  fieldHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  fieldInfoRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginBottom: 16,
-  },
-  fieldInfoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  fieldInfoText: {
-    fontSize: 13,
-  },
-  fieldInfoValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    gap: 8,
   },
   fieldTypeBadge: {
     paddingHorizontal: 10,
@@ -435,62 +571,101 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
-  fieldFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 16,
+  // Expanded Content
+  expandedContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     borderTopWidth: 1,
     borderTopColor: '#2a2a2a',
   },
-  priceSection: {},
-  pricePerHourLabel: {
+  fieldInfoRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    paddingTop: 12,
+    marginBottom: 16,
+  },
+  fieldInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  fieldInfoText: {
+    fontSize: 13,
+  },
+  // Time Slots
+  timeSlotsWrapper: {
+    marginBottom: 16,
+  },
+  timeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  timeSlotsSection: {
+    gap: 16,
+  },
+  slotGroup: {
+    gap: 8,
+  },
+  slotGroupTitle: {
     fontSize: 12,
-    marginBottom: 2,
+    fontWeight: '600',
   },
-  pricePerHour: {
-    fontSize: 18,
-    fontWeight: '700',
+  timeSlotsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
+  timeSlotChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    minWidth: 90,
+    alignItems: 'center',
+  },
+  timeSlotBooked: {
+    opacity: 0.5,
+  },
+  timeSlotText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  timeSlotPrice: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  timeSlotsLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 20,
+  },
+  loadingText: {
+    fontSize: 13,
+  },
+  noSlotsContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  noSlotsText: {
+    fontSize: 13,
+  },
+  // Book Button
   bookButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    justifyContent: 'center',
+    paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
   },
   bookButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-  },
-  timeTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 8,
-    color: '#fff',
-  },
-  timeItem: {
-    fontWeight: '400',
-  },
-  timeItemText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: '#fff',
-  },
-  itemTimeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
-  },
-  timeItemContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
   },
 });
 
 export default FieldsModal;
-

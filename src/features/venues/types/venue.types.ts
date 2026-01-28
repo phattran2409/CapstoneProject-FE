@@ -1,7 +1,4 @@
-import { interleaveAttributes } from "three-stdlib";
-
 export interface Venue {
-  // ownerId: string;
   venueId: string;
   name: string;
   address: string;
@@ -10,25 +7,47 @@ export interface Venue {
   description: string;
   images: string[];
   amenities: string[];
-  // rating: number;
-  fields : Field[];
-  operatingHours : OperatingHour[];
+  fields: Field[];
+  operatingHours: OperatingHour[];
   primaryPhotoUrl?: string;
   createdAt: string;
 }
 
 export interface OperatingHour {
-  dayOfWeek : string;
-  openTime : string;
-  closeTime : string;
+  dayOfWeek: string;
+  openTime: string;
+  closeTime: string;
 }
 
 export interface Field {
-  name : string;
-  fieldType : string;
-  maxPlayers : number;
-  pricePerHour : number;
-  description : string;
+  fieldId: string;
+  fieldName: string;
+  fieldType: string;
+  pricePerHour: number;
+  maxPlayers?: number;
+  description?: string;
+  status?: 'available' | 'booked' | 'maintenance';
+}
+
+export interface FieldAvailability {
+  fieldId: string;
+  fieldName: string;
+  date: string;
+  openTime: string;
+  closeTime: string;
+  timeSlots: TimeSlot[];
+}
+
+export interface FieldAvailabilityResponse {
+  isSuccess: boolean;
+  data: FieldAvailability[];
+}
+
+export interface TimeSlot {
+  startTime: string;
+  // endTime?: string;
+  isAvailable: boolean;
+  hourlyRate: number;
 }
 
 export interface VenueFilters {

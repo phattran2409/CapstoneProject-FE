@@ -15,6 +15,7 @@ import type {
   ChangePasswordRequest,
   ChangePasswordResponse,
   User,
+  ReSendOTPRequest,
 } from '../types/auth.types';
 import { API_CONFIG } from '@/shared/constants/api';
 
@@ -47,6 +48,11 @@ export const authApi = {
     return data;
   },
 
+  reSendOTP: async (request: ReSendOTPRequest): Promise<OTPResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.RESEND_OTP, request);
+    return data;
+  },
+   
   /**
    * Verify OTP
    */

@@ -16,6 +16,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
 import { RootStackParamList } from '@/app/navigation/types';
 import { useToast } from "@/shared/toast";
+import { useResendOTP } from '../hooks/useOTP';
 
 type OTPVerificationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -39,7 +40,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 
   // ✅ Use React Query mutations
   const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOTP();
-  const { mutate: sendOTP, isPending: isResending } = useSendOTP();
+  const { mutate: reSendOTP, isPending: isResending } = useResendOTP();
 
   useEffect(() => {
     if (resendTimer > 0) {
@@ -109,8 +110,9 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
   };
 
   const handleResend = () => {
+     console.log("userId", userId);
     // ✅ Call send OTP mutation
-    sendOTP(
+    reSendOTP(
       { userId: userId },
       {
         onSuccess: () => {

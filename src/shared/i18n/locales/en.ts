@@ -1,6 +1,8 @@
 const en = {
   common: {
     appName: "Neon Football App",
+    success: "Success",
+    error: "Error",
     language: {
       english: "English",
       vietnamese: "Vietnamese",
@@ -136,6 +138,10 @@ const en = {
   },
   createRoom: {
     title: "Create Room",
+    duration: "Duration",
+    description: "Description",
+    descriptionPlaceholder: "Enter description",
+    minutes: "Minutes",
     selectFormat: "Select Format",
     roomName: "Room Name",
     roomNamePlaceholder: "Enter room name",
@@ -152,7 +158,11 @@ const en = {
       nameRequired: "Please enter room name",
       venueRequired: "Please select a venue",
       passwordRequired: "Please enter password for private room",
+      nameTooLong: "Room name cannot exceed 100 characters",
+      descriptionTooLong: "Description cannot exceed 200 characters",
     },
+    successMessage: "Room created successfully!",
+    errorMessage: "Failed to create room. Please try again.",
   },
   venueSelection: {
     title: "Select Venue",

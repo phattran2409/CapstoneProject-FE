@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { signInWithGoogle } from '../services/googleAuth';
 import { authApi } from '../api/authApi';
-import { setAuthToken } from '@/shared/api/client';
+import { setAuthToken, setRefreshToken } from '@/shared/api/client';
 import { useAuthStore } from '../store/authStore';
 import type { User } from '../types/auth.types';
 
@@ -57,18 +57,23 @@ export const useGoogleSignIn = () => {
       return response;
     },  
 
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       // Set token for API calls
-      setAuthToken(response.data?.accessToken || null);
-
+      console.log('✅ Google Sign-In successful, response:', response.data);
+      const accessToken = response.data?.accessToken || null;
+      const refreshTokenValue = response.data?.refreshToken || null;
+      
+      await setAuthToken(accessToken);
+      await setRefreshToken(refreshTokenValue);
+      
       // Update auth store
       setUser(response.data || null);
-      setToken(response.data?.accessToken || null);
+      setToken(accessToken);
     },
 
-    onError: (error: any) => {
+    onError: async (error: any) => {
       // Clear auth on error
-      setAuthToken(null);
+      await setAuthToken(null);
       setUser(null);
       setToken(null);
       

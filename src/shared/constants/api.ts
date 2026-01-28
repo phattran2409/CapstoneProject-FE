@@ -20,6 +20,7 @@ export const API_CONFIG = {
       VERIFY_OTP: "/auth/verify-otp",
       FORGOT_PASSWORD: "/auth/forgot-password",
       CHANGE_PASSWORD: "/auth/change-password",
+      RESEND_OTP: "/auth/resend-otp",
     },
     ROOMS: {
       LIST: "/rooms",

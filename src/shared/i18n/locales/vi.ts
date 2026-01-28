@@ -1,6 +1,8 @@
 const vi = {
   common: {
     appName: "Ứng dụng Neon Football",
+    success: "Thành công",
+    error: "Lỗi",
     language: {
       english: "Tiếng Anh",
       vietnamese: "Tiếng Việt",
@@ -133,6 +135,10 @@ const vi = {
   },
   createRoom: {
     title: "Tạo Phòng Đấu",
+    duration: "Thời Lượng",
+    minutes: "Phút",
+    description: "Mô tả",
+    descriptionPlaceholder: "Nhập mô tả",
     selectFormat: "Chọn thể thức",
     roomName: "Tên phòng",
     roomNamePlaceholder: "Nhập tên phòng đấu",
@@ -149,7 +155,11 @@ const vi = {
       nameRequired: "Vui lòng nhập tên phòng",
       venueRequired: "Vui lòng chọn địa điểm",
       passwordRequired: "Vui lòng nhập mật khẩu cho phòng riêng tư",
+      nameTooLong: "Tên phòng không được vượt quá 100 ký tự",
+      descriptionTooLong: "Mô tả không được vượt quá 200 ký tự",
     },
+    successMessage: "Tạo phòng thành công!",
+    errorMessage: "Không thể tạo phòng. Vui lòng thử lại.",
   },
   venueSelection: {
     title: "Chọn sân",

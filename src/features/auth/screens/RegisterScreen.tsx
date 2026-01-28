@@ -29,7 +29,7 @@ import {
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  OTPVerification: { email: string; username: string; password: string };
+  OTPVerification: { email: string; userId: string };
   MainTabs: undefined;
 };
 
@@ -83,7 +83,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             t("register.success.message", "Tài khoản đã được tạo!")
           );
           // Navigation tự động xảy ra khi isAuthenticated thay đổi
-          navigation.navigate("OTPVerification", {email: data.email, userId: response.data?.userId});
+          navigation.navigate("OTPVerification", {email: data.email, userId: response.data?.userId as string});
         },
         onError: (error: any) => {
           toast.error(

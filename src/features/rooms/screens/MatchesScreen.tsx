@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,6 +11,7 @@ import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components'
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
+import { useMatchRooms, MatchRoom } from '@/features/rooms';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -21,6 +22,51 @@ interface MatchesScreenProps {
   navigation: MatchesScreenNavigationProp;
 }
 
+// Helper function to convert MatchRoom to MatchItemData
+const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
+  // Convert matchFormat to display format
+  const formatMap: Record<string, string> = {
+    'FiveVsFive': '5vs5',
+    'SevenVsSeven': '7vs7',
+  };
+  
+  // Format date
+  const matchDate = new Date(room.matchDate);
+  const formattedDate = matchDate.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  // Determine status for display
+  const getDisplayStatus = (status: string): MatchItemData['status'] => {
+    switch (status) {
+      case 'Open':
+        return 'ongoing';
+      case 'Full':
+        return 'ongoing';
+      case 'Completed':
+        return 'win'; // Default, could be dynamic based on result
+      case 'Cancelled':
+        return 'lose';
+      default:
+        return 'ongoing';
+    }
+  };
+
+  return {
+    id: room.roomId,
+    title: room.fieldName || room.venueName,
+    format: formatMap[room.matchFormat] || room.matchFormat,
+    players: `${room.filledSlots}/${room.totalSlots}`,
+    image: require('@assets/images/icon.png'),
+    status: getDisplayStatus(room.status),
+    date: formattedDate,
+    venue: room.venueName,
+    time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
+  };
+};
+
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -28,90 +74,47 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Mock data - replace with real data from API
-  const ongoingMatches: MatchItemData[] = [
-    {
-      id: '1',
-      title: 'Giao hữu cuối tuần',
-      format: '5vs5',
-      players: '7/10',
-      image: require('@assets/images/icon.png'),
-      status: 'ongoing',
-    },
-    {
-      id: '2',
-      title: 'Team Anh Em',
-      format: '7vs7',
-      players: '12/14',
-      image: require('@assets/images/icon.png'),
-      status: 'ongoing',
-    },
-  ];
+  // Fetch match rooms from API
+  const { 
+    matchRooms, 
+    loading, 
+    refreshing, 
+    loadingMore,
+    hasMore,
+    refresh,
+    loadMore 
+  } = useMatchRooms();
 
-  const recentMatches: MatchItemData[] = [
-    {
-      id: '1',
-      title: 'Giao hữu cuối tuần',
-      date: '18/07/2024',
-      status: 'win',
-      image: require('@assets/images/icon.png'),
-      format: '5vs5',
-      players: '10/10',
-    },
-    {
-      id: '4',
-      title: 'Team Anh Em',
-      date: '15/07/2024',
-      status: 'lose',
-      image: require('@assets/images/icon.png'),
-      format: '7vs7',
-      players: '14/14',
-    },
-    {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-    {
-      id: '6',
-      title: 'Trận đấu cuối tuần',
-      date: '10/07/2024',
-      status: 'win',
-      image: require('@assets/images/icon.png'),
-      format: '5vs5',
-      players: '10/10',
-    },
-    {
-      id: '7',
-      title: 'Giao hữu thân thiện',
-      date: '08/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '7vs7',
-      players: '14/14',
-    },
-    {
-      id: '8',
-      title: 'Championship',
-      date: '05/07/2024',
-      status: 'win',
-      image: require('@assets/images/icon.png'),
-      format: '11vs11',
-      players: '22/22',
-    },
-  ];
+  // Convert API data to MatchItemData format
+  const matches = useMemo(() => {
+    return matchRooms.map(convertMatchRoomToMatchItemData);
+  }, [matchRooms]);
 
-  const handleMatchPress = (matchId: string) => {
-    const match = [...ongoingMatches, ...recentMatches].find(m => m.id === matchId);
+  // Split matches for display (first 2 as featured, rest as list)
+  const featuredMatches = useMemo(() => matches.slice(0, 2), [matches]);
+  const listMatches = useMemo(() => matches.slice(0,2), [matches]);
+  
+  
+  const handleMatchPress = useCallback((matchId: string) => {
+    const match = matches.find(m => m.id === matchId);
     if (match) {
       setSelectedMatch(match);
       setModalVisible(true);
     }
-  };
+  }, [matches]);
+
+  // Handle scroll to bottom for pagination
+  const handleScroll = useCallback((event: any) => {
+    scrollHandler(event);
+    
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const paddingToBottom = 50;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+    
+    if (isCloseToBottom && hasMore && !loadingMore) {
+      loadMore();
+    }
+  }, [scrollHandler, hasMore, loadingMore, loadMore]);
 
   const handleViewDetail = (matchId: string) => {
     navigation.navigate('RoomInformation', { roomId: matchId });
@@ -157,30 +160,67 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       <ScrollView 
         style={styles.flex1}
         showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
+        onScroll={handleScroll}
         scrollEventThrottle={16}
         nestedScrollEnabled={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            colors={[theme.colors.neonGreen]}
+            tintColor={theme.colors.neonGreen}
+          />
+        }
       >
-        {/* Ongoing Matches Section */}
-        <MatchList
-          matches={ongoingMatches}
-          title={t("home.RecommendMatches")}
-          variant="horizontal"
-          itemVariant="card"
-          onMatchPress={handleMatchPress}
-          showStatus={true}
-        />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.neonGreen} />
+          </View>
+        ) : (
+          <>
+            {/* Featured Matches Section */}
+            {featuredMatches.length > 0 && (
+              <MatchList
+                matches={featuredMatches}
+                title={t("home.RecommendMatches")}
+                variant="horizontal"
+                itemVariant="card"
+                onMatchPress={handleMatchPress}
+                showStatus={true}
+              />
+            )}
 
-        {/* Recent Matches Section */}
-        <MatchList
-          matches={recentMatches}
-          title={t("home.recentMatches", "Trận đấu gần đây")}
-          variant="vertical"
-          itemVariant="list"
-          onMatchPress={handleMatchPress}
-          showStatus={true}
-          containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
-        />
+            {/* All Matches Section */}
+            {listMatches.length > 0 && (
+              <MatchList
+                matches={listMatches}
+                title={t("home.recentMatches", "Trận đấu gần đây")}
+                variant="vertical"
+                itemVariant="list"
+                onMatchPress={handleMatchPress}
+                showStatus={true}
+                containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
+              />
+            )}
+
+            {/* Loading more indicator */}
+            {loadingMore && (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator size="small" color={theme.colors.neonGreen} />
+              </View>
+            )}
+
+            {/* Empty state */}
+            {matches.length === 0 && !loading && (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="football-outline" size={64} color={theme.colors.textSecondary} />
+                <ThemedText variant="secondary" size="m" style={{ marginTop: theme.spacing.m }}>
+                  {t("matches.noMatches", "Chưa có trận đấu nào")}
+                </ThemedText>
+              </View>
+            )}
+          </>
+        )}
       </ScrollView>
 
       {/* Floating Create Button */}
@@ -255,6 +295,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 100,
+  },
+  loadingMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 100,
   },
 });
 

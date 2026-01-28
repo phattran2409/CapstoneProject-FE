@@ -6,6 +6,7 @@
 // ============ Hooks ============
 export {
   useRooms,
+  useMatchRooms,
   useRoomDetail,
   useJoinRoom,
   useRoomMessages,
@@ -27,6 +28,9 @@ export type {
   CreateRoomRequest,
   JoinRoomRequest,
   SendMessageRequest,
+  MatchRoom,
+  MatchRoomsResponse,
+  MatchRoomFilters,
 } from './types/room.types';
 
 // ============ UI Store (for internal use within rooms feature) ============

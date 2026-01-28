@@ -40,9 +40,9 @@ export const useRegister = () => {
       
     },
     
-    onError: () => {
+    onError: async () => {
       // Clear auth on error
-      setAuthToken(null);
+      await setAuthToken(null);
       setUser(null);
       setToken(null);
     },
