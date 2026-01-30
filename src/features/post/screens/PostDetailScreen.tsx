@@ -25,17 +25,23 @@ import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
 import { RootStackParamList } from "@/app/navigation/types";
 import {
   usePostDetail,
-  // TODO: Uncomment when backend APIs are ready
-  // usePostComments,
-  // useTogglePostLike,
-  // useCreateComment,
-  // useCreateReply,
-  // useToggleCommentLike,
-  useToggleReplyLike,
+  usePaginatedComments,
+  useTogglePostLike,
+  useCreateComment,
+  useUpdatePost,
+  useDeletePost,
+  useUpdateComment,
+  useDeleteComment,
+  useToggleCommentLike,
 } from "../hooks";
 import { CommentItem, PostDetailImages } from "../components";
-import { Comment, PostMedia, MediaItem } from "../types/post.types";
-import { PostDetailSkeleton } from "@/shared/components";
+import { PostMedia, MediaItem, Comment } from "../types/post.types";
+import {
+  PostDetailSkeleton,
+  ActionButton,
+  PostActions,
+} from "@/shared/components";
+import { useAuthStore } from "@/features/auth";
 
 type PostDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -56,8 +62,29 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
   const { postId } = route.params;
+  const { user } = useAuthStore();
 
   const { data: post, isLoading: postLoading } = usePostDetail(postId);
+  const {
+    comments,
+    loading: commentsLoading,
+    loadMore,
+    hasMore,
+    refresh,
+  } = usePaginatedComments({
+    postId,
+    pageSize: 20,
+  });
+
+  const { mutate: toggleLike } = useTogglePostLike();
+  const { mutateAsync: createComment } = useCreateComment();
+  const { mutateAsync: updatePost } = useUpdatePost();
+  const { mutateAsync: deletePost } = useDeletePost();
+  const { mutateAsync: updateComment } = useUpdateComment();
+  const { mutateAsync: deleteComment } = useDeleteComment();
+  const { mutate: toggleCommentLike } = useToggleCommentLike();
+
+  const [commentContent, setCommentContent] = useState("");
 
   // Transform PostMedia[] to MediaItem[] for display
   const transformMediaToMediaItems = (media: PostMedia[]): MediaItem[] => {
@@ -80,55 +107,46 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
         }
       });
   };
-  // TODO: Uncomment when backend APIs are ready
-  // const {
-  //   data: comments = [],
-  //   isLoading: commentsLoading,
-  //   refetch,
-  // } = usePostComments(postId);
-  // const { mutate: toggleLike } = useTogglePostLike();
-  // const { mutate: createComment } = useCreateComment();
-  // const { mutate: createReply } = useCreateReply(postId);
-  // const { mutate: toggleCommentLike } = useToggleCommentLike();
-  const { mutate: toggleReplyLike } = useToggleReplyLike();
 
-  // Mock data until APIs are ready
-  const comments: Comment[] = [];
-  const commentsLoading = false;
-  const refetch = () => {};
-
-  const [commentContent, setCommentContent] = useState("");
-
-  const handleSubmitComment = () => {
+  const handleSubmitComment = async () => {
     if (commentContent.trim()) {
-      // TODO: Implement when createComment API is ready
-      // createComment(
-      //   { postId, content: commentContent.trim() },
-      //   {
-      //     onSuccess: () => {
-      //       setCommentContent("");
-      //       Keyboard.dismiss();
-      //       refetch();
-      //     },
-      //   },
-      // );
-      console.log("Comment:", commentContent.trim());
-      setCommentContent("");
-      Keyboard.dismiss();
+      try {
+        await createComment({
+          postId,
+          content: commentContent.trim(),
+        });
+        setCommentContent("");
+        Keyboard.dismiss();
+        refresh();
+      } catch (error) {
+        console.error("Error creating comment:", error);
+      }
     }
   };
 
-  const handleReply = (commentId: string, content: string) => {
-    // TODO: Implement when createReply API is ready
-    // createReply(
-    //   { commentId, content },
-    //   {
-    //     onSuccess: () => {
-    //       refetch();
-    //     },
-    //   },
-    // );
-    console.log("Reply to", commentId, ":", content);
+  const handleEditPost = async (postId: string, newContent: string) => {
+    await updatePost({ postId, content: newContent });
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    await deletePost(postId);
+    navigation.goBack();
+  };
+
+  const handleEditComment = async (commentId: string, newContent: string) => {
+    await updateComment({ commentId, content: newContent });
+    refresh();
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    await deleteComment(commentId);
+    refresh();
+  };
+
+  const handleLoadMoreComments = () => {
+    if (hasMore && !commentsLoading) {
+      loadMore();
+    }
   };
 
   if (postLoading || !post) {
@@ -161,6 +179,8 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
       </ThemedSafeAreaView>
     );
   }
+
+  const isOwnPost = post.userId === user?.userId;
 
   return (
     <ThemedSafeAreaView>
@@ -210,11 +230,10 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
             <View style={styles.postAuthor}>
               {post.userAvatarUrl ? (
                 typeof post.userAvatarUrl === "string" ? (
-                  <View
-                    style={[
-                      styles.postAvatar,
-                      { backgroundColor: theme.colors.border },
-                    ]}
+                  <Image
+                    source={{ uri: post.userAvatarUrl }}
+                    style={styles.postAvatar}
+                    resizeMode="cover"
                   />
                 ) : (
                   <Image
@@ -244,68 +263,31 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <ThemedText variant="primary" size="m" weight="bold">
                   {post.userFullName}
-                  {/* {post.community && (
-                    <ThemedText variant="secondary" size="m" weight="regular">
-                      {" "}
-                      posted in '{post.community}'
-                    </ThemedText>
-                  )} */}
                 </ThemedText>
                 <ThemedText variant="secondary" size="s">
-                  {/* {post.timestamp} */}
+                  {new Date(post.createdAt).toLocaleDateString()}
+                  {post.isEdited &&
+                    " • " + t("post.edited", { defaultValue: "Đã chỉnh sửa" })}
                 </ThemedText>
               </View>
             </View>
-          </View>
 
-          {/* Post Type Badge */}
-          {/* {post.type && post.type !== "post" && (
-            <View
-              style={{ paddingHorizontal: theme.spacing.l, marginBottom: 8 }}
-            >
-              <View
-                style={[
-                  styles.postTypeBadge,
-                  {
-                    backgroundColor:
-                      post.type === "match"
-                        ? theme.colors.neonGreen
-                        : "#3b82f6",
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 20,
-                  },
-                ]}
-              >
-                <ThemedText
-                  size="xs"
-                  weight="bold"
-                  style={{
-                    color: isDark ? theme.colors.darkBlack : theme.colors.white,
-                  }}
-                >
-                  {post.type === "match"
-                    ? t("newsFeed.matches", { defaultValue: "Trận đấu" })
-                    : t("newsFeed.announcements", {
-                        defaultValue: "Thông báo",
-                      })}
-                </ThemedText>
-              </View>
-            </View>
-          )} */}
+            {/* Action Button for own posts */}
+            {isOwnPost && (
+              <ActionButton
+                contentType="post"
+                contentId={post.postId}
+                currentContent={post.content}
+                onEdit={handleEditPost}
+                onDelete={handleDeletePost}
+              />
+            )}
+          </View>
 
           {/* Post Title and Content */}
           <View
             style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
           >
-            {/* <ThemedText
-              variant="primary"
-              size="l"
-              weight="bold"
-              style={styles.postTitle}
-            >
-              {post.title}
-            </ThemedText> */}
             <ThemedText variant="secondary" size="m" style={styles.postContent}>
               {post.content}
             </ThemedText>
@@ -324,74 +306,22 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
 
           {/* Post Actions */}
           <View
-            style={[
-              styles.postActions,
-              {
-                paddingHorizontal: theme.spacing.l,
-                paddingVertical: theme.spacing.m,
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.border,
-              },
-            ]}
+            style={{
+              paddingHorizontal: theme.spacing.l,
+              paddingVertical: theme.spacing.m,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.border,
+            }}
           >
-            <TouchableOpacity
-              style={styles.postAction}
-              // onPress={() => toggleLike(post.postId)}
-            >
-              <Ionicons
-                name={/* post.isLiked */ false ? "heart" : "heart-outline"}
-                size={22}
-                color={
-                  /* post.isLiked */ false
-                    ? "#ef4444"
-                    : theme.colors.textSecondary
-                }
-              />
-              <ThemedText
-                variant="secondary"
-                size="m"
-                style={[
-                  styles.postActionText,
-                  {
-                    color: /* post.isLiked */ false
-                      ? "#ef4444"
-                      : theme.colors.textSecondary,
-                  },
-                ]}
-              >
-                {post.totalLikes}
-              </ThemedText>
-            </TouchableOpacity>
-
-            <View style={styles.postAction}>
-              <Ionicons
-                name="chatbubble-outline"
-                size={22}
-                color={theme.colors.textSecondary}
-              />
-              <ThemedText
-                variant="secondary"
-                size="m"
-                style={styles.postActionText}
-              >
-                {comments.length}
-              </ThemedText>
-            </View>
-
-            <TouchableOpacity style={styles.postAction}>
-              <Ionicons
-                name="share-social-outline"
-                size={22}
-                color={theme.colors.textSecondary}
-              />
-              <ThemedText
-                variant="secondary"
-                size="m"
-                style={styles.postActionText}
-              >
-                {/* post.shares */ 0}
-              </ThemedText>
-            </TouchableOpacity>
+            <PostActions
+              isLiked={post.isLikedByCurrentUser}
+              likeCount={post.totalLikes}
+              commentCount={post.totalComments}
+              shareCount={0}
+              onLike={() => toggleLike(post.postId)}
+              onComment={() => {}}
+              onShare={() => {}}
+            />
           </View>
 
           {/* Comments Section */}
@@ -408,7 +338,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
               {t("post.comments", { defaultValue: "Bình luận" })} (
               {comments.length})
             </ThemedText>
-            {commentsLoading ? (
+            {commentsLoading && comments.length === 0 ? (
               <ThemedView style={styles.loadingContainer}>
                 <ThemedText>
                   {t("common.loading", { defaultValue: "Đang tải..." })}
@@ -434,19 +364,34 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
             ) : (
               <FlatList
                 data={comments}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <CommentItem
-                    comment={item}
-                    onLike={() => {}}
-                    onReply={handleReply}
-                    onReplyLike={(commentId, replyId) =>
-                      toggleReplyLike({ commentId, replyId })
-                    }
-                  />
-                )}
+                keyExtractor={(item) => item.commentId}
+                renderItem={({ item }) => {
+                  const isOwnComment = item.userId === user?.userId;
+                  return (
+                    <CommentItem
+                      postId={postId}
+                      comment={item}
+                      onLike={() => toggleCommentLike(item.commentId)}
+                      onEdit={isOwnComment ? handleEditComment : undefined}
+                      onDelete={isOwnComment ? handleDeleteComment : undefined}
+                    />
+                  );
+                }}
                 scrollEnabled={false}
                 ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
+                onEndReached={handleLoadMoreComments}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                  commentsLoading && comments.length > 0 ? (
+                    <ThemedView style={styles.loadingMoreContainer}>
+                      <ThemedText variant="secondary" size="s">
+                        {t("common.loadingMore", {
+                          defaultValue: "Đang tải thêm...",
+                        })}
+                      </ThemedText>
+                    </ThemedView>
+                  ) : null
+                }
               />
             )}
           </View>
@@ -465,27 +410,29 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
             },
           ]}
         >
-          <TextInput
-            style={[
-              styles.commentInput,
-              {
-                backgroundColor: theme.colors.surface,
-                color: theme.colors.text,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.l,
-                paddingHorizontal: theme.spacing.m,
-                paddingVertical: theme.spacing.s,
-              },
-            ]}
-            placeholder={t("post.writeComment", {
-              defaultValue: "Viết bình luận...",
-            })}
-            placeholderTextColor={theme.colors.textSecondary}
-            value={commentContent}
-            onChangeText={setCommentContent}
-            multiline
-            maxLength={500}
-          />
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={[
+                styles.commentInput,
+                {
+                  backgroundColor: theme.colors.surface,
+                  color: theme.colors.text,
+                  borderColor: theme.colors.border,
+                  borderRadius: theme.radius.l,
+                  paddingHorizontal: theme.spacing.m,
+                  paddingVertical: theme.spacing.s,
+                },
+              ]}
+              placeholder={t("post.writeComment", {
+                defaultValue: "Viết bình luận...",
+              })}
+              placeholderTextColor={theme.colors.textSecondary}
+              value={commentContent}
+              onChangeText={setCommentContent}
+              multiline
+              maxLength={5000}
+            />
+          </View>
           <TouchableOpacity
             style={[
               styles.sendButton,
@@ -529,9 +476,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 32,
   },
+  loadingMoreContainer: {
+    padding: 16,
+    alignItems: "center",
+  },
   postHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
   },
   postAuthor: {
@@ -592,6 +543,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
+  },
+  replyingToContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+    paddingHorizontal: 8,
   },
 });
 

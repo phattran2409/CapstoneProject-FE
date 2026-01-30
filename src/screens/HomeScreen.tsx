@@ -144,23 +144,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     setPosts,
   } = usePaginatedPosts({ pageSize: 10 });
 
-  // Use toggle post like mutation with callback to update local state
-  const { mutate: toggleLike } = useTogglePostLike({
-    onSuccess: (data) => {
-      // Update local state with new like data
-      setPosts((currentPosts) =>
-        currentPosts.map((post) =>
-          post.postId === data.postId
-            ? {
-                ...post,
-                isLiked: data.isLiked,
-                totalLikes: data.totalLikes,
-              }
-            : post,
-        ),
-      );
-    },
-  });
+  const { mutate: toggleLike } = useTogglePostLike();
 
   const handleLike = (postId: string) => {
     toggleLike(postId);

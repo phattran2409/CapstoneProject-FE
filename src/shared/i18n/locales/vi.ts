@@ -21,6 +21,7 @@ const vi = {
       logout: "Đăng xuất",
       tryNow: "Trải nghiệm ngay",
       register: "Đăng ký",
+      cancel: "Hủy",
     },
     email: "Email",
   },
@@ -420,6 +421,33 @@ const vi = {
     emptyDescription: "Nhập từ khóa để tìm kiếm người chơi hoặc bài viết",
     noResults: "Không tìm thấy kết quả",
     tryDifferent: "Thử tìm kiếm với từ khóa khác",
+  },
+  post: {
+    detail: "Bài viết",
+    comments: "Bình luận",
+    noComments: "Chưa có bình luận nào",
+    writeComment: "Viết bình luận...",
+    writeReply: "Viết trả lời...",
+    reply: "Phản hồi",
+    edited: "Đã chỉnh sửa",
+    replyingTo: "Đang trả lời",
+  },
+  actionButton: {
+    post: "bài viết",
+    comment: "bình luận",
+    edit: "Chỉnh sửa",
+    delete: "Xóa",
+    save: "Lưu",
+    editTitle: "Chỉnh sửa {{type}}",
+    deleteConfirmTitle: "Xóa {{type}}?",
+    deleteConfirmMessage:
+      "Bạn có chắc chắn muốn xóa {{type}} này? Hành động này không thể hoàn tác.",
+    contentPlaceholder: "Nhập nội dung...",
+    validation: {
+      required: "Nội dung không được để trống",
+      tooLong: "Nội dung không được vượt quá 5000 ký tự",
+      failed: "Không thể lưu thay đổi. Vui lòng thử lại.",
+    },
   },
 };
 

@@ -1,4 +1,4 @@
-export * from './CommentItem';
-export * from './ReplyItem';
-export * from './PostDetailImages';
-
+export * from "./CommentItem";
+export * from "./ReplyItem";
+export * from "./RepliesList";
+export * from "./PostDetailImages";

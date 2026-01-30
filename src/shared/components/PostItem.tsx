@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedView, ThemedText } from "./themed";
 import { PostMediaGrid } from "./PostMediaGrid";
+import { PostActions } from "./PostActions";
 import { Post } from "@/features/post/types/post.types";
 import { useAuthStore } from "@/features/auth";
 import { getRelativeTime } from "@/shared/utils";
@@ -134,71 +135,19 @@ export const PostItem: React.FC<PostItemProps> = ({
       )}
 
       {/* Post Actions */}
-      <View
-        style={[styles.postActions, { paddingHorizontal: theme.spacing.l }]}
-      >
-        <TouchableOpacity
-          style={styles.postAction}
-          onPress={() => onLike?.(post.postId)}
-        >
-          <Ionicons
-            name={post.isLiked ? "heart" : "heart-outline"}
-            size={22}
-            color={post.isLiked ? "#ef4444" : theme.colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.postActionText,
-              {
-                color: post.isLiked ? "#ef4444" : theme.colors.textSecondary,
-                fontWeight: post.isLiked ? "600" : "400",
-              },
-            ]}
-          >
-            {post.totalLikes}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.postAction}
-          onPress={() => {
+      <View style={{ paddingHorizontal: theme.spacing.l }}>
+        <PostActions
+          isLiked={post.isLikedByCurrentUser}
+          likeCount={post.totalLikes}
+          commentCount={post.totalComments}
+          shareCount={0}
+          onLike={() => onLike?.(post.postId)}
+          onComment={() => {
             onComment?.(post.postId);
             onPress?.(post.postId);
           }}
-        >
-          <Ionicons
-            name="chatbubble-outline"
-            size={22}
-            color={theme.colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.postActionText,
-              { color: theme.colors.textSecondary },
-            ]}
-          >
-            {post.totalComments}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.postAction}
-          onPress={() => onShare?.(post.postId)}
-        >
-          <Ionicons
-            name="share-social-outline"
-            size={22}
-            color={theme.colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.postActionText,
-              { color: theme.colors.textSecondary },
-            ]}
-          >
-            {/* post.shares */ 0}
-          </Text>
-        </TouchableOpacity>
+          onShare={() => onShare?.(post.postId)}
+        />
       </View>
     </ThemedView>
   );

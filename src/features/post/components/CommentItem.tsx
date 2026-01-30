@@ -1,36 +1,61 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Keyboard, Image } from 'react-native';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedView, ThemedText } from '@/shared/components/themed';
-import { Comment, Reply } from '../types/post.types';
-import { ReplyItem } from './ReplyItem';
+import React, { useState } from "react";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Keyboard,
+  Image,
+} from "react-native";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { ThemedView, ThemedText } from "@/shared/components/themed";
+import { Comment } from "../types/post.types";
+import { ActionButton, LikeButton } from "@/shared/components";
+import { RepliesList } from "./RepliesList";
+import { useCreateComment } from "../hooks";
 
 interface CommentItemProps {
+  postId: string;
   comment: Comment;
   onLike: (commentId: string) => void;
-  onReply: (commentId: string, content: string) => void;
-  onReplyLike: (commentId: string, replyId: string) => void;
+  onEdit?: (commentId: string, newContent: string) => void | Promise<void>;
+  onDelete?: (commentId: string) => void | Promise<void>;
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
+  postId,
   comment,
   onLike,
-  onReply,
-  onReplyLike,
+  onEdit,
+  onDelete,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [showReplyInput, setShowReplyInput] = useState(false);
-  const [replyContent, setReplyContent] = useState('');
 
-  const handleSubmitReply = () => {
-    if (replyContent.trim()) {
-      onReply(comment.id, replyContent.trim());
-      setReplyContent('');
+  const [showReplies, setShowReplies] = useState(false);
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyContent, setReplyContent] = useState("");
+
+  const { mutateAsync: createComment, isPending: isSubmittingReply } =
+    useCreateComment();
+
+  const handleReplySubmit = async () => {
+    if (!replyContent.trim()) return;
+
+    try {
+      await createComment({
+        postId,
+        content: replyContent.trim(),
+        parentCommentId: comment.commentId,
+      });
+      setReplyContent("");
       setShowReplyInput(false);
+      setShowReplies(true); // Automatically show replies after replying
       Keyboard.dismiss();
+    } catch (error) {
+      console.error("Failed to post reply", error);
     }
   };
 
@@ -59,31 +84,29 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             },
           ]}
         >
-          {comment.author.avatar ? (
-            typeof comment.author.avatar === 'string' ? (
-              <Image
-                source={{ uri: comment.author.avatar }}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Image
-                source={comment.author.avatar}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
-                resizeMode="cover"
-              />
-            )
+          {comment.userAvatarUrl ? (
+            <Image
+              source={{ uri: comment.userAvatarUrl }}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+              resizeMode="cover"
+            />
           ) : (
-            <Ionicons name="person" size={24} color={theme.colors.textSecondary} />
+            <Ionicons
+              name="person"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
           )}
         </View>
         <View style={styles.commentContent}>
           <View style={styles.commentAuthorRow}>
             <ThemedText variant="primary" size="m" weight="semiBold">
-              {comment.author.name}
+              {comment.userFullName}
             </ThemedText>
             <ThemedText variant="secondary" size="s" style={styles.timestamp}>
-              {comment.timestamp}
+              {new Date(comment.createdAt).toLocaleDateString()}
+              {comment.isEdited &&
+                " • " + t("post.edited", { defaultValue: "Đã chỉnh sửa" })}
             </ThemedText>
           </View>
           <ThemedText variant="primary" size="m" style={styles.commentText}>
@@ -91,101 +114,117 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           </ThemedText>
           {/* Comment Actions */}
           <View style={styles.commentActions}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => onLike(comment.id)}
-            >
-              <Ionicons
-                name={comment.isLiked ? 'heart' : 'heart-outline'}
-                size={18}
-                color={comment.isLiked ? '#ef4444' : theme.colors.textSecondary}
-              />
-              <ThemedText
-                variant="secondary"
-                size="s"
-                style={[
-                  styles.actionText,
-                  { color: comment.isLiked ? '#ef4444' : theme.colors.textSecondary },
-                ]}
-              >
-                {comment.likes > 0 ? comment.likes : ''}
-              </ThemedText>
-            </TouchableOpacity>
+            <LikeButton
+              isLiked={comment.isLikedByCurrentUser ?? false}
+              likeCount={comment.totalLikes}
+              onPress={() => onLike(comment.commentId)}
+              size={18}
+              showCount={true}
+            />
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => setShowReplyInput(!showReplyInput)}
             >
-              <Ionicons name="chatbubble-outline" size={18} color={theme.colors.textSecondary} />
-              <ThemedText variant="secondary" size="s" style={styles.actionText}>
-                {t('post.reply', { defaultValue: 'Phản hồi' })}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Replies */}
-      {comment.replies && comment.replies.length > 0 && (
-        <View style={[styles.repliesContainer, { marginLeft: theme.spacing.xl }]}>
-          {comment.replies.map((reply) => (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              onLike={() => onReplyLike(comment.id, reply.id)}
-            />
-          ))}
-        </View>
-      )}
-
-      {/* Reply Input */}
-      {showReplyInput && (
-        <View style={[styles.replyInputContainer, { marginLeft: theme.spacing.xl, marginTop: theme.spacing.s }]}>
-          <TextInput
-            style={[
-              styles.replyInput,
-              {
-                backgroundColor: theme.colors.surface,
-                color: theme.colors.text,
-                borderColor: theme.colors.border,
-                borderRadius: theme.radius.m,
-                paddingHorizontal: theme.spacing.m,
-                paddingVertical: theme.spacing.s,
-              },
-            ]}
-            placeholder={t('post.writeReply', { defaultValue: 'Viết phản hồi...' })}
-            placeholderTextColor={theme.colors.textSecondary}
-            value={replyContent}
-            onChangeText={setReplyContent}
-            multiline
-            maxLength={500}
-          />
-          <View style={styles.replyInputActions}>
-            <TouchableOpacity
-              onPress={() => {
-                setShowReplyInput(false);
-                setReplyContent('');
-              }}
-            >
-              <ThemedText variant="secondary" size="s">
-                {t('common.cancel', { defaultValue: 'Hủy' })}
-              </ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSubmitReply}
-              disabled={!replyContent.trim()}
-            >
+              <Ionicons
+                name="chatbubble-outline"
+                size={18}
+                color={theme.colors.textSecondary}
+              />
               <ThemedText
-                variant="accent"
+                variant="secondary"
                 size="s"
-                weight="semiBold"
-                style={{ opacity: replyContent.trim() ? 1 : 0.5 }}
+                style={styles.actionText}
               >
-                {t('common.post', { defaultValue: 'Đăng' })}
+                {t("post.reply", { defaultValue: "Phản hồi" })}
               </ThemedText>
             </TouchableOpacity>
           </View>
+
+          {/* View Replies Button */}
+          {comment.totalReplies > 0 && (
+            <TouchableOpacity
+              style={styles.viewRepliesButton}
+              onPress={() => setShowReplies(!showReplies)}
+            >
+              <View
+                style={{ width: 24, paddingVertical: 8, alignItems: "center" }}
+              >
+                <View
+                  style={{
+                    height: 1,
+                    width: 24,
+                    backgroundColor: theme.colors.border,
+                  }}
+                />
+              </View>
+              <ThemedText variant="secondary" size="s">
+                {showReplies
+                  ? t("post.hideReplies", { defaultValue: "Ẩn câu trả lời" })
+                  : t("post.viewReplies", { defaultValue: "Xem" }) +
+                    ` ${comment.totalReplies} ` +
+                    t("post.replies", { defaultValue: "câu trả lời" })}
+              </ThemedText>
+            </TouchableOpacity>
+          )}
+
+          {/* Inline Reply Input */}
+          {showReplyInput && (
+            <View style={styles.replyInputContainer}>
+              <TextInput
+                style={[
+                  styles.replyInput,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text,
+                  },
+                ]}
+                placeholder={t("post.writeReply", {
+                  defaultValue: "Viết trả lời...",
+                })}
+                placeholderTextColor={theme.colors.textSecondary}
+                value={replyContent}
+                onChangeText={setReplyContent}
+                autoFocus
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendReplyButton,
+                  {
+                    backgroundColor: replyContent.trim()
+                      ? theme.colors.primary
+                      : theme.colors.border,
+                  },
+                ]}
+                onPress={handleReplySubmit}
+                disabled={!replyContent.trim() || isSubmittingReply}
+              >
+                <Ionicons
+                  name="send"
+                  size={16}
+                  color={
+                    replyContent.trim() ? "#fff" : theme.colors.textSecondary
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Replies List */}
+          {showReplies && <RepliesList commentId={comment.commentId} />}
         </View>
-      )}
+
+        {/* Action Button for edit/delete */}
+        {onEdit && onDelete && (
+          <ActionButton
+            contentType="comment"
+            contentId={comment.commentId}
+            currentContent={comment.content}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        )}
+      </View>
     </ThemedView>
   );
 };
@@ -195,19 +234,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   commentHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   avatarContainer: {
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
   },
   commentContent: {
     flex: 1,
   },
   commentAuthorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 4,
     gap: 8,
   },
@@ -219,34 +258,41 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   commentActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   actionText: {
     fontSize: 14,
   },
-  repliesContainer: {
-    marginTop: 12,
-  },
   replyInputContainer: {
     marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   replyInput: {
-    minHeight: 40,
-    maxHeight: 100,
+    flex: 1,
+    height: 40,
     borderWidth: 1,
-    marginBottom: 8,
-    textAlignVertical: 'top',
+    borderRadius: 20,
+    paddingHorizontal: 12,
   },
-  replyInputActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
+  sendReplyButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewRepliesButton: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 });
-

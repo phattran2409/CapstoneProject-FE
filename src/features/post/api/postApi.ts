@@ -1,11 +1,15 @@
 import { apiClient } from "@/shared/api/client";
 import {
   Post,
-  Comment,
   PostsResponse,
   PostDetailResponse,
   PostLikeResponse,
+  Comment,
+  CommentResponse,
+  Reply,
+  ReplyResponse,
 } from "../types/post.types";
+import { ApiResponse } from "@/shared/api";
 
 // Get posts with pagination
 export const getPosts = async (
@@ -77,7 +81,9 @@ export const getPostDetail = async (id: string): Promise<Post> => {
 };
 
 // Like/Unlike post
-export const togglePostLike = async (postId: string): Promise<PostLikeResponse> => {
+export const togglePostLike = async (
+  postId: string,
+): Promise<PostLikeResponse> => {
   try {
     const response = (await apiClient.post(
       `/posts/${postId}/like`,
@@ -92,103 +98,137 @@ export const togglePostLike = async (postId: string): Promise<PostLikeResponse> 
   }
 };
 
-// // Get comments for a post
-// export const getPostComments = async (postId: string): Promise<Comment[]> => {
-//   // TODO: Replace with real API call when backend is ready
-//   // const response = await apiClient.get<Comment[]>(`/posts/${postId}/comments`);
-//   // return response.data;
-
-// };
-
-
-
-// Create comment
-// export const createComment = async (
-//   postId: string,
-//   content: string,
-// ): Promise<Comment> => {
-//   // TODO: Replace with real API call when backend is ready
-//   // const response = await apiClient.post<Comment>(`/posts/${postId}/comments`, { content });
-//   // return response.data;
-
-// };
-
-// Create reply
-// export const createReply = async (
-//   commentId: string,
-//   content: string,
-//   replyToId?: string,
-// ): Promise<Comment["replies"]>[0] => {
-//   // TODO: Replace with real API call when backend is ready
-//   // const response = await apiClient.post(`/comments/${commentId}/replies`, { content, replyToId });
-//   // return response.data;
-
-//   // Mock data
-//   const comment = currentComments.find((c) => c.id === commentId);
-//   if (!comment) {
-//     throw new Error("Comment not found");
-//   }
-
-//   const replyToComment = replyToId
-//     ? currentComments.find((c) => c.id === replyToId)
-//     : undefined;
-//   const replyTo = replyToComment?.author;
-
-//   const newReply = {
-//     id: `reply${Date.now()}`,
-//     commentId,
-//     author: {
-//       id: "currentUser",
-//       name: "Current User",
-//       avatar: require("@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png"),
-//       username: "currentuser",
-//     },
-//     content,
-//     likes: 0,
-//     isLiked: false,
-//     timestamp: "Vừa xong",
-//     ...(replyTo && {
-//       replyTo: {
-//         id: replyTo.id,
-//         name: replyTo.name,
-//         username: replyTo.username,
-//       },
-//     }),
-//   };
-
-//   if (!comment.replies) {
-//     comment.replies = [];
-//   }
-//   comment.replies.push(newReply);
-//   return JSON.parse(JSON.stringify(newReply));
-// };
-
-// Like/Unlike comment
-// export const toggleCommentLike = async (
-//   commentId: string,
-// ): Promise<Comment> => {
-//   // TODO: Replace with real API call when backend is ready
-//   // const response = await apiClient.post(`/comments/${commentId}/like`);
-//   // return response.data;
-
-//   // Mock data
-//   const comment = currentComments.find((c) => c.id === commentId);
-//   if (!comment) {
-//     throw new Error("Comment not found");
-//   }
-//   comment.isLiked = !comment.isLiked;
-//   comment.likes += comment.isLiked ? 1 : -1;
-//   return JSON.parse(JSON.stringify(comment));
-// };
-
-// Like/Unlike reply
-export const toggleReplyLike = async (
-  commentId: string,
-  replyId: string,
-): Promise<void> => {
-  // TODO: Replace with real API call when backend is ready
-  // await apiClient.post(`/replies/${replyId}/like`);
+// Create Post
+export const createPost = async (
+  content: string,
+  files: File[],
+): Promise<ApiResponse> => {
+  try {
+    const formData = new FormData();
+    formData.append("Content", content);
+    files.forEach((file) => {
+      formData.append("Files", file);
+    });
+    // apiClient interceptor already returns response.data
+    const response = await apiClient.post(`/posts`, formData);
+    const apiResponse = response as unknown as ApiResponse;
+    if (apiResponse.isSuccess) {
+      return apiResponse;
+    }
+    throw new Error("Post creation failed");
+  } catch (error) {
+    console.error("Error creating post:", error);
+    throw error;
+  }
 };
 
-// // Keep track of current comments for mock data
-// let currentComments = [...mockComments];
+// Update Post
+export const updatePost = async (
+  postId: string,
+  content: string,
+): Promise<ApiResponse> => {
+  // apiClient interceptor already returns response.data
+  const res = await apiClient.put(`/posts/${postId}`, { Content: content });
+
+  return res as unknown as ApiResponse;
+};
+
+// Delete Post
+export const deletePost = async (postId: string): Promise<ApiResponse> => {
+  // apiClient interceptor already returns response.data
+  const res = await apiClient.delete(`/posts/${postId}`);
+
+  return res as unknown as ApiResponse;
+};
+
+export const getComments = async (
+  page: number = 1,
+  pageSize: number = 20,
+  postId: string,
+): Promise<{ comments: Comment[]; totalPages: number; totalCount: number }> => {
+  try {
+    const response = (await apiClient.get(
+      `/comments/${postId}?page=${page}&pageSize=${pageSize}`,
+    )) as CommentResponse;
+
+    if (response.isSuccess && response.data) {
+      return {
+        comments: response.data.comments,
+        totalPages: response.data.totalPages,
+        totalCount: response.data.totalCount,
+      };
+    }
+    throw new Error("Failed to fetch comments");
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    throw error;
+  }
+};
+
+export const getReplies = async (
+  page: number = 1,
+  pageSize: number = 20,
+  commentId: string,
+): Promise<{ replies: Reply[]; totalPages: number; totalCount: number }> => {
+  try {
+    const response = (await apiClient.get(
+      `/comments/${commentId}/replies?page=${page}&pageSize=${pageSize}`,
+    )) as ReplyResponse;
+
+    if (response.isSuccess && response.data) {
+      return {
+        replies: response.data.replies,
+        totalPages: response.data.totalPages,
+        totalCount: response.data.totalCount,
+      };
+    }
+    throw new Error("Failed to fetch comments");
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    throw error;
+  }
+};
+
+// Create comments for a post
+export const createComment = async (
+  postId: string,
+  content: string,
+  parentCommentId?: string,
+): Promise<ApiResponse> => {
+  // apiClient interceptor already returns response.data
+  const res = await apiClient.post(`/comments/${postId}`, {
+    parentCommentId: parentCommentId,
+    content: content,
+  });
+
+  return res as unknown as ApiResponse;
+};
+
+// Update comments for a post
+export const updateComment = async (
+  commentId: string,
+  content: string,
+): Promise<ApiResponse> => {
+  const res = await apiClient.put(`/comments/${commentId}`, {
+    content,
+  });
+  return res as unknown as ApiResponse;
+};
+
+// Delete comment for a post
+export const deleteComment = async (
+  commentId: string,
+): Promise<ApiResponse> => {
+  const res = await apiClient.delete(`/comments/${commentId}`);
+  return res as unknown as ApiResponse;
+};
+
+// Like/Unlike comment
+export const toggleCommentLike = async (
+  commentId: string,
+): Promise<ApiResponse> => {
+  // apiClient interceptor already returns response.data
+  const response = await apiClient.post(`/comments/${commentId}/like`);
+
+  return response as unknown as ApiResponse;
+};

@@ -1,31 +1,65 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { togglePostLike } from "../api/postApi";
+import {
+  createPost,
+  togglePostLike,
+  updatePost,
+  deletePost,
+} from "../api/postApi";
 import { PostLikeResponse } from "../types/post.types";
+import { postKeys } from "../api";
+import { ApiResponse } from "@/shared/api";
 
-interface UseTogglePostLikeOptions {
-  onSuccess?: (data: PostLikeResponse["data"]) => void;
-}
-
-export const useTogglePostLike = (options?: UseTogglePostLikeOptions) => {
+export const useTogglePostLike = () => {
   const queryClient = useQueryClient();
 
   return useMutation<PostLikeResponse, Error, string>({
     mutationFn: (postId: string) => togglePostLike(postId),
-    onSuccess: (response, postId) => {
-      // Invalidate posts queries (for React Query based lists)
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-
-      console.log("Post liked successfully:", {
-        postId,
-        isLiked: response.data.isLiked,
-        totalLikes: response.data.totalLikes,
-      });
-
-      // Call custom onSuccess callback to update local state
-      options?.onSuccess?.(response.data);
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
-    onError: (error, postId) => {
-      console.error("Error liking post:", postId, error);
+    onError: (error) => {
+      console.error("Error liking post:", error);
+    },
+  });
+};
+
+export const useCreatePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse, Error, { content: string; files: File[] }>({
+    mutationFn: ({ content, files }) => createPost(content, files),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+    },
+    onError: (error) => {
+      console.error("Error creating post:", error);
+    },
+  });
+};
+
+export const useUpdatePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse, Error, { postId: string; content: string }>({
+    mutationFn: ({ postId, content }) => updatePost(postId, content),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+    },
+    onError: (error) => {
+      console.error("Error updating post:", error);
+    },
+  });
+};
+
+export const useDeletePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse, Error, string>({
+    mutationFn: (postId: string) => deletePost(postId),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+    },
+    onError: (error) => {
+      console.error("Error deleting post:", error);
     },
   });
 };
