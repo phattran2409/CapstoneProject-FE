@@ -48,7 +48,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
   // };
 
   const handleSelectVenue = (venue: Venue) => {
-    navigation?.replace('CreateRoom', { selectedVenue: venue });
+    navigation?.navigate('VenueDetail', { venueId: venue.venueId });
   };
 
   const handleOpenFieldsModal = (venue: Venue) => {
@@ -82,7 +82,9 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
       : require('@assets/images/icon.png');
 
     return (
-      <View
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => handleSelectVenue(venue)}
         style={[
           styles.venueCard,
           {
@@ -163,6 +165,17 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
             </TouchableOpacity>
           )}  
 
+          {/* View Detail Button */}
+          <TouchableOpacity
+            style={[styles.viewDetailButton, { borderColor: '#2a2a2a' }]}
+            onPress={() => handleSelectVenue(venue)}
+          >
+            <Text style={[styles.viewDetailText, { color: theme.colors.textSecondary }]}>
+              Xem chi tiết
+            </Text>
+            <Ionicons name="arrow-forward" size={16} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+
           {/* Price and Formats */}
           {/* <View style={[styles.priceRow, { paddingTop: 12, borderTopWidth: 1, borderTopColor: '#2a2a2a' }]}>
             <View>
@@ -189,7 +202,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
             )}
           </View> */}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }, [theme, t]);
 
@@ -507,6 +520,19 @@ const styles = StyleSheet.create({
   },
   loadingMoreText: {
     fontSize: 14,
+  },
+  viewDetailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 6,
+  },
+  viewDetailText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

@@ -223,7 +223,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     }
                   />
                   <TextInput
-                    style={[styles.input, { color: theme.colors.softWhite }]}
+                    style={[styles.input, styles.inputFlex, { color: theme.colors.softWhite }]}
                     placeholder={t("login.emailPlaceholder")}
                     placeholderTextColor={theme.colors.textSecondary}
                     value={value}

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, Image, ScrollView, Alert, StyleSheet, Share } from 'react-native';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { View, TouchableOpacity, Image, ScrollView, Alert, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -13,27 +13,41 @@ import {
   ThemedCard 
 } from '@/shared/components/themed';
 import { RootStackParamList } from '@/app/navigation/types';
-import { useRoomDetail, useJoinRoom, useKickPlayer, useCancelRoom, type Player } from '@/features/rooms';
+import { 
+  useMatchRoomDetail,
+  useUpdateParticipant,
+  useLeaveMatchRoom,
+  useKickPlayer, 
+  useCancelRoom, 
+  type MatchRoomFullInfo,
+  type MatchRoomParticipant,
+  type TeamAssignment,
+} from '@/features/rooms';
 import { useAuthStore } from '@/features/auth';
 import SplashScreen from '@/features/splash/screens/SplashScreen';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { HostMenuModal, PlayerCard } from '../components';
+import { 
+  HostMenuModal, 
+  ParticipantCard, 
+  EmptySlotCard, 
+  PositionSelectionModal,
+  type PlayerPosition,
+} from '../components';
+import { useMatchRoomSignalR, useMatchRoomSignalRHandlers } from '@/shared/hooks';
+import { useToast } from '@/shared/toast';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
 interface RoomInformationScreenProps {
   navigation?: RoomInformationScreenNavigationProp;
-  route?: {
-    params: {
-      roomId: string;
-    };
-  };
+  route: RouteProp<RootStackParamList, 'RoomInformation'>;
 }
 
+// ==================== Main Screen Component ====================
 const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { roomId } = route?.params || { roomId: '1' };
+  const { roomId } = route?.params;
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
   // ✅ Handle back navigation (supports deep link)
@@ -50,50 +64,238 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     }
   };
   
-  // ✅ Use React Query hooks
-  const { data: room, isLoading, error, refetch } = useRoomDetail(roomId);
-  const { mutate: joinRoom, isPending: isJoining } = useJoinRoom();
+  // ✅ Use React Query hooks - sử dụng useMatchRoomDetail cho MatchRoomFullInfo
+  const { data: room, isLoading, error, refetch } = useMatchRoomDetail(roomId);
+  const { mutate: updateParticipant, isPending: isUpdatingParticipant } = useUpdateParticipant();
+  const { mutate: leaveMatchRoom, isPending: isLeaving } = useLeaveMatchRoom();
   const { mutate: kickPlayer, isPending: isKicking } = useKickPlayer();
   const { mutate: cancelRoom, isPending: isCancelling } = useCancelRoom();
 
   const { user } = useAuthStore();
   
-  console.log('room', room);
+  // ✅ Local room data state for real-time updates
+  const [roomData, setRoomData] = useState<MatchRoomFullInfo | null>(null);
+  
+  // ✅ Sync room data from React Query
+  useEffect(() => {
+    if (room) {
+      setRoomData(room);
+    }
+  }, [room]);
+  
+  // ✅ Use roomData for display (có real-time updates) hoặc fallback về room từ query
+  const displayRoom = roomData || room;
+  
+  console.log('room', displayRoom);
   
   // ✅ Check if user is the host
-  const isHost = room?.hostId === user?.userId;
-  console.log('isHost', user?.userId);
+  const isHost = displayRoom?.hostId === user?.userId;
+
+  // ✅ Check if current user is already in the room
+  const currentUserParticipant = useMemo(() => {
+    if (!displayRoom || !user?.userId) return null;
+    const allParticipants = [
+      ...displayRoom.participants.teamA,
+      ...displayRoom.participants.teamB,
+      ...displayRoom.participants.unassigned,
+    ];
+    return allParticipants.find(p => p.userId === user.userId) || null;
+  }, [displayRoom, user?.userId]);
+
+  // ✅ Selected team (A, B, or null)
+  const [selectedTeam, setSelectedTeam] = useState<TeamAssignment | null>(null);
+  
   // ✅ Local UI state
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'teams' | 'host' | 'venue'>('teams');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
+  
+  // ✅ Position selection modal state
+  const [showPositionModal, setShowPositionModal] = useState(false);
+  const [pendingTeamAssignment, setPendingTeamAssignment] = useState<'A' | 'B' | null>(null);
 
-  // ✅ Handle join team
-  const handleJoinTeam = (teamId: string) => {
+  // ==================== SignalR Integration ====================
+  
+  // ✅ Toast hook for notifications
+  const toast = useToast();
+  
+  /**
+   * Callback hiển thị notification - sử dụng Toast thay vì Alert
+   */
+  const showNotification = useCallback((message: string, type?: 'success' | 'info' | 'warning' | 'error') => {
+    switch (type) {
+      case 'success':
+        toast.success('Thành công', message);
+        break;
+      case 'error':
+        toast.error('Lỗi', message);
+        break;
+      case 'warning':
+        toast.warning('Cảnh báo', message);
+        break;
+      case 'info':
+      default:
+        toast.info('Thông báo', message);
+        break;
+    }
+  }, [toast]);
+
+  /**
+   * Callback khi bị kick - điều hướng về trang trước
+   */
+  const handleKickedFromRoom = useCallback((payload: any) => {
+    if (payload.kickedUserId === user?.userId) {
+      Alert.alert(
+        'Bạn đã bị kick',
+        payload.reason || 'Bạn đã bị kick khỏi phòng bởi host',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (navigation?.canGoBack()) {
+                navigation.goBack();
+              } else {
+                nav.reset({
+                  index: 0,
+                  routes: [{ name: 'MainTabs' }],
+                });
+              }
+            },
+          },
+        ]
+      );
+    }
+  }, [user?.userId, navigation, nav]);
+
+  /**
+   * Callback khi room bị xóa - điều hướng về trang trước
+   */
+  const handleRoomDeleted = useCallback(() => {
+    Alert.alert(
+      'Phòng đã bị xóa',
+      'Phòng đã bị xóa bởi host hoặc đã hết người chơi.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            if (navigation?.canGoBack()) {
+              navigation.goBack();
+            } else {
+              nav.reset({
+                index: 0,
+                routes: [{ name: 'MainTabs' }],
+              });
+            }
+          },
+        },
+      ]
+    );
+  }, [navigation, nav]);
+
+  /**
+   * Callback khi host thay đổi
+   */
+  const handleHostChanged = useCallback((newHostId: string) => {
+    // Refetch để lấy thông tin host mới đầy đủ
+    refetch();
+    
+    // Nếu user hiện tại trở thành host
+    if (newHostId === user?.userId) {
+      Alert.alert(
+        'Bạn đã trở thành Host!',
+        'Host cũ đã rời khỏi phòng. Bạn được chỉ định làm host mới.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, [user?.userId, refetch]);
+
+  // ✅ Tạo SignalR handlers
+  const signalRHandlers = useMatchRoomSignalRHandlers({
+    roomId,
+    currentUserId: user?.userId,
+    setRoomData,
+    showNotification,
+    onKicked: handleKickedFromRoom,
+    onRoomDeleted: handleRoomDeleted,
+    onHostChanged: handleHostChanged,
+  });
+
+  // ✅ Kết nối SignalR với handlers
+  const { isConnected: isSignalRConnected, connectionState } = useMatchRoomSignalR(signalRHandlers);
+  
+  // Log connection state for debugging
+  useEffect(() => {
+    console.log('🔌 SignalR Connection State:', connectionState, 'Connected:', isSignalRConnected);
+  }, [connectionState, isSignalRConnected]);
+
+  // ✅ Handle open position selection modal
+  const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
     if (!user) {
-      Alert.alert('Login Required', 'Please login to join a room');
+      Alert.alert('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để tham gia phòng');
       return;
     }
 
-    joinRoom(
-      { userId: user.userId, roomId: room!.id, teamId },
+    // User phải là participant (đã join vào Unassigned từ MatchesScreen)
+    if (!currentUserParticipant) {
+      Alert.alert('Chưa tham gia', 'Bạn cần tham gia phòng trước khi chọn đội');
+      return;
+    }
+
+    // Nếu đã có team rồi thì thông báo (có thể cho phép đổi team sau này)
+    if (currentUserParticipant.teamAssignment !== 'Unassigned') {
+      Alert.alert('Đã chọn đội', `Bạn đã ở Team ${currentUserParticipant.teamAssignment}`);
+      return;
+    }
+
+    // Set pending team and show modal
+    if (teamAssignment === 'A' || teamAssignment === 'B') {
+      setPendingTeamAssignment(teamAssignment);
+      setShowPositionModal(true);
+    }
+  };
+
+  // ✅ Handle position selected from modal - Cập nhật team assignment và position
+  const handlePositionSelected = (position: PlayerPosition) => {
+    if (!pendingTeamAssignment || !displayRoom) return;
+
+    // Gọi PUT /participants/me để cập nhật team và position
+    // Server sẽ broadcast ParticipantUpdated event qua SignalR
+    updateParticipant(
+      { 
+        roomId: displayRoom.roomId, 
+        teamAssignment: pendingTeamAssignment, 
+        position: position,
+      },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'You have joined the team!');
-          setSelectedTeamId(teamId);
+          toast.success(
+            'Chọn đội thành công!', 
+            `Bạn đã chọn Team ${pendingTeamAssignment} với vị trí ${position}`
+          );
+          setSelectedTeam(pendingTeamAssignment);
+          setShowPositionModal(false);
+          setPendingTeamAssignment(null);
+          // SignalR sẽ tự động cập nhật UI, nhưng refetch để đảm bảo
           refetch();
         },
         onError: (error: any) => {
-          Alert.alert('Error', error.message || 'Failed to join room');
+          toast.error('Lỗi', error.message || 'Không thể chọn đội');
+          setShowPositionModal(false);
+          setPendingTeamAssignment(null);
         },
       }
     );
   };
 
+  // ✅ Handle close position modal
+  const handleClosePositionModal = () => {
+    setShowPositionModal(false);
+    setPendingTeamAssignment(null);
+  };
+
   const handleJoinMatch = () => {
-    if (!selectedTeamId) {
-      Alert.alert('Please choose a team', 'You need to select a team before joining the match');
+    if (!currentUserParticipant) {
+      Alert.alert('Please join a team', 'You need to join a team before entering the match');
       return;
     }
     navigation?.navigate('RoomDetail', { roomId });
@@ -154,6 +356,31 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     );
   };
 
+  // ✅ Handle leave room
+  const handleLeaveRoom = () => {
+    Alert.alert(
+      t('roomDetail.leaveRoomTitle', 'Rời phòng'),
+      t('roomDetail.leaveRoomMessage', 'Bạn có chắc muốn rời khỏi phòng này?'),
+      [
+        { text: t('common.cancel', 'Hủy'), style: 'cancel' },
+        {
+          text: t('roomDetail.leaveRoomConfirm', 'Rời phòng'),
+          style: 'destructive',
+          onPress: () => {
+            leaveMatchRoom(roomId, {
+              onSuccess: () => {
+                toast.success(t('roomDetail.leaveRoomSuccess', 'Rời phòng'), t('roomDetail.leaveRoomSuccessDesc', 'Bạn đã rời khỏi phòng'));
+                handleGoBack();
+              },
+              onError: (error: any) => {
+                toast.error(t('common.error', 'Lỗi'), error.message || t('roomDetail.leaveRoomError', 'Không thể rời phòng'));
+              },
+            });
+          },
+        },
+      ]
+    );
+  };
 
   // ✅ Loading state
   if (isLoading) {
@@ -182,7 +409,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   }
 
   // ✅ Not found state
-  if (!room) {
+  if (!displayRoom) {
     return (
       <ThemedSafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.notFoundContainer}>
@@ -214,15 +441,31 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           </ThemedText>
         </View>
         
-        {/* Menu Button (Host only) */}
-        {isHost && (
-          <TouchableOpacity
-            onPress={() => setShowMenuModal(true)}
-            style={styles.menuButton}
-          >
-            <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerRight}>
+          {/* Leave Room Button (when user is participant) */}
+          {currentUserParticipant && (
+            <TouchableOpacity
+              onPress={handleLeaveRoom}
+              disabled={isLeaving}
+              style={styles.menuButton}
+            >
+              <Ionicons
+                name="exit-outline"
+                size={24}
+                color={theme.colors.error || '#ef4444'}
+              />
+            </TouchableOpacity>
+          )}
+          {/* Menu Button (Host only) */}
+          {isHost && (
+            <TouchableOpacity
+              onPress={() => setShowMenuModal(true)}
+              style={styles.menuButton}
+            >
+              <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </ThemedView>
 
       {/* Tab Navigation */}
@@ -316,7 +559,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                   {t('roomDetail.format')}
                 </ThemedText>
                 <ThemedText variant="primary" size="xl" weight="bold">
-                  {room.format}
+                  {displayRoom.matchFormat === 'FiveVsFive' ? '5v5' : displayRoom.matchFormat === 'SevenVsSeven' ? '7v7' : displayRoom.matchFormat}
                 </ThemedText>
               </View>
             </ThemedView>
@@ -341,7 +584,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                   {t('roomDetail.datetime')}
                 </ThemedText>
                 <ThemedText variant="primary" size="l" weight="semiBold">
-                  {new Date(room.datetime).toLocaleString('vi-VN')}
+                  {new Date(displayRoom.matchDate).toLocaleDateString('vi-VN')} • {displayRoom.startTime} - {displayRoom.endTime}
                 </ThemedText>
               </View>
             </ThemedView>
@@ -366,10 +609,35 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                   {t('roomDetail.venue')}
                 </ThemedText>
                 <ThemedText variant="primary" size="m" weight="medium">
-                  {room.venue.name}
+                  {displayRoom.field.fieldName} - {displayRoom.field.venue.venueName}
                 </ThemedText>
                 <ThemedText variant="secondary" size="s">
-                  {room.venue.address}
+                  {displayRoom.field.venue.address}
+                </ThemedText>
+              </View>
+            </ThemedView>
+
+            {/* Deposit */}
+            <ThemedView 
+              style={[
+                styles.infoCard,
+                { backgroundColor: theme.colors.surface }
+              ]}
+            >
+              <View 
+                style={[
+                  styles.infoIconContainer,
+                  { backgroundColor: theme.colors.neonGreen + '20' }
+                ]}
+              >
+                <ThemedIcon name="cash" size={24} variant="accent" />
+              </View>
+              <View style={styles.infoContent}>
+                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
+                  Deposit / Person
+                </ThemedText>
+                <ThemedText variant="primary" size="l" weight="semiBold">
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayRoom.depositPerPerson)}
                 </ThemedText>
               </View>
             </ThemedView>
@@ -379,80 +647,155 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           <View style={styles.teamLineupSection}>
             <View style={styles.teamLineupHeader}>
               <ThemedText variant="primary" size="l" weight="bold">
-                {t('roomDetail.teamLineup')} ({room.currentPlayers}/{room.totalPlayers})
+                {t('roomDetail.teamLineup')} ({displayRoom.filledSlots}/{displayRoom.totalSlots})
               </ThemedText>
+              {/* SignalR Connection Indicator */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View 
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: isSignalRConnected ? theme.colors.neonGreen : theme.colors.textSecondary,
+                    marginRight: 4,
+                  }}
+                />
+                <ThemedText variant="secondary" size="xs">
+                  {isSignalRConnected ? 'Live' : 'Offline'}
+                </ThemedText>
+              </View>
             </View>
 
-            {/* Render Teams from API */}
-            {room.teams.map((team) => (
-              <View key={team.id} style={styles.teamContainer}>
+            {/* Team A */}
+            <View style={styles.teamContainer}>
+              <View style={styles.teamHeader}>
+                <ThemedIcon name="shield" size={20} variant="accent" />
+                <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
+                  Team A
+                </ThemedText>
+                {currentUserParticipant?.teamAssignment === 'A' && (
+                  <View 
+                    style={[
+                      styles.selectedTeamBadge,
+                      { backgroundColor: theme.colors.neonGreen + '30' }
+                    ]}
+                  >
+                    <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
+                      Your Team
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.playersScrollContainer}
+              >
+                {displayRoom.participants.teamA.map((participant) => (
+                  <ParticipantCard
+                    key={participant.participantId}
+                    participant={participant}
+                    teamColor="#4CAF50"
+                    isHost={isHost}
+                    currentUserId={user?.userId}
+                    isKicking={isKicking}
+                    onKickPlayer={handleKickPlayer}
+                  />
+                ))}
+                {/* Add empty slots for Team A */}
+                {displayRoom.participants.teamA.length < displayRoom.totalSlots / 2 && currentUserParticipant?.teamAssignment === 'Unassigned' && (
+                  <EmptySlotCard
+                    teamAssignment="A"
+                    teamColor="#4CAF50"
+                    isJoining={isUpdatingParticipant && pendingTeamAssignment === 'A'}
+                    onPress={handleOpenPositionModal}
+                  />
+                )}
+              </ScrollView>
+            </View>
+
+            {/* Team B */}
+            <View style={styles.teamContainer}>
+              <View style={styles.teamHeader}>
+                <ThemedIcon name="shield" size={20} variant="accent" />
+                <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
+                  Team B
+                </ThemedText>
+                {currentUserParticipant?.teamAssignment === 'B' && (
+                  <View 
+                    style={[
+                      styles.selectedTeamBadge,
+                      { backgroundColor: theme.colors.neonGreen + '30' }
+                    ]}
+                  >
+                    <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
+                      Your Team
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.playersScrollContainer}
+              >
+                {displayRoom.participants.teamB.map((participant) => (
+                  <ParticipantCard
+                    key={participant.participantId}
+                    participant={participant}
+                    teamColor="#2196F3"
+                    isHost={isHost}
+                    currentUserId={user?.userId}
+                    isKicking={isKicking}
+                    onKickPlayer={handleKickPlayer}
+                  />
+                ))}
+                {/* Add empty slots for Team B */}
+                {displayRoom.participants.teamB.length < displayRoom.totalSlots / 2 && currentUserParticipant?.teamAssignment === 'Unassigned' && (
+                  <EmptySlotCard
+                    teamAssignment="B"
+                    teamColor="#2196F3"
+                    isJoining={isUpdatingParticipant && pendingTeamAssignment === 'B'}
+                    onPress={handleOpenPositionModal}
+                  />
+                )}
+              </ScrollView>
+            </View>
+
+            {/* Unassigned Players */}
+            {displayRoom.participants.unassigned.length > 0 && (
+              <View style={styles.teamContainer}>
                 <View style={styles.teamHeader}>
-                  <ThemedIcon name="shield" size={20} variant="accent" />
-                  <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-                    {team.name}
+                  <ThemedIcon name="people" size={20} variant="secondary" />
+                  <ThemedText variant="secondary" size="m" weight="bold" style={styles.teamName}>
+                    Unassigned
                   </ThemedText>
-                  {selectedTeamId === team.id && (
-                    <View 
-                      style={[
-                        styles.selectedTeamBadge,
-                        { backgroundColor: theme.colors.neonGreen + '30' }
-                      ]}
-                    >
-                      <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                        Your Team
-                      </ThemedText>
-                    </View>
-                  )}
                 </View>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.playersScrollContainer}
                 >
-                  {team.players.map((player, index) => (
-                    <View key={`${team.id}-player-${index}`}>
-                      <PlayerCard
-                        player={player}
-                        teamId={team.id}
-                        teamColor={team.color}
-                        isHost={isHost}
-                        currentUserId={user?.userId}
-                        isJoining={isJoining}
-                        isKicking={isKicking}
-                        onJoinTeam={handleJoinTeam}
-                        onKickPlayer={handleKickPlayer}
-                        onPress={() => {
-                          console.log('View player profile:', player.user?.id);
-                          // Handle view player profile
-                        }}
-                      />
-                    </View>
+                  {displayRoom.participants.unassigned.map((participant) => (
+                    <ParticipantCard
+                      key={participant.participantId}
+                      participant={participant}
+                      teamColor="#9E9E9E"
+                      isHost={isHost}
+                      currentUserId={user?.userId}
+                      isKicking={isKicking}
+                      onKickPlayer={handleKickPlayer}
+                    />
                   ))}
-                  {/* Add empty slot if team not full */}
-                  {team.players.length < room.totalPlayers / 2 && (
-                    <View key={`${team.id}-empty-slot`}>
-                      <PlayerCard
-                        player={null}
-                        teamId={team.id}
-                        teamColor={team.color}
-                        isHost={isHost}
-                        currentUserId={user?.userId}
-                        isJoining={isJoining}
-                        isKicking={isKicking}
-                        onJoinTeam={handleJoinTeam}
-                        onKickPlayer={handleKickPlayer}
-                      />
-                    </View>
-                  )}
                 </ScrollView>
               </View>
-            ))}
+            )}
           </View>
             </>
           )}
 
           {/* Host Info Tab Content */}
-          {activeTab === 'host' && room.host && (
+          {activeTab === 'host' && displayRoom.host && (
             <View>
               <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
                 Host Information
@@ -461,45 +804,46 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               <ThemedCard style={styles.hostCard}>
                 <View style={styles.hostHeader}>
                   <Image
-                    source={{ uri: room.host.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(room.host.name) }}
+                    source={{ uri: displayRoom.host.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayRoom.host.fullName) }}
                     style={styles.hostAvatar}
                   />
                   <View style={styles.hostInfo}>
                     <ThemedText size="xl" weight="bold" style={styles.hostName}>
-                      {room.host.name}
+                      {displayRoom.host.fullName}
                     </ThemedText>
-                    <View style={styles.hostRating}>
-                      <ThemedIcon name="star" size={16} variant="accent" />
-                      <ThemedText variant="secondary" size="m" style={styles.hostRatingText}>
-                        {(room.host as any).rating || 'N/A'} • {(room.host as any).matchesHosted || 0} matches hosted
-                      </ThemedText>
-                    </View>
+                    <ThemedText variant="secondary" size="s">
+                      Host ID: {displayRoom.host.userId.slice(0, 8)}...
+                    </ThemedText>
                   </View>
                 </View>
 
-                {(room.host as any).bio && (
+                {/* Room Description */}
+                {displayRoom.description && (
                   <View style={styles.hostBio}>
-                    <ThemedText variant="secondary" size="m">
-                      {(room.host as any).bio}
+                    <ThemedText variant="secondary" size="xs" style={{ marginBottom: 4 }}>
+                      Description
+                    </ThemedText>
+                    <ThemedText size="m">
+                      {displayRoom.description}
                     </ThemedText>
                   </View>
                 )}
 
-                <View style={styles.hostContact}>
-                  <View 
-                    style={[
-                      styles.hostContactItem,
-                      { backgroundColor: theme.colors.neonGreen + '10' }
-                    ]}
-                  >
-                    <ThemedText variant="secondary" size="xs" style={styles.contactLabel}>
-                      Email
+                {/* Room Rules */}
+                {displayRoom.rules && (
+                  <View style={[styles.hostBio, { marginTop: 12 }]}>
+                    <ThemedText variant="secondary" size="xs" style={{ marginBottom: 4 }}>
+                      Rules
                     </ThemedText>
-                    <ThemedText size="s" weight="medium" numberOfLines={1}>
-                      {room.host.email}
+                    <ThemedText size="m">
+                      {displayRoom.rules}
                     </ThemedText>
                   </View>
-                  {room.host.phone && (
+                )}
+
+                {/* Contact via venue */}
+                {displayRoom.field.venue.contactPhone && (
+                  <View style={styles.hostContact}>
                     <View 
                       style={[
                         styles.hostContactItem,
@@ -507,142 +851,108 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                       ]}
                     >
                       <ThemedText variant="secondary" size="xs" style={styles.contactLabel}>
-                        Phone
+                        Venue Contact
                       </ThemedText>
                       <ThemedText size="s" weight="medium">
-                        {room.host.phone}
+                        {displayRoom.field.venue.contactPhone}
                       </ThemedText>
                     </View>
-                  )}
-                </View>
+                  </View>
+                )}
               </ThemedCard>
             </View>
           )}
 
           {/* Venue Details Tab Content */}
-          {activeTab === 'venue' && room.venue && (
+          {activeTab === 'venue' && displayRoom.field && (
             <View>
               <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
-                Venue Details
+                Venue & Field Details
               </ThemedText>
-
-              {/* Venue Images Carousel */}
-              {room.venue.images && room.venue.images.length > 0 && (
-                <View style={styles.venueImagesContainer}>
-                  <ScrollView
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onScroll={(e) => {
-                      const index = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
-                      setSelectedImageIndex(index);
-                    }}
-                    scrollEventThrottle={16}
-                  >
-                    {room.venue.images.map((imageUrl, index) => (
-                      <View key={index} style={styles.venueImageWrapper}>
-                        <Image
-                          source={{ uri: imageUrl }}
-                          style={styles.venueImage}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    ))}
-                  </ScrollView>
-                  {/* Image Indicators */}
-                  <View style={styles.imageIndicators}>
-                    {room.venue.images.map((_, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.imageIndicator,
-                          {
-                            width: selectedImageIndex === index ? 24 : 8,
-                            backgroundColor: selectedImageIndex === index 
-                              ? theme.colors.neonGreen 
-                              : theme.colors.border,
-                          }
-                        ]}
-                      />
-                    ))}
-                  </View>
-                </View>
-              )}
 
               {/* Venue Info Cards */}
               <View style={styles.venueInfoContainer}>
-                {/* Rating & Price */}
-                <View style={styles.venueInfoRow}>
-                  <ThemedCard style={styles.venueInfoCard}>
-                    <View style={styles.venueInfoHeader}>
-                      <ThemedIcon name="star" size={20} variant="accent" />
-                      <ThemedText size="xs" variant="secondary" style={styles.venueInfoLabel}>
-                        Rating
-                      </ThemedText>
-                    </View>
-                    <ThemedText size="xl" weight="bold">
-                      {room.venue.rating}
+                {/* Field Info */}
+                <ThemedCard style={styles.venueLocationCard}>
+                  <View style={styles.venueInfoHeader}>
+                    <ThemedIcon name="football" size={20} variant="accent" />
+                    <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
+                      Field
                     </ThemedText>
-                    <ThemedText size="xs" variant="secondary">
-                      {room.venue.totalReviews} reviews
-                    </ThemedText>
-                  </ThemedCard>
+                  </View>
+                  <ThemedText size="l" weight="semiBold">
+                    {displayRoom.field.fieldName}
+                  </ThemedText>
+                  <ThemedText variant="secondary" size="s">
+                    Type: {displayRoom.field.fieldType === 'FiveVsFive' ? '5v5' : displayRoom.field.fieldType === 'SevenVsSeven' ? '7v7' : displayRoom.field.fieldType}
+                  </ThemedText>
+                </ThemedCard>
 
+                {/* Price */}
+                <View style={styles.venueInfoRow}>
                   <ThemedCard style={styles.venueInfoCard}>
                     <View style={styles.venueInfoHeader}>
                       <ThemedIcon name="cash" size={20} variant="accent" />
                       <ThemedText size="xs" variant="secondary" style={styles.venueInfoLabel}>
-                        Price/Hour
+                        Field Rate/Hour
                       </ThemedText>
                     </View>
                     <ThemedText size="xl" weight="bold">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(room.venue.pricePerHour)}
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayRoom.field.hourlyRate)}
+                    </ThemedText>
+                  </ThemedCard>
+
+                  <ThemedCard style={styles.venueInfoCard}>
+                    <View style={styles.venueInfoHeader}>
+                      <ThemedIcon name="time" size={20} variant="accent" />
+                      <ThemedText size="xs" variant="secondary" style={styles.venueInfoLabel}>
+                        Duration
+                      </ThemedText>
+                    </View>
+                    <ThemedText size="xl" weight="bold">
+                      {displayRoom.durationMinutes} min
                     </ThemedText>
                   </ThemedCard>
                 </View>
+
+                {/* Venue Info */}
+                <ThemedCard style={styles.venueLocationCard}>
+                  <View style={styles.venueInfoHeader}>
+                    <ThemedIcon name="business" size={20} variant="accent" />
+                    <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
+                      Venue
+                    </ThemedText>
+                  </View>
+                  <ThemedText size="l" weight="semiBold">
+                    {displayRoom.field.venue.venueName}
+                  </ThemedText>
+                </ThemedCard>
 
                 {/* Location */}
                 <ThemedCard style={styles.venueLocationCard}>
                   <View style={styles.venueInfoHeader}>
                     <ThemedIcon name="location" size={20} variant="accent" />
                     <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                      Location
+                      Address
                     </ThemedText>
                   </View>
                   <ThemedText variant="secondary" size="m">
-                    {room.venue.address}
+                    {displayRoom.field.venue.address}
                   </ThemedText>
-                  {room.venue.lat && room.venue.lng && (
-                    <ThemedText variant="secondary" size="s" style={styles.venueCoordinates}>
-                      📍 {room.venue.lat.toFixed(4)}, {room.venue.lng.toFixed(4)}
-                    </ThemedText>
-                  )}
                 </ThemedCard>
 
-                {/* Amenities */}
-                {room.venue.amenities && room.venue.amenities.length > 0 && (
-                  <ThemedCard style={styles.venueAmenitiesCard}>
+                {/* Contact */}
+                {displayRoom.field.venue.contactPhone && (
+                  <ThemedCard style={styles.venueLocationCard}>
                     <View style={styles.venueInfoHeader}>
-                      <ThemedIcon name="checkmark-circle" size={20} variant="accent" />
+                      <ThemedIcon name="call" size={20} variant="accent" />
                       <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                        Amenities
+                        Contact
                       </ThemedText>
                     </View>
-                    <View style={styles.amenitiesContainer}>
-                      {room.venue.amenities.map((amenity, index) => (
-                        <View
-                          key={index}
-                          style={[
-                            styles.amenityTag,
-                            { backgroundColor: theme.colors.neonGreen + '15' }
-                          ]}
-                        >
-                          <ThemedText size="s" weight="medium">
-                            ✓ {amenity}
-                          </ThemedText>
-                        </View>
-                      ))}
-                    </View>
+                    <ThemedText size="m">
+                      {displayRoom.field.venue.contactPhone}
+                    </ThemedText>
                   </ThemedCard>
                 )}
               </View>
@@ -656,11 +966,21 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         <HostMenuModal
           visible={showMenuModal}
           handleShowMenuModal={() => setShowMenuModal(false)}
-          room={room}
+          room={displayRoom}
           handleCancelRoom={handleCancelRoom}
           isCancelling={isCancelling}
         />
       )}
+    
+      {/* Position Selection Modal */}
+      <PositionSelectionModal
+        visible={showPositionModal}
+        onClose={handleClosePositionModal}
+        onSelectPosition={handlePositionSelected}
+        teamAssignment={pendingTeamAssignment || 'A'}
+        isLoading={isUpdatingParticipant}
+      />
+
       {/* Join Button - Only show on Teams tab */}
       {activeTab === 'teams' && (
       <View 
@@ -676,26 +996,26 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           style={[
             styles.joinButton,
             {
-              backgroundColor: selectedTeamId ? theme.colors.neonGreen : theme.colors.border,
-              shadowColor: selectedTeamId ? theme.colors.neonGreen : 'transparent',
+              backgroundColor: currentUserParticipant ? theme.colors.neonGreen : theme.colors.border,
+              shadowColor: currentUserParticipant ? theme.colors.neonGreen : 'transparent',
             }
           ]}
           onPress={handleJoinMatch}
-          disabled={!selectedTeamId || isJoining}
+          disabled={!currentUserParticipant || isUpdatingParticipant}
         >
           <ThemedText 
             size="l" 
             weight="bold" 
             style={[
               styles.joinButtonText,
-              { color: selectedTeamId ? '#000' : theme.colors.textSecondary }
+              { color: currentUserParticipant ? '#000' : theme.colors.textSecondary }
             ]}
           >
-            {isJoining 
+            {isUpdatingParticipant 
               ? 'Joining...' 
-              : selectedTeamId 
+              : currentUserParticipant 
                 ? t('roomDetail.joinButton') 
-                : 'Choose a team first'
+                : 'Join a team first'
             }
           </ThemedText>
         </TouchableOpacity>
@@ -740,6 +1060,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   backButton: {
     width: 40,

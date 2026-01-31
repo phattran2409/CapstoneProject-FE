@@ -8,6 +8,7 @@ import {
   LeaderboardScreen,
   CreateRoomScreen,
   VenueSelectionScreen,
+  VenueDetailScreen,
   RoomDetailScreen,
   PersonalPageScreen,
   ProfileDetailScreen,
@@ -127,6 +128,14 @@ const StackNavigator: React.FC = () => {
           <Stack.Screen 
             name="VenueSelection" 
             component={VenueSelectionScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="VenueDetail" 
+            component={VenueDetailScreen}
             options={{
               headerShown: false,
               animation: 'slide_from_right',

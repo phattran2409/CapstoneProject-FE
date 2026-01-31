@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/api/client';
-import { Venue, VenueFilters, VenueReview, VenueBooking, PaginatedVenueResponse, FieldAvailability, FieldAvailabilityResponse } from '../types/venue.types';
+import { Venue, VenueDetail, VenueDetailResponse, VenueFilters, VenueReview, VenueBooking, PaginatedVenueResponse, FieldAvailability, FieldAvailabilityResponse } from '../types/venue.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import axios from 'axios';
 
@@ -17,11 +17,29 @@ export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueR
 };
 
 // Get single venue by ID
-export const getVenueById = async (id: string): Promise<Venue> => {
-  const response = await apiClient.get<Venue>(`/venues/${id}`);
-  // Interceptor returns response.data, so response is already the data
-  return response as unknown as Venue;
+export const getVenueById = async (id: string): Promise<VenueDetail> => {
+  try {
+    const response = await apiClient.get<VenueDetailResponse>(`/venues/${id}`);
+    return response.data.data as unknown as VenueDetail;
+  
+  } catch (error) {
+    console.error('Error fetching venue by id:', error);
+    throw error;
+  }
 };
+
+// Get venue detail by ID (full detail with operating hours, photos, etc.)
+// export const getVenueDetail = async (id: string): Promise<VenueDetail> => {
+//   try {
+//     const response = await axios.get<VenueDetailResponse>(
+//       `https://api.kickify.site/api/venues/${id}`
+//     );
+//     return response.data.data;
+//   } catch (error) {
+//     console.error('Error fetching venue detail:', error);
+//     throw error;
+//   }
+// };
 
 // Get venue reviews
 export const getVenueReviews = async (venueId: string): Promise<VenueReview[]> => {

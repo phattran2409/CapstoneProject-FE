@@ -23,12 +23,15 @@ export const API_CONFIG = {
       RESEND_OTP: "/auth/resend-otp",
     },
     ROOMS: {
-      LIST: "/rooms",
-      DETAIL: "/rooms/:id",
-      FULL_INFO: "/rooms/:id/full-info",
-      TEAMS: "/rooms/:id/teams",
-      MESSAGES: "/rooms/:id/messages",
-      CREATE: "/rooms",
+      LIST: "/match-rooms",
+      JOIN: "/match-rooms/:id/join",
+      LEAVE: "/match-rooms/:id/leave",
+      DETAIL: "/match-rooms/:id",
+      FULL_INFO: "/match-rooms/:id",
+      TEAMS: "/match-rooms/:id/teams",
+      MESSAGES: "/match-rooms/:id/messages",
+      CREATE: "/match-rooms",
+      UPDATE_PARTICIPANT: "/match-rooms/:id/participants/me",
     },
     VENUES: {
       LIST: "/venues",
@@ -40,6 +43,10 @@ export const API_CONFIG = {
       CREATE: "/bookings",
       UPDATE: "/bookings/:id",
       DELETE: "/bookings/:id",
+    },
+    WALLETS: {
+      BALANCE: "/wallets/balance",
+      DEPOSIT: "/wallets/deposit",
     },
   },
 } as const;

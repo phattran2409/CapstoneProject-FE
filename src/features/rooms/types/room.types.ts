@@ -1,72 +1,69 @@
-// ==================== User Types ====================
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  avatar?: string;
-  position?: string;
-  rating: number;
-  totalMatches: number;
-  createdAt: string;
-}
-
-// ==================== Venue Types ====================
-export interface Venue {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  images: string[];
-  amenities: string[];
-  pricePerHour: number;
-  rating: number;
-  totalReviews: number;
-}
-
-// ==================== Room/Match Types ====================
-export interface Room {
-  id: string;
-  format: string;
-  datetime: string;
-  venueId: string;
-  venue?: Venue;
-  totalPlayers: number;
-  currentPlayers: number;
-  status: RoomStatus;
-  hostId: string;
-  host?: User;
-  pricePerPlayer: number;
-  description: string;
-  createdAt: string;
-}
 
 export type RoomStatus = 'open' | 'full' | 'closed' | 'completed' | 'cancelled';
 
-export interface Player {
-  userId: string;
-  position: string;
-  isConfirmed: boolean;
-  joinedAt: string;
-  user?: User;
-}
-
-export interface Team {
-  id: string; 
-  roomId: string;
-  name: string;
-  color: string;
-  players: Player[];
-}
-
-export interface RoomFullInfo extends Room {
-  venue: Venue;
-  teams: Team[];
-  host: User;
-}
 
 // ==================== Match Room Types (from API) ====================
+
+export type MatchRoomStatus = 'Open' | 'Full' | 'Closed' | 'Completed' | 'Cancelled';
+export type MatchFormat = 'FiveVsFive' | 'SevenVsSeven' | string;
+export type TeamAssignment = 'A' | 'B' | 'Unassigned';
+
+/**
+ * Host info trong MatchRoom
+ */
+export interface MatchRoomHost {
+  userId: string;
+  fullName: string;
+  avatarUrl: string | null;
+}
+
+/**
+ * Venue info trong Field
+ */
+export interface MatchRoomVenue {
+  venueId: string;
+  venueName: string;
+  address: string;
+  contactPhone: string | null;
+}
+
+/**
+ * Field (sân) info
+ */
+export interface MatchRoomField {
+  fieldId: string;
+  fieldName: string;
+  fieldType: MatchFormat;
+  hourlyRate: number;
+  venue: MatchRoomVenue;
+}
+
+/**
+ * Participant (người chơi) trong phòng
+ */
+export interface MatchRoomParticipant {
+  participantId: string;
+  userId: string;
+  fullName: string;
+  avatarUrl: string | null;
+  teamAssignment: TeamAssignment;
+  position: string;
+  depositPaid: boolean;
+  joinDate: string;
+}
+
+/**
+ * Participants grouped by team
+ */
+export interface MatchRoomParticipants {
+  teamA: MatchRoomParticipant[];
+  teamB: MatchRoomParticipant[];
+  unassigned: MatchRoomParticipant[];
+}
+
+/**
+ * Match Room summary (for list view)
+ */
 export interface MatchRoom {
   roomId: string;
   hostId: string;
@@ -80,24 +77,54 @@ export interface MatchRoom {
   startTime: string;
   endTime: string;
   durationMinutes: number;
-  matchFormat: 'FiveVsFive' | 'SevenVsSeven' | string;
+  matchFormat: MatchFormat;
   totalSlots: number;
   filledSlots: number;
   depositPerPerson: number;
-  status: 'Open' | 'Full' | 'Closed' | 'Completed' | 'Cancelled';
+  status: MatchRoomStatus;
   createdAt: string;
 }
 
-export interface MatchRoomsResponse {
-  isSuccess: boolean;
-  data: {
-    rooms: MatchRoom[];
-    totalCount: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  };
+/**
+ * Match Room Full Info (for detail view)
+ * Response từ GET /match-rooms/{id}
+ */
+export interface MatchRoomFullInfo {
+  roomId: string;
+  hostId: string;
+  host: MatchRoomHost;
+  fieldId: string;
+  field: MatchRoomField;
+  roomName: string | null;
+  matchDate: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  matchFormat: MatchFormat;
+  description: string;
+  rules: string;
+  totalSlots: number;
+  filledSlots: number;
+  depositPerPerson: number;
+  totalDepositCollected: number;
+  status: MatchRoomStatus;
+  participants: MatchRoomParticipants;
+  createdAt: string;
 }
+
+
+export interface ApiResponse<T> {
+  isSuccess: boolean;
+  data: T;
+}
+
+export type MatchRoomsResponse = ApiResponse<{
+  rooms: MatchRoom[], 
+  totalCount: number, 
+  page: number, 
+  pageSize: number, 
+  totalPages: number
+}>;
 
 export interface MatchRoomFilters {
   page?: number;
@@ -152,20 +179,18 @@ export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {
 }
 
 export interface JoinRoomRequest {
-  userId: string;
   roomId: string;
-  teamId: string;
 }
 
 // ==================== Message Types ====================
-export interface Message {
-  id: string;
-  roomId: string;
-  userId: string;
-  user?: User;
-  message: string;
-  createdAt: string;
-}
+// export interface Message {
+//   id: string;
+//   roomId: string;
+//   userId: string;
+//   user?: User;
+//   message: string;
+//   createdAt: string;
+// }
 
 export interface SendMessageRequest {
   roomId: string;

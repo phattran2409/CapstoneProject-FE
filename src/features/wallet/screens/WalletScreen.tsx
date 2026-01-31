@@ -1,5 +1,18 @@
-import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Linking,
+  Alert,
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
@@ -10,8 +23,11 @@ import {
   ThemedView,
 } from '@/shared/components/themed';
 import Button from '@/shared/components/Button';
-
+import { useWalletBalance, useWalletDeposit } from '../hooks';
 import { RootStackParamList } from '@/app/navigation/types';
+
+const formatBalance = (value: number) =>
+  value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
 
 type WalletScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -79,6 +95,41 @@ const MOCK_TRANSACTIONS: WalletTransaction[] = [
 const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { data: wallet, isLoading: balanceLoading } = useWalletBalance();
+  const depositMutation = useWalletDeposit();
+
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositError, setDepositError] = useState('');
+
+  const handleOpenDepositModal = () => {
+    setDepositAmount('');
+    setDepositError('');
+    setShowDepositModal(true);
+  };
+
+  const handleDeposit = async () => {
+    const amount = Number(depositAmount?.replace(/\D/g, '') || 0);
+    if (!amount || amount < 1000) {
+      setDepositError('Vui lòng nhập số tiền tối thiểu 1.000 VND');
+      return;
+    }
+    setDepositError('');
+    try {
+      const result = await depositMutation.mutateAsync(amount);
+      setShowDepositModal(false);
+      if (result?.paymentUrl) {
+        const canOpen = await Linking.canOpenURL(result.paymentUrl);
+        if (canOpen) {
+          await Linking.openURL(result.paymentUrl);
+        } else {
+          Alert.alert('Thông báo', 'Không thể mở link thanh toán. Vui lòng thử lại.');
+        }
+      }
+    } catch (err: any) {
+      setDepositError(err?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  };
 
   const renderTransactionItem = ({ item }: { item: WalletTransaction }) => {
     const isIncome = item.type === 'in';
@@ -210,18 +261,22 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               defaultValue: 'Tổng số dư hiện có',
             })}
           </ThemedText>
-          <ThemedText
-            style={{ color: theme.colors.neonGreen }}
-            size="xxl"
-            weight="bold"
-          >
-            1,250 COINS
-          </ThemedText>
+          {balanceLoading ? (
+            <ActivityIndicator size="small" color={theme.colors.neonGreen} style={{ marginVertical: 8 }} />
+          ) : (
+            <ThemedText
+              style={{ color: theme.colors.neonGreen }}
+              size="xxl"
+              weight="bold"
+            >
+              {wallet ? `${formatBalance(wallet.balance)} VND` : '0 VND'}
+            </ThemedText>
+          )}
 
           <View style={styles.balanceActions}>
             <Button
               title={t('wallet.deposit', { defaultValue: 'Nạp thêm' })}
-              onPress={() => navigation.navigate('WalletTopUp' as any)}
+              onPress={handleOpenDepositModal}
               size="medium"
               style={{
                 flex: 1,
@@ -319,6 +374,87 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
         }}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Deposit Modal */}
+      <Modal
+        visible={showDepositModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDepositModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowDepositModal(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalKeyboardView}
+          >
+            <Pressable
+              style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.modalHeader}>
+                <ThemedText variant="primary" size="l" weight="bold">
+                  Nạp tiền vào ví
+                </ThemedText>
+                <TouchableOpacity onPress={() => setShowDepositModal(false)}>
+                  <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              <ThemedText variant="secondary" size="s" style={{ marginTop: 8 }}>
+                Nhập số tiền cần nạp (VND)
+              </ThemedText>
+
+              <TextInput
+                style={[
+                  styles.depositInput,
+                  {
+                    borderColor: depositError ? theme.colors.error : theme.colors.border,
+                    color: theme.colors.text,
+                  },
+                ]}
+                placeholder="Ví dụ: 50000"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={depositAmount}
+                onChangeText={(text) => {
+                  setDepositAmount(text.replace(/\D/g, ''));
+                  if (depositError) setDepositError('');
+                }}
+                keyboardType="number-pad"
+              />
+              {depositError ? (
+                <ThemedText size="xs" style={{ color: theme.colors.error, marginTop: 4 }}>
+                  {depositError}
+                </ThemedText>
+              ) : null}
+
+              <Button
+                title={depositMutation.isPending ? 'Đang xử lý...' : 'Thanh toán VNPay'}
+                onPress={handleDeposit}
+                disabled={depositMutation.isPending}
+                size="medium"
+                style={{
+                  ...styles.modalButton,
+                  backgroundColor: theme.colors.neonGreen,
+                  opacity: depositMutation.isPending ? 0.7 : 1,
+                }}
+                textStyle={{ color: '#000' }}
+              />
+
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowDepositModal(false)}
+              >
+                <ThemedText variant="secondary" size="s">
+                  Hủy
+                </ThemedText>
+              </TouchableOpacity>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
     </ThemedSafeAreaView>
   );
 };
@@ -377,6 +513,43 @@ const styles = StyleSheet.create({
   },
   transactionMeta: {
     alignItems: 'flex-end',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalKeyboardView: {
+    width: '100%',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    width: '100%',
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  depositInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 12,
+    fontSize: 16,
+  },
+  modalButton: {
+    marginTop: 20,
+  },
+  modalCancelButton: {
+    alignSelf: 'center',
+    marginTop: 12,
+    paddingVertical: 8,
   },
 });
 
