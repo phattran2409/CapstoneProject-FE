@@ -1,26 +1,19 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Svg, {
-  Path,
-  Text as SvgText,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Stop,
-} from "react-native-svg";
 import { FriendshipActionButton } from "./FriendshipActionButton";
 import { FriendshipStatus } from "@/features/friends/types/friends.types";
+import { JerseyBadge } from "./JerseyBadge";
 
 interface ProfileHeaderProps {
+  avatar?: string;
   name: string;
   elo: number;
   description?: string;
-  age?: number;
   position?: string;
   shirtNumber?: number;
-  matchesCount?: number;
   isCurrentUser?: boolean;
   onEditPress?: () => void;
   // Friendship actions
@@ -33,79 +26,15 @@ interface ProfileHeaderProps {
 }
 
 //SVG Jersey Badge
-const JerseyBadge: React.FC<{
-  number: number;
-  accent: string;
-  text: string;
-}> = ({ number, accent, text }) => {
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-  return (
-    <View style={styles.jerseyRow}>
-      {/* Jersey SVG */}
-      <Svg width={70} height={80} viewBox="0 0 70 80">
-        <Defs>
-          <SvgLinearGradient id="jerseyBg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor="#1E2D3D" stopOpacity="1" />
-            <Stop offset="100%" stopColor="#0D1B2A" stopOpacity="1" />
-          </SvgLinearGradient>
-        </Defs>
-
-        {/* Jersey Body */}
-        <Path
-          d="M15 25 L15 72 Q15 76 19 76 L51 76 Q55 76 55 72 L55 25"
-          fill="url(#jerseyBg)"
-        />
-
-        {/* Left Sleeve */}
-        <Path d="M15 25 L5 32 Q2 35 4 40 L12 48 L15 42" fill="url(#jerseyBg)" />
-
-        {/* Right Sleeve */}
-        <Path
-          d="M55 25 L65 32 Q68 35 66 40 L58 48 L55 42"
-          fill="url(#jerseyBg)"
-        />
-
-        {/* Collar - Curved Downwards */}
-        <Path
-          d="M23 25 Q35 42 47 25 Q41 32 35 28 Q29 32 23 25 Z"
-          fill={accent}
-        />
-
-        {/* Jersey Number */}
-        <SvgText
-          x="35"
-          y="58"
-          fill="#FFFFFF"
-          fontSize={number > 9 ? 26 : 30}
-          fontWeight="800"
-          textAnchor="middle"
-        >
-          {number}
-        </SvgText>
-      </Svg>
-
-      {/* Position Text */}
-      <View style={styles.positionContainer}>
-        <Text
-          style={[styles.positionLabel, { color: theme.colors.textSecondary }]}
-        >
-          {t("personalPage.position")}
-        </Text>
-        <Text style={[styles.positionText, { color: accent }]}>{text}</Text>
-      </View>
-    </View>
-  );
-};
+JerseyBadge
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+  avatar,
   name,
   elo,
-  description = "King of the Pitch - Chuyên gia kiến tạo",
-  age = 20,
+  description,
   position = "Forward",
   shirtNumber = 10,
-  matchesCount = 100,
   isCurrentUser,
   onEditPress,
   friendshipStatus,
@@ -131,7 +60,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           },
         ]}
       >
-        <Ionicons name="person" size={60} color={theme.colors.textSecondary} />
+        <Image source={{ uri: avatar }} style={styles.avatar} />
       </View>
 
       {/* Name */}
@@ -199,7 +128,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             },
           ]}
         >
-          Elo Score
+          Điểm Elo
         </Text>
       </View>
       <JerseyBadge

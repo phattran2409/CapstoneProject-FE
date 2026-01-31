@@ -91,10 +91,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               resizeMode="cover"
             />
           ) : (
-            <Ionicons
-              name="person"
-              size={24}
-              color={theme.colors.textSecondary}
+            <Image
+              source={require("../../../assets/images/default_avatar.png")}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
             />
           )}
         </View>

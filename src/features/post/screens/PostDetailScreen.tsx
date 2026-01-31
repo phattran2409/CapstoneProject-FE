@@ -229,36 +229,17 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
           >
             <View style={styles.postAuthor}>
               {post.userAvatarUrl ? (
-                typeof post.userAvatarUrl === "string" ? (
-                  <Image
-                    source={{ uri: post.userAvatarUrl }}
-                    style={styles.postAvatar}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Image
-                    source={post.userAvatarUrl}
-                    style={styles.postAvatar}
-                    resizeMode="cover"
-                  />
-                )
+                <Image
+                  source={{ uri: post.userAvatarUrl }}
+                  style={styles.postAvatar}
+                  resizeMode="cover"
+                />
               ) : (
-                <View
-                  style={[
-                    styles.postAvatar,
-                    {
-                      backgroundColor: theme.colors.border,
-                      justifyContent: "center",
-                      alignItems: "center",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="person"
-                    size={24}
-                    color={theme.colors.textSecondary}
-                  />
-                </View>
+                <Image
+                  source={require("../../../assets/images/default_avatar.png")}
+                  style={styles.postAvatar}
+                  resizeMode="cover"
+                />
               )}
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <ThemedText variant="primary" size="m" weight="bold">

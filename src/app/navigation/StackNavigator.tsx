@@ -22,6 +22,7 @@ import {
   OnboardingScreen,
   checkOnboardingStatus,
 } from "@/screens";
+import { CreatePostScreen } from "@/features/post/screens";
 import TabNavigator from "./TabNavigator";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RootStackParamList } from "./types";
@@ -208,6 +209,14 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="CreatePost"
+              component={CreatePostScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_bottom",
               }}
             />
             <Stack.Screen

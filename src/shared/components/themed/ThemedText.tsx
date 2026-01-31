@@ -1,55 +1,56 @@
-import React from 'react';
-import { Text, TextProps, StyleSheet } from 'react-native';
-import { useTheme } from '../../theme';
+import React from "react";
+import { Text, TextProps, StyleSheet } from "react-native";
+import { useTheme } from "../../theme";
 
 interface ThemedTextProps extends TextProps {
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'accent' | 'muted';
-  size?: 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl' | 'title' | 'header';
-  weight?: 'regular' | 'medium' | 'semiBold' | 'bold';
+  variant?: "primary" | "secondary" | "tertiary" | "accent" | "muted" | "error";
+  size?: "xs" | "s" | "m" | "l" | "xl" | "xxl" | "title" | "header";
+  weight?: "regular" | "medium" | "semiBold" | "bold";
   children?: React.ReactNode;
 }
 
-export const ThemedText: React.FC<ThemedTextProps> = ({ 
-  variant = 'primary',
-  size = 'm',
-  weight = 'regular',
-  style, 
+export const ThemedText: React.FC<ThemedTextProps> = ({
+  variant = "primary",
+  size = "m",
+  weight = "regular",
+  style,
   children,
-  ...props 
+  ...props
 }) => {
   const { theme } = useTheme();
 
-    const getColor = () => {
+  const getColor = () => {
     switch (variant) {
-      case 'primary':
-        return theme.colors.textPrimary; 
-      case 'secondary':
+      case "primary":
+        return theme.colors.textPrimary;
+      case "secondary":
         return theme.colors.textSecondary;
-      case 'tertiary':
+      case "tertiary":
         return theme.colors.textTertiary;
-      case 'accent':
+      case "accent":
         return theme.colors.neonGreen;
-      case 'muted':
+      case "muted":
         return theme.colors.textMuted;
+      case "error":
+        return theme.colors.error;
       default:
         return theme.colors.text;
     }
   };
 
   return (
-    <Text 
+    <Text
       style={[
         {
           color: getColor(),
           fontSize: theme.fontSizes[size],
           fontWeight: theme.fontWeights[weight],
         },
-        style
-      ]} 
+        style,
+      ]}
       {...props}
     >
       {children}
     </Text>
   );
 };
-

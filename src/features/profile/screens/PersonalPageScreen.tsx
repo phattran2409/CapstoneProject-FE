@@ -57,6 +57,11 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const { user: currentUser } = useAuthStore();
   const { t } = useTranslation();
 
+  const { mutate: toggleLike } = useTogglePostLike();
+  const handleLike = (postId: string) => {
+    toggleLike(postId);
+  };
+
   // Get userId from params or fallback to current user
   const userId = route.params?.userId || currentUser?.userId || "";
   const isCurrentUser = userId === currentUser?.userId;
@@ -87,7 +92,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const { mutate: respondToRequest, isPending: isRespondingToRequest } =
     useRespondToFriendRequest();
 
-  // Fetch user's posts (currently returns empty until API is implemented)
   const {
     posts,
     loading,
@@ -100,24 +104,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   } = usePaginatedUserPosts({
     userId: currentUser?.userId || "",
     pageSize: 10,
-  });
-
-  // Use toggle post like mutation with callback to update local state
-  const { mutate: toggleLike } = useTogglePostLike({
-    onSuccess: (data) => {
-      // Update local state with new like data
-      setPosts((currentPosts) =>
-        currentPosts.map((post) =>
-          post.postId === data.postId
-            ? {
-                ...post,
-                isLiked: data.isLiked,
-                totalLikes: data.totalLikes,
-              }
-            : post,
-        ),
-      );
-    },
   });
 
   const stats = {
@@ -150,10 +136,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const handleLike = (postId: string) => {
-    toggleLike(postId);
   };
 
   const recentMatches: MatchItemData[] = [
@@ -267,7 +249,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   };
 
   const handleCancelRequest = () => {
-    // TODO: Implement cancel request API if available
     console.log("Cancel request not implemented yet");
   };
 
@@ -341,13 +322,12 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           {/* Profile Section */}
           <View style={{ backgroundColor: theme.colors.background }}>
             <ProfileHeader
+              avatar={profile?.avatarUrl}
               name={profile?.fullName || "Unknown User"}
-              elo={2450}
-              description={profile?.bio || ""}
-              age={22}
-              position={profile?.playerProfile?.position || "N/A"}
-              shirtNumber={profile?.playerProfile?.shirtNumber || 0}
-              matchesCount={88}
+              elo={profile?.playerProfile?.currentElo || 2450}
+              description={profile?.bio || "N/A"}
+              position={profile?.playerProfile?.preferredPositions || "N/A"}
+              // shirtNumber={profile?.playerProfile?.shirtNumber || 0}
               isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}
               friendshipStatus={friendshipStatus?.status}
@@ -474,8 +454,8 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         initialData={{
           name: profile?.fullName || currentUser?.fullName || "",
           bio: profile?.bio || "",
-          position: profile?.playerProfile?.position || "",
-          shirtNumber: profile?.playerProfile?.shirtNumber || 0,
+          position: profile?.playerProfile?.preferredPositions || "",
+          // shirtNumber: profile?.playerProfile?.shirtNumber || 0,
         }}
       />
     </SafeAreaView>

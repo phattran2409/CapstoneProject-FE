@@ -101,16 +101,20 @@ export const togglePostLike = async (
 // Create Post
 export const createPost = async (
   content: string,
-  files: File[],
+  files: Array<File | { uri: string; type: string; name: string }>,
 ): Promise<ApiResponse> => {
   try {
     const formData = new FormData();
     formData.append("Content", content);
     files.forEach((file) => {
-      formData.append("Files", file);
+      formData.append("Files", file as any);
     });
     // apiClient interceptor already returns response.data
-    const response = await apiClient.post(`/posts`, formData);
+    const response = await apiClient.post(`/posts`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     const apiResponse = response as unknown as ApiResponse;
     if (apiResponse.isSuccess) {
       return apiResponse;

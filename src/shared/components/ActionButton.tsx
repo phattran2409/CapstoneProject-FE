@@ -13,22 +13,15 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import { useAlert } from "@/shared/hooks/useAlert";
+import { validateContent as validateContentUtil } from "@/shared/utils";
 
 export interface ActionButtonProps {
-  /** Type of content: 'post' or 'comment' */
   contentType: "post" | "comment";
-  /** ID of the post or comment */
   contentId: string;
-  /** Current content text */
   currentContent: string;
-  /** Callback when edit is confirmed */
   onEdit: (contentId: string, newContent: string) => void | Promise<void>;
-  /** Callback when delete is confirmed */
   onDelete: (contentId: string) => void | Promise<void>;
-  /** Whether the action is currently loading */
   isLoading?: boolean;
-  /** Custom test ID for testing */
-  testID?: string;
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({
@@ -38,7 +31,6 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   onEdit,
   onDelete,
   isLoading = false,
-  testID,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -88,15 +80,10 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   };
 
   const validateContent = (content: string): boolean => {
-    const trimmedContent = content.trim();
+    const { isValid, errorKey } = validateContentUtil(content);
 
-    if (!trimmedContent) {
-      setValidationError(t("actionButton.validation.required"));
-      return false;
-    }
-
-    if (trimmedContent.length > 5000) {
-      setValidationError(t("actionButton.validation.tooLong"));
+    if (!isValid && errorKey) {
+      setValidationError(t(errorKey));
       return false;
     }
 
@@ -135,7 +122,6 @@ const ActionButton: React.FC<ActionButtonProps> = ({
         onPress={handleMenuPress}
         disabled={isLoading}
         style={styles.actionButton}
-        testID={testID}
       >
         <Ionicons
           name="ellipsis-horizontal"

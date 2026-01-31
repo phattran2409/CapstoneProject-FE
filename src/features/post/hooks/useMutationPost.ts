@@ -26,7 +26,11 @@ export const useTogglePostLike = () => {
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse, Error, { content: string; files: File[] }>({
+  return useMutation<
+    ApiResponse,
+    Error,
+    { content: string; files: Array<File | { uri: string; type: string; name: string }> }
+  >({
     mutationFn: ({ content, files }) => createPost(content, files),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });

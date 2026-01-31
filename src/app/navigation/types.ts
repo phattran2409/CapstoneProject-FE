@@ -23,6 +23,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };
+  CreatePost: undefined;
   PaymentSuccess: undefined;
   Wallet: undefined;
   WalletTopUp: undefined;
@@ -30,6 +31,7 @@ export type RootStackParamList = {
     email: string;
   };
   Search: undefined;
+  
 };
 
 export type TabParamList = {
