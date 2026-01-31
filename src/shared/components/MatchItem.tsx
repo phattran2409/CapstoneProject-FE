@@ -21,6 +21,7 @@ export interface MatchItemData {
   time?: string;
 }
 
+
 export interface MatchItemProps {
   match: MatchItemData;
   variant?: 'card' | 'list' | 'compact';

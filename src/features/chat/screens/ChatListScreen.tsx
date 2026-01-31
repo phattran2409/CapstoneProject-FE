@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
+  AnimatedSearchBar,
   EmptyState,
   ErrorState,
   ListSkeleton,
@@ -21,6 +22,7 @@ import {
 } from "@/shared/components";
 import { useChatConversations } from "../hooks";
 import { ChatItem, ChatItemData } from "../components";
+import { useDebounce } from "@/shared/hooks";
 
 type ChatListScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,6 +36,10 @@ interface ChatListScreenProps {
 const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const {
     chatConversations,
@@ -44,7 +50,7 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
     refresh,
     loadMore,
     setChatConversations,
-  } = useChatConversations({ pageSize: 20 });
+  } = useChatConversations({ pageSize: 20, searchTerm: debouncedSearchQuery });
 
   const chats: ChatItemData[] =
     chatConversations?.map((c) => ({
@@ -104,11 +110,24 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
         >
           {t("chat.title")}
         </Text>
-        <TouchableOpacity>
-          <Ionicons name="add" size={24} color={theme.colors.text} />
+        <TouchableOpacity onPress={() => setIsSearchVisible(!isSearchVisible)}>
+          <Ionicons
+            name="search"
+            size={24}
+            color={theme.colors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
 
+      <AnimatedSearchBar
+        visible={isSearchVisible}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onClose={() => setIsSearchVisible(false)}
+        placeholder={t("chat.searchPlaceholder", {
+          defaultValue: "Search chats",
+        })}
+      />
       {loading && <ListSkeleton />}
       {error && <ErrorState error={error} onRetry={refresh} />}
 

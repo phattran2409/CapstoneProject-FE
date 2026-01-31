@@ -4,5 +4,6 @@ export const postKeys = {
   detail: (id: string) => [...postKeys.all, 'detail', id] as const,
   postsByUserId: (userId: string) => [...postKeys.all, 'postsByUserId', userId] as const,
   comments: (postId: string) => [...postKeys.all, 'comments', postId] as const,
+  replies: (commentId: string) => [...postKeys.all, 'replies', commentId] as const,
 };
 

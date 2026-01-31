@@ -21,15 +21,17 @@ interface UseChatMessagesOptions {
 
 interface UseChatConversationsOptions {
   pageSize?: number;
+  searchTerm?: string;
 }
 
 export const useChatConversations = ({
   pageSize = 20,
+  searchTerm,
 }: UseChatConversationsOptions = {}) => {
   const pagination = usePagination<ConversationSummary>({
-    queryKey: chatKeys.conversations(),
+    queryKey: [...chatKeys.conversations(), searchTerm],
     fetchFunction: async (page, size) => {
-      const result = await getConversations({ page, pageSize: size });
+      const result = await getConversations({ page, pageSize: size, searchTerm });
       return {
         data: result.conversations,
         totalPages: result.totalPages,

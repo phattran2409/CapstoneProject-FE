@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "@/shared/theme";
+import { getRelativeTime } from "@/shared/utils";
 
 export interface ChatItemData {
   id: string;
@@ -93,7 +94,7 @@ export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
             marginBottom: theme.spacing.xs,
           }}
         >
-          {item.timestamp}
+          {getRelativeTime(item.timestamp)}
         </Text>
         {item.isOnline && (
           <View

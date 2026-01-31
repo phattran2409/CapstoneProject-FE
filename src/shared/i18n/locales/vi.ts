@@ -21,6 +21,7 @@ const vi = {
       logout: "Đăng xuất",
       tryNow: "Trải nghiệm ngay",
       register: "Đăng ký",
+      cancel: "Hủy",
     },
     email: "Email",
   },
@@ -41,7 +42,8 @@ const vi = {
       required: "Tên người dùng là bắt buộc",
       tooShort: "Tên người dùng phải có ít nhất 3 ký tự",
       tooLong: "Tên người dùng phải ít hơn 30 ký tự",
-      invalid: "Tên người dùng chỉ có thể chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang",
+      invalid:
+        "Tên người dùng chỉ có thể chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang",
     },
     otp: {
       required: "Mã OTP là bắt buộc",
@@ -84,6 +86,7 @@ const vi = {
   friends: {
     title: "Bạn bè",
     searchPlaceholder: "Tìm kiếm bạn bè...",
+    searchPlaceholderRequests: "Tìm kiếm lời mời kết bạn...",
     noResults: "Không tìm thấy bạn bè",
     tryDifferentSearch: "Thử tìm kiếm với từ khóa khác",
     inviteFriends: "Mời bạn bè tham gia cùng bạn!",
@@ -354,6 +357,7 @@ const vi = {
     reportIssue: "Báo cáo vấn đề",
   },
   chat: {
+    searchPlaceholder: "Tìm kiếm trò chuyện",
     title: "Trò chuyện",
     you: "Bạn",
     sent: "Đã gửi",
@@ -408,7 +412,43 @@ const vi = {
       "Tối ưu và nhanh chóng",
     ],
   },
+  search: {
+    placeholder: "Tìm kiếm...",
+    all: "Tất cả",
+    players: "Mọi người",
+    posts: "Bài viết",
+    emptyTitle: "Tìm kiếm",
+    emptyDescription: "Nhập từ khóa để tìm kiếm người chơi hoặc bài viết",
+    noResults: "Không tìm thấy kết quả",
+    tryDifferent: "Thử tìm kiếm với từ khóa khác",
+  },
+  post: {
+    detail: "Bài viết",
+    comments: "Bình luận",
+    noComments: "Chưa có bình luận nào",
+    writeComment: "Viết bình luận...",
+    writeReply: "Viết trả lời...",
+    reply: "Phản hồi",
+    edited: "Đã chỉnh sửa",
+    replyingTo: "Đang trả lời",
+  },
+  actionButton: {
+    post: "bài viết",
+    comment: "bình luận",
+    edit: "Chỉnh sửa",
+    delete: "Xóa",
+    save: "Lưu",
+    editTitle: "Chỉnh sửa {{type}}",
+    deleteConfirmTitle: "Xóa {{type}}?",
+    deleteConfirmMessage:
+      "Bạn có chắc chắn muốn xóa {{type}} này? Hành động này không thể hoàn tác.",
+    contentPlaceholder: "Nhập nội dung...",
+    validation: {
+      required: "Nội dung không được để trống",
+      tooLong: "Nội dung không được vượt quá 5000 ký tự",
+      failed: "Không thể lưu thay đổi. Vui lòng thử lại.",
+    },
+  },
 };
 
 export default vi;
-

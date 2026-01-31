@@ -9,21 +9,26 @@ import {
   RemoveFriendData,
   RespondRequest,
   RespondRequestData,
+  Players,
+  PlayersResponse,
 } from "../types/friends.types";
 import { apiClient } from "@/shared/api/client";
 
 export const getFriendRequests = async (
   page: number = 1,
   pageSize: number = 10,
+  searchTerm?: string,
 ): Promise<{
   requests: FriendRequests[];
   totalPages: number;
   totalCount: number;
 }> => {
   try {
-    const response = (await apiClient.get(
-      `/friendships/requests?page=${page}&pageSize=${pageSize}`,
-    )) as FriendRequestResponse;
+    let url = `/friendships/requests?page=${page}&pageSize=${pageSize}`;
+    if (searchTerm && searchTerm.trim()) {
+      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
+    const response = (await apiClient.get(url)) as FriendRequestResponse;
     if (response.isSuccess && response.data) {
       return {
         requests: response.data.requests,
@@ -41,15 +46,20 @@ export const getFriendRequests = async (
 export const getFriends = async (
   page: number = 1,
   pageSize: number = 10,
+  searchTerm?: string,
 ): Promise<{
   friends: Friend[];
   totalPages: number;
   totalCount: number;
 }> => {
   try {
-    const response = (await apiClient.get(
-      `/friendships/friends?page=${page}&pageSize=${pageSize}`,
-    )) as FriendResponse;
+    // Build URL with proper query parameters
+    let url = `/friendships/friends?page=${page}&pageSize=${pageSize}`;
+    if (searchTerm && searchTerm.trim()) {
+      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
+
+    const response = (await apiClient.get(url)) as FriendResponse;
     if (response.isSuccess && response.data) {
       return {
         friends: response.data.friends,
@@ -60,6 +70,37 @@ export const getFriends = async (
     throw new Error("Failed to fetch friends");
   } catch (error) {
     console.error("Error fetching friends:", error);
+    throw error;
+  }
+};
+
+export const getPlayers = async (
+  page: number = 1,
+  pageSize: number = 10,
+  searchTerm?: string,
+  role = 'Player'
+): Promise<{
+  users: Players[];
+  totalPages: number;
+  totalCount: number;
+}> => {
+  try {
+    let url = `/users?page=${page}&pageSize=${pageSize}&role=${role}`;
+    if (searchTerm && searchTerm.trim()) {
+      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
+
+    const response = (await apiClient.get(url)) as PlayersResponse;
+    if (response.isSuccess && response.data) {
+      return {
+        users: response.data.users,
+        totalPages: response.data.totalPages,
+        totalCount: response.data.totalCount,
+      };
+    }
+    throw new Error("Failed to fetch users");
+  } catch (error) {
+    console.error("Error fetching people:", error);
     throw error;
   }
 };

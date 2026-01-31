@@ -30,7 +30,7 @@ export interface Post {
   createdAt: string;
   updatedAt?: string;
   media: PostMedia[];
-  isLiked?: boolean;
+  isLikedByCurrentUser: boolean;
 }
 
 export interface PostsResponse {
@@ -41,6 +41,19 @@ export interface PostsResponse {
     page: number;
     pageSize: number;
     totalPages: number;
+  };
+}
+
+export interface Media {
+
+}
+
+export interface PostLikeResponse {
+  isSuccess: boolean;
+  data: {
+    postId: string;
+    isLiked: boolean;
+    totalLikes: number;
   };
 }
 
@@ -58,38 +71,72 @@ export interface PostLikeResponse {
   };
 }
 
+
 export interface Comment {
-  id: string;
-  postId: string;
-  author: {
-    id: string;
-    name: string;
-    avatar: any;
-    username: string;
-  };
+  commentId: string;
+  userId: string;
+  userFullName: string;
+  userAvatarUrl: string | null;
   content: string;
-  likes: number;
-  isLiked: boolean;
-  timestamp: string;
-  replies?: Reply[];
+  totalLikes: number;
+  totalReplies: number;
+  isEdited: boolean;
+  createdAt: string;
+  isLikedByCurrentUser?: boolean;
+}
+
+export interface CommentResponse {
+  isSuccess: boolean;
+  data: {
+    comments: Comment[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
 }
 
 export interface Reply {
-  id: string;
   commentId: string;
-  author: {
-    id: string;
-    name: string;
-    avatar: any;
-    username: string;
-  };
+  userId: string;
+  userFullName: string;
+  userAvatarUrl: string | null;
   content: string;
-  likes: number;
-  isLiked: boolean;
-  timestamp: string;
-  replyTo?: {
-    id: string;
-    name: string;
-    username: string;
+  totalLikes: number;
+  isEdited: boolean;
+  createdAt: string;
+  isLikedByCurrentUser?: boolean;
+}
+
+export interface ReplyResponse {
+  isSuccess: boolean;
+  data: {
+    parentCommentId: string;
+    replies: Reply[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
   };
 }
+
+export interface CreateComment {
+  commentId: string;
+  postId: string;
+  parentCommentId: string | null;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreateCommentResponse {
+  isSuccess: boolean;
+  data: {
+    comments: CreateComment[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+

@@ -1,8 +1,8 @@
-import React, {useState, useEffect } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { 
-  LoginScreen, 
-  RegisterScreen, 
+import React, { useState, useEffect } from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  LoginScreen,
+  RegisterScreen,
   OTPVerificationScreen,
   ChangePasswordScreen,
   LeaderboardScreen,
@@ -22,14 +22,14 @@ import {
   SplashScreen,
   OnboardingScreen,
   checkOnboardingStatus,
-} from '@/screens';
-import TabNavigator from './TabNavigator';
-import { useAuthStore } from '@/features/auth/store/authStore';
-import { RootStackParamList } from './types';
-import { View, StyleSheet } from 'react-native';
-import { WalletScreen, WalletTopUpScreen } from '@/features/wallet';
-import { PaymentSuccessScreen } from '@/features/payment';
-
+} from "@/screens";
+import TabNavigator from "./TabNavigator";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { RootStackParamList } from "./types";
+import { View, StyleSheet } from "react-native";
+import { WalletScreen, WalletTopUpScreen } from "@/features/wallet";
+import { PaymentSuccessScreen } from "@/features/payment";
+import { SearchScreen } from "@/features/search";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -38,7 +38,7 @@ const StackNavigator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() =>{
+  useEffect(() => {
     const checkInitialState = async () => {
       const hasSeenOnboarding = await checkOnboardingStatus();
       if (!hasSeenOnboarding) {
@@ -267,4 +267,3 @@ const styles = StyleSheet.create({
 });
 
 export default StackNavigator;
-

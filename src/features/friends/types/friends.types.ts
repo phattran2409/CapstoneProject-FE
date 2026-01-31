@@ -19,6 +19,30 @@ export interface FriendRequestResponse {
   };
 }
 
+export interface Players {
+  userId: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  role: number;
+  isEmailVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+  playerProfile: null;
+}
+
+export interface PlayersResponse {
+  isSuccess: boolean;
+  data: {
+    users: Players[];
+    totalPages: number;
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
 export interface Friend {
   userId: string;
   fullName: string;

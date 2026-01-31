@@ -3,7 +3,7 @@ import { Venue, Field, TimeSlot } from '@/features/venues/types/venue.types';
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  OTPVerification: { email: string , userId: string };
+  OTPVerification: { email: string; userId: string };
   MainTabs: undefined;
   Leaderboard: undefined;
   CreateRoom: {
@@ -30,6 +30,7 @@ export type RootStackParamList = {
   ChangePassword: {
     email: string;
   };
+  Search: undefined;
 };
 
 export type TabParamList = {
@@ -39,4 +40,3 @@ export type TabParamList = {
   Create: undefined;
   Profile: undefined;
 };
-

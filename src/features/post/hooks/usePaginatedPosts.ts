@@ -19,11 +19,12 @@ interface UsePaginatedUserPostsOptions {
 export const usePaginatedPosts = ({
   pageSize = 10,
   enabled = true,
+  searchTerm,
 }: UsePaginatedPostsOptions = {}) => {
   const pagination = usePagination<Post>({
-    queryKey: postKeys.list(),
+    queryKey: [...postKeys.list(), searchTerm || ""],
     fetchFunction: async (page, size) => {
-      const result = await getPosts(page, size);
+      const result = await getPosts(page, size, searchTerm);
       return {
         data: result.posts,
         totalPages: result.totalPages,
@@ -31,7 +32,7 @@ export const usePaginatedPosts = ({
       };
     },
     pageSize,
-    staleTime: 2 * 60 * 1000, // 2 minutes for posts list
+    staleTime: 2 * 60 * 1000, 
     enabled,
     onError: (error) => {
       console.error("Error fetching posts:", error);

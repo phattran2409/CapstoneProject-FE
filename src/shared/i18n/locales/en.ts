@@ -21,6 +21,7 @@ const en = {
       logout: "Logout",
       tryNow: "Try now",
       register: "Register",
+      cancel: "Cancel",
     },
     email: "Email",
   },
@@ -41,7 +42,8 @@ const en = {
       required: "Username is required",
       tooShort: "Username must be at least 3 characters",
       tooLong: "Username must be less than 30 characters",
-      invalid: "Username can only contain letters, numbers, underscores, and hyphens",
+      invalid:
+        "Username can only contain letters, numbers, underscores, and hyphens",
     },
     otp: {
       required: "OTP code is required",
@@ -84,6 +86,7 @@ const en = {
   friends: {
     title: "Friends",
     searchPlaceholder: "Search friends...",
+    searchPlaceholderRequests: "Search Requests...",
     noResults: "No friends found",
     tryDifferentSearch: "Try searching with a different keyword",
     inviteFriends: "Invite friends to join you!",
@@ -371,6 +374,7 @@ const en = {
     reportIssue: "Report Issue",
   },
   chat: {
+    searchPlaceholder: "Search chat",
     title: "Chats",
     you: "You",
     sent: "Sent",
@@ -425,7 +429,43 @@ const en = {
       "Fast and optimized",
     ],
   },
+  search: {
+    placeholder: "Search...",
+    all: "All",
+    players: "Players",
+    posts: "Posts",
+    emptyTitle: "Search",
+    emptyDescription: "Enter keywords to search for players or posts",
+    noResults: "No results found",
+    tryDifferent: "Try searching with different keywords",
+  },
+  post: {
+    detail: "Post",
+    comments: "Comments",
+    noComments: "No comments yet",
+    writeComment: "Write a comment...",
+    writeReply: "Write a reply...",
+    reply: "Reply",
+    edited: "Edited",
+    replyingTo: "Replying to",
+  },
+  actionButton: {
+    post: "post",
+    comment: "comment",
+    edit: "Edit",
+    delete: "Delete",
+    save: "Save",
+    editTitle: "Edit {{type}}",
+    deleteConfirmTitle: "Delete {{type}}?",
+    deleteConfirmMessage:
+      "Are you sure you want to delete this {{type}}? This action cannot be undone.",
+    contentPlaceholder: "Enter content...",
+    validation: {
+      required: "Content cannot be empty",
+      tooLong: "Content cannot exceed 5000 characters",
+      failed: "Failed to save changes. Please try again.",
+    },
+  },
 };
 
 export default en;
-
