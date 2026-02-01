@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,7 +11,7 @@ import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components'
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
-import { useMatchRooms, MatchRoom } from '@/features/rooms';
+import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom } from '@/features/rooms';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -116,8 +116,23 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     }
   }, [scrollHandler, hasMore, loadingMore, loadMore]);
 
+  // ✅ Hook để join room (tự động thêm vào Unassigned)
+  const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
+
   const handleViewDetail = (matchId: string) => {
-    navigation.navigate('RoomInformation', { roomId: matchId });
+    // Gọi API join để thêm user vào room (Unassigned)
+    // Server sẽ broadcast UserJoinedRoom event → toast cho tất cả members
+    joinRoomAsUnassigned(matchId, {
+      onSuccess: () => {
+        // Join thành công → Navigate đến RoomInformation
+        navigation.navigate('RoomInformation', { roomId: matchId });
+      },
+      onError: (error: any) => {
+        // Nếu đã là participant hoặc lỗi khác → vẫn navigate để xem thông tin
+        console.log('Join room error (may already be participant):', error?.message);
+        navigation.navigate('RoomInformation', { roomId: matchId });
+      },
+    });
   };
 
   return (

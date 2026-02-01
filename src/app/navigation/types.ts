@@ -12,6 +12,7 @@ export type RootStackParamList = {
     selectedTimeSlot?: TimeSlot;
   } | undefined;
   VenueSelection: undefined;
+  VenueDetail: { venueId: string };
   RoomInformation: { roomId: string };
   RoomDetail: { roomId: string };
   PersonalPage: { userId?: string };

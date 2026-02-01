@@ -8,7 +8,12 @@ export {
   useRooms,
   useMatchRooms,
   useRoomDetail,
+  useMatchRoomDetail,
   useJoinRoom,
+  useJoinMatchRoom,
+  useJoinRoomAsUnassigned,
+  useUpdateParticipant,
+  useLeaveMatchRoom,
   useRoomMessages,
   useSendMessage,
   useCreateRoom,
@@ -18,19 +23,25 @@ export {
 
 // ============ Types ============
 export type {
-  Room,
-  RoomFullInfo,
   RoomFilters,
   RoomStatus,
-  Player,
-  Team,
   Message,
   CreateRoomRequest,
   JoinRoomRequest,
   SendMessageRequest,
+  // Match Room Types
   MatchRoom,
   MatchRoomsResponse,
   MatchRoomFilters,
+  MatchRoomFullInfo,
+  MatchRoomHost,
+  MatchRoomField,
+  MatchRoomVenue,
+  MatchRoomParticipant,
+  MatchRoomParticipants,
+  MatchRoomStatus,
+  MatchFormat,
+  TeamAssignment,
 } from './types/room.types';
 
 // ============ UI Store (for internal use within rooms feature) ============

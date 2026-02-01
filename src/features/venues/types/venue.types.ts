@@ -5,18 +5,71 @@ export interface Venue {
   latitude: number;
   longitude: number;
   description: string;
-  images: string[];
   amenities: string[];
+  contactPhone: string;
+  contactEmail: string;
+  amentities: string | null;
   fields: Field[];
-  operatingHours: OperatingHour[];
   primaryPhotoUrl?: string;
   createdAt: string;
 }
 
+/**
+ * VenueDetail - Chi tiết venue từ API GET /api/venues/:id
+ */
+export interface VenueDetail {
+  venueId: string;
+  venueName: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  description: string | null;
+  amenities: string[] | null;
+  fields: VenueFieldDetail[];
+  operatingHours: OperatingHour[];
+  photos: VenuePhoto[];
+  walletBalance: number;
+  createdAt: string;
+}
+
+/**
+ * Field detail trong VenueDetail response
+ */
+export interface VenueFieldDetail {
+  fieldId: string;
+  fieldName: string;
+  fieldType: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | string;
+  surfaceType: string | null;
+  hourlyRate: number;
+  peakHourSurcharge: number;
+}
+
+/**
+ * Photo của venue
+ */
+export interface VenuePhoto {
+  photoId: string;
+  photoUrl: string;
+  isPrimary: boolean;
+}
+
+/**
+ * Operating hours - giờ hoạt động của venue
+ */
 export interface OperatingHour {
-  dayOfWeek: string;
-  openTime: string;
-  closeTime: string;
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  openTime: string;  // "HH:mm:ss" format
+  closeTime: string; // "HH:mm:ss" format
+}
+
+/**
+ * API Response wrapper for VenueDetail
+ */
+export interface VenueDetailResponse {
+  isSuccess: boolean;
+  data: VenueDetail;
 }
 
 export interface Field {
@@ -53,12 +106,6 @@ export interface TimeSlot {
 export interface VenueFilters {
   page? :number;
   pageSize? :number;
-  // city?: string;
-  // district?: string;
-  // format?: '5vs5' | '7vs7' | '11vs11';
-  // minPrice?: number;
-  // maxPrice?: number;
-  // minRating?: number;
 }
 
 
