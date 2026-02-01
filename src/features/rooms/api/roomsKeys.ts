@@ -11,6 +11,9 @@ export const roomsKeys = {
   // Lists of rooms
   lists: () => [...roomsKeys.all, 'list'] as const,
   list: (filters: RoomFilters) => [...roomsKeys.lists(), filters] as const,
+
+  // List of room by user
+  listByUser: (userId: string) => [...roomsKeys.lists(), userId] as const,
   
   // Match rooms (paginated)
   matchRooms: () => [...roomsKeys.all, 'match-rooms'] as const,

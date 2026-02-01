@@ -16,9 +16,19 @@ export interface UserProfile {
 }
 
 export interface PlayerProfile {
-  position?: string;
-  preferredFoot?: 'left' | 'right' | 'both';
-  shirtNumber?: number;
+  profileId: string;
+  currentElo: number;
+  trustScore: number;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  mvpCount: number;
+  winStreak: number;
+  maxWinStreak: number;
+  afkCount: number;
+  reportCount: number;
+  preferredPositions: string;
 }
 
 export interface PlayerStats {

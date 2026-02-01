@@ -31,6 +31,7 @@ export { default as NotificationsScreen } from '../features/notification/screens
 
 // Post Feature Screens
 export { default as PostDetailScreen } from '../features/post/screens/PostDetailScreen';
+export { default as CreatePostScreen } from '../features/post/screens/CreatePostScreen';
 
 // Chat Feature Screens
 export { default as ChatListScreen } from '../features/chat/screens/ChatListScreen';

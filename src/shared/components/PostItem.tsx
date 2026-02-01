@@ -10,6 +10,8 @@ import { Post } from "@/features/post/types/post.types";
 import { useAuthStore } from "@/features/auth";
 import { getRelativeTime } from "@/shared/utils";
 import auth from "../firebase";
+import ActionButton from "./ActionButton";
+import { useDeletePost, useUpdatePost } from "@/features/post";
 
 export interface PostItemProps {
   post: Post;
@@ -17,8 +19,8 @@ export interface PostItemProps {
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
   onMenuPress?: (postId: string) => void;
-  onPress?: (postId: string) => void; // Navigate to post detail
-  onAvatarPress?: (userId: string) => void; // Navigate to user profile
+  onPress?: (postId: string) => void;
+  onAvatarPress?: (userId: string) => void;
 }
 
 export const PostItem: React.FC<PostItemProps> = ({
@@ -34,7 +36,20 @@ export const PostItem: React.FC<PostItemProps> = ({
   const { t } = useTranslation();
   const { user } = useAuthStore();
 
+  const isOwnPost = post.userId === user?.userId;
+
   const timestamp = getRelativeTime(post.createdAt);
+
+  const { mutateAsync: updatePost } = useUpdatePost();
+  const { mutateAsync: deletePost } = useDeletePost();
+
+  const handleEditPost = async (postId: string, newContent: string) => {
+    await updatePost({ postId, content: newContent });
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    await deletePost(postId);
+  };
 
   return (
     <ThemedView
@@ -77,10 +92,9 @@ export const PostItem: React.FC<PostItemProps> = ({
                   },
                 ]}
               >
-                <Ionicons
-                  name="person"
-                  size={24}
-                  color={theme.colors.textSecondary}
+                <Image
+                  source={require("../../assets/images/default_avatar.png")}
+                  style={styles.postAvatar}
                 />
               </View>
             )}
@@ -99,18 +113,16 @@ export const PostItem: React.FC<PostItemProps> = ({
             </Text>
           </View>
         </View>
-        {/* {post.userId === user?.userId && (
-        <TouchableOpacity
-          style={styles.postMenuButton}
-          onPress={() => onMenuPress?.(post.postId)}
-        >
-          <Ionicons
-            name="ellipsis-horizontal"
-            size={20}
-            color={theme.colors.textSecondary}
+
+        {isOwnPost && (
+          <ActionButton
+            contentType="post"
+            contentId={post.postId}
+            currentContent={post.content}
+            onEdit={handleEditPost}
+            onDelete={handleDeletePost}
           />
-        </TouchableOpacity>
-        )} */}
+        )}
       </View>
 
       {/* Post Content */}

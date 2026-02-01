@@ -44,10 +44,9 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({ reply, onLike }) => {
               resizeMode="cover"
             />
           ) : (
-            <Ionicons
-              name="person"
-              size={20}
-              color={theme.colors.textSecondary}
+            <Image
+              source={require("../../../assets/images/default_avatar.png")}
+              style={{ width: 32, height: 32, borderRadius: 16 }}
             />
           )}
         </View>
