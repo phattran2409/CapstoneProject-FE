@@ -6,6 +6,9 @@ import type {
   SendChatRequestBody,
   SendChatMessageData,
   MarkAsReadData,
+  SendChatRoomRequestBody,
+  SendChatMessageRoomData,
+  RoomChatDetailData,
 } from "../types/chat.types";
 
 
@@ -38,6 +41,30 @@ export const getConversationMessages = async (
     { params: { pageNumber, pageSize } },
   )) as unknown as ChatApiResponse<ConversationDetailData>;
 
+  return res.data;
+};
+
+export const getRoomChat = async (
+  roomId: string,
+  channel: string,
+  pageNumber = 1,
+  pageSize = 50,
+): Promise<RoomChatDetailData> => {
+  const res = (await apiClient.get<ChatApiResponse<RoomChatDetailData>>(
+    `/chat/room/${roomId}/messages`,
+    { params: { channel, pageNumber, pageSize } },
+  )) as unknown as ChatApiResponse<RoomChatDetailData>;
+
+  return res.data;
+};
+
+export const sendChatMessageRoom = async (
+  payload: SendChatRoomRequestBody,
+): Promise<SendChatMessageRoomData> => {
+  const res = (await apiClient.post<ChatApiResponse<SendChatMessageRoomData>>(
+    "/chat/room/send",
+    payload,
+  )) as unknown as ChatApiResponse<SendChatMessageRoomData>;
   return res.data;
 };
 

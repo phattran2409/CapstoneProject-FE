@@ -33,7 +33,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [matchNotifications, setMatchNotifications] = useState(true);
   const [newsUpdates, setNewsUpdates] = useState(false);
 
-
   // ✅ Use logout
   const { logout } = useLogout();
   const scrollHandler = useScrollToHideTabBar();
@@ -102,7 +101,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               marginRight: theme.spacing.m,
             }}
           >
-            <Ionicons name="person" size={36} color={theme.colors.textSecondary} />
+            {user?.avatar ? (
+              <Image source={{ uri: user.avatar }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            ) : (
+              <Image source={require('../../../assets/images/default_avatar.png')} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            )}
           </View>
 
           {/* Name + info */}
@@ -115,7 +118,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: theme.spacing.xs / 2,
               }}
             >
-              {user?.fullName || 'Tuấn Anh Nguyễn'}
+              {user?.fullName || 'Người dùng'}
             </Text>
             <Text
               style={{
@@ -124,7 +127,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               }}
               numberOfLines={1}
             >
-              {t('profile.position')}: {t('profile.forward')} · {t('profile.matchesCount', { count: 25 })}
+              Trang cá nhân
             </Text>
           </View>
 
@@ -149,27 +152,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           >
             {t('profile.account')}
           </Text>
-          <TouchableOpacity
-            style={[
-              styles.settingItem,
-              {
-                backgroundColor: theme.colors.surface,
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.border,
-                paddingVertical: theme.spacing.m,
-                paddingHorizontal: theme.spacing.m,
-                borderRadius: theme.radius.m,
-                marginBottom: theme.spacing.xs,
-              },
-            ]}
-            onPress={handleAvatarPress}
-          >
-            <Ionicons name="person-outline" size={24} color={theme.colors.text} />
-            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
-              {t('profile.editPersonalInfo')}
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+      
           <TouchableOpacity
             style={[
               styles.settingItem,

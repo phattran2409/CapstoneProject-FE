@@ -262,6 +262,14 @@ const StackNavigator: React.FC = () => {
               animation: 'slide_from_right',
             }}
           />
+          <Stack.Screen
+            name="Search"
+            component={SearchScreen}
+            options={{
+              headerShown: false,
+              animation: "slide_from_right",
+            }}
+          />
         </>
       )}
       </Stack.Navigator>

@@ -1,12 +1,16 @@
-
-export type RoomStatus = 'open' | 'full' | 'closed' | 'completed' | 'cancelled';
-
+export type RoomStatus = "open" | "full" | "closed" | "completed" | "cancelled";
 
 // ==================== Match Room Types (from API) ====================
 
-export type MatchRoomStatus = 'Open' | 'Full' | 'Closed' | 'Completed' | 'Cancelled';
-export type MatchFormat = 'FiveVsFive' | 'SevenVsSeven' | string;
-export type TeamAssignment = 'A' | 'B' | 'Unassigned';
+export type MatchRoomStatus =
+  | "Open"
+  | "Full"
+  | "Closed"
+  | "InProgress"
+  | "Completed"
+  | "Cancelled";
+export type MatchFormat = "FiveVsFive" | "SevenVsSeven" | string;
+export type TeamAssignment = "A" | "B" | "Unassigned";
 
 /**
  * Host info trong MatchRoom
@@ -112,18 +116,17 @@ export interface MatchRoomFullInfo {
   createdAt: string;
 }
 
-
 export interface ApiResponse<T> {
   isSuccess: boolean;
   data: T;
 }
 
 export type MatchRoomsResponse = ApiResponse<{
-  rooms: MatchRoom[], 
-  totalCount: number, 
-  page: number, 
-  pageSize: number, 
-  totalPages: number
+  rooms: MatchRoom[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }>;
 
 export interface MatchRoomFilters {
@@ -142,7 +145,7 @@ export interface RoomFilters {
   minPrice?: number;
   maxPrice?: number;
   _sort?: string;
-  _order?: 'asc' | 'desc';
+  _order?: "asc" | "desc";
   _page?: number;
   _limit?: number;
 }
@@ -197,4 +200,3 @@ export interface SendMessageRequest {
   userId: string;
   message: string;
 }
-

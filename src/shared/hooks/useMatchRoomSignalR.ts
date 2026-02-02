@@ -16,13 +16,21 @@ const MATCH_ROOM_HUB_URL = "https://api.kickify.site/hubs/matchroom";
 export interface UseMatchRoomSignalROptions {
   // Room ID để join vào group
   roomId: string;
-  
-  // Events từ server
+
+  // Events từ server - Room management
   onUserJoinedRoom?: (payload: UserJoinedPayload) => void;
   onUserLeftRoom?: (payload: UserLeftPayload) => void;
   onParticipantUpdated?: (payload: ParticipantUpdatedPayload) => void;
   onRoomStatusChanged?: (payload: RoomStatusPayload) => void;
   onPlayerKicked?: (payload: PlayerKickedPayload) => void;
+
+  // Events từ server - Room chat
+  onTeamChatSwitched?: (payload: TeamChatSwitchedPayload) => void;
+  onReceiveRoomMessage?: (payload: RoomMessage) => void;
+  onReceiveRoomMessages?: (payload: RoomMessagesPayload) => void;
+  onRoomUserTyping?: (payload: RoomTypingPayload) => void;
+  onRoomUserStopTyping?: (payload: RoomTypingPayload) => void;
+
   onError?: (payload: any) => void;
 }
 
@@ -39,7 +47,7 @@ export interface UserJoinedPayload {
   userName: string;
   avatarUrl?: string | null;
   userAvatar?: string | null; // Legacy fallback
-  teamAssignment?: 'A' | 'B' | 'Unassigned';
+  teamAssignment?: "A" | "B" | "Unassigned";
   position?: string;
   filledSlots: number;
   totalSlots: number;
@@ -73,7 +81,7 @@ export interface ParticipantUpdatedPayload {
   userId: string;
   userName: string;
   avatarUrl?: string | null;
-  teamAssignment: 'A' | 'B' | 'Unassigned';
+  teamAssignment: "A" | "B" | "Unassigned";
   position?: string | null;
   updatedAt: string;
 }
@@ -84,7 +92,7 @@ export interface ParticipantUpdatedPayload {
  */
 export interface RoomStatusPayload {
   roomId: string;
-  status: 'Open' | 'Full' | 'Closed' | 'InProgress' | 'Completed' | 'Cancelled';
+  status: "Open" | "Full" | "Closed" | "InProgress" | "Completed" | "Cancelled";
   changedAt: string;
   // Legacy fields (for backward compatibility)
   currentPlayers?: number;
@@ -105,14 +113,66 @@ export interface PlayerKickedPayload {
 }
 
 /**
+ * Room Chat Channel enum
+ */
+export enum RoomChatChannel {
+  All = 0,
+  TeamA = 1,
+  TeamB = 2,
+}
+
+/**
+ * Payload khi user switch team chat channel
+ */
+export interface TeamChatSwitchedPayload {
+  roomId: string;
+  teamAssignment: "A" | "B" | "Unassigned";
+}
+
+/**
+ * Room message object
+ */
+export interface RoomMessage {
+  messageId: string;
+  roomId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string | null;
+  channel: RoomChatChannel;
+  messageText: string;
+  sentAt: string;
+}
+
+/**
+ * Payload khi nhận danh sách messages
+ */
+export interface RoomMessagesPayload {
+  messages: RoomMessage[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  hasMore: boolean;
+}
+
+/**
+ * Payload khi user đang typing
+ */
+export interface RoomTypingPayload {
+  roomId: string;
+  channel: RoomChatChannel;
+  userId: string;
+  userName: string;
+}
+
+/**
  * Hook quản lý kết nối SignalR cho Match Room
- * 
+ *
  * Features:
  * - Tự động kết nối và join room group
  * - Tự động reconnect khi mất kết nối
  * - Đăng ký các event listeners
  * - Cleanup khi unmount
- * 
+ *
  * @example
  * const { isConnected, connectionState } = useMatchRoomSignalR({
  *   roomId: '123',
@@ -129,9 +189,9 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
   const [connection, setConnection] = useState<HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState<HubConnectionState>(
-    HubConnectionState.Disconnected
+    HubConnectionState.Disconnected,
   );
-  
+
   // Use ref to store options to avoid stale closure issues
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -149,15 +209,15 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
       try {
         // Get token first to validate
         const token = await getAuthToken();
-        
+
         if (!token) {
           console.warn("⚠️ MatchRoom SignalR: No auth token available");
           return;
         }
-        
+
         console.log("🔌 MatchRoom SignalR: Starting connection...");
         console.log("🔑 Token available:", token.substring(0, 20) + "...");
-        
+
         // For React Native, use LongPolling as primary transport
         // WebSockets in React Native can have issues with SignalR
         hubConnection = new HubConnectionBuilder()
@@ -173,7 +233,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         if (!isMounted) return;
 
         // ==================== Register Event Listeners ====================
-        
+
         // User joined room
         hubConnection.on("UserJoinedRoom", (payload: UserJoinedPayload) => {
           console.log("🏟️ UserJoinedRoom:", payload);
@@ -192,10 +252,13 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
 
         // Participant updated (team/position change)
-        hubConnection.on("ParticipantUpdated", (payload: ParticipantUpdatedPayload) => {
-          console.log("🔄 ParticipantUpdated:", payload);
-          optionsRef.current.onParticipantUpdated?.(payload);
-        });
+        hubConnection.on(
+          "ParticipantUpdated",
+          (payload: ParticipantUpdatedPayload) => {
+            console.log("🔄 ParticipantUpdated:", payload);
+            optionsRef.current.onParticipantUpdated?.(payload);
+          },
+        );
 
         // Room status changed (Open -> Full, etc.)
         hubConnection.on("RoomStatusChanged", (payload: RoomStatusPayload) => {
@@ -209,6 +272,44 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           optionsRef.current.onPlayerKicked?.(payload);
         });
 
+        // ==================== Room Chat Events ====================
+
+        // Team chat switched
+        hubConnection.on(
+          "TeamChatSwitched",
+          (payload: TeamChatSwitchedPayload) => {
+            console.log("💬 TeamChatSwitched:", payload);
+            optionsRef.current.onTeamChatSwitched?.(payload);
+          },
+        );
+
+        // Receive single room message
+        hubConnection.on("ReceiveRoomMessage", (payload: RoomMessage) => {
+          console.log("📨 ReceiveRoomMessage:", payload);
+          optionsRef.current.onReceiveRoomMessage?.(payload);
+        });
+
+        // Receive room messages (pagination)
+        hubConnection.on(
+          "ReceiveRoomMessages",
+          (payload: RoomMessagesPayload) => {
+            console.log("📨 ReceiveRoomMessages:", payload);
+            optionsRef.current.onReceiveRoomMessages?.(payload);
+          },
+        );
+
+        // User typing in room
+        hubConnection.on("RoomUserTyping", (payload: RoomTypingPayload) => {
+          console.log("⌨️ RoomUserTyping:", payload);
+          optionsRef.current.onRoomUserTyping?.(payload);
+        });
+
+        // User stop typing in room
+        hubConnection.on("RoomUserStopTyping", (payload: RoomTypingPayload) => {
+          console.log("⌨️ RoomUserStopTyping:", payload);
+          optionsRef.current.onRoomUserStopTyping?.(payload);
+        });
+
         // Error from server
         hubConnection.on("Error", (payload: any) => {
           console.warn("❌ MatchRoom SignalR Error:", payload);
@@ -216,7 +317,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
 
         // ==================== Connection State Handlers ====================
-        
+
         hubConnection.onreconnecting((error) => {
           console.log("🔄 MatchRoom SignalR reconnecting...", error);
           setConnectionState(HubConnectionState.Reconnecting);
@@ -227,7 +328,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           console.log("✅ MatchRoom SignalR reconnected:", connectionId);
           setConnectionState(HubConnectionState.Connected);
           setIsConnected(true);
-          
+
           // Re-join room group after reconnection
           try {
             await hubConnection?.invoke("JoinRoomGroup", roomId);
@@ -244,7 +345,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
 
         // ==================== Start Connection ====================
-        
+
         setConnectionState(HubConnectionState.Connecting);
         await hubConnection.start();
 
@@ -265,7 +366,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         } catch (error) {
           console.error("❌ Failed to join room group:", error);
         }
-
       } catch (error: any) {
         console.error("❌ MatchRoom SignalR connection error:", error);
         console.error("Error details:", {
@@ -284,7 +384,8 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
       isMounted = false;
       if (hubConnection) {
         // Leave room group trước khi disconnect
-        hubConnection.invoke("LeaveRoomGroup", roomId)
+        hubConnection
+          .invoke("LeaveRoomGroup", roomId)
           .catch((err) => console.warn("Failed to leave room group:", err))
           .finally(() => {
             hubConnection?.stop();
@@ -311,7 +412,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         throw error;
       }
     },
-    [connection]
+    [connection],
   );
 
   /**
@@ -322,11 +423,81 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
     await invokeHubMethod("NotifyPresence", roomId);
   }, [invokeHubMethod, roomId]);
 
+  // ==================== Room Chat Methods ====================
+
+  /**
+   * Switch team chat channel
+   * @param newTeamAssignment - 'A', 'B', or 'Unassigned'
+   */
+  const switchTeamChat = useCallback(
+    async (newTeamAssignment: "A" | "B" | "Unassigned") => {
+      await invokeHubMethod("SwitchTeamChat", roomId, newTeamAssignment);
+    },
+    [invokeHubMethod, roomId],
+  );
+
+  /**
+   * Send a message to room chat
+   * @param channel - RoomChatChannel (0=All, 1=TeamA, 2=TeamB)
+   * @param messageText - Message content
+   */
+  const sendRoomMessage = useCallback(
+    async (channel: RoomChatChannel, messageText: string) => {
+      await invokeHubMethod("SendRoomMessage", roomId, channel, messageText);
+    },
+    [invokeHubMethod, roomId],
+  );
+
+  /**
+   * Get room messages (pagination)
+   * @param channel - RoomChatChannel
+   * @param page - Page number (default: 1)
+   * @param pageSize - Page size (default: 50)
+   */
+  const getRoomMessages = useCallback(
+    async (
+      channel: RoomChatChannel,
+      page: number = 1,
+      pageSize: number = 50,
+    ) => {
+      await invokeHubMethod("GetRoomMessages", roomId, channel, page, pageSize);
+    },
+    [invokeHubMethod, roomId],
+  );
+
+  /**
+   * Notify that user is typing
+   * @param channel - RoomChatChannel
+   */
+  const roomTyping = useCallback(
+    async (channel: RoomChatChannel) => {
+      await invokeHubMethod("RoomTyping", roomId, channel);
+    },
+    [invokeHubMethod, roomId],
+  );
+
+  /**
+   * Notify that user stopped typing
+   * @param channel - RoomChatChannel
+   */
+  const roomStopTyping = useCallback(
+    async (channel: RoomChatChannel) => {
+      await invokeHubMethod("RoomStopTyping", roomId, channel);
+    },
+    [invokeHubMethod, roomId],
+  );
+
   return {
     connection,
     isConnected,
     connectionState,
     invokeHubMethod,
     notifyPresence,
+    // Room chat methods
+    switchTeamChat,
+    sendRoomMessage,
+    getRoomMessages,
+    roomTyping,
+    roomStopTyping,
   };
 };

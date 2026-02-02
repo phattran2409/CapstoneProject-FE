@@ -60,7 +60,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           },
         ]}
       >
-        <Image source={{ uri: avatar }} style={styles.avatar} />
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <Image
+            source={require("../../../assets/images/default_avatar.png")}
+            style={styles.avatar}
+          />
+        )}
       </View>
 
       {/* Name */}
