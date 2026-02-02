@@ -21,6 +21,7 @@ export type RootStackParamList = {
   Friends: undefined;
   FriendRequests: undefined;
   Chat: { chatId: string; chatName: string };
+  RoomChat: { roomId: string };
   Profile: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };

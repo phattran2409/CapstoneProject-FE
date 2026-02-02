@@ -17,6 +17,7 @@ import type {
   RoomMessage,
   RoomMessagesPayload,
   RoomTypingPayload,
+  RoomStopTypingPayload,
 } from "./useMatchRoomSignalR";
 
 export interface UseMatchRoomSignalRHandlersOptions {
@@ -45,7 +46,7 @@ export interface UseMatchRoomSignalRHandlersOptions {
   onNewRoomMessage?: (message: RoomMessage) => void;
   onRoomMessagesLoaded?: (payload: RoomMessagesPayload) => void;
   onUserTyping?: (payload: RoomTypingPayload) => void;
-  onUserStopTyping?: (payload: RoomTypingPayload) => void;
+  onUserStopTyping?: (payload: RoomStopTypingPayload) => void;
 
   // Toast/Alert notifications
   showNotification?: (
@@ -660,7 +661,7 @@ export const useMatchRoomSignalRHandlers = (
    * Handler khi user stop typing
    */
   const onRoomUserStopTyping = useCallback(
-    (payload: RoomTypingPayload) => {
+    (payload: RoomStopTypingPayload) => {
       console.log("⌨️ Handler - RoomUserStopTyping:", payload);
 
       if (payload.roomId !== roomId) return;

@@ -5,19 +5,64 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 import { getAuthToken } from "@/shared/api/client";
+import type {
+  ConversationDetailData,
+  SendChatMessageData,
+  MarkAsReadData,
+} from "@/features/chat/types/chat.types";
 
 const CHAT_HUB_URL = "https://api.kickify.site/hubs/chat";
 
+
+export interface UserOnlineStatusPayload {
+  userId: string;
+  isOnline: boolean;
+}
+
+export interface UserTypingPayload {
+  userId: string;
+  userName: string;
+}
+
+export interface UserStopTypingPayload {
+  userId: string;
+}
+
+export type ReceiveConversationPayload = ConversationDetailData;
+
+export type ReceiveMessagePayload = SendChatMessageData;
+
+export type MessagesReadPayload = MarkAsReadData;
+
+export interface OnlineUsersPayload {
+  userIds: string[];
+}
+
+export interface ChatErrorPayload {
+  message: string;
+}
+
+/**
+ * Options cho useChatSignalR hook
+ */
 export interface UseChatSignalROptions {
-  // /chatHub events từ server
-  onUserOnlineStatus?: (payload: any) => void; // "UserOnlineStatus"
-  onUserTyping?: (payload: any) => void; // "UserTyping"
-  onUserStopTyping?: (payload: any) => void; // "UserStopTyping"
-  onReceiveConversation?: (payload: any) => void; // "ReceiveConversation"
-  onReceiveMessage?: (payload: any) => void; // "ReceiveMessage"
-  onMessagesRead?: (payload: any) => void; // "MessagesRead"
-  onOnlineUsers?: (payload: any) => void; // "OnlineUsers"
-  onError?: (payload: any) => void; // "Error"
+  // Events từ server - Connection Management
+  onUserOnlineStatus?: (payload: UserOnlineStatusPayload) => void;
+
+  // Events từ server - Typing Indicators
+  onUserTyping?: (payload: UserTypingPayload) => void;
+  onUserStopTyping?: (payload: UserStopTypingPayload) => void;
+
+  // Events từ server - Messages
+  onReceiveConversation?: (payload: ReceiveConversationPayload) => void;
+  onReceiveMessage?: (payload: ReceiveMessagePayload) => void;
+  onMessagesRead?: (payload: MessagesReadPayload) => void;
+
+  // Events từ server - Online Status
+  onOnlineUsers?: (payload: OnlineUsersPayload) => void;
+
+  // Error handling
+  onError?: (payload: ChatErrorPayload) => void;
 }
 
 export const useChatSignalR = (options: UseChatSignalROptions = {}) => {
@@ -42,43 +87,50 @@ export const useChatSignalR = (options: UseChatSignalROptions = {}) => {
         }
 
         // User online / offline
-        newConnection.on("UserOnlineStatus", (payload: any) => {
+        newConnection.on("UserOnlineStatus", (payload: UserOnlineStatusPayload) => {
+          console.log("🟢 UserOnlineStatus:", payload);
           options.onUserOnlineStatus?.(payload);
         });
 
         // User đang gõ
-        newConnection.on("UserTyping", (payload: any) => {
+        newConnection.on("UserTyping", (payload: UserTypingPayload) => {
+          console.log("⌨️ UserTyping:", payload);
           options.onUserTyping?.(payload);
         });
 
         // User dừng gõ
-        newConnection.on("UserStopTyping", (payload: any) => {
+        newConnection.on("UserStopTyping", (payload: UserStopTypingPayload) => {
+          console.log("⌨️ UserStopTyping:", payload);
           options.onUserStopTyping?.(payload);
         });
 
         // Nhận conversation (GetConversation)
-        newConnection.on("ReceiveConversation", (payload: any) => {
+        newConnection.on("ReceiveConversation", (payload: ReceiveConversationPayload) => {
+          console.log("📨 ReceiveConversation:", payload);
           options.onReceiveConversation?.(payload);
         });
 
-        // Một số event khác từ backend (log hiển thị dưới dạng 'messagesread', 'receivemessage')
-        newConnection.on("MessagesRead", (payload: any) => {
-          console.log("📩 MessagesRead:", payload);
-          options.onMessagesRead?.(payload);
-        });
-        newConnection.on("ReceiveMessage", (payload: any) => {
+        // Nhận message mới (SendPrivateMessage)
+        newConnection.on("ReceiveMessage", (payload: ReceiveMessagePayload) => {
           console.log("📩 ReceiveMessage:", payload);
           options.onReceiveMessage?.(payload);
         });
 
-        // Danh sách online
-        newConnection.on("OnlineUsers", (payload: any) => {
+        // Messages đã được đánh dấu đọc
+        newConnection.on("MessagesRead", (payload: MessagesReadPayload) => {
+          console.log("✅ MessagesRead:", payload);
+          options.onMessagesRead?.(payload);
+        });
+
+        // Danh sách online users
+        newConnection.on("OnlineUsers", (payload: OnlineUsersPayload) => {
+          console.log("👥 OnlineUsers:", payload);
           options.onOnlineUsers?.(payload);
         });
 
         // Lỗi từ server
-        newConnection.on("Error", (payload: any) => {
-          console.warn("SignalR Error event:", payload);
+        newConnection.on("Error", (payload: ChatErrorPayload) => {
+          console.warn("❌ Chat SignalR Error:", payload);
           options.onError?.(payload);
         });
 

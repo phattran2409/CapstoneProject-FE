@@ -29,7 +29,7 @@ export interface UseMatchRoomSignalROptions {
   onReceiveRoomMessage?: (payload: RoomMessage) => void;
   onReceiveRoomMessages?: (payload: RoomMessagesPayload) => void;
   onRoomUserTyping?: (payload: RoomTypingPayload) => void;
-  onRoomUserStopTyping?: (payload: RoomTypingPayload) => void;
+  onRoomUserStopTyping?: (payload: RoomStopTypingPayload) => void;
 
   onError?: (payload: any) => void;
 }
@@ -121,47 +121,54 @@ export enum RoomChatChannel {
   TeamB = 2,
 }
 
-/**
- * Payload khi user switch team chat channel
- */
 export interface TeamChatSwitchedPayload {
   roomId: string;
-  teamAssignment: "A" | "B" | "Unassigned";
+  teamAssignment: string; // "A", "B", hoặc "Unassigned"
 }
 
-/**
- * Room message object
- */
 export interface RoomMessage {
   messageId: string;
   roomId: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string | null;
-  channel: RoomChatChannel;
+  channel: number; // RoomChatChannel as number (0=All, 1=TeamA, 2=TeamB)
+  senderId: string;
+  senderFullName: string;
+  senderAvatarUrl: string | null;
   messageText: string;
   sentAt: string;
 }
 
 /**
  * Payload khi nhận danh sách messages
+ * Backend: ReceiveRoomMessages event với result.Value từ GetRoomMessagesQuery
  */
 export interface RoomMessagesPayload {
   messages: RoomMessage[];
   page: number;
   pageSize: number;
   totalCount: number;
-  hasMore: boolean;
+  totalPages: number;
 }
 
 /**
  * Payload khi user đang typing
+ * Backend: RoomUserTyping event với { RoomId, Channel, UserId, UserName }
  */
 export interface RoomTypingPayload {
   roomId: string;
-  channel: RoomChatChannel;
+  channel: number; // RoomChatChannel as number
   userId: string;
   userName: string;
+}
+
+/**
+ * Payload khi user stop typing
+ * Backend: RoomUserStopTyping event với { RoomId, Channel, UserId }
+ * Lưu ý: Không có UserName trong payload này
+ */
+export interface RoomStopTypingPayload {
+  roomId: string;
+  channel: number; // RoomChatChannel as number
+  userId: string;
 }
 
 /**
@@ -305,7 +312,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
 
         // User stop typing in room
-        hubConnection.on("RoomUserStopTyping", (payload: RoomTypingPayload) => {
+        hubConnection.on("RoomUserStopTyping", (payload: RoomStopTypingPayload) => {
           console.log("⌨️ RoomUserStopTyping:", payload);
           optionsRef.current.onRoomUserStopTyping?.(payload);
         });
@@ -438,19 +445,21 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
 
   /**
    * Send a message to room chat
-   * @param channel - RoomChatChannel (0=All, 1=TeamA, 2=TeamB)
+   * Backend: SendRoomMessage(roomId, channel, messageText) - channel là int
+   * @param channel - RoomChatChannel enum (0=All, 1=TeamA, 2=TeamB)
    * @param messageText - Message content
    */
   const sendRoomMessage = useCallback(
     async (channel: RoomChatChannel, messageText: string) => {
-      await invokeHubMethod("SendRoomMessage", roomId, channel, messageText);
+      await invokeHubMethod("SendRoomMessage", roomId, channel as number, messageText);
     },
     [invokeHubMethod, roomId],
   );
 
   /**
    * Get room messages (pagination)
-   * @param channel - RoomChatChannel
+   * Backend: GetRoomMessages(roomId, channel, page, pageSize) - channel là int
+   * @param channel - RoomChatChannel enum
    * @param page - Page number (default: 1)
    * @param pageSize - Page size (default: 50)
    */
@@ -460,29 +469,31 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
       page: number = 1,
       pageSize: number = 50,
     ) => {
-      await invokeHubMethod("GetRoomMessages", roomId, channel, page, pageSize);
+      await invokeHubMethod("GetRoomMessages", roomId, channel as number, page, pageSize);
     },
     [invokeHubMethod, roomId],
   );
 
   /**
    * Notify that user is typing
-   * @param channel - RoomChatChannel
+   * Backend: RoomTyping(roomId, channel) - channel là int
+   * @param channel - RoomChatChannel enum
    */
   const roomTyping = useCallback(
     async (channel: RoomChatChannel) => {
-      await invokeHubMethod("RoomTyping", roomId, channel);
+      await invokeHubMethod("RoomTyping", roomId, channel as number);
     },
     [invokeHubMethod, roomId],
   );
 
   /**
    * Notify that user stopped typing
-   * @param channel - RoomChatChannel
+   * Backend: RoomStopTyping(roomId, channel) - channel là int
+   * @param channel - RoomChatChannel enum
    */
   const roomStopTyping = useCallback(
     async (channel: RoomChatChannel) => {
-      await invokeHubMethod("RoomStopTyping", roomId, channel);
+      await invokeHubMethod("RoomStopTyping", roomId, channel as number);
     },
     [invokeHubMethod, roomId],
   );

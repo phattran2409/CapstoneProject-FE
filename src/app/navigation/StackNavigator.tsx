@@ -14,6 +14,7 @@ import {
   ProfileDetailScreen,
   ChatListScreen,
   ChatScreen,
+  RoomChatScreen,
   ProfileScreen,
   RoomInformation,
   FriendRequestsScreen,
@@ -268,6 +269,14 @@ const StackNavigator: React.FC = () => {
             options={{
               headerShown: false,
               animation: "slide_from_right",
+            }}
+          />
+          <Stack.Screen
+            name="RoomChat"
+            component={RoomChatScreen}
+            options={{
+              headerShown: false,
+              animation: "slide_from_bottom",
             }}
           />
         </>

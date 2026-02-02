@@ -52,21 +52,21 @@ export interface ConversationDetailData {
   totalPages: number;
 }
 
+export interface RoomChatMessage {
+  messageId: string;
+  senderId: string;
+  senderFullName: string;
+  senderAvatarUrl: string | null;
+  senderTeam: number;
+  messageText: string;
+  sentAt: string;
+  isEdited: boolean;
+}
+
 export interface RoomChatDetailData {
   roomId: string;
   channel: number;
-  messages: [
-    {
-      messageId: string;
-      senderId: string;
-      senderFullName: string;
-      senderAvatarUrl: string | null;
-      senderTeam: number;
-      messageText: string;
-      sentAt: string;
-      isEdited: boolean;
-    },
-  ];
+  messages: RoomChatMessage[];
   totalCount: number;
   page: number;
   pageSize: number;
