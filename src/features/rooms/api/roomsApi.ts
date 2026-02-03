@@ -66,14 +66,9 @@ export const roomsApi = {
    */
   createRoom: async (room: CreateRoomRequest): Promise<MatchRoom> => {
     try {
-<<<<<<< HEAD
       const response = await apiClient.post<ApiResponse<MatchRoom>>('/match-rooms', room);
       const body = response as unknown as ApiResponse<MatchRoom>;
       return body.data as MatchRoom;
-=======
-      const response = await apiClient.post("/match-rooms", room);
-      return response.data;
->>>>>>> origin/DatDev
     } catch (error) {
       console.error("Failed to create room:", error);
       throw error;
@@ -99,10 +94,14 @@ export const roomsApi = {
    * Join a room (create booking)
    */
   joinMatchRoom: async (request: JoinRoomRequest): Promise<any> => {
-    const data = await apiClient.post(
-      `${API_CONFIG.ENDPOINTS.ROOMS.JOIN.replace(":id", request.roomId)}`,
-    );
-    return data;
+    try { 
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.ROOMS.JOIN.replace(":id", request.roomId), request);
+      const body = response as unknown as ApiResponse<any>;
+      return body.data;
+    }catch (error) {
+      console.error("Failed to join room:", error);
+      throw error;
+    }
   },
 
   /**
