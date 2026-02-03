@@ -26,7 +26,8 @@ export const useMatchRooms = (filters?: Omit<MatchRoomFilters, 'page' | 'pageSiz
       const result = await roomsApi.getMatchRooms({ 
         page, 
         pageSize,
-        ...filters 
+        availableOnly: true,
+        ...filters
       });
       return {
         data: result.data.rooms,

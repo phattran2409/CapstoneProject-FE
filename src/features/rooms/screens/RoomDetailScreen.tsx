@@ -57,31 +57,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({ navigation, route }
   
   }, [showChat]);
   // Mock data - replace with real data from API
-  const roomData = {
-    id: roomId,
-    format: '7vs7' as '5vs5' | '7vs7', 
-    datetime: '19:00 - 20:30, 28/08',
-    venue: {
-      name: 'Sân bóng ABC',
-      address: '123 Đường XYZ',
-    },
-    totalPlayers: 10,
-    currentPlayers: 9,
-    pricePerPlayer: 80000,
-    status: 'Sắp diễn ra',
-    teams: {
-      name: 'Đội A',
-      players: [
-        { id: 'd3b7b055-ec37-4956-b587-c2edb61b0171', name: 'An Nguyễn', avatar: require('@assets/images/icon.png'), isCaptain: true, role: 'GK' as const },
-        { id: '2', name: 'Cường Phạm', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'DF' as const },
-        { id: '3', name: 'Emeka Okafor', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'DF' as const },
-        { id: '4', name: 'Giang Hoàng', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'MF' as const },
-        { id: '5', name: 'Phat Tran', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'FW' as const },
-        { id: '6', name: 'Minh Lê', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'DF' as const },
-        { id: '7', name: 'Hùng Trần', avatar: require('@assets/images/icon.png'), isCaptain: false, role: 'FW' as const },
-      ],
-    }
-  };
+
 
   const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>('teamA');
   const [selectedFormation, setSelectedFormation] = useState<string>('3-3');

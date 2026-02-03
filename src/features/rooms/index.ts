@@ -5,11 +5,9 @@
 
 // ============ Hooks ============
 export {
-  useRooms,
   useMatchRooms,
   useRoomDetail,
   useMatchRoomDetail,
-  useJoinRoom,
   useJoinMatchRoom,
   useJoinRoomAsUnassigned,
   useUpdateParticipant,
@@ -25,7 +23,6 @@ export {
 export type {
   RoomFilters,
   RoomStatus,
-  Message,
   CreateRoomRequest,
   JoinRoomRequest,
   SendMessageRequest,

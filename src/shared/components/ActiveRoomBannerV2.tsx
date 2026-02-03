@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useActiveRoomStore } from '@/features/rooms/store/activeRoomStore';
-import { useRoomDetail } from '@/features/rooms';
+import { useMatchRoomDetail, useRoomDetail } from '@/features/rooms';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { RootStackParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -26,13 +26,12 @@ export const ActiveRoomBannerV2: React.FC = () => {
   const { user } = useAuthStore();
 
   // Fetch room data if roomId exists
-  const { data: room } = useRoomDetail(roomId || '', {
+  const { data: room } = useMatchRoomDetail(roomId || '', {
     enabled: !!roomId && !!user,
   });
 
   const isAuthenticated = !!user;
-  const isActive = roomId && room && room.status !== 'completed' && room.status !== 'cancelled';
-
+  const isActive = roomId && room && room.status !== 'Closed' && room.status !== 'Cancelled';
   // Chỉ hiển thị nếu có active room
   if (!isAuthenticated || !isActive) {
     return null;
@@ -70,7 +69,7 @@ export const ActiveRoomBannerV2: React.FC = () => {
               Phòng của bạn đang hoạt động
             </Text>
             <Text style={[styles.bannerSubtitle, { color: theme.colors.textSecondary }]}>
-              {room?.currentPlayers}/{room?.totalPlayers} người • {formatDate(room?.datetime || '')}
+              {room?.filledSlots}/{room?.totalSlots} người • {formatDate(room?.matchDate || '')}
             </Text>
           </View>
         </View>

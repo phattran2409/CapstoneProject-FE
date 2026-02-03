@@ -51,6 +51,17 @@ export function usePagination<T>({
   // Track if this is initial load
   const isInitialLoad = useRef(true);
 
+  // Reset accumulated data and page when queryKey changes (e.g. filter change)
+  const queryKeyRef = useRef(queryKey);
+  useEffect(() => {
+    if (JSON.stringify(queryKeyRef.current) !== JSON.stringify(queryKey)) {
+      queryKeyRef.current = queryKey;
+      setAccumulatedData([]);
+      setCurrentPage(1);
+      isInitialLoad.current = true;
+    }
+  }, [queryKey]);
+
   // Create query key with page
   const paginatedQueryKey = [...queryKey, { page: currentPage, pageSize }];
 

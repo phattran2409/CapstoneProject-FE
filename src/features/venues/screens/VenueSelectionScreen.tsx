@@ -37,7 +37,8 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
     loadMore,
     setVenues,
   } = useVenues({
-    pageSize: 2,
+    pageSize: 5,
+    sportType: selectedFilter === 'all' ? undefined : selectedFilter,
   });
 
   // const formatPrice = (price: number) => {

@@ -66,6 +66,7 @@ export interface MatchRoomParticipants {
  */
 export interface MatchRoom {
   roomId: string;
+  roomName: string;
   hostId: string;
   hostName: string;
   hostAvatar: string | null;
@@ -129,7 +130,7 @@ export type MatchRoomsResponse = ApiResponse<{
 export interface MatchRoomFilters {
   page?: number;
   pageSize?: number;
-  status?: string;
+  availableOnly?: boolean;
   matchFormat?: string;
 }
 
@@ -162,7 +163,7 @@ export interface CreateRoomRequest {
   // isPrivate?: boolean;
   // password?: string;
 
-  fieldId: string;
+  fieldId: string;  
   matchDate: string;
   startTime: string;
   durationMinutes: number;

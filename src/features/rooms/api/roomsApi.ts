@@ -9,8 +9,10 @@ import type {
   MatchRoomFilters,
   MatchRoomFullInfo,
   ApiResponse,
+  MatchRoom,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
+import { Message } from '@/shared/components';
 
 /**
  * Rooms API functions
@@ -24,7 +26,7 @@ export const roomsApi = {
     const params = {
       page: filters?.page || 1,
       pageSize: filters?.pageSize || 10,
-      ...(filters?.status && { status: filters.status }),
+      ...(filters?.availableOnly && { availableOnly: filters.availableOnly }),
       ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
     };
     const data = await apiClient.get('/match-rooms', { params });
@@ -51,11 +53,13 @@ export const roomsApi = {
 
   /**
    * Create a new room
+   * Note: apiClient interceptor returns response.data, so "response" here is { isSuccess, data }.
    */
-  createRoom: async (room: CreateRoomRequest): Promise<Room> => {
+  createRoom: async (room: CreateRoomRequest): Promise<MatchRoom> => {
     try {
-      const response = await apiClient.post('/match-rooms', room);
-      return response.data;
+      const response = await apiClient.post<ApiResponse<MatchRoom>>('/match-rooms', room);
+      const body = response as unknown as ApiResponse<MatchRoom>;
+      return body.data as MatchRoom;
     } catch (error) {
       console.error('Failed to create room:', error);
       throw error;
@@ -65,7 +69,7 @@ export const roomsApi = {
   /**
    * Update room
    */
-  updateRoom: async (id: string, updates: UpdateRoomRequest): Promise<Room> => {
+  updateRoom: async (id: string, updates: UpdateRoomRequest): Promise<MatchRoom> => {
     const data = await apiClient.patch(`/rooms/${id}`, updates);
     return data;
   },

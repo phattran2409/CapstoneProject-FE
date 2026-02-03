@@ -56,7 +56,7 @@ const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
 
   return {
     id: room.roomId,
-    title: room.fieldName || room.venueName,
+    title: room.roomName,
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
     image: require('@assets/images/icon.png'),
@@ -91,8 +91,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   }, [matchRooms]);
 
   // Split matches for display (first 2 as featured, rest as list)
-  const featuredMatches = useMemo(() => matches.slice(0, 2), [matches]);
-  const listMatches = useMemo(() => matches.slice(0,2), [matches]);
+  const featuredMatches = useMemo(() => matches.slice(0, matches.length ), [matches]);
+  const listMatches = useMemo(() => matches.slice(0,matches.length), [matches]);
   
   
   const handleMatchPress = useCallback((matchId: string) => {

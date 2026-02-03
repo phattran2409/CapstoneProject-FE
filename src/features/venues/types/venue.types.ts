@@ -106,6 +106,7 @@ export interface TimeSlot {
 export interface VenueFilters {
   page? :number;
   pageSize? :number;
+  sportType? : string | null;
 }
 
 

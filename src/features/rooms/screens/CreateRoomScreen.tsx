@@ -143,9 +143,9 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         onSuccess: async (newRoom) => {
           showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
             // Save active room ID to storage
-            if (newRoom?.id) {
-              await setActiveRoom(newRoom.id);
-              navigation?.navigate('RoomInformation', { roomId: newRoom.id });
+            if (newRoom?.roomId) {
+              await setActiveRoom(newRoom.roomId);
+              navigation?.navigate('RoomInformation', { roomId: newRoom.roomId });
             } else {
               navigation?.goBack();
             }

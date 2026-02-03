@@ -26,6 +26,7 @@ import {
 import { CreatePostScreen } from "@/features/post/screens";
 import TabNavigator from "./TabNavigator";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useActiveRoomStore } from "@/features/rooms/store/activeRoomStore";
 import { RootStackParamList } from "./types";
 import { View, StyleSheet } from "react-native";
 import { WalletScreen, WalletTopUpScreen } from "@/features/wallet";
@@ -36,6 +37,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const StackNavigator: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const loadActiveRoom = useActiveRoomStore((state) => state.loadActiveRoom);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -51,6 +53,13 @@ const StackNavigator: React.FC = () => {
     };
     checkInitialState();
   }, []);
+
+  // Restore active room from storage when user is logged in → ActiveRoomBannerV2 can show again
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadActiveRoom();
+    }
+  }, [isAuthenticated, loadActiveRoom]);
 
   if (isLoading) {
     return <SplashScreen />;
