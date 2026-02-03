@@ -52,6 +52,29 @@ export interface ConversationDetailData {
   totalPages: number;
 }
 
+export interface RoomChatMessage {
+  messageId: string;
+  senderId: string;
+  senderFullName: string;
+  senderAvatarUrl: string | null;
+  senderTeam: number;
+  messageText: string;
+  sentAt: string;
+  isEdited: boolean;
+}
+
+export interface RoomChatDetailData {
+  roomId: string;
+  channel: number;
+  messages: RoomChatMessage[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+
+
 // ===== Send message (/api/chat/send) =====
 
 export interface SendChatRequestBody {
@@ -61,12 +84,29 @@ export interface SendChatRequestBody {
   messageType: ChatMessageType;
 }
 
+export interface SendChatRoomRequestBody {
+  roomId: string;
+  channel: string;
+  messageText: string;
+}
+
 export interface SendChatMessageData {
   messageId: string;
   senderId: string;
   receiverId: string;
   messageText: string;
   messageType: ChatMessageType;
+  sentAt: string;
+}
+
+export interface SendChatMessageRoomData {
+  messageId: string;
+  roomId: string;
+  channel: number;
+  senderId: string;
+  senderFullName: string;
+  senderAvatarUrl: string | null;
+  messageText: string;
   sentAt: string;
 }
 

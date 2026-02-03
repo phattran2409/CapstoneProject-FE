@@ -13,6 +13,11 @@ import type {
   ParticipantUpdatedPayload,
   RoomStatusPayload,
   PlayerKickedPayload,
+  TeamChatSwitchedPayload,
+  RoomMessage,
+  RoomMessagesPayload,
+  RoomTypingPayload,
+  RoomStopTypingPayload,
 } from "./useMatchRoomSignalR";
 
 export interface UseMatchRoomSignalRHandlersOptions {
@@ -29,17 +34,24 @@ export interface UseMatchRoomSignalRHandlersOptions {
   onParticipantUpdated?: (payload: ParticipantUpdatedPayload) => void;
   onStatusChanged?: (payload: RoomStatusPayload) => void;
   onKicked?: (payload: PlayerKickedPayload) => void;
-  
+
   // Callback khi room bị xóa - để điều hướng
   onRoomDeleted?: () => void;
-  
+
   // Callback khi host thay đổi
   onHostChanged?: (newHostId: string) => void;
+
+  // Room chat callbacks
+  onTeamChatSwitched?: (payload: TeamChatSwitchedPayload) => void;
+  onNewRoomMessage?: (message: RoomMessage) => void;
+  onRoomMessagesLoaded?: (payload: RoomMessagesPayload) => void;
+  onUserTyping?: (payload: RoomTypingPayload) => void;
+  onUserStopTyping?: (payload: RoomStopTypingPayload) => void;
 
   // Toast/Alert notifications
   showNotification?: (
     message: string,
-    type?: "success" | "info" | "warning" | "error"
+    type?: "success" | "info" | "warning" | "error",
   ) => void;
 }
 
@@ -63,7 +75,7 @@ export interface UseMatchRoomSignalRHandlersOptions {
  * const { isConnected } = useMatchRoomSignalR(handlers);
  */
 export const useMatchRoomSignalRHandlers = (
-  options: UseMatchRoomSignalRHandlersOptions
+  options: UseMatchRoomSignalRHandlersOptions,
 ): UseMatchRoomSignalROptions => {
   const {
     roomId,
@@ -76,6 +88,11 @@ export const useMatchRoomSignalRHandlers = (
     onKicked,
     onRoomDeleted,
     onHostChanged,
+    onTeamChatSwitched: onTeamChatSwitchedCallback,
+    onNewRoomMessage,
+    onRoomMessagesLoaded,
+    onUserTyping,
+    onUserStopTyping,
     showNotification,
   } = options;
 
@@ -85,7 +102,7 @@ export const useMatchRoomSignalRHandlers = (
    * Helper: Map team assignment string to team key
    */
   const getTeamKey = (
-    teamAssignment: TeamAssignment | string
+    teamAssignment: TeamAssignment | string,
   ): "teamA" | "teamB" | "unassigned" => {
     switch (teamAssignment) {
       case "A":
@@ -113,7 +130,8 @@ export const useMatchRoomSignalRHandlers = (
         userId: payload.userId,
         fullName: payload.userName,
         avatarUrl: payload.avatarUrl || payload.userAvatar || null,
-        teamAssignment: (payload.teamAssignment as TeamAssignment) || "Unassigned",
+        teamAssignment:
+          (payload.teamAssignment as TeamAssignment) || "Unassigned",
         position: payload.position || "",
         depositPaid: false,
         joinDate: payload.joinedAt,
@@ -134,7 +152,7 @@ export const useMatchRoomSignalRHandlers = (
             ...prev.participants.unassigned,
           ];
           const participantExists = allParticipants.some(
-            (p) => p.userId === payload.userId
+            (p) => p.userId === payload.userId,
           );
           if (participantExists) return prev;
 
@@ -169,7 +187,14 @@ export const useMatchRoomSignalRHandlers = (
       // Custom callback
       onPlayerJoined?.(payload);
     },
-    [roomId, currentUserId, setRoomData, queryClient, showNotification, onPlayerJoined]
+    [
+      roomId,
+      currentUserId,
+      setRoomData,
+      queryClient,
+      showNotification,
+      onPlayerJoined,
+    ],
   );
 
   /**
@@ -187,11 +212,11 @@ export const useMatchRoomSignalRHandlers = (
       // Case 1: Room đã bị xóa
       if (payload.isRoomDeleted) {
         console.log("🗑️ Room has been deleted");
-        
+
         if (showNotification) {
           showNotification("Phòng đã bị xóa", "warning");
         }
-        
+
         // Trigger callback để điều hướng
         onRoomDeleted?.();
         return;
@@ -204,17 +229,18 @@ export const useMatchRoomSignalRHandlers = (
 
           const updatedRoom: MatchRoomFullInfo = {
             ...prev,
-            filledSlots: payload.filledSlots ?? Math.max(0, prev.filledSlots - 1),
+            filledSlots:
+              payload.filledSlots ?? Math.max(0, prev.filledSlots - 1),
             totalSlots: payload.totalSlots ?? prev.totalSlots,
             participants: {
               teamA: prev.participants.teamA.filter(
-                (p) => p.userId !== payload.userId
+                (p) => p.userId !== payload.userId,
               ),
               teamB: prev.participants.teamB.filter(
-                (p) => p.userId !== payload.userId
+                (p) => p.userId !== payload.userId,
               ),
               unassigned: prev.participants.unassigned.filter(
-                (p) => p.userId !== payload.userId
+                (p) => p.userId !== payload.userId,
               ),
             },
           };
@@ -229,7 +255,7 @@ export const useMatchRoomSignalRHandlers = (
               ...updatedRoom.participants.unassigned,
             ];
             const newHostParticipant = allParticipants.find(
-              (p) => p.userId === payload.newHostId
+              (p) => p.userId === payload.newHostId,
             );
             if (newHostParticipant) {
               updatedRoom.host = {
@@ -247,15 +273,18 @@ export const useMatchRoomSignalRHandlers = (
       // Case 2: Thông báo về host mới
       if (payload.newHostId) {
         console.log("👑 New host assigned:", payload.newHostId);
-        
+
         if (showNotification) {
           if (payload.newHostId === currentUserId) {
             showNotification("Bạn đã trở thành host của phòng!", "success");
           } else {
-            showNotification(`${payload.userName} đã rời đi. Host mới đã được chỉ định.`, "info");
+            showNotification(
+              `${payload.userName} đã rời đi. Host mới đã được chỉ định.`,
+              "info",
+            );
           }
         }
-        
+
         // Trigger callback cho host change
         onHostChanged?.(payload.newHostId);
       } else {
@@ -273,7 +302,16 @@ export const useMatchRoomSignalRHandlers = (
       // Custom callback
       onPlayerLeft?.(payload);
     },
-    [roomId, currentUserId, setRoomData, queryClient, showNotification, onPlayerLeft, onRoomDeleted, onHostChanged]
+    [
+      roomId,
+      currentUserId,
+      setRoomData,
+      queryClient,
+      showNotification,
+      onPlayerLeft,
+      onRoomDeleted,
+      onHostChanged,
+    ],
   );
 
   /**
@@ -300,7 +338,7 @@ export const useMatchRoomSignalRHandlers = (
 
           // Tìm trong teamA
           const inTeamA = prev.participants.teamA.find(
-            (p) => p.userId === payload.userId
+            (p) => p.userId === payload.userId,
           );
           if (inTeamA) {
             foundParticipant = inTeamA;
@@ -310,7 +348,7 @@ export const useMatchRoomSignalRHandlers = (
           // Tìm trong teamB
           if (!foundParticipant) {
             const inTeamB = prev.participants.teamB.find(
-              (p) => p.userId === payload.userId
+              (p) => p.userId === payload.userId,
             );
             if (inTeamB) {
               foundParticipant = inTeamB;
@@ -321,7 +359,7 @@ export const useMatchRoomSignalRHandlers = (
           // Tìm trong unassigned
           if (!foundParticipant) {
             const inUnassigned = prev.participants.unassigned.find(
-              (p) => p.userId === payload.userId
+              (p) => p.userId === payload.userId,
             );
             if (inUnassigned) {
               foundParticipant = inUnassigned;
@@ -351,7 +389,7 @@ export const useMatchRoomSignalRHandlers = (
               participants: {
                 ...prev.participants,
                 [oldTeamKey]: prev.participants[oldTeamKey].map((p) =>
-                  p.userId === payload.userId ? updatedParticipant : p
+                  p.userId === payload.userId ? updatedParticipant : p,
                 ),
               },
             };
@@ -364,10 +402,13 @@ export const useMatchRoomSignalRHandlers = (
               ...prev.participants,
               // Xóa khỏi team cũ
               [oldTeamKey]: prev.participants[oldTeamKey].filter(
-                (p) => p.userId !== payload.userId
+                (p) => p.userId !== payload.userId,
               ),
               // Thêm vào team mới
-              [newTeamKey]: [...prev.participants[newTeamKey], updatedParticipant],
+              [newTeamKey]: [
+                ...prev.participants[newTeamKey],
+                updatedParticipant,
+              ],
             },
           };
         });
@@ -388,14 +429,21 @@ export const useMatchRoomSignalRHandlers = (
               : "chưa phân đội";
         showNotification(
           `${payload.userName} đã chuyển sang ${teamName}${payload.position ? ` (${payload.position})` : ""}`,
-          "info"
+          "info",
         );
       }
 
       // Custom callback
       onParticipantUpdatedCallback?.(payload);
     },
-    [roomId, currentUserId, setRoomData, queryClient, showNotification, onParticipantUpdatedCallback]
+    [
+      roomId,
+      currentUserId,
+      setRoomData,
+      queryClient,
+      showNotification,
+      onParticipantUpdatedCallback,
+    ],
   );
 
   /**
@@ -416,8 +464,10 @@ export const useMatchRoomSignalRHandlers = (
             ...prev,
             status: payload.status,
             // Sử dụng filledSlots/totalSlots hoặc legacy currentPlayers/totalPlayers
-            filledSlots: payload.filledSlots ?? payload.currentPlayers ?? prev.filledSlots,
-            totalSlots: payload.totalSlots ?? payload.totalPlayers ?? prev.totalSlots,
+            filledSlots:
+              payload.filledSlots ?? payload.currentPlayers ?? prev.filledSlots,
+            totalSlots:
+              payload.totalSlots ?? payload.totalPlayers ?? prev.totalSlots,
           };
         });
       }
@@ -451,7 +501,7 @@ export const useMatchRoomSignalRHandlers = (
       // Custom callback
       onStatusChanged?.(payload);
     },
-    [roomId, setRoomData, queryClient, showNotification, onStatusChanged]
+    [roomId, setRoomData, queryClient, showNotification, onStatusChanged],
   );
 
   /**
@@ -473,13 +523,13 @@ export const useMatchRoomSignalRHandlers = (
             filledSlots: Math.max(0, prev.filledSlots - 1),
             participants: {
               teamA: prev.participants.teamA.filter(
-                (p) => p.userId !== payload.kickedUserId
+                (p) => p.userId !== payload.kickedUserId,
               ),
               teamB: prev.participants.teamB.filter(
-                (p) => p.userId !== payload.kickedUserId
+                (p) => p.userId !== payload.kickedUserId,
               ),
               unassigned: prev.participants.unassigned.filter(
-                (p) => p.userId !== payload.kickedUserId
+                (p) => p.userId !== payload.kickedUserId,
               ),
             },
           };
@@ -496,12 +546,12 @@ export const useMatchRoomSignalRHandlers = (
         if (payload.kickedUserId === currentUserId) {
           showNotification(
             `Bạn đã bị kick khỏi phòng${payload.reason ? `: ${payload.reason}` : ""}`,
-            "error"
+            "error",
           );
         } else {
           showNotification(
             `${payload.kickedUserName} đã bị kick khỏi phòng`,
-            "warning"
+            "warning",
           );
         }
       }
@@ -509,7 +559,14 @@ export const useMatchRoomSignalRHandlers = (
       // Custom callback
       onKicked?.(payload);
     },
-    [roomId, currentUserId, setRoomData, queryClient, showNotification, onKicked]
+    [
+      roomId,
+      currentUserId,
+      setRoomData,
+      queryClient,
+      showNotification,
+      onKicked,
+    ],
   );
 
   /**
@@ -523,7 +580,99 @@ export const useMatchRoomSignalRHandlers = (
         showNotification(payload.message || "Đã có lỗi xảy ra", "error");
       }
     },
-    [showNotification]
+    [showNotification],
+  );
+
+  // ==================== Room Chat Handlers ====================
+
+  /**
+   * Handler khi user switch team chat channel
+   */
+  const onTeamChatSwitched = useCallback(
+    (payload: TeamChatSwitchedPayload) => {
+      console.log("💬 Handler - TeamChatSwitched:", payload);
+
+      if (payload.roomId !== roomId) return;
+
+      // Hiển thị notification
+      if (showNotification) {
+        const teamName =
+          payload.teamAssignment === "A"
+            ? "Team A"
+            : payload.teamAssignment === "B"
+              ? "Team B"
+              : "All";
+        showNotification(`Đã chuyển sang chat ${teamName}`, "success");
+      }
+
+      // Custom callback
+      onTeamChatSwitchedCallback?.(payload);
+    },
+    [roomId, showNotification, onTeamChatSwitchedCallback],
+  );
+
+  /**
+   * Handler khi nhận được message mới
+   */
+  const onReceiveRoomMessage = useCallback(
+    (message: RoomMessage) => {
+      console.log("📨 Handler - ReceiveRoomMessage:", message);
+
+      if (message.roomId !== roomId) return;
+
+      // Custom callback để thêm message vào UI
+      onNewRoomMessage?.(message);
+    },
+    [roomId, onNewRoomMessage],
+  );
+
+  /**
+   * Handler khi nhận danh sách messages (pagination)
+   */
+  const onReceiveRoomMessages = useCallback(
+    (payload: RoomMessagesPayload) => {
+      console.log("📨 Handler - ReceiveRoomMessages:", payload);
+
+      // Custom callback để load messages vào UI
+      onRoomMessagesLoaded?.(payload);
+    },
+    [onRoomMessagesLoaded],
+  );
+
+  /**
+   * Handler khi user đang typing
+   */
+  const onRoomUserTyping = useCallback(
+    (payload: RoomTypingPayload) => {
+      console.log("⌨️ Handler - RoomUserTyping:", payload);
+
+      if (payload.roomId !== roomId) return;
+
+      // Bỏ qua nếu là current user
+      if (payload.userId === currentUserId) return;
+
+      // Custom callback để hiển thị typing indicator
+      onUserTyping?.(payload);
+    },
+    [roomId, currentUserId, onUserTyping],
+  );
+
+  /**
+   * Handler khi user stop typing
+   */
+  const onRoomUserStopTyping = useCallback(
+    (payload: RoomStopTypingPayload) => {
+      console.log("⌨️ Handler - RoomUserStopTyping:", payload);
+
+      if (payload.roomId !== roomId) return;
+
+      // Bỏ qua nếu là current user
+      if (payload.userId === currentUserId) return;
+
+      // Custom callback để ẩn typing indicator
+      onUserStopTyping?.(payload);
+    },
+    [roomId, currentUserId, onUserStopTyping],
   );
 
   return {
@@ -533,6 +682,11 @@ export const useMatchRoomSignalRHandlers = (
     onParticipantUpdated,
     onRoomStatusChanged,
     onPlayerKicked,
+    onTeamChatSwitched,
+    onReceiveRoomMessage,
+    onReceiveRoomMessages,
+    onRoomUserTyping,
+    onRoomUserStopTyping,
     onError,
   };
 };

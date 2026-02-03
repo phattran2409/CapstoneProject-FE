@@ -35,6 +35,7 @@ export { default as CreatePostScreen } from '../features/post/screens/CreatePost
 
 // Chat Feature Screens
 export { default as ChatListScreen } from '../features/chat/screens/ChatListScreen';
+export { default as RoomChatScreen } from '../features/chat/screens/RoomChatScreen';
 export { default as ChatScreen } from '../features/chat/screens/ChatScreen';
 
 // Leaderboard Feature Screens

@@ -36,7 +36,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 interface EditProfileFormProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (data: UpdateProfileData) => void;
+  onSave: (userId: string, data: UpdateProfileData) => void;
+  userId: string;
   initialData?: Partial<UpdateProfileData>;
   isLoading?: boolean;
 }
@@ -47,6 +48,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
   onSave,
   initialData = {},
   isLoading = false,
+  userId,
 }) => {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
@@ -63,33 +65,35 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
   } = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
-      name: initialData.name || "",
+      fullName: initialData.fullName || "",
       bio: initialData.bio || "",
       phone: initialData.phone || "",
       dateOfBirth: initialData.dateOfBirth || "",
-      gender: initialData.gender,
-      position: initialData.position || "",
-      preferredFoot: initialData.preferredFoot,
-      shirtNumber: initialData.shirtNumber,
+      gender: initialData.gender ?? undefined,
+      preferredPositions: initialData.preferredPositions || "",
+      preferredFoot: initialData.preferredFoot || "",
+      shirtNumber: initialData.shirtNumber || undefined,
+      avatarUrl: initialData.avatarUrl || "",
     },
   });
 
-  // Watch dateOfBirth for display
+  // Watch fields for display
   const dateOfBirth = watch("dateOfBirth");
-  const position = watch("position");
+  const preferredPositions = watch("preferredPositions");
 
   // Reset form when initialData changes
   useEffect(() => {
     if (visible) {
       reset({
-        name: initialData.name || "",
+        fullName: initialData.fullName || "",
         bio: initialData.bio || "",
         phone: initialData.phone || "",
         dateOfBirth: initialData.dateOfBirth || "",
-        gender: initialData.gender,
-        position: initialData.position || "",
-        preferredFoot: initialData.preferredFoot,
-        shirtNumber: initialData.shirtNumber,
+        gender: initialData.gender ?? undefined,
+        preferredPositions: initialData.preferredPositions || "",
+        preferredFoot: initialData.preferredFoot || "",
+        shirtNumber: initialData.shirtNumber || undefined,
+        avatarUrl: initialData.avatarUrl || "",
       });
     }
   }, [visible, initialData, reset]);
@@ -113,18 +117,8 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
   };
 
   const onSubmit = (data: EditProfileFormData) => {
-    // Transform to UpdateProfileData format
-    const profileData: UpdateProfileData = {
-      name: data.name,
-      bio: data.bio || undefined,
-      phone: data.phone || undefined,
-      dateOfBirth: data.dateOfBirth || undefined,
-      gender: data.gender,
-      position: data.position || undefined,
-      preferredFoot: data.preferredFoot,
-      shirtNumber: typeof data.shirtNumber === "number" ? data.shirtNumber : undefined,
-    };
-    onSave(profileData);
+    // EditProfileFormData is now compatible with UpdateProfileData
+    onSave(userId, data);
   };
 
   return (
@@ -171,7 +165,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                     />
                   ) : (
                     <Text
-                      style={[styles.saveButtonText, { color: theme.colors.black }]}
+                      style={[
+                        styles.saveButtonText,
+                        { color: theme.colors.black },
+                      ]}
                     >
                       {t("personalPage.editForm.save")}
                     </Text>
@@ -186,49 +183,27 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
               contentContainerStyle={styles.formContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* Avatar Section */}
-              <View style={styles.avatarSection}>
-                <View
-                  style={[
-                    styles.avatarContainer,
-                    {
-                      borderColor: theme.colors.neonGreen,
-                      backgroundColor: theme.colors.surface,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="person"
-                    size={48}
-                    color={theme.colors.textSecondary}
-                  />
-                </View>
-                <TouchableOpacity
-                  style={[
-                    styles.changeAvatarButton,
-                    { backgroundColor: theme.colors.neonGreen },
-                  ]}
-                >
-                  <Ionicons name="camera" size={16} color={theme.colors.black} />
-                </TouchableOpacity>
-              </View>
-
               {/* Personal Info Section */}
               <View style={styles.section}>
                 <Text
-                  style={[styles.sectionTitle, { color: theme.colors.neonGreen }]}
+                  style={[
+                    styles.sectionTitle,
+                    { color: theme.colors.neonGreen },
+                  ]}
                 >
                   {t("personalPage.editForm.sections.personal")}
                 </Text>
 
                 <ProfileFormField
                   control={control}
-                  name="name"
+                  name="fullName"
                   label={t("personalPage.editForm.fields.name")}
                   icon="person"
-                  placeholder={t("personalPage.editForm.fields.namePlaceholder")}
+                  placeholder={t(
+                    "personalPage.editForm.fields.namePlaceholder",
+                  )}
                   maxLength={50}
-                  error={errors.name}
+                  error={errors.fullName}
                 />
 
                 <ProfileFormField
@@ -245,7 +220,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                 <ProfileFormField
                   control={control}
                   name="phone"
-                  label={t("personalPage.editForm.fields.phone")}
+                  label={t("personalPage.editForm.fields.phone") + " (+84)"}
                   icon="call"
                   placeholder="0123456789"
                   keyboardType="phone-pad"
@@ -288,7 +263,9 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                     >
                       {dateOfBirth
                         ? formatDateDisplay(dateOfBirth)
-                        : t("personalPage.editForm.fields.dateOfBirthPlaceholder")}
+                        : t(
+                            "personalPage.editForm.fields.dateOfBirthPlaceholder",
+                          )}
                     </Text>
                     <Ionicons
                       name="chevron-down"
@@ -300,7 +277,9 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
 
                 {showDatePicker && (
                   <DateTimePicker
-                    value={dateOfBirth ? new Date(dateOfBirth) : new Date(2000, 0, 1)}
+                    value={
+                      dateOfBirth ? new Date(dateOfBirth) : new Date(2000, 0, 1)
+                    }
                     mode="date"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={handleDateChange}
@@ -322,7 +301,10 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
               {/* Football Info Section */}
               <View style={styles.section}>
                 <Text
-                  style={[styles.sectionTitle, { color: theme.colors.neonGreen }]}
+                  style={[
+                    styles.sectionTitle,
+                    { color: theme.colors.neonGreen },
+                  ]}
                 >
                   {t("personalPage.editForm.sections.football")}
                 </Text>
@@ -343,16 +325,16 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                     {POSITIONS.map((pos) => (
                       <TouchableOpacity
                         key={pos.id}
-                        onPress={() => setValue("position", pos.id)}
+                        onPress={() => setValue("preferredPositions", pos.id)}
                         style={[
                           styles.positionChip,
                           {
                             backgroundColor:
-                              position === pos.id
+                              preferredPositions === pos.id
                                 ? theme.colors.neonGreen
                                 : theme.colors.surface,
                             borderColor:
-                              position === pos.id
+                              preferredPositions === pos.id
                                 ? theme.colors.neonGreen
                                 : theme.colors.border,
                           },
@@ -363,7 +345,7 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                             styles.positionChipText,
                             {
                               color:
-                                position === pos.id
+                                preferredPositions === pos.id
                                   ? theme.colors.black
                                   : theme.colors.text,
                             },
@@ -374,9 +356,11 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                       </TouchableOpacity>
                     ))}
                   </View>
-                  {errors.position && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>
-                      {t(errors.position.message || "")}
+                  {errors.preferredPositions && (
+                    <Text
+                      style={[styles.errorText, { color: theme.colors.error }]}
+                    >
+                      {t(errors.preferredPositions.message || "")}
                     </Text>
                   )}
                 </View>
@@ -395,7 +379,9 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                   name="shirtNumber"
                   label={t("personalPage.editForm.fields.shirtNumber")}
                   icon="shirt"
-                  placeholder={t("personalPage.editForm.fields.shirtNumberPlaceholder")}
+                  placeholder={t(
+                    "personalPage.editForm.fields.shirtNumberPlaceholder",
+                  )}
                   keyboardType="number-pad"
                   error={errors.shirtNumber}
                 />

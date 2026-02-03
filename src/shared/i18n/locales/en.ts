@@ -53,13 +53,19 @@ const en = {
       name: {
         required: "Name is required",
         tooShort: "Name must be at least 2 characters",
-        tooLong: "Name cannot exceed 50 characters",
+        tooLong: "Name cannot exceed 255 characters",
       },
       bio: {
-        tooLong: "Bio cannot exceed 200 characters",
+        tooLong: "Bio cannot exceed 500 characters",
       },
       phone: {
         invalid: "Invalid phone number",
+      },
+      avatarUrl: {
+        invalid: "Invalid avatar URL",
+      },
+      dateOfBirth: {
+        invalid: "Invalid date of birth",
       },
       gender: {
         invalid: "Invalid gender",
@@ -302,18 +308,19 @@ const en = {
         name: "Name",
         namePlaceholder: "Enter your name",
         bio: "Bio",
-        bioPlaceholder: "Enter your bio",
+        bioPlaceholder: "Write a few lines about yourself...",
         phone: "Phone",
-        phonePlaceholder: "Enter your phone",
+        phonePlaceholder: "0123456789",
         dateOfBirth: "Date of Birth",
         dateOfBirthPlaceholder: "Select your date of birth",
         gender: "Gender",
         genderPlaceholder: "Select your gender",
         position: "Position",
+        positionPlaceholder: "Select your position",
         preferredFoot: "Preferred Foot",
         preferredFootPlaceholder: "Select your preferred foot",
         shirtNumber: "Shirt Number",
-        shirtNumberPlaceholder: "Enter your shirt number",
+        shirtNumberPlaceholder: "Enter shirt number (1-99)",
       },
       errors: {
         nameRequired: "Please enter name",
@@ -332,6 +339,12 @@ const en = {
         invalidShirtNumber: "Invalid shirt number",
       },
       save: "Save",
+      toast: {
+        updateSuccess: "Profile updated successfully!",
+        updateError: "Failed to update profile. Please try again.",
+        avatarUpdateSuccess: "Avatar updated successfully!",
+        avatarUpdateError: "Failed to update avatar. Please try again.",
+      },
     },
     tabs: {
       posts: "Posts",

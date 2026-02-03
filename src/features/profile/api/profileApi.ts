@@ -1,17 +1,15 @@
 import { apiClient } from "@/shared/api/client";
 import {
-  UserProfile,
+  User,
   UpdateProfileData,
-  UpdatePreferencesData,
-  MatchHistory,
   UserProfileResponse,
 } from "../types/profile.types";
-
+import { ApiResponse } from "@/shared/api";
 
 // Get user profile by ID
-export const getUserProfile = async (userId: string): Promise<UserProfile> => {
+export const getUserProfile = async (userId: string): Promise<User> => {
   try {
-    const response = await apiClient.get<UserProfile>(`/users/${userId}`);
+    const response = await apiClient.get<User>(`/users/${userId}`);
     console.log("response :", response.data);
 
     // Ensure we have valid data before returning
@@ -28,51 +26,41 @@ export const getUserProfile = async (userId: string): Promise<UserProfile> => {
 
 // Update my profile
 export const updateMyProfile = async (
+  userId: string,
   data: UpdateProfileData,
-): Promise<UserProfile> => {
-  const response = await apiClient.patch<UserProfile>("/users/me", data);
+): Promise<User> => {
+  // Clean data: remove empty strings and null/undefined values
+  // Backend expects null for optional fields, not empty strings
+  const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
+    // Skip empty strings, null, and undefined
+    if (value !== "" && value !== null && value !== undefined) {
+      acc[key as keyof UpdateProfileData] = value;
+    }
+    return acc;
+  }, {} as Partial<UpdateProfileData>);
+
+  console.log("📤 Sending profile update:", cleanedData);
+
+  const response = await apiClient.put<User>(`/users/${userId}`, cleanedData);
   return response.data;
 };
 
 // Update avatar
-export const updateAvatar = async (avatarUri: string): Promise<UserProfile> => {
+export const updateAvatar = async (
+  file: File | { uri: string; type: string; name: string },
+): Promise<ApiResponse<{ avatarUrl: string }>> => {
   const formData = new FormData();
-  formData.append("avatar", {
-    uri: avatarUri,
-    type: "image/jpeg",
-    name: "avatar.jpg",
-  } as any);
-
-  const response = await apiClient.patch<UserProfile>(
-    "/users/me/avatar",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+  formData.append("file", file as any);
+  const response = await apiClient.post(`/users/avatar`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
     },
-  );
-  return response.data;
-};
-
-// Get match history
-export const getMatchHistory = async (
-  userId?: string,
-): Promise<MatchHistory[]> => {
-  const endpoint = userId ? `/users/${userId}/matches` : "/users/me/matches";
-  const response = await apiClient.get<MatchHistory[]>(endpoint);
-  return response.data;
-};
-
-// Update preferences
-export const updatePreferences = async (
-  data: UpdatePreferencesData,
-): Promise<UserProfile> => {
-  const response = await apiClient.patch<UserProfile>(
-    "/users/me/preferences",
-    data,
-  );
-  return response.data;
+  });
+  const apiResponse = response as unknown as ApiResponse<{ avatarUrl: string }>;
+  if (apiResponse.isSuccess) {
+    return apiResponse;
+  }
+  throw new Error("Avatar update failed");
 };
 
 // Send friend request
@@ -94,4 +82,3 @@ export const removeFriend = async (friendId: string): Promise<void> => {
     throw error;
   }
 };
-

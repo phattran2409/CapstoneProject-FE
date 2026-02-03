@@ -35,12 +35,6 @@ export const FriendCard: React.FC<{
       ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']
       : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.90)'];
 
-    // Border color based on theme and online status
-    // const borderColor = friend.isOnline
-    //   ? `${theme.colors.neonGreen}${isDark ? '30' : '60'}`
-    //   : isDark
-    //   ? 'rgba(255,255,255,0.05)'
-    //   : theme.colors.border;
   
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
@@ -73,7 +67,7 @@ export const FriendCard: React.FC<{
                   styles.avatar,
                   {
                     backgroundColor: theme.colors.surface,
-                    // borderColor: getRankColor(friend.elo),
+                    borderColor: getRankColor(friend.currentElo),
                   },
                 ]}
               >
@@ -83,10 +77,9 @@ export const FriendCard: React.FC<{
                     style={styles.avatarImage}
                   />
                 ) : (
-                  <Ionicons
-                    name="person"
-                    size={28}
-                    color={theme.colors.textSecondary}
+                  <Image
+                    source={require("../../../assets/images/default_avatar.png")}
+                    style={styles.avatarImage}
                   />
                 )}
               </View>
@@ -110,11 +103,6 @@ export const FriendCard: React.FC<{
                   />
                 )}
               </View>
-              {/* <Text
-                style={[styles.username, { color: theme.colors.textSecondary }]}
-              >
-                @{friend.fullName}
-              </Text> */}
 
               <View style={styles.statsRow}>
                 <View
@@ -163,13 +151,6 @@ export const FriendCard: React.FC<{
                   </View>
                 )}
               </View>
-
-              {/* {friend.mutualFriends && friend.mutualFriends > 0 && (
-                <Text style={[styles.mutualFriends, { color: theme.colors.textSecondary }]}>
-                  <Ionicons name="people" size={12} color={theme.colors.textSecondary} />{' '}
-                  {t('friends.mutualFriends', { count: friend.mutualFriends, defaultValue: `${friend.mutualFriends} bạn chung` })}
-                </Text>
-              )} */}
               <Text
                 style={[styles.sentAt, { color: theme.colors.textTertiary }]}
               >

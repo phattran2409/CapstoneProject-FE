@@ -1,4 +1,5 @@
-import { Venue, Field, TimeSlot } from '@/features/venues/types/venue.types';
+import { User } from "@/features/profile/types/profile.types";
+import { Venue, Field, TimeSlot } from "@/features/venues/types/venue.types";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -17,11 +18,12 @@ export type RootStackParamList = {
   RoomInformation: { roomId: string };
   RoomDetail: { roomId: string };
   PersonalPage: { userId?: string };
-  ProfileDetail: undefined;
+  ProfileDetail: { player: User };
   ChatList: undefined;
   Friends: undefined;
   FriendRequests: undefined;
   Chat: { chatId: string; chatName: string };
+  RoomChat: { roomId: string };
   Profile: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };
@@ -33,7 +35,6 @@ export type RootStackParamList = {
     email: string;
   };
   Search: undefined;
-  
 };
 
 export type TabParamList = {

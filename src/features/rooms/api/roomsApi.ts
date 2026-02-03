@@ -10,6 +10,7 @@ import type {
   MatchRoomFullInfo,
   ApiResponse,
   MatchRoom,
+  MyRoomsResponse,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -19,35 +20,43 @@ import { Message } from '@/shared/components';
  * Pure API calls without any React Query logic
  */
 export const roomsApi = {
-  /** 
+  /**
    * Get paginated list of match rooms
    */
-  getMatchRooms: async (filters?: MatchRoomFilters): Promise<MatchRoomsResponse> => {
+  getMatchRooms: async (
+    filters?: MatchRoomFilters,
+  ): Promise<MatchRoomsResponse> => {
     const params = {
       page: filters?.page || 1,
       pageSize: filters?.pageSize || 10,
       ...(filters?.availableOnly && { availableOnly: filters.availableOnly }),
       ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
     };
-    const data = await apiClient.get('/match-rooms', { params });
+    const data = await apiClient.get("/match-rooms", { params });
     return data;
   },
 
+  getMyRooms: async (): Promise<MyRoomsResponse> => {
+    const data = await apiClient.get("/match-rooms/mine");
+    return data;
+  },
 
   /**
    * Get full room information including venue, teams, and players
    */
   getRoomFullInfo: async (id: string): Promise<MatchRoomFullInfo> => {
-    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.FULL_INFO.replace(':id', id)) as ApiResponse<MatchRoomFullInfo>;
+    const data = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.ROOMS.FULL_INFO.replace(":id", id),
+    )) as ApiResponse<MatchRoomFullInfo>;
 
     // If backend returns undefined/null, throw error so React Query handles it properly
     if (!data) {
-      throw new Error('Room not found');
+      throw new Error("Room not found");
     }
     if (data.isSuccess) {
       return data.data as MatchRoomFullInfo;
     } else {
-      throw new Error('Failed to get room full info');
+      throw new Error("Failed to get room full info");
     }
   },
 
@@ -57,11 +66,16 @@ export const roomsApi = {
    */
   createRoom: async (room: CreateRoomRequest): Promise<MatchRoom> => {
     try {
+<<<<<<< HEAD
       const response = await apiClient.post<ApiResponse<MatchRoom>>('/match-rooms', room);
       const body = response as unknown as ApiResponse<MatchRoom>;
       return body.data as MatchRoom;
+=======
+      const response = await apiClient.post("/match-rooms", room);
+      return response.data;
+>>>>>>> origin/DatDev
     } catch (error) {
-      console.error('Failed to create room:', error);
+      console.error("Failed to create room:", error);
       throw error;
     }
   },
@@ -85,7 +99,9 @@ export const roomsApi = {
    * Join a room (create booking)
    */
   joinMatchRoom: async (request: JoinRoomRequest): Promise<any> => {
-    const data = await apiClient.post(`${API_CONFIG.ENDPOINTS.ROOMS.JOIN.replace(':id', request.roomId)}`);
+    const data = await apiClient.post(
+      `${API_CONFIG.ENDPOINTS.ROOMS.JOIN.replace(":id", request.roomId)}`,
+    );
     return data;
   },
 
@@ -93,7 +109,7 @@ export const roomsApi = {
    * Get messages for a room
    */
   getRoomMessages: async (roomId: string): Promise<Message[]> => {
-    const data = await apiClient.get('/messages', {
+    const data = await apiClient.get("/messages", {
       params: { roomId },
     });
     return data;
@@ -103,7 +119,7 @@ export const roomsApi = {
    * Send a message to a room
    */
   sendMessage: async (request: SendMessageRequest): Promise<Message> => {
-    const data = await apiClient.post('/messages', {
+    const data = await apiClient.post("/messages", {
       ...request,
       createdAt: new Date().toISOString(),
     });
@@ -121,7 +137,7 @@ export const roomsApi = {
    * Cancel/Delete a room (host only)
    */
   cancelRoom: async (roomId: string): Promise<void> => {
-    await apiClient.patch(`/rooms/${roomId}`, { status: 'cancelled' });
+    await apiClient.patch(`/rooms/${roomId}`, { status: "cancelled" });
   },
 
   // ==================== Match Room SignalR API ====================
@@ -133,14 +149,17 @@ export const roomsApi = {
    * SignalR will broadcast UserJoinedRoom event to all players in the room
    */
   joinMatchRoomParticipant: async (
-    roomId: string, 
-    teamAssignment: 'A' | 'B', 
-    position: string
+    roomId: string,
+    teamAssignment: "A" | "B",
+    position: string,
   ): Promise<any> => {
-    const data = await apiClient.post(`/match-rooms/${roomId}/participants/me`, {
-      teamAssignment,
-      position,
-    });
+    const data = await apiClient.post(
+      `/match-rooms/${roomId}/participants/me`,
+      {
+        teamAssignment,
+        position,
+      },
+    );
     return data;
   },
 
@@ -159,8 +178,8 @@ export const roomsApi = {
    */
   updateParticipant: async (
     roomId: string,
-    teamAssignment: 'A' | 'B' | 'Unassigned',
-    position?: string
+    teamAssignment: "A" | "B" | "Unassigned",
+    position?: string,
   ): Promise<any> => {
     const data = await apiClient.put(`/match-rooms/${roomId}/participants/me`, {
       teamAssignment,
@@ -168,8 +187,6 @@ export const roomsApi = {
     });
     return data;
   },
-
-  
 
   /**
    * Get match room detail by ID

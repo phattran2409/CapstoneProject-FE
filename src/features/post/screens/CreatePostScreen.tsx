@@ -27,6 +27,7 @@ import { PostMediaGrid } from "@/shared/components/PostMediaGrid";
 import { PostMedia } from "../types/post.types";
 import { useAuthStore } from "@/features/auth";
 import * as ImagePicker from "expo-image-picker";
+import { useToast } from "@/shared/toast";
 
 type CreatePostScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -49,7 +50,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const { mutateAsync: createPost, isPending } = useCreatePost();
-
+  const toast = useToast();
   const [content, setContent] = useState("");
   const [media, setMedia] = useState<SelectedMedia[]>([]);
   const [contentError, setContentError] = useState<string | null>(null);
@@ -63,8 +64,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (cameraStatus !== "granted" || libraryStatus !== "granted") {
-      Alert.alert(
-        t("post.permissions.title", { defaultValue: "Quyền truy cập" }),
+      toast.error(
         t("post.permissions.message", {
           defaultValue:
             "Cần quyền truy cập camera và thư viện để chọn ảnh/video",
@@ -82,8 +82,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
 
     // Check current media count
     if (media.length >= 4) {
-      Alert.alert(
-        t("post.media.maxReached", { defaultValue: "Đã đạt giới hạn" }),
+      toast.error(
         t("post.media.maxReachedMessage", {
           defaultValue: "Bạn chỉ có thể tải lên tối đa 4 media",
         }),
@@ -94,8 +93,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
     // Check if video already exists
     const hasVideo = media.some((m) => m.type === "video");
     if (hasVideo) {
-      Alert.alert(
-        t("post.media.videoExists", { defaultValue: "Đã có video" }),
+      toast.error(
         t("post.media.videoExistsMessage", {
           defaultValue:
             "Bạn chỉ có thể tải lên 1 video. Nếu muốn thêm video mới, vui lòng xóa video hiện tại.",
@@ -137,8 +135,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
           media.filter((m) => m.type === "video").length +
           newMedia.filter((m) => m.type === "video").length;
         if (totalVideos > 1) {
-          Alert.alert(
-            t("post.media.oneVideoOnly", { defaultValue: "Chỉ được 1 video" }),
+          toast.error(
             t("post.media.oneVideoOnlyMessage", {
               defaultValue: "Bạn chỉ có thể tải lên tối đa 1 video",
             }),
@@ -158,8 +155,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
       }
     } catch (error) {
       console.error("Error picking media:", error);
-      Alert.alert(
-        t("post.media.error", { defaultValue: "Lỗi" }),
+      toast.error(
         t("post.media.errorMessage", {
           defaultValue: "Không thể chọn media. Vui lòng thử lại.",
         }),
@@ -174,8 +170,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
 
     // Check current media count
     if (media.length >= 4) {
-      Alert.alert(
-        t("post.media.maxReached", { defaultValue: "Đã đạt giới hạn" }),
+      toast.error(
         t("post.media.maxReachedMessage", {
           defaultValue: "Bạn chỉ có thể tải lên tối đa 4 media",
         }),
@@ -214,8 +209,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
 
         // Validate: only 1 video total
         if (isVideo && hasVideo) {
-          Alert.alert(
-            t("post.media.oneVideoOnly", { defaultValue: "Chỉ được 1 video" }),
+          toast.error(
             t("post.media.oneVideoOnlyMessage", {
               defaultValue: "Bạn chỉ có thể tải lên tối đa 1 video",
             }),
@@ -228,8 +222,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
       }
     } catch (error) {
       console.error("Error taking photo:", error);
-      Alert.alert(
-        t("post.media.error", { defaultValue: "Lỗi" }),
+      toast.error(
         t("post.media.errorMessage", {
           defaultValue: "Không thể chụp ảnh/quay video. Vui lòng thử lại.",
         }),
@@ -306,13 +299,16 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
         content: content.trim(),
         files: files.length > 0 ? files : [],
       });
-
       // Success - navigate back
+      toast.success(
+        t("post.create.successMessage", {
+          defaultValue: "Bài viết đã được tạo thành công",
+        }),
+      );
       navigation.goBack();
     } catch (error) {
       console.error("Error creating post:", error);
-      Alert.alert(
-        t("post.create.error", { defaultValue: "Lỗi" }),
+      toast.error(
         t("post.create.errorMessage", {
           defaultValue: "Không thể tạo bài viết. Vui lòng thử lại.",
         }),
@@ -400,9 +396,9 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
               },
             ]}
           >
-            {user?.avatar ? (
+            {user?.avatarUrl ? (
               <Image
-                source={{ uri: user.avatar }}
+                source={{ uri: user.avatarUrl }}
                 style={styles.avatar}
                 resizeMode="cover"
               />
@@ -417,10 +413,10 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
                   },
                 ]}
               >
-                <Ionicons
-                  name="person"
-                  size={24}
-                  color={theme.colors.textSecondary}
+                <Image
+                  source={require("../../../assets/images/default_avatar.png")}
+                  style={styles.avatar}
+                  resizeMode="cover"
                 />
               </View>
             )}

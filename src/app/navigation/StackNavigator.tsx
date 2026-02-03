@@ -14,6 +14,7 @@ import {
   ProfileDetailScreen,
   ChatListScreen,
   ChatScreen,
+  RoomChatScreen,
   ProfileScreen,
   RoomInformation,
   FriendRequestsScreen,
@@ -142,14 +143,6 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
-              name="VenueDetail"
-              component={VenueDetailScreen}
-              options={{
-                headerShown: false,
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
               name="RoomInformation"
               component={RoomInformation}
               options={{
@@ -230,6 +223,14 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
+              name="CreatePost"
+              component={CreatePostScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
               name="PaymentSuccess"
               component={PaymentSuccessScreen}
               options={{
@@ -271,6 +272,200 @@ const StackNavigator: React.FC = () => {
             />
           </>
         )}
+
+      {!isAuthenticated ? (
+        <>
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+              
+            }}
+            
+          />
+          <Stack.Screen 
+            name="Register" 
+            component={RegisterScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="OTPVerification" 
+            component={OTPVerificationScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ChangePassword" 
+            component={ChangePasswordScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <Stack.Screen 
+            name="MainTabs" 
+            component={TabNavigator}
+            options={{
+              headerShown: false,
+              animation: 'none',
+            }}
+          />
+          <Stack.Screen 
+            name="Leaderboard" 
+            component={LeaderboardScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="CreateRoom" 
+            component={CreateRoomScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_bottom',
+            }}
+          />
+          <Stack.Screen 
+            name="VenueSelection" 
+            component={VenueSelectionScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="VenueDetail" 
+            component={VenueDetailScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="RoomInformation" 
+            component={RoomInformation}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="RoomDetail" 
+            component={RoomDetailScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ChatList" 
+            component={ChatListScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Chat" 
+            component={ChatScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfileScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="PersonalPage" 
+            component={PersonalPageScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="ProfileDetail" 
+            component={ProfileDetailScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="FriendRequests" 
+            component={FriendRequestsScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="Notifications" 
+            component={NotificationsScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="PostDetail" 
+            component={PostDetailScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="PaymentSuccess" 
+            component={PaymentSuccessScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+          name="Wallet"
+          component={WalletScreen}        
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+          name="WalletTopUp"
+          component={WalletTopUpScreen}
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+          />
+          <Stack.Screen 
+            name="ChangePassword" 
+            component={ChangePasswordScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+        </>
+      )}
       </Stack.Navigator>
     </View>
   );

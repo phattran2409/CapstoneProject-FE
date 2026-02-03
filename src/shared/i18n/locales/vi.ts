@@ -53,13 +53,19 @@ const vi = {
       name: {
         required: "Họ tên là bắt buộc",
         tooShort: "Họ tên phải có ít nhất 2 ký tự",
-        tooLong: "Họ tên không được quá 50 ký tự",
+        tooLong: "Họ tên không được quá 255 ký tự",
       },
       bio: {
-        tooLong: "Giới thiệu không được quá 200 ký tự",
+        tooLong: "Giới thiệu không được quá 500 ký tự",
       },
       phone: {
         invalid: "Số điện thoại không hợp lệ",
+      },
+      avatarUrl: {
+        invalid: "URL ảnh đại diện không hợp lệ",
+      },
+      dateOfBirth: {
+        invalid: "Ngày sinh không hợp lệ",
       },
       gender: {
         invalid: "Giới tính không hợp lệ",
@@ -290,13 +296,21 @@ const vi = {
       },
       fields: {
         name: "Họ và tên",
+        namePlaceholder: "Nhập họ và tên của bạn",
         bio: "Giới thiệu",
+        bioPlaceholder: "Viết vài dòng về bản thân...",
         phone: "Số điện thoại",
+        phonePlaceholder: "0123456789",
         dateOfBirth: "Ngày sinh",
+        dateOfBirthPlaceholder: "Chọn ngày sinh",
         gender: "Giới tính",
+        genderPlaceholder: "Chọn giới tính",
         position: "Vị trí",
+        positionPlaceholder: "Chọn vị trí",
         preferredFoot: "Chân thuận",
+        preferredFootPlaceholder: "Chọn chân thuận",
         shirtNumber: "Số áo",
+        shirtNumberPlaceholder: "Nhập số áo (1-99)",
       },
       errors: {
         nameRequired: "Vui lòng nhập họ và tên",
@@ -315,6 +329,12 @@ const vi = {
         invalidShirtNumber: "Số áo không hợp lệ",
       },
       save: "Lưu",
+      toast: {
+        updateSuccess: "Cập nhật hồ sơ thành công!",
+        updateError: "Không thể cập nhật hồ sơ. Vui lòng thử lại.",
+        avatarUpdateSuccess: "Cập nhật ảnh đại diện thành công!",
+        avatarUpdateError: "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.",
+      },
     },
     tabs: {
       posts: "Bài đăng",

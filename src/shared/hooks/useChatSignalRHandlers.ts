@@ -2,7 +2,15 @@ import { useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "@/features/chat/api/chatKeys";
 import type { ConversationMessage } from "@/features/chat/types/chat.types";
-import type { UseChatSignalROptions } from "./useChatSignalR";
+import type {
+  UseChatSignalROptions,
+  UserTypingPayload,
+  UserStopTypingPayload,
+  UserOnlineStatusPayload,
+  OnlineUsersPayload,
+  ReceiveMessagePayload,
+  MessagesReadPayload,
+} from "./useChatSignalR";
 
 export interface UseChatSignalRHandlersOptions {
   // Conversation info
@@ -27,18 +35,15 @@ export interface UseChatSignalRHandlersOptions {
   };
 
   // Custom callbacks (optional - để override hoặc extend)
-  onReceiveMessage?: (payload: any) => void;
-  onUserTyping?: (payload: any) => void;
-  onUserStopTyping?: (payload: any) => void;
-  onUserOnlineStatus?: (payload: any) => void;
-  onOnlineUsers?: (payload: any) => void;
-  onMessagesRead?: (payload: any) => void;
+  onReceiveMessage?: (payload: ReceiveMessagePayload) => void;
+  onUserTyping?: (payload: UserTypingPayload) => void;
+  onUserStopTyping?: (payload: UserStopTypingPayload) => void;
+  onUserOnlineStatus?: (payload: UserOnlineStatusPayload) => void;
+  onOnlineUsers?: (payload: OnlineUsersPayload) => void;
+  onMessagesRead?: (payload: MessagesReadPayload) => void;
 }
 
-/**
- * Hook tạo các SignalR handlers phổ biến cho chat messages
- * Có thể tái sử dụng ở nhiều màn hình khác nhau
- */
+
 export const useChatSignalRHandlers = (
   options: UseChatSignalRHandlersOptions,
 ): UseChatSignalROptions => {
@@ -65,7 +70,7 @@ export const useChatSignalRHandlers = (
   const activeTypingTimeoutRef = typingTimeoutRef || defaultTypingTimeoutRef;
 
   const onReceiveMessage = useCallback(
-    (payload: any) => {
+    (payload: ReceiveMessagePayload) => {
       console.log("📩 ReceiveMessage:", payload);
 
       // Kiểm tra nếu tin nhắn này dành cho conversation hiện tại
@@ -73,23 +78,20 @@ export const useChatSignalRHandlers = (
         payload.senderId === otherUserId ||
         payload.receiverId === otherUserId
       ) {
-        // Tạo message mới từ payload
+        // Tạo message mới từ payload (SendChatMessageData)
         const newMessage: ConversationMessage = {
-          messageId: payload.messageId || `temp-${Date.now()}`,
+          messageId: payload.messageId,
           senderId: payload.senderId,
-          senderName: payload.senderName || chatName || "",
-          senderAvatarUrl: payload.senderAvatarUrl || null,
-          messageText: payload.messageText || payload.message,
-          messageType: payload.messageType || "Text",
+          senderName: chatName || "", // SendChatMessageData không có senderName, dùng chatName
+          senderAvatarUrl: null, // SendChatMessageData không có senderAvatarUrl
+          messageText: payload.messageText,
+          messageType: payload.messageType,
           // Nếu là tin nhắn của mình gửi đi, mặc định chưa đọc (người nhận chưa đọc)
           // Nếu là tin nhắn nhận được, dùng giá trị từ payload hoặc false
-          isRead:
-            payload.senderId === currentUserId
-              ? false
-              : payload.isRead || false,
-          isEdited: payload.isEdited || false,
+          isRead: payload.senderId === currentUserId ? false : false,
+          isEdited: false, // SendChatMessageData không có isEdited
           isMine: payload.senderId === currentUserId,
-          sentAt: payload.sentAt || new Date().toISOString(),
+          sentAt: payload.sentAt,
         };
 
         // Cập nhật trực tiếp vào accumulatedData của pagination
@@ -135,7 +137,7 @@ export const useChatSignalRHandlers = (
   );
 
   const onUserTyping = useCallback(
-    (payload: any) => {
+    (payload: UserTypingPayload) => {
       // Kiểm tra nếu người đang gõ là người đang chat với
       if (payload.userId === otherUserId && setIsOtherUserTyping) {
         setIsOtherUserTyping(true);
@@ -155,7 +157,7 @@ export const useChatSignalRHandlers = (
   );
 
   const onUserStopTyping = useCallback(
-    (payload: any) => {
+    (payload: UserStopTypingPayload) => {
       if (payload.userId === otherUserId && setIsOtherUserTyping) {
         setIsOtherUserTyping(false);
         if (activeTypingTimeoutRef.current) {
@@ -170,10 +172,10 @@ export const useChatSignalRHandlers = (
   );
 
   const onUserOnlineStatus = useCallback(
-    (payload: any) => {
+    (payload: UserOnlineStatusPayload) => {
       // Kiểm tra nếu status update là của người đang chat
       if (payload.userId === otherUserId && setIsOtherUserOnline) {
-        setIsOtherUserOnline(payload.isOnline || false);
+        setIsOtherUserOnline(payload.isOnline);
       }
 
       // Call custom callback nếu có
@@ -183,14 +185,10 @@ export const useChatSignalRHandlers = (
   );
 
   const onOnlineUsers = useCallback(
-    (payload: any) => {
+    (payload: OnlineUsersPayload) => {
       if (setIsOtherUserOnline) {
-        // payload có thể là array of user IDs hoặc object
-        if (Array.isArray(payload)) {
-          setIsOtherUserOnline(payload.includes(otherUserId));
-        } else if (payload.users && Array.isArray(payload.users)) {
-          setIsOtherUserOnline(payload.users.includes(otherUserId));
-        }
+        // payload.userIds là array of user IDs
+        setIsOtherUserOnline(payload.userIds.includes(otherUserId));
       }
 
       // Call custom callback nếu có
@@ -200,13 +198,12 @@ export const useChatSignalRHandlers = (
   );
 
   const onMessagesRead = useCallback(
-    (payload: any) => {
+    (payload: MessagesReadPayload) => {
       console.log("📩 MessagesRead event:", payload);
 
       // Kiểm tra nếu event này liên quan đến conversation hiện tại
       // fromUserId là người đã gửi tin nhắn (người mà tin nhắn của họ đã được đọc)
-      const fromUserId = payload.fromUserId || payload.userId;
-      if (fromUserId === otherUserId) {
+      if (payload.fromUserId === otherUserId) {
         // Người đang chat với đã đọc tin nhắn của mình
         // Cập nhật trực tiếp vào accumulatedData của pagination
         setChatMessages((prevMessages) =>

@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { User } from '../types/auth.types';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { User } from "../types/auth.types";
 
 /**
  * Auth Store
@@ -17,6 +17,7 @@ interface AuthState {
   // Actions
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  updateUserAvatar: (avatarUrl: string) => void;
   reset: () => void;
 }
 
@@ -31,17 +32,23 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       ...initialState,
 
-      setUser: (user) => set({ 
-        user, 
-        isAuthenticated: !!user && user?.isEmailVerified === true
-      }),
+      setUser: (user) =>
+        set({
+          user,
+          isAuthenticated: !!user && user?.isEmailVerified === true,
+        }),
 
       setToken: (token) => set({ token }),
+
+      updateUserAvatar: (avatarUrl) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, avatarUrl } : null,
+        })),
 
       reset: () => set(initialState),
     }),
     {
-      name: 'auth-storage', // Key trong AsyncStorage
+      name: "auth-storage", // Key trong AsyncStorage
       storage: createJSONStorage(() => AsyncStorage),
       // Chỉ persist những field cần thiết
       partialize: (state) => ({
@@ -49,7 +56,6 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 );
-

@@ -1,12 +1,16 @@
-
-export type RoomStatus = 'open' | 'full' | 'closed' | 'completed' | 'cancelled';
-
+export type RoomStatus = "open" | "full" | "closed" | "completed" | "cancelled";
 
 // ==================== Match Room Types (from API) ====================
 
-export type MatchRoomStatus = 'Open' | 'Full' | 'Closed' | 'Completed' | 'Cancelled';
-export type MatchFormat = 'FiveVsFive' | 'SevenVsSeven' | string;
-export type TeamAssignment = 'A' | 'B' | 'Unassigned';
+export type MatchRoomStatus =
+  | "Open"
+  | "Full"
+  | "Closed"
+  | "InProgress"
+  | "Completed"
+  | "Cancelled";
+export type MatchFormat = "FiveVsFive" | "SevenVsSeven" | string;
+export type TeamAssignment = "A" | "B" | "Unassigned";
 
 /**
  * Host info trong MatchRoom
@@ -113,6 +117,42 @@ export interface MatchRoomFullInfo {
   createdAt: string;
 }
 
+export interface MyRoom {
+  roomId: string;
+  hostId: string;
+  host: {
+    userId: string;
+    fullName: string;
+    avatarUrl: string | null;
+  };
+  fieldId: string;
+  field: {
+    fieldId: string;
+    fieldName: string;
+    fieldType: MatchFormat;
+    hourlyRate: number;
+    venue: {
+      venueId: string;
+      venueName: string;
+      address: string;
+      contactPhone: string | null;
+    };
+  };
+  roomName: string | null;
+  matchDate: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  matchFormat: MatchFormat;
+  description: string;
+  rules: string;
+  totalSlots: number;
+  filledSlots: number;
+  depositPerPerson: number;
+  totalDepositCollected: number;
+  status: MatchRoomStatus;
+  createdAt: string;
+}
 
 export interface ApiResponse<T> {
   isSuccess: boolean;
@@ -120,12 +160,21 @@ export interface ApiResponse<T> {
 }
 
 export type MatchRoomsResponse = ApiResponse<{
-  rooms: MatchRoom[], 
-  totalCount: number, 
-  page: number, 
-  pageSize: number, 
-  totalPages: number
+  rooms: MatchRoom[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }>;
+
+export type MyRoomsResponse = ApiResponse<{
+  rooms: MyRoom[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>;
+
 
 export interface MatchRoomFilters {
   page?: number;
@@ -143,7 +192,7 @@ export interface RoomFilters {
   minPrice?: number;
   maxPrice?: number;
   _sort?: string;
-  _order?: 'asc' | 'desc';
+  _order?: "asc" | "desc";
   _page?: number;
   _limit?: number;
 }
@@ -197,4 +246,3 @@ export interface SendMessageRequest {
   userId: string;
   message: string;
 }
-

@@ -11,7 +11,7 @@ import { useAuthStore } from "@/features/auth";
 import { getRelativeTime } from "@/shared/utils";
 import auth from "../firebase";
 import ActionButton from "./ActionButton";
-import { useDeletePost, useUpdatePost } from "@/features/post";
+import { useDeletePost, useUpdatePost } from "@/features/post/hooks";
 
 export interface PostItemProps {
   post: Post;

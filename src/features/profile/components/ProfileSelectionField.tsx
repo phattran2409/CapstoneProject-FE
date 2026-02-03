@@ -1,16 +1,13 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { Control, Controller, FieldError } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import type { FootImageKey, EditProfileFormData } from "../validation/profileSchemas";
+import type {
+  FootImageKey,
+  EditProfileFormData,
+} from "../validation/profileSchemas";
 
 /**
  * ProfileSelectionField - Reusable selection field for profile editing
@@ -32,7 +29,7 @@ const FOOT_IMAGES = {
 } as const;
 
 interface OptionWithIcon {
-  readonly id: string;
+  readonly id: string | number;
   readonly label: string;
   readonly icon?: keyof typeof Ionicons.glyphMap;
   readonly imageKey?: FootImageKey;
@@ -195,4 +192,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileSelectionField;
-

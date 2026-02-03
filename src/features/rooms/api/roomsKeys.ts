@@ -12,6 +12,8 @@ export const roomsKeys = {
   lists: () => [...roomsKeys.all, 'list'] as const,
   list: (filters: RoomFilters) => [...roomsKeys.lists(), filters] as const,
 
+  myRooms: () => [...roomsKeys.all, 'my-rooms'] as const,
+
   // List of room by user
   listByUser: (userId: string) => [...roomsKeys.lists(), userId] as const,
   

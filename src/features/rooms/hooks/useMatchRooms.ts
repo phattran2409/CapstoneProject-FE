@@ -1,7 +1,7 @@
 import { usePagination } from '@/shared/hooks/usePagination';
 import { roomsApi } from '../api/roomsApi';
 import { roomsKeys } from '../api/roomsKeys';
-import type { MatchRoom, MatchRoomFilters } from '../types/room.types';
+import type { MatchRoom, MatchRoomFilters, MyRoom } from '../types/room.types';
 
 /**
  * Hook to fetch paginated list of match rooms
@@ -45,6 +45,39 @@ export const useMatchRooms = (filters?: Omit<MatchRoomFilters, 'page' | 'pageSiz
 
   return {
     matchRooms: pagination.data,
+    loading: pagination.loading,
+    refreshing: pagination.refreshing,
+    loadingMore: pagination.loadingMore,
+    error: pagination.error,
+    hasMore: pagination.hasMore,
+    page: pagination.page,
+    totalPages: pagination.totalPages,
+    refresh: pagination.refresh,
+    loadMore: pagination.loadMore,
+  };
+};
+
+export const useMyRooms = () => {
+  const pagination = usePagination<MyRoom>({
+    queryKey: roomsKeys.myRooms(),
+    fetchFunction: async () => {
+      const result = await roomsApi.getMyRooms();
+      return {
+        data: result.data.rooms,
+        totalPages: result.data.totalPages,
+        totalCount: result.data.totalCount,
+      };
+    },
+    pageSize: 10,
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+    onError: (error) => {
+      console.error("Error fetching my rooms:", error);
+    },
+  });
+
+  return {
+    myRooms: pagination.data,
     loading: pagination.loading,
     refreshing: pagination.refreshing,
     loadingMore: pagination.loadingMore,
