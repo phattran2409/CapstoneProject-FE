@@ -61,12 +61,13 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
     setSelectedVenueForFields(null);
   };
 
-  const handleSelectField = (venue: Venue, field: Field, selectedSlot: TimeSlot) => {
+  const handleSelectField = (venue: Venue, field: Field, selectedSlot: TimeSlot, selectedDate: string) => {
     handleCloseFieldsModal();
     navigation?.replace('CreateRoom', { 
       selectedVenue: venue,
       selectedField: field,
       selectedTimeSlot: selectedSlot,
+      selectedDate,
     });
   };
 
@@ -129,7 +130,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
           )}
 
           {/* Facilities/Amenities */}
-          {venue.amenities && venue.amenities.length > 0 && (
+          {/* {venue.amenities && venue.amenities.length > 0 && (
             <View style={[styles.facilitiesContainer, { marginBottom: 12 }]}>
               {venue.amenities.map((amenity, index) => (
                 <View key={index} style={[styles.facilityTag, { backgroundColor: '#2a2a2a', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }]}>
@@ -139,7 +140,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
                 </View>
               ))}
             </View>
-          )}
+          )} */}
 
           {/* Fields Count Indicator */}
           {venue.fields && venue.fields.length > 0 && (
@@ -176,31 +177,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
             <Ionicons name="arrow-forward" size={16} color={theme.colors.textSecondary} />
           </TouchableOpacity>
 
-          {/* Price and Formats */}
-          {/* <View style={[styles.priceRow, { paddingTop: 12, borderTopWidth: 1, borderTopColor: '#2a2a2a' }]}>
-            <View>
-              <Text style={[styles.priceLabel, { color: theme.colors.textSecondary, marginBottom: 4 }]}>
-                {t('venueSelection.perHour')}
-              </Text>
-              <Text style={[styles.priceValue, { color: theme.colors.neonGreen }]}>
-                {formatPrice(minPrice)}
-              </Text>
-            </View>
-            {availableFormats.length > 0 && (
-              <View style={styles.formatsContainer}>
-                {availableFormats.map((format, index) => (
-                  <View 
-                    key={index} 
-                    style={[styles.formatBadge, { backgroundColor: theme.colors.neonGreen, paddingHorizontal: 12, paddingVertical: 4, borderRadius: theme.radius.s }]}
-                  >
-                    <Text style={[styles.formatText, { color: theme.colors.darkBlack, fontWeight: '700' }]}>
-                      {format}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View> */}
+         
         </View>
       </TouchableOpacity>
     );

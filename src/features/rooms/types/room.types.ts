@@ -170,7 +170,6 @@ export interface CreateRoomRequest {
   matchFormat: string;
   description: string;
   rules: string;
-  depositPerPerson: number;
 }
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {

@@ -135,8 +135,8 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
     }
   }, [venue?.contactPhone]);
 
-  // Handle select field
-  const handleSelectField = (venueData: any, field: Field, selectedSlot: TimeSlot) => {
+  // Handle select field - selectedDate (YYYY-MM-DD) from FieldsModal for matchDate
+  const handleSelectField = (venueData: any, field: Field, selectedSlot: TimeSlot, selectedDate: string) => {
     setFieldsModalVisible(false);
     navigation?.navigate('CreateRoom', {
       selectedVenue: venueData,

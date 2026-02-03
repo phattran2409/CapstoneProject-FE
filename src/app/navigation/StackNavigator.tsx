@@ -133,6 +133,14 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
+              name="VenueDetail"
+              component={VenueDetailScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
               name="RoomInformation"
               component={RoomInformation}
               options={{

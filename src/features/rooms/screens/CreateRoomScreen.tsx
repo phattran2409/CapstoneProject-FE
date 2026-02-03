@@ -4,7 +4,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   ThemedSafeAreaView, 
   ThemedView, 
@@ -64,8 +63,6 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   );
   const [matchDate, setMatchDate] = useState(new Date());
   const [matchTime, setMatchTime] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -85,7 +82,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     }
   }
 
-  // Update data when returning from VenueSelection
+  // Update data when returning from VenueSelection / VenueDetail (TimeSlot + date from field)
   React.useEffect(() => {
     if (route?.params?.selectedVenue) {
       setSelectedVenue(route.params.selectedVenue);
@@ -95,13 +92,16 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     }
     if (route?.params?.selectedTimeSlot) {
       setSelectedTimeSlot(route.params.selectedTimeSlot);
-      // Auto-set match time from selected time slot
       const [hours, minutes] = route.params.selectedTimeSlot.startTime.split(':').map(Number);
       const newTime = new Date();
       newTime.setHours(hours, minutes, 0, 0);
       setMatchTime(newTime);
     }
-  }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot]);
+    if (route?.params?.selectedDate) {
+      const d = new Date(route.params.selectedDate + 'T00:00:00');
+      if (!isNaN(d.getTime())) setMatchDate(d);
+    }
+  }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot, route?.params?.selectedDate]);
 
   const handleCreateRoom = (data: RoomFormData) => {
     // Validate
@@ -123,16 +123,20 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       matchTime.getMinutes()
     );
 
+    // Use TimeSlot from field when available; otherwise fallback to matchDate/matchTime
+    const startTimeStr = selectedTimeSlot?.startTime
+      ? selectedTimeSlot.startTime.substring(0, 5)
+      : formatTime(matchTime);
+
     createRoom(
       {
         matchDate: datetime.toISOString(),
-        startTime: formatTime(matchTime),
+        startTime: startTimeStr,
         durationMinutes,
         matchFormat: FormatMatch(selectedFormat),
         roomName: data.roomName,
-        description: data.description,
+        description: data.description || '',
         rules: '',
-        depositPerPerson: 0,
         fieldId: selectedField?.fieldId || '',
       },
       {
@@ -487,79 +491,52 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           )}
           </View>
 
-          {/* Date and Time */}
+          {/* Date and Time - read-only from TimeSlot khi đã chọn sân (DateTimePicker đã tắt) */}
           <View style={styles.dateTimeRow}>
-            {/* Date */}
             <View style={styles.dateTimeContainer}>
               <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.matchDate')}
               </ThemedText>
-              <TouchableOpacity
+              <View
                 style={[styles.dateTimeButton, { 
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1, 
-                  borderColor: theme.colors.border 
+                  borderColor: theme.colors.border,
+                  opacity: selectedTimeSlot ? 1 : 0.7,
                 }]}
-                onPress={() => setShowDatePicker(true)}
+                pointerEvents="none"
               >
                 <ThemedText variant="muted" size="m">
                   {formatDate(matchDate)}
                 </ThemedText>
                 <ThemedIcon name="calendar" size={20} variant="secondary" />
-              </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Time */}
             <View style={styles.dateTimeContainer}>
               <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.matchTime')}
               </ThemedText>
-              <TouchableOpacity
+              <View
                 style={[styles.dateTimeButton, { 
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1, 
-                  borderColor: theme.colors.border 
+                  borderColor: theme.colors.border,
+                  opacity: selectedTimeSlot ? 1 : 0.7,
                 }]}
-                onPress={() => setShowTimePicker(true)}
+                pointerEvents="none"
               >
                 <ThemedText variant="muted" size="m">
-                  {formatTime(matchTime)}
+                  {selectedTimeSlot ? selectedTimeSlot.startTime.substring(0, 5) : formatTime(matchTime)}
                 </ThemedText>
-                <ThemedIcon  name="time" size={20} variant="secondary" />
-              </TouchableOpacity>
+                <ThemedIcon name="time" size={20} variant="secondary" />
+              </View>
             </View>
           </View>
-
-            {/* Date Picker */}
-            {showDatePicker && (
-              <DateTimePicker
-                value={matchDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setMatchDate(selectedDate);
-                  }
-                }}
-              />
-            )}
-
-            {/* Time Picker */}
-            {showTimePicker && (
-              <DateTimePicker
-                value={matchTime}
-                mode="time"
-                display="default"
-                is24Hour={true}
-                onChange={(event, selectedTime) => {
-                  setShowTimePicker(false);
-                  if (selectedTime) {
-                    setMatchTime(selectedTime);
-                  }
-                }}
-              />
-            )}
+          {!selectedTimeSlot && (
+            <ThemedText variant="muted" size="s" style={{ marginTop: 4 }}>
+              Chọn sân (venue) và khung giờ để tự động điền ngày & giờ
+            </ThemedText>
+          )}
 
           {/* Room Settings */}
           <View style={styles.section}>

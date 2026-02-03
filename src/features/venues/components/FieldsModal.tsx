@@ -11,7 +11,7 @@ interface FieldsModalProps {
   visible: boolean;
   venue: Venue | null;
   onClose: () => void;
-  onSelectField: (venue: Venue, field: Field, selectedSlot: TimeSlot) => void;
+  onSelectField: (venue: Venue, field: Field, selectedSlot: TimeSlot, selectedDate: string) => void;
   theme: any;
 }
 
@@ -91,12 +91,12 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     setSelectedSlot(slot);
   }, []);
 
-  // Handle book button press
+  // Handle book button press - pass selectedDate (YYYY-MM-DD) so CreateRoom can use it
   const handleBookField = useCallback((field: Field) => {
     if (venue && selectedSlot) {
-      onSelectField(venue, field, selectedSlot);
+      onSelectField(venue, field, selectedSlot, selectedDate);
     }
-  }, [venue, selectedSlot, onSelectField]);
+  }, [venue, selectedSlot, selectedDate, onSelectField]);
 
   if (!venue) return null;
 

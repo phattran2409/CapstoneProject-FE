@@ -20,7 +20,7 @@ export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueR
 export const getVenueById = async (id: string): Promise<VenueDetail> => {
   try {
     const response = await apiClient.get<VenueDetailResponse>(`/venues/${id}`);
-    return response.data.data as unknown as VenueDetail;
+    return response.data as unknown as VenueDetail;
   
   } catch (error) {
     console.error('Error fetching venue by id:', error);

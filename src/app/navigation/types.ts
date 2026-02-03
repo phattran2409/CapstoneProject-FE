@@ -10,6 +10,7 @@ export type RootStackParamList = {
     selectedVenue?: Venue;
     selectedField?: Field;
     selectedTimeSlot?: TimeSlot;
+    selectedDate?: string; // YYYY-MM-DD from FieldsModal
   } | undefined;
   VenueSelection: undefined;
   VenueDetail: { venueId: string };

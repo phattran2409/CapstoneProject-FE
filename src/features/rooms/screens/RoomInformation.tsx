@@ -242,10 +242,10 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     }
 
     // Nếu đã có team rồi thì thông báo (có thể cho phép đổi team sau này)
-    if (currentUserParticipant.teamAssignment !== 'Unassigned') {
-      Alert.alert('Đã chọn đội', `Bạn đã ở Team ${currentUserParticipant.teamAssignment}`);
-      return;
-    }
+    // if (currentUserParticipant.teamAssignment !== 'Unassigned') {
+    //   Alert.alert('Đã chọn đội', `Bạn đã ở Team ${currentUserParticipant.teamAssignment}`);
+    //   return;
+    // }
 
     // Set pending team and show modal
     if (teamAssignment === 'A' || teamAssignment === 'B') {
@@ -702,8 +702,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                     onKickPlayer={handleKickPlayer}
                   />
                 ))}
-                {/* Add empty slots for Team A */}
-                {displayRoom.participants.teamA.length < displayRoom.totalSlots / 2 && currentUserParticipant?.teamAssignment === 'Unassigned' && (
+                {/* Add empty slots for Team A - always show when team has room so user can switch teams */}
+                {displayRoom.participants.teamA.length < displayRoom.totalSlots / 2 && (
                   <EmptySlotCard
                     teamAssignment="A"
                     teamColor="#4CAF50"
@@ -750,8 +750,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                     onKickPlayer={handleKickPlayer}
                   />
                 ))}
-                {/* Add empty slots for Team B */}
-                {displayRoom.participants.teamB.length < displayRoom.totalSlots / 2 && currentUserParticipant?.teamAssignment === 'Unassigned' && (
+                {/* Add empty slots for Team B - always show when team has room so user can switch teams */}
+                {displayRoom.participants.teamB.length < displayRoom.totalSlots / 2 && (
                   <EmptySlotCard
                     teamAssignment="B"
                     teamColor="#2196F3"

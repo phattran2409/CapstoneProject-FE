@@ -10,14 +10,48 @@ import { getAuthToken } from "@/shared/api/client";
 
 const MATCH_ROOM_HUB_URL = "https://api.kickify.site/hubs/matchroom";
 
+const MATCH_ROOM_HUB_METHODS = {
+  JoinRoomGroup: "JoinRoomGroup",
+  LeaveRoomGroup: "LeaveRoomGroup",
+} as const;
+
+const MATCH_ROOM_HUB_EVENTS = {
+  // Ack events for group join/leave (per documentation)
+  JoinedRoom: "JoinedRoom",
+  LeftRoom: "LeftRoom",
+
+  // Error event (per documentation)
+  Error: "Error",
+
+  // Legacy/room realtime events currently used in app
+  UserJoinedRoom: "UserJoinedRoom",
+  UserLeftRoom: "UserLeftRoom",
+  ParticipantUpdated: "ParticipantUpdated",
+  RoomStatusChanged: "RoomStatusChanged",
+  // Per updated documentation: event name is "UserKicked"
+  UserKicked: "UserKicked",
+} as const;
+
 /**
  * SignalR events từ MatchRoom Hub
  */
 export interface UseMatchRoomSignalROptions {
   // Room ID để join vào group
   roomId: string;
-  
+
+  /**
+   * Optional team assignment for JoinRoomGroup (per documentation: "A" | "B" | null)
+   * - undefined: call JoinRoomGroup(roomId) (backward compatible)
+   * - null: spectator
+   * - "A"/"B": join team-specific chat group
+   */
+  teamAssignment?: "A" | "B" | null;
+
   // Events từ server
+  // Ack events for JoinRoomGroup / LeaveRoomGroup
+  onJoinedRoomGroup?: (payload: JoinedRoomGroupPayload) => void;
+  onLeftRoomGroup?: (payload: LeftRoomGroupPayload) => void;
+
   onUserJoinedRoom?: (payload: UserJoinedPayload) => void;
   onUserLeftRoom?: (payload: UserLeftPayload) => void;
   onParticipantUpdated?: (payload: ParticipantUpdatedPayload) => void;
@@ -27,6 +61,25 @@ export interface UseMatchRoomSignalROptions {
 }
 
 // ==================== Payload Types ====================
+
+/**
+ * Payload ack sau khi JoinRoomGroup thành công
+ * (Docs: JoinedRoom event - PascalCase keys from server)
+ */
+export interface JoinedRoomGroupPayload {
+  roomId: string;
+  teamAssignment: "A" | "B" | null;
+  userId: string;
+  userName: string;
+}
+
+/**
+ * Payload ack sau khi LeaveRoomGroup thành công
+ * (Docs: LeftRoom event)
+ */
+export interface LeftRoomGroupPayload {
+  roomId: string;
+}
 
 /**
  * Payload khi có người chơi mới tham gia room
@@ -102,6 +155,10 @@ export interface PlayerKickedPayload {
   kickedUserName: string;
   kickedBy: string;
   reason?: string;
+  // Extended fields from latest documentation
+  filledSlots?: number;
+  totalSlots?: number;
+  kickedAt?: string;
 }
 
 /**
@@ -128,6 +185,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
   const { roomId } = options;
   const [connection, setConnection] = useState<HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [hasJoinedRoomGroup, setHasJoinedRoomGroup] = useState(false);
   const [connectionState, setConnectionState] = useState<HubConnectionState>(
     HubConnectionState.Disconnected
   );
@@ -135,6 +193,28 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
   // Use ref to store options to avoid stale closure issues
   const optionsRef = useRef(options);
   optionsRef.current = options;
+
+  const normalizeJoinedRoomGroupPayload = useCallback(
+    (raw: any): JoinedRoomGroupPayload => {
+      const teamAssignmentRaw = raw?.TeamAssignment ?? raw?.teamAssignment ?? null;
+      return {
+        roomId: raw?.RoomId ?? raw?.roomId ?? "",
+        teamAssignment:
+          teamAssignmentRaw === "A" || teamAssignmentRaw === "B"
+            ? teamAssignmentRaw
+            : null,
+        userId: raw?.UserId ?? raw?.userId ?? "",
+        userName: raw?.UserName ?? raw?.userName ?? "",
+      };
+    },
+    []
+  );
+
+  const normalizeLeftRoomGroupPayload = useCallback((raw: any): LeftRoomGroupPayload => {
+    return {
+      roomId: raw?.RoomId ?? raw?.roomId ?? "",
+    };
+  }, []);
 
   useEffect(() => {
     if (!roomId) {
@@ -173,15 +253,31 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         if (!isMounted) return;
 
         // ==================== Register Event Listeners ====================
+
+        // Ack: Joined room group (per documentation)
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.JoinedRoom, (raw: any) => {
+          const payload = normalizeJoinedRoomGroupPayload(raw);
+          console.log("✅ JoinedRoom (group ack):", payload);
+          setHasJoinedRoomGroup(true);
+          optionsRef.current.onJoinedRoomGroup?.(payload);
+        });
+
+        // Ack: Left room group (per documentation)
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.LeftRoom, (raw: any) => {
+          const payload = normalizeLeftRoomGroupPayload(raw);
+          console.log("🚪 LeftRoom (group ack):", payload);
+          setHasJoinedRoomGroup(false);
+          optionsRef.current.onLeftRoomGroup?.(payload);
+        });
         
         // User joined room
-        hubConnection.on("UserJoinedRoom", (payload: UserJoinedPayload) => {
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.UserJoinedRoom, (payload: UserJoinedPayload) => {
           console.log("🏟️ UserJoinedRoom:", payload);
           optionsRef.current.onUserJoinedRoom?.(payload);
         });
 
         // User left room (includes host transfer logic)
-        hubConnection.on("UserLeftRoom", (payload: UserLeftPayload) => {
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.UserLeftRoom, (payload: UserLeftPayload) => {
           console.log("🚪 UserLeftRoom:", payload);
           if (payload.isRoomDeleted) {
             console.log("🗑️ Room has been deleted");
@@ -192,25 +288,28 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
 
         // Participant updated (team/position change)
-        hubConnection.on("ParticipantUpdated", (payload: ParticipantUpdatedPayload) => {
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.ParticipantUpdated,
+          (payload: ParticipantUpdatedPayload) => {
           console.log("🔄 ParticipantUpdated:", payload);
           optionsRef.current.onParticipantUpdated?.(payload);
-        });
+          }
+        );
 
         // Room status changed (Open -> Full, etc.)
-        hubConnection.on("RoomStatusChanged", (payload: RoomStatusPayload) => {
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.RoomStatusChanged, (payload: RoomStatusPayload) => {
           console.log("📊 RoomStatusChanged:", payload);
           optionsRef.current.onRoomStatusChanged?.(payload);
         });
 
         // Player kicked from room
-        hubConnection.on("PlayerKicked", (payload: PlayerKickedPayload) => {
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.UserKicked, (payload: PlayerKickedPayload) => {
           console.log("⛔ PlayerKicked:", payload);
           optionsRef.current.onPlayerKicked?.(payload);
         });
 
         // Error from server
-        hubConnection.on("Error", (payload: any) => {
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.Error, (payload: any) => {
           console.warn("❌ MatchRoom SignalR Error:", payload);
           optionsRef.current.onError?.(payload);
         });
@@ -221,6 +320,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           console.log("🔄 MatchRoom SignalR reconnecting...", error);
           setConnectionState(HubConnectionState.Reconnecting);
           setIsConnected(false);
+          setHasJoinedRoomGroup(false);
         });
 
         hubConnection.onreconnected(async (connectionId) => {
@@ -230,10 +330,25 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           
           // Re-join room group after reconnection
           try {
-            await hubConnection?.invoke("JoinRoomGroup", roomId);
+            const rawTeamAssignment = optionsRef.current.teamAssignment;
+            const resolvedTeamAssignment =
+              rawTeamAssignment === undefined ? null : rawTeamAssignment;
+
+            console.log("📨 Re-joinRoomGroup (reconnected) with params:", {
+              roomId,
+              teamAssignment: resolvedTeamAssignment,
+            });
+
+            await hubConnection?.invoke(
+              MATCH_ROOM_HUB_METHODS.JoinRoomGroup,
+              roomId,
+              resolvedTeamAssignment
+            );
             console.log("✅ Re-joined room group:", roomId);
+            setHasJoinedRoomGroup(true);
           } catch (error) {
             console.error("❌ Failed to re-join room group:", error);
+            setHasJoinedRoomGroup(false);
           }
         });
 
@@ -241,6 +356,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           console.log("🔌 MatchRoom SignalR connection closed", error);
           setConnectionState(HubConnectionState.Disconnected);
           setIsConnected(false);
+          setHasJoinedRoomGroup(false);
         });
 
         // ==================== Start Connection ====================
@@ -260,10 +376,25 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
 
         // Join room group để nhận events của room này
         try {
-          await hubConnection.invoke("JoinRoomGroup", roomId);
+          const rawTeamAssignment = optionsRef.current.teamAssignment;
+          const resolvedTeamAssignment =
+            rawTeamAssignment === undefined ? null : rawTeamAssignment;
+
+          console.log("📨 JoinRoomGroup (initial) with params:", {
+            roomId,
+            teamAssignment: resolvedTeamAssignment,
+          });
+
+          await hubConnection.invoke(
+            MATCH_ROOM_HUB_METHODS.JoinRoomGroup,
+            roomId,
+            resolvedTeamAssignment
+          );
           console.log("✅ Joined room group:", roomId);
+          setHasJoinedRoomGroup(true);
         } catch (error) {
           console.error("❌ Failed to join room group:", error);
+          setHasJoinedRoomGroup(false);
         }
 
       } catch (error: any) {
@@ -274,6 +405,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
         setConnectionState(HubConnectionState.Disconnected);
         setIsConnected(false);
+        setHasJoinedRoomGroup(false);
       }
     };
 
@@ -284,12 +416,14 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
       isMounted = false;
       if (hubConnection) {
         // Leave room group trước khi disconnect
-        hubConnection.invoke("LeaveRoomGroup", roomId)
+        hubConnection
+          .invoke(MATCH_ROOM_HUB_METHODS.LeaveRoomGroup, roomId)
           .catch((err) => console.warn("Failed to leave room group:", err))
           .finally(() => {
             hubConnection?.stop();
           });
       }
+      setHasJoinedRoomGroup(false);
     };
   }, [roomId]);
 
@@ -315,6 +449,38 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
   );
 
   /**
+   * Join room group (per documentation).
+   * - If teamAssignment is undefined, invokes JoinRoomGroup(roomId) for backward compatibility.
+   * - If teamAssignment is null/"A"/"B", invokes JoinRoomGroup(roomId, teamAssignment).
+   */
+  const joinRoomGroup = useCallback(
+    async (teamAssignment?: "A" | "B" | null) => {
+      const rawFromOptions = optionsRef.current.teamAssignment;
+      const resolvedTeamAssignment =
+        teamAssignment !== undefined ? teamAssignment : rawFromOptions ?? null;
+
+      console.log("📨 joinRoomGroup() manual call with params:", {
+        roomId,
+        teamAssignment: resolvedTeamAssignment,
+      });
+
+      await invokeHubMethod(
+        MATCH_ROOM_HUB_METHODS.JoinRoomGroup,
+        roomId,
+        resolvedTeamAssignment
+      );
+    },
+    [invokeHubMethod, roomId]
+  );
+
+  /**
+   * Leave room group (per documentation).
+   */
+  const leaveRoomGroup = useCallback(async () => {
+    await invokeHubMethod(MATCH_ROOM_HUB_METHODS.LeaveRoomGroup, roomId);
+  }, [invokeHubMethod, roomId]);
+
+  /**
    * Notify server that current user is viewing the room
    * (Optional: for presence tracking)
    */
@@ -325,8 +491,11 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
   return {
     connection,
     isConnected,
+    hasJoinedRoomGroup,
     connectionState,
     invokeHubMethod,
+    joinRoomGroup,
+    leaveRoomGroup,
     notifyPresence,
   };
 };
