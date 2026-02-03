@@ -14,6 +14,7 @@ import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import { useAlert } from "@/shared/hooks/useAlert";
 import { validateContent as validateContentUtil } from "@/shared/utils";
+import { useToast } from "../toast";
 
 export interface ActionButtonProps {
   contentType: "post" | "comment";
@@ -35,7 +36,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { visible, alertOptions, showDanger, hideAlert } = useAlert();
-
+  const toast = useToast();
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editedContent, setEditedContent] = useState(currentContent);
@@ -69,8 +70,18 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       async () => {
         try {
           await onDelete(contentId);
+          toast.info(
+            t("Đã xóa bài viết", {
+              type: t(`actionButton.${contentType}`),
+            }),
+          );
         } catch (error) {
           console.error("Error deleting:", error);
+          toast.error(
+            t("Xóa thất bại", {
+              type: t(`actionButton.${contentType}`),
+            }),
+          );
         }
       },
       undefined,

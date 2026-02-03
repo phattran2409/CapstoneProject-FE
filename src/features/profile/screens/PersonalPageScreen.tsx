@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -20,6 +21,7 @@ import { ThemedText } from "@/shared/components/themed";
 import { UpdateProfileData } from "../types/profile.types";
 import {
   MatchList,
+  MatchItem,
   MatchItemData,
   MatchDetailModal,
   PostItem,
@@ -30,17 +32,18 @@ import {
   LoadingMoreIndicator,
 } from "@/shared/components";
 import {
-  usePaginatedPosts,
   usePaginatedUserPosts,
   useTogglePostLike,
 } from "@/features/post/hooks";
-import { useProfile } from "@/features/auth";
 import { useSendFriendRequest, useUserProfile } from "../hooks";
 import {
   useGetFriendshipStatus,
   useRemoveFriend,
   useRespondToFriendRequest,
 } from "@/features/friends/hooks";
+import { useMyRooms } from "@/features/rooms/hooks/useMatchRooms";
+import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
+import { useToast } from "@/shared/toast";
 
 type PersonalPageScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -49,6 +52,53 @@ type PersonalPageScreenProps = NativeStackScreenProps<
 
 type TabType = "posts" | "history" | "analysis";
 
+// Helper function to convert MyRoom to MatchItemData
+const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
+  // Convert matchFormat to display format
+  const formatMap: Record<string, string> = {
+    FiveVsFive: "5vs5",
+    SevenVsSeven: "7vs7",
+  };
+
+  // Format date
+  const matchDate = new Date(room.matchDate);
+  const formattedDate = matchDate.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  // Determine status for display
+  const getDisplayStatus = (status: string): MatchItemData["status"] => {
+    switch (status) {
+      case "Open":
+        return "upcoming";
+      case "Full":
+        return "upcoming";
+      case "InProgress":
+        return "ongoing";
+      case "Completed":
+        return "win"; // Default, could be dynamic based on result
+      case "Cancelled":
+        return "lose";
+      default:
+        return "ongoing";
+    }
+  };
+
+  return {
+    id: room.roomId,
+    title: room.field?.fieldName || room.field?.venue?.venueName || "Unknown",
+    format: formatMap[room.matchFormat] || room.matchFormat,
+    players: `${room.filledSlots}/${room.totalSlots}`,
+    image: require("@assets/images/icon.png"),
+    status: getDisplayStatus(room.status),
+    date: formattedDate,
+    venue: room.field?.venue?.venueName,
+    time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
+  };
+};
+
 const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   navigation,
   route,
@@ -56,6 +106,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const { theme } = useTheme();
   const { user: currentUser } = useAuthStore();
   const { t } = useTranslation();
+  const toast = useToast();
 
   const { mutate: toggleLike } = useTogglePostLike();
   const handleLike = (postId: string) => {
@@ -66,13 +117,16 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const userId = route.params?.userId || currentUser?.userId || "";
   const isCurrentUser = userId === currentUser?.userId;
   console.log("isCurrentUser", isCurrentUser);
+
+  // UI State
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [showEditForm, setShowEditForm] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(
     null,
   );
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Profile data
   const { data: profile, isLoading: profileLoading } = useUserProfile(userId);
 
   // Friendship status and mutations
@@ -94,17 +148,28 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
   const {
     posts,
-    loading,
-    refreshing,
-    loadingMore,
-    error,
-    refresh,
-    loadMore,
+    loading: postsLoading,
+    refreshing: postsRefreshing,
+    loadingMore: postsLoadingMore,
+    error: postsError,
+    refresh: postsRefresh,
+    loadMore: postsLoadMore,
     setPosts,
   } = usePaginatedUserPosts({
-    userId: currentUser?.userId || "",
+    userId: userId,
     pageSize: 10,
   });
+
+  // Matches data - only fetch for current user
+  const {
+    myRooms: matches,
+    loading: matchesLoading,
+    refreshing: matchesRefreshing,
+    loadingMore: matchesLoadingMore,
+    error: matchesError,
+    refresh: matchesRefresh,
+    loadMore: matchesLoadMore,
+  } = useMyRooms();
 
   const stats = {
     matches: 88,
@@ -124,81 +189,33 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     setShowEditForm(true);
   };
 
-  const handleSaveProfile = async (data: UpdateProfileData) => {
-    setIsUpdating(true);
-    try {
-      // TODO: Call API to update profile
-      console.log("Saving profile:", data);
-      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
-      setShowEditForm(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    } finally {
-      setIsUpdating(false);
-    }
+  // Profile update mutations
+  const { mutate: updateProfile, isPending: isUpdatingProfile } =
+    useUpdateProfile();
+
+  const handleSaveProfile = async (userId: string, data: UpdateProfileData) => {
+    updateProfile(
+      { userId, data },
+      {
+        onSuccess: () => {
+          console.log("Profile updated successfully");
+          toast.success(t("personalPage.editForm.toast.updateSuccess"));
+          setShowEditForm(false);
+        },
+        onError: (error) => {
+          console.error("Error updating profile:", error);
+          toast.error(t("personalPage.editForm.toast.updateError"));
+        },
+      },
+    );
   };
 
-  const recentMatches: MatchItemData[] = [
-    {
-      id: "1",
-      title: "Giao hữu cuối tuần",
-      date: "18/07/2024",
-      status: "win",
-      image: require("@assets/images/icon.png"),
-      format: "5vs5",
-      players: "10/10",
-    },
-    {
-      id: "4",
-      title: "Team Anh Em",
-      date: "15/07/2024",
-      status: "lose",
-      image: require("@assets/images/icon.png"),
-      format: "7vs7",
-      players: "14/14",
-    },
-    {
-      id: "5",
-      title: "Đá cho vui",
-      date: "12/07/2024",
-      status: "draw",
-      image: require("@assets/images/icon.png"),
-      format: "6vs6",
-      players: "12/12",
-    },
-    {
-      id: "6",
-      title: "Trận đấu cuối tuần",
-      date: "10/07/2024",
-      status: "win",
-      image: require("@assets/images/icon.png"),
-      format: "5vs5",
-      players: "10/10",
-    },
-    {
-      id: "7",
-      title: "Giao hữu thân thiện",
-      date: "08/07/2024",
-      status: "draw",
-      image: require("@assets/images/icon.png"),
-      format: "7vs7",
-      players: "14/14",
-    },
-    {
-      id: "8",
-      title: "Championship",
-      date: "05/07/2024",
-      status: "win",
-      image: require("@assets/images/icon.png"),
-      format: "11vs11",
-      players: "22/22",
-    },
-  ];
-
   const handleMatchPress = (matchId: string) => {
-    const match = recentMatches.find((m) => m.id === matchId);
+    const match = matches.find((m) => m.roomId === matchId);
     if (match) {
-      setSelectedMatch(match);
+      // Convert MyRoom to MatchItemData for the modal
+      const matchItemData = convertMyRoomToMatchItemData(match);
+      setSelectedMatch(matchItemData);
       setModalVisible(true);
     }
   };
@@ -252,18 +269,46 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     console.log("Cancel request not implemented yet");
   };
 
-  const renderFooter = () => {
-    if (!loadingMore) return null;
+  const renderPostsFooter = () => {
+    if (!postsLoadingMore) return null;
     return <LoadingMoreIndicator />;
   };
 
-  const renderEmpty = () => {
-    if (loading) return null;
+  const renderPostsEmpty = () => {
+    if (postsLoading) return null;
     return (
       <EmptyState
         icon="document-text-outline"
         title="Chưa có bài viết nào"
         description="Người dùng này chưa đăng bài viết nào"
+      />
+    );
+  };
+
+  const renderMatchesFooter = () => {
+    if (!matchesLoadingMore) return null;
+    return <LoadingMoreIndicator />;
+  };
+
+  const renderMatchesEmpty = () => {
+    if (matchesLoading) return null;
+    return (
+      <EmptyState
+        icon="football-outline"
+        title="Chưa có trận đấu nào"
+        description="Bạn chưa tham gia trận đấu nào"
+      />
+    );
+  };
+
+  const renderMatchItem = ({ item }: { item: any }) => {
+    const matchItemData = convertMyRoomToMatchItemData(item);
+    return (
+      <MatchItem
+        match={matchItemData}
+        variant="list"
+        onPress={handleMatchPress}
+        showStatus={true}
       />
     );
   };
@@ -301,11 +346,18 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         <ThemedText size="xl" weight="bold" variant="primary">
           {t("personalPage.title")}
         </ThemedText>
-        <TouchableOpacity onPress={() => navigation.navigate("ProfileDetail")}>
+        <TouchableOpacity
+          onPress={() => {
+            if (profile) {
+              navigation.navigate("ProfileDetail", { player: profile });
+            }
+          }}
+          disabled={!profile}
+        >
           <Ionicons
             name="ellipsis-vertical"
             size={24}
-            color={theme.colors.text}
+            color={profile ? theme.colors.text : theme.colors.textSecondary}
           />
         </TouchableOpacity>
       </View>
@@ -324,10 +376,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
             <ProfileHeader
               avatar={profile?.avatarUrl}
               name={profile?.fullName || "Unknown User"}
-              elo={profile?.playerProfile?.currentElo || 2450}
+              elo={profile?.playerProfile?.currentElo || 0}
               description={profile?.bio || "N/A"}
-              position={profile?.playerProfile?.preferredPositions || "N/A"}
-              // shirtNumber={profile?.playerProfile?.shirtNumber || 0}
+              position={profile?.preferredPositions || "N/A"}
+              shirtNumber={profile?.shirtNumber || 0}
               isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}
               friendshipStatus={friendshipStatus?.status}
@@ -390,23 +442,25 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
             {activeTab === "posts" && (
               <View style={{ flex: 1 }}>
                 {/* Loading State */}
-                {loading && <ProfileSkeleton />}
+                {postsLoading && <ProfileSkeleton />}
 
                 {/* Error State */}
-                {error && <ErrorState error={error} onRetry={refresh} />}
+                {postsError && (
+                  <ErrorState error={postsError} onRetry={postsRefresh} />
+                )}
 
                 {/* Posts List */}
-                {!loading && !error && (
+                {!postsLoading && !postsError && (
                   <FlatList
                     data={posts}
                     keyExtractor={(post) => post.postId}
                     renderItem={renderPostItem}
-                    ListFooterComponent={renderFooter}
-                    ListEmptyComponent={renderEmpty}
-                    onEndReached={loadMore}
+                    ListFooterComponent={renderPostsFooter}
+                    ListEmptyComponent={renderPostsEmpty}
+                    onEndReached={postsLoadMore}
                     onEndReachedThreshold={0.5}
-                    refreshing={refreshing}
-                    onRefresh={refresh}
+                    refreshing={postsRefreshing}
+                    onRefresh={postsRefresh}
                     scrollEnabled={false}
                     nestedScrollEnabled={true}
                   />
@@ -416,14 +470,35 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
             {/* History Tab */}
             {activeTab === "history" && (
-              <MatchList
-                matches={recentMatches}
-                variant="vertical"
-                itemVariant="list"
-                onMatchPress={handleMatchPress}
-                showStatus={true}
-                containerStyle={{ marginTop: theme.spacing.m }}
-              />
+              <View style={{ flex: 1 }}>
+                {/* Loading State */}
+                {matchesLoading && <ProfileSkeleton />}
+
+                {/* Error State */}
+                {matchesError && (
+                  <ErrorState error={matchesError} onRetry={matchesRefresh} />
+                )}
+
+                {/* Matches List with Load More */}
+                {!matchesLoading && !matchesError && (
+                  <FlatList
+                    data={matches}
+                    keyExtractor={(match) => match.roomId}
+                    renderItem={renderMatchItem}
+                    ListFooterComponent={renderMatchesFooter}
+                    ListEmptyComponent={renderMatchesEmpty}
+                    onEndReached={matchesLoadMore}
+                    onEndReachedThreshold={0.5}
+                    refreshing={matchesRefreshing}
+                    onRefresh={matchesRefresh}
+                    scrollEnabled={false}
+                    nestedScrollEnabled={true}
+                    contentContainerStyle={{
+                      paddingHorizontal: theme.spacing.m,
+                    }}
+                  />
+                )}
+              </View>
             )}
 
             {/* Analysis Tab */}
@@ -450,12 +525,21 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         visible={showEditForm}
         onClose={() => setShowEditForm(false)}
         onSave={handleSaveProfile}
-        isLoading={isUpdating}
+        userId={userId}
+        isLoading={isUpdatingProfile}
         initialData={{
-          name: profile?.fullName || currentUser?.fullName || "",
+          fullName: profile?.fullName || currentUser?.fullName || "",
+          phone: profile?.phone || "",
+          avatarUrl: profile?.avatarUrl || "",
           bio: profile?.bio || "",
-          position: profile?.playerProfile?.preferredPositions || "",
-          // shirtNumber: profile?.playerProfile?.shirtNumber || 0,
+          dateOfBirth: profile?.dateOfBirth || "",
+          gender: profile?.gender ?? undefined,
+          preferredPositions:
+            profile?.playerProfile?.preferredPositions ||
+            profile?.preferredPositions ||
+            "",
+          shirtNumber: profile?.shirtNumber || 0,
+          preferredFoot: profile?.preferredFoot || "",
         }}
       />
     </SafeAreaView>

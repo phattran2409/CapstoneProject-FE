@@ -74,7 +74,7 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
                 styles.avatar,
                 {
                   backgroundColor: theme.colors.surface,
-                  // borderColor: getRankColor(request.elo),
+                  borderColor: getRankColor(request.currentElo),
                 },
               ]}
             >
@@ -84,10 +84,9 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
                   style={styles.avatarImage}
                 />
               ) : (
-                <Ionicons
-                  name="person"
-                  size={28}
-                  color={theme.colors.textSecondary}
+                <Image
+                  source={require("../../../assets/images/default_avatar.png")}
+                  style={styles.avatarImage}
                 />
               )}
             </View>
@@ -102,9 +101,9 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
               >
                 {request.requesterFullName}
               </Text>
-              {/* {request.elo >= 2500 && (
+              {request.currentElo >= 2500 && (
                 <Ionicons name="checkmark-circle" size={16} color={theme.colors.neonGreen} style={{ marginLeft: 4 }} />
-              )} */}
+              )}
             </View>
             <Text
               style={[styles.username, { color: theme.colors.textSecondary }]}
@@ -112,30 +111,23 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
               @{request.requesterFullName}
             </Text>
 
-            {/* <View style={styles.statsRow}>
+            <View style={styles.statsRow}>
               <View style={[
                 styles.eloBadge, 
-                { backgroundColor: isDark ? `${getRankColor(request.elo)}20` : `${getRankColor(request.elo)}15` }
+                { backgroundColor: isDark ? `${getRankColor(request.currentElo)}20` : `${getRankColor(request.currentElo)}15` }
               ]}>
-                <Ionicons name="trophy" size={12} color={getRankColor(request.elo)} />
-                <Text style={[styles.eloText, { color: getRankColor(request.elo) }]}>{request.elo}</Text>
+                <Ionicons name="trophy" size={12} color={getRankColor(request.currentElo)} />
+                <Text style={[styles.eloText, { color: getRankColor(request.currentElo) }]}>{request.currentElo}</Text>
               </View>
-              {request.position && (
+              {request.preferredPositions && (
                 <View style={[
                   styles.positionBadge, 
                   { backgroundColor: isDark ? `${theme.colors.neonGreen}15` : `${theme.colors.neonGreen}10` }
                 ]}>
-                  <Text style={[styles.positionText, { color: theme.colors.neonGreen }]}>{request.position}</Text>
+                  <Text style={[styles.positionText, { color: theme.colors.neonGreen }]}>{request.preferredPositions}</Text>
                 </View>
               )}
-            </View> */}
-
-            {/* {request.mutualFriends && request.mutualFriends > 0 && (
-              <Text style={[styles.mutualFriends, { color: theme.colors.textSecondary }]}>
-                <Ionicons name="people" size={12} color={theme.colors.textSecondary} />{' '}
-                {t('friends.mutualFriends', { count: request.mutualFriends, defaultValue: `${request.mutualFriends} bạn chung` })}
-              </Text>
-            )} */}
+            </View>
 
             <Text style={[styles.sentAt, { color: theme.colors.textTertiary }]}>
               {getRelativeTime(request.sentAt)}

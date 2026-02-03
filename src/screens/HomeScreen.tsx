@@ -114,12 +114,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 },
               ]}
             >
-              {user?.avatar ? (
+              {user?.avatarUrl ? (
                 <Image
                   source={
-                    typeof user.avatar === "string"
-                      ? { uri: user.avatar }
-                      : user.avatar
+                    typeof user.avatarUrl === "string"
+                      ? { uri: user.avatarUrl }
+                      : user.avatarUrl
                   }
                   style={{ width: 36, height: 36, borderRadius: 18 }}
                   resizeMode="cover"

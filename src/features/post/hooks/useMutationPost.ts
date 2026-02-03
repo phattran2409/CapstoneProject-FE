@@ -29,7 +29,10 @@ export const useCreatePost = () => {
   return useMutation<
     ApiResponse,
     Error,
-    { content: string; files: Array<File | { uri: string; type: string; name: string }> }
+    {
+      content: string;
+      files: Array<File | { uri: string; type: string; name: string }>;
+    }
   >({
     mutationFn: ({ content, files }) => createPost(content, files),
     onSuccess: (response) => {

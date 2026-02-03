@@ -116,6 +116,43 @@ export interface MatchRoomFullInfo {
   createdAt: string;
 }
 
+export interface MyRoom {
+  roomId: string;
+  hostId: string;
+  host: {
+    userId: string;
+    fullName: string;
+    avatarUrl: string | null;
+  };
+  fieldId: string;
+  field: {
+    fieldId: string;
+    fieldName: string;
+    fieldType: MatchFormat;
+    hourlyRate: number;
+    venue: {
+      venueId: string;
+      venueName: string;
+      address: string;
+      contactPhone: string | null;
+    };
+  };
+  roomName: string | null;
+  matchDate: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  matchFormat: MatchFormat;
+  description: string;
+  rules: string;
+  totalSlots: number;
+  filledSlots: number;
+  depositPerPerson: number;
+  totalDepositCollected: number;
+  status: MatchRoomStatus;
+  createdAt: string;
+}
+
 export interface ApiResponse<T> {
   isSuccess: boolean;
   data: T;
@@ -128,6 +165,15 @@ export type MatchRoomsResponse = ApiResponse<{
   pageSize: number;
   totalPages: number;
 }>;
+
+export type MyRoomsResponse = ApiResponse<{
+  rooms: MyRoom[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>;
+
 
 export interface MatchRoomFilters {
   page?: number;

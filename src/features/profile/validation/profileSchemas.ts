@@ -3,57 +3,95 @@ import { z } from "zod";
 /**
  * Profile validation schemas
  * Organized by feature (profile) following clean architecture
+ * Matches backend FluentValidation rules
  */
 
 // ============================================
 // Field Schemas (reusable)
 // ============================================
 
-const nameField = z
+// FullName: optional, max 255 characters
+const fullNameField = z
   .string()
-  .min(1, "validation.profile.name.required")
-  .min(2, "validation.profile.name.tooShort")
-  .max(50, "validation.profile.name.tooLong")
-  .trim();
+  .max(255, "validation.profile.name.tooLong")
+  .trim()
+  .optional()
+  .or(z.literal(""));
 
+// Bio: optional, max 500 characters
 const bioField = z
   .string()
-  .max(200, "validation.profile.bio.tooLong")
+  .max(500, "validation.profile.bio.tooLong")
   .optional()
   .or(z.literal(""));
 
+// Phone: optional, E.164 format (^\+?[1-9]\d{1,14}$)
 const phoneField = z
   .string()
-  .regex(/^(0|\+84)?[0-9]{9,10}$/, "validation.profile.phone.invalid")
+  .regex(/^\+?[1-9]\d{1,14}$/, "validation.profile.phone.invalid")
   .optional()
   .or(z.literal(""));
 
+// AvatarUrl: optional, must be valid HTTP/HTTPS URL
+const avatarUrlField = z
+  .string()
+  .url("validation.profile.avatarUrl.invalid")
+  .refine(
+    (url) => {
+      if (!url) return true;
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    },
+    { message: "validation.profile.avatarUrl.invalid" },
+  )
+  .optional()
+  .or(z.literal(""));
+
+// DateOfBirth: optional, must be in the past and not more than 120 years ago
 const dateOfBirthField = z
   .string()
+  .refine(
+    (date) => {
+      if (!date) return true;
+      const dateObj = new Date(date);
+      const now = new Date();
+      const minDate = new Date();
+      minDate.setFullYear(now.getFullYear() - 120);
+      return dateObj < now && dateObj > minDate;
+    },
+    { message: "validation.profile.dateOfBirth.invalid" },
+  )
   .optional()
   .or(z.literal(""));
 
+// Gender: optional, must be valid enum value (0 = Male, 1 = Female, 2 = Other)
 const genderField = z
-  .enum(["male", "female", "other"], {
-    errorMap: () => ({ message: "validation.profile.gender.invalid" }),
+  .number()
+  .int()
+  .refine((val) => val >= 0 && val <= 2, {
+    message: "validation.profile.gender.invalid",
   })
-  .optional();
+  .optional()
+  .or(z.literal("").transform(() => undefined));
 
-const positionField = z
-  .string()
-  .optional();
+// Position: optional
+const positionField = z.string().optional().or(z.literal(""));
 
-const preferredFootField = z
-  .enum(["left", "right", "both"], {
-    errorMap: () => ({ message: "validation.profile.preferredFoot.invalid" }),
-  })
-  .optional();
+// PreferredFoot: optional
+const preferredFootField = z.string().optional().or(z.literal(""));
 
+// ShirtNumber: optional, 1-99 (realistic jersey numbers)
 const shirtNumberField = z
   .union([
     z.number().int().min(1).max(99),
-    z.string().regex(/^[1-9][0-9]?$/).transform(Number),
-    z.literal(""),
+    z
+      .string()
+      .regex(/^[1-9][0-9]?$/)
+      .transform(Number),
   ])
   .optional();
 
@@ -63,23 +101,25 @@ const shirtNumberField = z
 
 /**
  * Edit Profile form schema
+ * All fields are optional to match backend validation
  */
 export const editProfileSchema = z.object({
-  name: nameField,
+  fullName: fullNameField,
   bio: bioField,
   phone: phoneField,
   dateOfBirth: dateOfBirthField,
   gender: genderField,
-  position: positionField,
+  preferredPositions: positionField,
   preferredFoot: preferredFootField,
   shirtNumber: shirtNumberField,
+  avatarUrl: avatarUrlField,
 });
 
 /**
  * Personal info section schema (subset)
  */
 export const personalInfoSchema = editProfileSchema.pick({
-  name: true,
+  fullName: true,
   bio: true,
   phone: true,
   dateOfBirth: true,
@@ -90,7 +130,7 @@ export const personalInfoSchema = editProfileSchema.pick({
  * Football info section schema (subset)
  */
 export const footballInfoSchema = editProfileSchema.pick({
-  position: true,
+  preferredPositions: true,
   preferredFoot: true,
   shirtNumber: true,
 });
@@ -121,9 +161,9 @@ export const POSITIONS = [
 ] as const;
 
 export const GENDERS = [
-  { id: "male", label: "Nam", icon: "male" },
-  { id: "female", label: "Nữ", icon: "female" },
-  { id: "other", label: "Khác", icon: "ellipse" },
+  { id: 0, label: "Nam", icon: "male" },
+  { id: 1, label: "Nữ", icon: "female" },
+  { id: 2, label: "Khác", icon: "ellipse" },
 ] as const;
 
 export const PREFERRED_FOOT_OPTIONS = [
@@ -133,4 +173,3 @@ export const PREFERRED_FOOT_OPTIONS = [
 ] as const;
 
 export type FootImageKey = "left" | "right" | "both";
-

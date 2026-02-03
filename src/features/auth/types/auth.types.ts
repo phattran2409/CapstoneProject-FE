@@ -4,7 +4,7 @@ export interface User {
   fullName: string;
   email: string;
   role?: string;
-  avatar?: string;
+  avatarUrl?: string;
   position?: string;
   rating?: number;
   totalMatches?: number;

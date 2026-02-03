@@ -101,8 +101,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               marginRight: theme.spacing.m,
             }}
           >
-            {user?.avatar ? (
-              <Image source={{ uri: user.avatar }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            {user?.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={{ width: 64, height: 64, borderRadius: 32 }} />
             ) : (
               <Image source={require('../../../assets/images/default_avatar.png')} style={{ width: 64, height: 64, borderRadius: 32 }} />
             )}
