@@ -25,29 +25,33 @@ import {
 } from "@/shared/components/formation";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useMatchRoomDetail, type MatchRoomFullInfo } from "@/features/rooms";
-type RoomDetailScreenNavigationProp = NativeStackNavigationProp<
+type TeamScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "RoomDetail"
+  "Team"
 >;
 
-interface RoomDetailScreenProps {
-  navigation?: RoomDetailScreenNavigationProp;
+interface TeamScreenProps {
+  navigation?: TeamScreenNavigationProp;
   route?: {
     params: {
       roomId: string;
+      team: "A" | "B";
     };
   };
 }
 
 type SelectedTeam = "teamA" | "teamB";
 
-const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({
+const TeamScreen: React.FC<TeamScreenProps> = ({
   navigation,
   route,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { roomId } = route?.params || { roomId: "1" };
+  const { roomId, team } = route?.params || {
+    roomId: "1",
+    team: "A" as const,
+  };
   // Removed chat modal state - now using navigation
   const formationRef = useRef<FormationFieldRef>(null);
   const [isCaptain, setIsCaptain] = useState<boolean>(false);
@@ -142,7 +146,9 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({
     },
   };
 
-  const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>("teamA");
+  const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>(
+    team === "B" ? "teamB" : "teamA",
+  );
   const [selectedFormation, setSelectedFormation] = useState<string>("3-3");
   const [isLineupDropdownOpen, setIsLineupDropdownOpen] = useState(false);
 
@@ -185,16 +191,34 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({
     }
   }, [displayRoom, mockRoomData.teams.players, user?.userId]);
 
-  // Convert team players to FormationPlayer type (tạm thời dùng mock data)
-  const formationPlayers: FormationPlayer[] = mockRoomData.teams.players.map(
-    (player) => ({
+  // Convert team players to FormationPlayer type
+  const formationPlayers: FormationPlayer[] = React.useMemo(() => {
+    if (roomData) {
+      const teamParticipants =
+        selectedTeam === "teamA"
+          ? roomData.participants.teamA
+          : roomData.participants.teamB;
+
+      return teamParticipants.map<FormationPlayer>((p) => ({
+        id: p.userId,
+        name: p.fullName || "Player",
+        avatar: p.avatarUrl
+          ? { uri: p.avatarUrl }
+          : require("@assets/images/icon.png"),
+        role: (p.position || "MF") as FormationPlayer["role"],
+        isCaptain: p.userId === roomData.hostId,
+      }));
+    }
+
+    // Fallback to mock data when no real room data yet
+    return mockRoomData.teams.players.map((player) => ({
       id: player.id,
       name: player.name,
       avatar: player.avatar,
       role: player.role,
       isCaptain: player.isCaptain,
-    }),
-  );
+    }));
+  }, [roomData, selectedTeam]);
 
   const handlePlayerPress = (player: FormationPlayer, slotId: string) => {
     console.log("Player pressed:", player.name, "at slot:", slotId);
@@ -288,7 +312,8 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({
                   {t("roomDetail.venue")}
                 </ThemedText>
                 <ThemedText variant="primary" size="m" weight="medium">
-                  {displayRoom?.venueName || mockRoomData.venue.name}
+                  {displayRoom?.field?.venue?.venueName ||
+                    mockRoomData.venue.name}
                 </ThemedText>
               </View>
             </ThemedView>
@@ -378,7 +403,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({
               </ThemedText>
               <View style={styles.teamInfoContainer}>
                 <ThemedText variant="primary" size="m" weight="semiBold">
-                  {displayRoom?.venueName || mockRoomData.teams.name}
+                  {selectedTeam === "teamA" ? "Team A" : "Team B"}
                 </ThemedText>
                 <View
                   style={[
@@ -538,7 +563,7 @@ const RoomDetailScreen: React.FC<RoomDetailScreenProps> = ({
                 </ThemedText>
                 <ThemedText variant="primary" size="l" weight="bold">
                   {(
-                    displayRoom?.pricePerPlayer || mockRoomData.pricePerPlayer
+                    displayRoom?.depositPerPerson || mockRoomData.pricePerPlayer
                   ).toLocaleString("vi-VN")}
                   đ
                 </ThemedText>
@@ -772,4 +797,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RoomDetailScreen;
+export default TeamScreen;

@@ -14,7 +14,7 @@ export { default as ProfileDetailScreen } from '../features/profile/screens/Prof
 
 // Rooms Feature Screens
 export { default as RoomInformation } from '../features/rooms/screens/RoomInformation';
-export { default as RoomDetailScreen } from '../features/rooms/screens/RoomDetailScreen';
+export { default as RoomDetailScreen } from '../features/rooms/screens/TeamScreen';
 export { default as CreateRoomScreen } from '../features/rooms/screens/CreateRoomScreen';
 export { default as MatchesScreen } from '../features/rooms/screens/MatchesScreen';
 

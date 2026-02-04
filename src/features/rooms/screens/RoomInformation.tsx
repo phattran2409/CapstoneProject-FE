@@ -298,7 +298,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       Alert.alert('Please join a team', 'You need to join a team before entering the match');
       return;
     }
-    navigation?.navigate('RoomDetail', { roomId });
+    // Ưu tiên team hiện tại nếu user đã ở Team A/B, mặc định A nếu vẫn Unassigned
+    const currentTeam = currentUserParticipant.teamAssignment === 'B' ? 'B' : 'A';
+    navigation?.navigate('Team', { roomId, team: currentTeam });
   };
 
   // ✅ Handle kick player (host only)

@@ -33,6 +33,7 @@ import { View, StyleSheet } from "react-native";
 import { WalletScreen, WalletTopUpScreen } from "@/features/wallet";
 import { PaymentSuccessScreen } from "@/features/payment";
 import { SearchScreen } from "@/features/search";
+import TeamScreen from "@/features/rooms/screens/TeamScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -159,8 +160,8 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
-              name="RoomDetail"
-              component={RoomDetailScreen}
+              name="Team"
+              component={TeamScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
