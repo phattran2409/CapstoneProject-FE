@@ -76,8 +76,7 @@ export interface Field {
   fieldId: string;
   fieldName: string;
   fieldType: string;
-  pricePerHour: number;
-  maxPlayers?: number;
+  // maxPlayers?: number;
   description?: string;
   status?: 'available' | 'booked' | 'maintenance';
 }

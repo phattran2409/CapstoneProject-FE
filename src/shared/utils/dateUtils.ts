@@ -90,3 +90,33 @@ export const isYesterday = (dateString: string): boolean => {
     date.getFullYear() === yesterday.getFullYear()
   );
 };
+
+export const formatDateYYYYMMDDLocal = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+export const formatDateDDMMYYYY = (yyyyMmDd: string): string => {
+  const parts = yyyyMmDd.split("-");
+  if (parts.length === 3) {
+    const [yyyy, mm, dd] = parts;
+    if (yyyy && mm && dd) return `${dd}/${mm}/${yyyy}`;
+  }
+  return new Date(yyyyMmDd).toLocaleDateString("vi-VN");
+};  
+
+export const getMaxSelectableDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(23, 59, 59, 999);
+    return d;
+};
+
+export const getMinSelectableDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+};

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions, ActivityIndicator, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Venue, Field, TimeSlot, FieldAvailability } from '../types/venue.types';
 import { getFieldAvailability } from '../api/venuesApi';
+import { getMinSelectableDate, getMaxSelectableDate, formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -32,14 +34,33 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
   const [availabilityCache, setAvailabilityCache] = useState<AvailabilityCache>({});
   const [loadingFields, setLoadingFields] = useState<Record<string, boolean>>({});
 
-  
-  // Get today's date in YYYY-MM-DD format
-  const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
+
+  // Today in YYYY-MM-DD (local) to avoid timezone shifts
+  const getTodayDate = () => formatDateYYYYMMDDLocal(new Date());
+
+
   
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // handle change date picker
+  const handleDateChange = useCallback(
+    (_event: any, date?: Date) => {
+      if (Platform.OS !== "ios") {
+        setShowDatePicker(false);
+      }
+
+      if (!date) return;
+
+      const next = formatDateYYYYMMDDLocal(date);
+      setSelectedDate(next);
+
+      // Reset slot selection when changing date
+      setSelectedTimeKey(null);
+      setSelectedSlot(null);
+    },
+    [],
+  );
 
   // Reset state when modal closes
   useEffect(() => {
@@ -107,19 +128,20 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     }).format(price);
   };
 
-  const getFieldTypeColor = (fieldType: string) => {
+  const getFieldTypeColor = (fieldType: string) : {color: string, shortNameType: string} => {
     switch (fieldType) {
-      case '5vs5':
-        return '#10B981';
-      case '7vs7':
-        return '#3B82F6';
-      case '11vs11':
-        return '#8B5CF6';
+      case 'FiveVsFive':
+        return { color: '#10B981', shortNameType: '5 vs 5' };
+      case 'SevenVsSeven':
+        return { color: '#3B82F6', shortNameType: '7 vs 7' };
+      case 'ElevenVsEleven':
+        return { color: '#8B5CF6', shortNameType: '11 vs 11' };
       default:
-        return theme.colors.neonGreen;
+        return { color: theme.colors.neonGreen, shortNameType: fieldType };
     }
   };
 
+  // chưa được sử dụng
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'available':
@@ -136,13 +158,13 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
   const getStatusText = (status?: string) => {
     switch (status) {
       case 'available':
-        return 'Còn trống';
+        return t('fieldsModal.status.available', 'Còn trống');
       case 'booked':
-        return 'Đã đặt';
+        return t('fieldsModal.status.booked', 'Đã đặt');
       case 'maintenance':
-        return 'Bảo trì';
+        return t('fieldsModal.status.maintenance', 'Bảo trì');
       default:
-        return 'Còn trống';
+        return t('fieldsModal.status.available', 'Còn trống');
     }
   };
 
@@ -168,7 +190,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
         <View style={styles.timeSlotsLoading}>
           <ActivityIndicator size="small" color={theme.colors.neonGreen} />
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-            Đang tải khung giờ...
+            {t('fieldsModal.loadingSlots', 'Đang tải khung giờ...')}
           </Text>
         </View>
       );
@@ -178,7 +200,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
       return (
         <View style={styles.noSlotsContainer}>
           <Text style={[styles.noSlotsText, { color: theme.colors.textSecondary }]}>
-            Không có khung giờ khả dụng
+            {t('fieldsModal.noSlots', 'Không có khung giờ khả dụng')}
           </Text>
         </View>
       );
@@ -194,7 +216,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
         {availableSlots.length > 0 && (
           <View style={styles.slotGroup}>
             <Text style={[styles.slotGroupTitle, { color: theme.colors.neonGreen }]}>
-              Còn trống ({availableSlots.length})
+              {t('fieldsModal.availableLabel', 'Còn trống')} ({availableSlots.length})
             </Text>
             <View style={styles.timeSlotsGrid}>
               {availableSlots.map((slot, index) => {
@@ -241,7 +263,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
         {bookedSlots.length > 0 && (
           <View style={styles.slotGroup}>
             <Text style={[styles.slotGroupTitle, { color: '#EF4444' }]}>
-              Đã đặt ({bookedSlots.length})
+              {t('fieldsModal.bookedLabel', 'Đã đặt')} ({bookedSlots.length})
             </Text>
             <View style={styles.timeSlotsGrid}>
               {bookedSlots.map((slot, index) => (
@@ -257,7 +279,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                     {slot.startTime}
                   </Text>
                   <Text style={[styles.timeSlotPrice, { color: '#555' }]}>
-                    Đã đặt
+                    {t('fieldsModal.bookedShort', 'Đã đặt')}
                   </Text>
                 </View>
               ))}
@@ -288,7 +310,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                   {venue.name}
                 </Text>
                 <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
-                  {venue.fields.length} sân có sẵn
+                  {t('fieldsModal.subtitle', '{{count}} sân có sẵn', { count: venue.fields.length })}
                 </Text>
               </View>
             </View>
@@ -300,18 +322,29 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Date Display */}
-          <View style={[styles.dateContainer, { backgroundColor: '#1a1a1a' }]}>
+          {/* Date Display (tap to change) */}
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.75}
+            style={[styles.dateContainer, { backgroundColor: '#1a1a1a' }]}
+          >
             <Ionicons name="calendar" size={18} color={theme.colors.neonGreen} />
             <Text style={[styles.dateText, { color: theme.colors.softWhite }]}>
-              {new Date(selectedDate).toLocaleDateString('vi-VN', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-              })}
+              {formatDateDDMMYYYY(selectedDate)}
             </Text>
-          </View>
+            <Ionicons name="chevron-down" size={18} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date(selectedDate)}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+              minimumDate={getMinSelectableDate()}
+              maximumDate={getMaxSelectableDate()}
+            />
+          )}
 
           {/* Fields List */}
           <ScrollView 
@@ -346,7 +379,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                         styles.fieldNumberBadge,
                         { backgroundColor: getFieldTypeColor(field.fieldType) + '20' }
                       ]}>
-                        <Text style={[styles.fieldNumber, { color: getFieldTypeColor(field.fieldType) }]}>
+                        <Text style={[styles.fieldNumber, { color: getFieldTypeColor(field.fieldType).color }]}>
                           {index + 1}
                         </Text>
                       </View>
@@ -366,9 +399,9 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                       {/* Field Type Badge */}
                       <View style={[
                         styles.fieldTypeBadge,
-                        { backgroundColor: getFieldTypeColor(field.fieldType) }
+                        { backgroundColor: getFieldTypeColor(field.fieldType).color }
                       ]}>
-                        <Text style={styles.fieldTypeText}>{field.fieldType}</Text>
+                        <Text style={styles.fieldTypeText}>{getFieldTypeColor(field.fieldType).shortNameType}</Text>
                       </View>
                       
                       {/* Expand Icon */}
@@ -383,28 +416,11 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                   {/* Expanded Content - Time Slots */}
                   {isExpanded && (
                     <View style={styles.expandedContent}>
-                      {/* Field Info */}
-                      <View style={styles.fieldInfoRow}>
-                        <View style={styles.fieldInfoItem}>
-                          <Ionicons name="cash-outline" size={16} color={theme.colors.textSecondary} />
-                          <Text style={[styles.fieldInfoText, { color: theme.colors.textSecondary }]}>
-                            Từ {formatPrice(field.pricePerHour)}/giờ
-                          </Text>
-                        </View>
-                        {field.maxPlayers && (
-                          <View style={styles.fieldInfoItem}>
-                            <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
-                            <Text style={[styles.fieldInfoText, { color: theme.colors.textSecondary }]}>
-                              Tối đa {field.maxPlayers} người
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-
+                      
                       {/* Time Slots */}
                       <View style={styles.timeSlotsWrapper}>
                         <Text style={[styles.timeTitle, { color: theme.colors.softWhite }]}>
-                          Chọn khung giờ
+                          {t('fieldsModal.selectTimeTitle', 'Chọn khung giờ')}
                         </Text>
                         {renderTimeSlots(field)}
                       </View>
@@ -430,7 +446,9 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                             styles.bookButtonText, 
                             { color: hasSelectedSlot ? theme.colors.darkBlack : '#666' }
                           ]}>
-                            {hasSelectedSlot ? 'Đặt sân ngay' : 'Chọn khung giờ trước'}
+                            {hasSelectedSlot 
+                              ? t('fieldsModal.bookNow', 'Đặt sân ngay') 
+                              : t('fieldsModal.selectTimeFirst', 'Chọn khung giờ trước')}
                           </Text>
                         </TouchableOpacity>
                       )}
