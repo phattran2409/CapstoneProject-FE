@@ -284,6 +284,15 @@ The project uses strict TypeScript settings with path aliases:
 - [ ] Add animations and transitions
 - [ ] Add unit and integration tests
 
+## Run Docker
+- **Build image** : docker compose build
+- **vào Container** : docker compose run android-builder
+-- **Build Android (bên trong container)** : 
+  npm install
+  expo prebuild
+  cd android
+  ./gradlew assembleRelease
+
 ## 📄 License
 
 MIT License

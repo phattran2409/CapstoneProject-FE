@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  android-builder:
+    container_name: rn_expo_android_builder
+    image: rn-android-builder:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    volumes:
+      # Source code project
+      - .:/app
+
+      # Cache gradle (rất quan trọng)
+      - gradle-cache:/root/.gradle
+
+      # Cache npm/yarn (optional)
+      - npm-cache:/root/.npm
+
+    working_dir: /app
+    tty: true
+    stdin_open: true
+
+    environment:
+      # Android
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      ANDROID_HOME: /opt/android-sdk
+
+      # Java
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+
+      # Fix file permission khi chạy trên Linux
+      GRADLE_USER_HOME: /root/.gradle
+
+    command: bash
+
+volumes:
+  gradle-cache:
+  npm-cache:
