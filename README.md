@@ -287,11 +287,13 @@ The project uses strict TypeScript settings with path aliases:
 ## Run Docker
 - **Build image** : docker compose build
 - **vào Container** : docker compose run android-builder
--- **Build Android (bên trong container)** : 
+- **Build Android (bên trong container)** : 
+```bash
   npm install
   expo prebuild
   cd android
   ./gradlew assembleRelease
+```
 
 ## 📄 License
 
@@ -300,7 +302,6 @@ MIT License
 ## 👥 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
 ---
 
 Built with ⚡ and 💚 by the development team.
