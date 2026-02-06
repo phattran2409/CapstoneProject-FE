@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
+  Image,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "@/shared/theme";
@@ -17,14 +19,16 @@ import {
 import { RootStackParamList } from "@/app/navigation/types";
 import { Button } from "@/shared/components";
 import {
-  FormationField,
-  FormationFieldRef,
   FormationPlayer,
-  FormationData,
   getFormationNames,
+  getFormation,
+  type SlotAssignment,
+  type PositionLine,
+  type FormationData,
 } from "@/shared/components/formation";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useMatchRoomDetail, type MatchRoomFullInfo } from "@/features/rooms";
+import { roomsApi } from "@/features/rooms/api/roomsApi";
 type TeamScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Team"
@@ -52,11 +56,11 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     roomId: "1",
     team: "A" as const,
   };
-  // Removed chat modal state - now using navigation
-  const formationRef = useRef<FormationFieldRef>(null);
   const [isCaptain, setIsCaptain] = useState<boolean>(false);
-  const [currentFormationData, setCurrentFormationData] =
-    useState<FormationData | null>(null);
+  const [hasPaidDeposit, setHasPaidDeposit] = useState<boolean>(false);
+  const [assignments, setAssignments] = useState<SlotAssignment[]>([]);
+  /** Captain chọn 1 cầu thủ từ list, sau đó bấm vào ô vị trí để gán */
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const handleShowChat = () => {
     navigation?.navigate('RoomChat', { roomId });
   };
@@ -64,7 +68,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
   // Fetch room data from API
   const { data: room, isLoading: isLoadingRoom } = useMatchRoomDetail(roomId);
-
+  
   // Local room data state for real-time updates (nếu cần SignalR updates)
   const [roomData, setRoomData] = useState<MatchRoomFullInfo | null>(null);
 
@@ -149,6 +153,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
   const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>(
     team === "B" ? "teamB" : "teamA",
   );
+
   const [selectedFormation, setSelectedFormation] = useState<string>("3-3");
   const [isLineupDropdownOpen, setIsLineupDropdownOpen] = useState(false);
 
@@ -180,14 +185,18 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
         ...(displayRoom.participants.teamB || []),
         ...(displayRoom.participants.unassigned || []),
       ].find((p) => p.userId === user?.userId);
+      console.log("Current User Participant : ",currentUserParticipant);
+      
       // TODO: Check captain status from room data structure
-      setIsCaptain(false); // Tạm thời, cần check structure thực tế
+      setIsCaptain(currentUserParticipant?.isCaptain === true); // Tạm thời, cần check structure thực tế
+      setHasPaidDeposit(currentUserParticipant?.depositPaid === true);
     } else {
       // Fallback to mock data
       const currentUserPlayer = mockRoomData.teams.players.find(
         (player) => player?.id === user?.userId,
       );
       setIsCaptain(currentUserPlayer?.isCaptain === true);
+      setHasPaidDeposit(false);
     }
   }, [displayRoom, mockRoomData.teams.players, user?.userId]);
 
@@ -220,23 +229,44 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     }));
   }, [roomData, selectedTeam]);
 
-  const handlePlayerPress = (player: FormationPlayer, slotId: string) => {
-    console.log("Player pressed:", player.name, "at slot:", slotId);
-    // TODO: Navigate to player profile or show modal
-  };
+  const formationConfig = useMemo(
+    () => getFormation(formatForFormation, selectedFormation),
+    [formatForFormation, selectedFormation],
+  );
 
-  const handleFormationChange = (data: FormationData) => {
-    setCurrentFormationData(data);
-    console.log("Formation changed:", data);
+  /** Gán cầu thủ đang chọn vào slot (captain đã chọn player trước đó) */
+  const handleAssignToSlot = (slotId: string) => {
+    if (!selectedPlayerId || !isCaptain) return;
+    setAssignments((prev) => {
+      const withoutPlayer = prev.filter((a) => a.playerId !== selectedPlayerId);
+      const withoutSlot = withoutPlayer.filter((a) => a.slotId !== slotId);
+      return [...withoutSlot, { slotId, playerId: selectedPlayerId }];
+    });
+    setSelectedPlayerId(null);
   };
 
   const handleSaveFormation = async () => {
-    const formationData = formationRef.current?.getFormationData();
+    const formationData: FormationData = {
+      formationName: selectedFormation,
+      format: formatForFormation,
+      assignments,
+    };
+    console.log("Saving formation:", formationData);
+    // TODO: API call to save formation
+    // api.saveFormation(roomId, formationData);
+  };
 
-    if (formationData) {
-      console.log("Saving formation:", formationData);
-      // TODO: API call to save formation
-      // api.saveFormation(roomId, formationData);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+
+  const handleProcessPayment = async () => {
+    if (isProcessingPayment || hasPaidDeposit) return;
+    try {
+      setIsProcessingPayment(true);
+      await roomsApi.processPayment(roomId);
+    } catch (error) {
+      console.error("Failed to process payment:", error);
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -515,26 +545,185 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
             </View>
           )}
 
-          {/* Field Layout - Formation View */}
-          <View
-            style={[
-              styles.fieldContainer,
-              {
-                borderColor: theme.colors.border,
-              },
-            ]}
-          >
-            <FormationField
-              ref={formationRef}
-              players={formationPlayers}
-              format={formatForFormation}
-              formationName={selectedFormation}
-              editable={isCaptain}
-              onPlayerPress={handlePlayerPress}
-              onFormationChange={handleFormationChange}
-              showBench={isCaptain}
-            />
-          </View>
+          {/* Role position cards – captain chọn cầu thủ bên dưới rồi bấm vào ô để gán */}
+          {isCaptain && formationConfig && (
+            <View style={styles.roleCardsSection}>
+              <ThemedText
+                variant="secondary"
+                size="s"
+                style={styles.sectionLabel}
+              >
+                Vị trí trên sân – chọn cầu thủ bên dưới rồi bấm vào ô
+              </ThemedText>
+              {(["GK", "DF", "MF", "FW"] as PositionLine[]).map((line) => {
+                const slots = formationConfig.slots.filter((s) => s.line === line);
+                if (slots.length === 0) return null;
+                return (
+                  <ThemedView
+                    key={line}
+                    style={[
+                      styles.roleCard,
+                      { backgroundColor: theme.colors.surface },
+                    ]}
+                  >
+                    <View style={styles.roleCardHeader}>
+                      <ThemedText size="m" weight="bold">
+                        {line}
+                      </ThemedText>
+                      <View
+                        style={[
+                          styles.roleBadge,
+                          { backgroundColor: theme.colors.neonGreen + "25" },
+                        ]}
+                      >
+                        <ThemedText
+                          size="xs"
+                          weight="bold"
+                          style={{ color: theme.colors.neonGreen }}
+                        >
+                          {line}
+                        </ThemedText>
+                      </View>
+                    </View>
+                    {slots.map((slot) => {
+                      const current = assignments.find(
+                        (a) => a.slotId === slot.id,
+                      );
+                      const currentPlayer = formationPlayers.find(
+                        (p) => p.id === current?.playerId,
+                      );
+                      return (
+                        <TouchableOpacity
+                          key={slot.id}
+                          style={[
+                            styles.roleSlotRow,
+                            {
+                              borderBottomColor: theme.colors.border,
+                              backgroundColor: currentPlayer
+                                ? theme.colors.neonGreen + "12"
+                                : "transparent",
+                            },
+                          ]}
+                          onPress={() =>
+                            isCaptain && handleAssignToSlot(slot.id)
+                          }
+                          activeOpacity={0.7}
+                        >
+                          <ThemedText size="s" variant="secondary">
+                            {slot.label}
+                          </ThemedText>
+                          <ThemedText
+                            size="s"
+                            weight={currentPlayer ? "semiBold" : "medium"}
+                            variant={currentPlayer ? "primary" : "secondary"}
+                          >
+                            {currentPlayer ? currentPlayer.name : "Bấm để gán"}
+                          </ThemedText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ThemedView>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Danh sách cầu thủ – captain bấm chọn rồi bấm ô vị trí ở trên */}
+          {isCaptain && (
+            <View style={styles.playerListSection}>
+              <ThemedText
+                variant="secondary"
+                size="s"
+                style={styles.sectionLabel}
+              >
+                Danh sách cầu thủ – bấm để chọn, sau đó bấm ô vị trí
+              </ThemedText>
+              {selectedPlayerId && (
+                <ThemedText size="xs" variant="secondary" style={styles.hint}>
+                  Đã chọn 1 cầu thủ. Bấm vào ô vị trí ở trên để gán.
+                </ThemedText>
+              )}
+              <ScrollView
+                style={styles.playerListScroll}
+                showsVerticalScrollIndicator={false}
+              >
+                {formationPlayers.map((player) => {
+                  const assigned = assignments.find(
+                    (a) => a.playerId === player.id,
+                  );
+                  const slot = assigned
+                    ? formationConfig?.slots.find((s) => s.id === assigned.slotId)
+                    : null;
+                  const isSelected = selectedPlayerId === player.id;
+                  return (
+                    <TouchableOpacity
+                      key={player.id}
+                      style={[
+                        styles.playerRow,
+                        {
+                          borderColor: theme.colors.border,
+                          backgroundColor: isSelected
+                            ? theme.colors.neonGreen + "20"
+                            : theme.colors.surface,
+                          borderLeftWidth: isSelected ? 4 : 0,
+                          borderLeftColor: theme.colors.neonGreen,
+                        },
+                      ]}
+                      onPress={() => {
+                        if (!isCaptain) return;
+                        setSelectedPlayerId((prev) =>
+                          prev === player.id ? null : player.id,
+                        );
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.playerRowLeft}>
+                        {player.avatar ? (
+                          <Image
+                            source={player.avatar}
+                            style={styles.playerAvatar}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.playerAvatarPlaceholder,
+                              { backgroundColor: theme.colors.border },
+                            ]}
+                          >
+                            <ThemedText size="s" weight="bold">
+                              {player.name?.charAt(0) || "?"}
+                            </ThemedText>
+                          </View>
+                        )}
+                        <View>
+                          <ThemedText
+                            size="m"
+                            weight={isSelected ? "bold" : "medium"}
+                          >
+                            {player.name}
+                          </ThemedText>
+                          {player.role && (
+                            <ThemedText size="xs" variant="secondary">
+                              {player.role}
+                              {slot ? ` → ${slot.label}` : ""}
+                            </ThemedText>
+                          )}
+                        </View>
+                      </View>
+                      {isSelected && (
+                        <ThemedIcon
+                          name="checkmark-circle"
+                          size={22}
+                          color={theme.colors.neonGreen}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
+
           {isCaptain && (
             <View style={styles.saveButtonContainer}>
               <Button title="Lưu đội hình" onPress={handleSaveFormation} />
@@ -555,7 +744,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 weight="bold"
                 style={styles.paymentTitle}
               >
-                Check-in & Thanh toán
+                Check-in & Thanh  toán
               </ThemedText>
               <View style={styles.paymentRow}>
                 <ThemedText variant="secondary" size="s">
@@ -570,7 +759,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
               </View>
 
               <View style={styles.paymentButtons}>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={[
                     styles.paymentButton,
                     {
@@ -590,15 +779,18 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   >
                     Check-in Ngay
                   </ThemedText>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 <TouchableOpacity
                   style={[
                     styles.paymentButton,
                     {
                       backgroundColor: theme.colors.neonGreen,
+                      opacity: isProcessingPayment || hasPaidDeposit ? 0.6 : 1,
                     },
                   ]}
+                  onPress={handleProcessPayment}
+                  disabled={isProcessingPayment || hasPaidDeposit}
                 >
                   <ThemedIcon name="card" size={20} color="#000" />
                   <ThemedText
@@ -606,7 +798,11 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                     weight="bold"
                     style={[styles.paymentButtonText, { color: "#000" }]}
                   >
-                    Thanh toán
+                    {isProcessingPayment
+                      ? "Đang thanh toán..."
+                      : hasPaidDeposit
+                        ? "Đã thanh toán"
+                        : "Thanh toán"}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -750,15 +946,75 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  fieldContainer: {
-    borderRadius: 24,
-    borderWidth: 1,
-    overflow: "hidden",
-    backgroundColor: "#111",
-    padding: 16,
-  },
   saveButtonContainer: {
     marginTop: 16,
+  },
+  roleCardsSection: {
+    marginBottom: 20,
+  },
+  sectionLabel: {
+    marginBottom: 10,
+  },
+  hint: {
+    marginBottom: 8,
+  },
+  roleCard: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  roleCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  roleBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  roleSlotRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+  },
+  playerListSection: {
+    marginBottom: 16,
+  },
+  playerListScroll: {
+    maxHeight: 280,
+  },
+  playerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  playerRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  playerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  playerAvatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   paymentSection: {
     marginTop: 24,
@@ -779,7 +1035,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   paymentButtons: {
-    flexDirection: "row",
+    flex:1,
     marginTop: 16,
     gap: 12,
   },

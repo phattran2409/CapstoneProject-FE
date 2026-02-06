@@ -32,7 +32,8 @@ export const API_CONFIG = {
       MESSAGES: "/match-rooms/:id/messages",
       CREATE: "/match-rooms",
       UPDATE_PARTICIPANT: "/match-rooms/:id/participants/me",
-    },
+        PROCESS_PAYMENT: "bookings/process-payment",
+      },
     VENUES: {
       LIST: "/venues",
       DETAIL: "/venues/:id",

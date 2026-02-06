@@ -30,6 +30,8 @@ const MATCH_ROOM_HUB_EVENTS = {
   RoomStatusChanged: "RoomStatusChanged",
   // Per updated documentation: event name is "UserKicked"
   UserKicked: "UserKicked",
+  // Payment-related events
+  ParticipantPaid: "ParticipantPaid",
 } as const;
 
 /**
@@ -66,6 +68,9 @@ export interface UseMatchRoomSignalROptions {
   onRoomUserStopTyping?: (payload: RoomStopTypingPayload) => void;
 
   onError?: (payload: any) => void;
+
+  // Payment events
+  onParticipantPaid?: (payload: ParticipantPaidEvent) => void;
 }
 
 // ==================== Payload Types ====================
@@ -226,6 +231,19 @@ export interface RoomStopTypingPayload {
   roomId: string;
   channel: number; // RoomChatChannel as number
   userId: string;
+}
+
+/**
+ * Payload khi một participant thanh toán thành công
+ * Backend: ParticipantPaid event
+ */
+export interface ParticipantPaidEvent {
+  roomId: string;
+  userId: string;
+  userName: string;
+  amountPaid: number;
+  totalDepositCollected: number;
+  paidAt: string;
 }
 
 /**
@@ -408,10 +426,22 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         });
 
         // User stop typing in room
-        hubConnection.on("RoomUserStopTyping", (payload: RoomStopTypingPayload) => {
-          console.log("⌨️ RoomUserStopTyping:", payload);
-          optionsRef.current.onRoomUserStopTyping?.(payload);
-        });
+        hubConnection.on(
+          "RoomUserStopTyping",
+          (payload: RoomStopTypingPayload) => {
+            console.log("⌨️ RoomUserStopTyping:", payload);
+            optionsRef.current.onRoomUserStopTyping?.(payload);
+          },
+        );
+
+        // Participant paid deposit
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.ParticipantPaid,
+          (payload: ParticipantPaidEvent) => {
+            console.log("💵 ParticipantPaid:", payload);
+            optionsRef.current.onParticipantPaid?.(payload);
+          },
+        );
 
         // Error from server
         hubConnection.on(MATCH_ROOM_HUB_EVENTS.Error, (payload: any) => {

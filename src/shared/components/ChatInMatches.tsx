@@ -16,7 +16,8 @@ import {
 } from "react-native";
 import { useTheme } from "../theme";
 import { ThemedText, ThemedView, ThemedIcon } from "./themed";
-import { MessageList, Message, MessageListRef, TypingIndicator } from "./";
+import { MessageList, Message, MessageListRef } from "./MessageList";
+import { TypingIndicator } from "./TypingIndicator";
 import { getRelativeTime } from "../utils/dateUtils";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {

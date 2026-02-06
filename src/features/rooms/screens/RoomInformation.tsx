@@ -35,6 +35,7 @@ import {
 } from '../components';
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
+import { formatCurrency } from '@/shared/utils/formatters';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -50,7 +51,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { roomId } = route?.params;
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
-  // ✅ Handle back navigation (supports deep link)
   const handleGoBack = () => {
     // Check if there's a previous screen in the stack
     if (navigation?.canGoBack()) {
@@ -85,8 +85,21 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   
   // ✅ Use roomData for display (có real-time updates) hoặc fallback về room từ query
   const displayRoom = roomData || room;
-  
-  console.log('room', displayRoom);
+
+
+  // ==================== Deposit progress (realtime) ====================
+  const depositTargetTotal = useMemo(() => {
+    if (!displayRoom) return 0;
+    // Tổng deposit cần thu để đủ trận (tính theo totalSlots)
+    return (displayRoom.depositPerPerson || 0) * (displayRoom.totalSlots || 0);
+  }, [displayRoom]);
+
+  const depositCollected = displayRoom?.totalDepositCollected || 0;
+
+  const depositProgress = useMemo(() => {
+    if (!depositTargetTotal) return 0;
+    return Math.max(0, Math.min(1, depositCollected / depositTargetTotal));
+  }, [depositCollected, depositTargetTotal]);
   
   // ✅ Check if user is the host
   const isHost = displayRoom?.hostId === user?.userId;
@@ -538,7 +551,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         <View style={styles.contentContainer}>
           {/* Teams Tab Content */}
           {activeTab === 'teams' && (
-            <>
+          <>
           {/* Room Info Section */}
           <View style={styles.roomInfoSection}>
             {/* Format */}
@@ -643,6 +656,40 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                 </ThemedText>
               </View>
             </ThemedView>
+
+            {/* Total Deposit Collected */}
+            <ThemedView 
+              style={[
+                styles.infoCard,
+                { backgroundColor: theme.colors.surface }
+              ]}
+            >
+              <View 
+                style={[
+                  styles.infoIconContainer,
+                  { backgroundColor: theme.colors.neonGreen + '20' }
+                ]}
+              >
+                <ThemedIcon name="trophy" size={24} variant="accent" />
+              </View>
+              <View style={styles.infoContent}>
+                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
+                  Tổng tiền đã thu
+                </ThemedText>
+                <ThemedText variant="primary" size="l" weight="semiBold">
+                  {/* {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(depositCollected)} */}
+                  {formatCurrency(depositCollected, 'VND') || '0'}
+                </ThemedText>
+                {depositTargetTotal > 0 && (
+                  <ThemedText variant="secondary" size="xs">
+                    {Math.round(depositProgress * 100)}% quỹ trận đấu
+                  </ThemedText>
+                )}
+              </View>
+            </ThemedView>
+            
+
+          
           </View>
 
           {/* Team Lineup Section */}
@@ -1030,6 +1077,39 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 const styles = StyleSheet.create({
   safeArea: {
     paddingVertical: 40,
+  },
+  floatingDepositBadge: {
+    position: 'absolute',
+    top: 8,
+    alignSelf: 'center',
+    zIndex: 9999,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  floatingDepositHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  floatingDepositProgressTrack: {
+    height: 6,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 6,
+  },
+  floatingDepositProgressFill: {
+    height: 6,
+    borderRadius: 999,
   },
   errorContainer: {
     flex: 1,

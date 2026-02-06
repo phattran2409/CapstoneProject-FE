@@ -47,6 +47,7 @@ export interface MatchRoomField {
  */
 export interface MatchRoomParticipant {
   participantId: string;
+  isCaptain : boolean; 
   userId: string;
   fullName: string;
   avatarUrl: string | null;
@@ -82,10 +83,12 @@ export interface MatchRoom {
   startTime: string;
   endTime: string;
   durationMinutes: number;
+  venuePhotos : string[] | [];
   matchFormat: MatchFormat;
   totalSlots: number;
   filledSlots: number;
   depositPerPerson: number;
+  totalDepositCollected: number;
   status: MatchRoomStatus;
   createdAt: string;
 }

@@ -129,7 +129,7 @@ export const roomsApi = {
    * Kick a player from a room (host only)
    */
   kickPlayer: async (roomId: string, playerId: string): Promise<void> => {
-    await apiClient.delete(`/rooms/${roomId}/players/${playerId}`);
+    await apiClient.delete(`/match-rooms/${roomId}/participants/${playerId}`);
   },
 
   /**
@@ -137,6 +137,21 @@ export const roomsApi = {
    */
   cancelRoom: async (roomId: string): Promise<void> => {
     await apiClient.patch(`/rooms/${roomId}`, { status: "cancelled" });
+  },
+
+  /**
+   * Process payment for a booking
+   * Endpoint: https://api.kickify.site/api/bookings/process-payment
+   * Payload: { roomId: string }
+   */
+  processPayment: async (roomId: string): Promise<any> => {
+    const data = await apiClient.post(
+      API_CONFIG.ENDPOINTS.ROOMS.PROCESS_PAYMENT,
+      {
+        roomId,
+      },
+    );
+    return data;
   },
 
   // ==================== Match Room SignalR API ====================

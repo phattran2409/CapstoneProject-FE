@@ -215,11 +215,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             />
           </TouchableOpacity>
           <IconButton
-            icon="cart-outline"
-            onPress={() => navigation.navigate("PaymentSuccess" as any)}
-            size="medium"
-          />
-          <IconButton
             icon="wallet-outline"
             onPress={() => navigation.navigate("Wallet" as any)}
             size="medium"

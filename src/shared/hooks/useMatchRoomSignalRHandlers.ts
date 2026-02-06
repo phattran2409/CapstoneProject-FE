@@ -18,6 +18,7 @@ import type {
   RoomMessagesPayload,
   RoomTypingPayload,
   RoomStopTypingPayload,
+  ParticipantPaidEvent,
 } from "./useMatchRoomSignalR";
 
 export interface UseMatchRoomSignalRHandlersOptions {
@@ -47,6 +48,9 @@ export interface UseMatchRoomSignalRHandlersOptions {
   onRoomMessagesLoaded?: (payload: RoomMessagesPayload) => void;
   onUserTyping?: (payload: RoomTypingPayload) => void;
   onUserStopTyping?: (payload: RoomStopTypingPayload) => void;
+
+  // Payment callbacks
+  onParticipantPaid?: (payload: ParticipantPaidEvent) => void;
 
   // Toast/Alert notifications
   showNotification?: (
@@ -94,6 +98,7 @@ export const useMatchRoomSignalRHandlers = (
     onUserTyping,
     onUserStopTyping,
     showNotification,
+    onParticipantPaid: onParticipantPaidCallback,
   } = options;
 
   const queryClient = useQueryClient();
@@ -127,6 +132,7 @@ export const useMatchRoomSignalRHandlers = (
       // Tạo participant object mới từ payload (dùng avatarUrl hoặc fallback userAvatar)
       const newParticipant: MatchRoomParticipant = {
         participantId: payload.participantId || `temp-${Date.now()}`,
+        isCaptain: false,
         userId: payload.userId,
         fullName: payload.userName,
         avatarUrl: payload.avatarUrl || payload.userAvatar || null,
@@ -675,6 +681,79 @@ export const useMatchRoomSignalRHandlers = (
     [roomId, currentUserId, onUserStopTyping],
   );
 
+  /**
+   * Handler khi một participant thanh toán thành công (ParticipantPaid)
+   */
+  const onParticipantPaid = useCallback(
+    (payload: ParticipantPaidEvent) => {
+      console.log("💵 Handler - ParticipantPaid:", payload);
+
+      if (payload.roomId !== roomId) return;
+
+      if (setRoomData) {
+        setRoomData((prev) => {
+          if (!prev) return prev;
+
+          // Cập nhật tổng tiền đã thu
+          const updated: MatchRoomFullInfo = {
+            ...prev,
+            totalDepositCollected: payload.totalDepositCollected,
+          };
+
+          // Đánh dấu participant đã thanh toán
+          const updateParticipantList = (
+            list: MatchRoomParticipant[],
+          ): MatchRoomParticipant[] =>
+            list.map((p) =>
+              p.userId === payload.userId
+                ? {
+                    ...p,
+                    depositPaid: true,
+                  }
+                : p,
+            );
+
+          updated.participants = {
+            teamA: updateParticipantList(prev.participants.teamA),
+            teamB: updateParticipantList(prev.participants.teamB),
+            unassigned: updateParticipantList(prev.participants.unassigned),
+          };
+
+          return updated;
+        });
+      }
+
+      // Invalidate queries để đồng bộ với server
+      queryClient.invalidateQueries({
+        queryKey: roomsKeys.detail(roomId),
+      });
+
+      // Thông báo UI
+      if (showNotification) {
+        const isCurrentUser = payload.userId === currentUserId;
+        const amount = payload.amountPaid.toLocaleString("vi-VN");
+        const total = payload.totalDepositCollected.toLocaleString("vi-VN");
+        showNotification(
+          isCurrentUser
+            ? `Bạn đã thanh toán ${amount}đ (tổng đã thu: ${total}đ)`
+            : `${payload.userName} đã thanh toán ${amount}đ (tổng đã thu: ${total}đ)`,
+          "success",
+        );
+      }
+
+      // Custom callback
+      onParticipantPaidCallback?.(payload);
+    },
+    [
+      roomId,
+      currentUserId,
+      setRoomData,
+      queryClient,
+      showNotification,
+      onParticipantPaidCallback,
+    ],
+  );
+
   return {
     roomId,
     onUserJoinedRoom,
@@ -688,5 +767,6 @@ export const useMatchRoomSignalRHandlers = (
     onRoomUserTyping,
     onRoomUserStopTyping,
     onError,
+    onParticipantPaid,
   };
 };
