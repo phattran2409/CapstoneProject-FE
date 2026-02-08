@@ -79,77 +79,6 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     }
   }, [room]);
 
-  // Removed modal animation - now using navigation
-
-  // Mock data - replace with real data from API (tạm thời dùng cho formation)
-  const mockRoomData = {
-    id: roomId,
-    format: "7vs7" as "5vs5" | "7vs7",
-    datetime: "19:00 - 20:30, 28/08",
-    venue: {
-      name: "Sân bóng ABC",
-      address: "123 Đường XYZ",
-    },
-    totalPlayers: 10,
-    currentPlayers: 9,
-    pricePerPlayer: 80000,
-    status: "Sắp diễn ra",
-    teams: {
-      name: "Đội A",
-      players: [
-        {
-          id: "d3b7b055-ec37-4956-b587-c2edb61b0171",
-          name: "An Nguyễn",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: true,
-          role: "GK" as const,
-        },
-        {
-          id: "2",
-          name: "Cường Phạm",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: false,
-          role: "DF" as const,
-        },
-        {
-          id: "3",
-          name: "Emeka Okafor",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: false,
-          role: "DF" as const,
-        },
-        {
-          id: "4",
-          name: "Giang Hoàng",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: false,
-          role: "MF" as const,
-        },
-        {
-          id: "5",
-          name: "Phat Tran",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: false,
-          role: "FW" as const,
-        },
-        {
-          id: "6",
-          name: "Minh Lê",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: false,
-          role: "DF" as const,
-        },
-        {
-          id: "7",
-          name: "Hùng Trần",
-          avatar: require("@assets/images/icon.png"),
-          isCaptain: false,
-          role: "FW" as const,
-        },
-      ],
-    },
-  };
-
   const [selectedTeam, setSelectedTeam] = useState<SelectedTeam>(
     team === "B" ? "teamB" : "teamA",
   );
@@ -164,7 +93,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
       ? "5vs5"
       : displayRoom?.matchFormat === "SevenVsSeven"
         ? "7vs7"
-        : mockRoomData.format;
+        : "11vs11";
 
   // Get available formations based on format
   const availableFormations = getFormationNames(formatForFormation);
@@ -177,55 +106,44 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     }
   }, [formatForFormation, selectedFormation]);
 
+  // Khởi tạo đội hình + assignments từ API khi có – chỉ thành viên trong team mới có dữ liệu và xem đúng vị trí captain assign
+  const teamKey = selectedTeam === "teamA" ? "A" : "B";
+  const savedFormation = displayRoom?.formationByTeam?.[teamKey];
   useEffect(() => {
-    // Check if user is captain from real room data
-    if (displayRoom) {
-      const currentUserParticipant = [
-        ...(displayRoom.participants.teamA || []),
-        ...(displayRoom.participants.teamB || []),
-        ...(displayRoom.participants.unassigned || []),
-      ].find((p) => p.userId === user?.userId);
-      console.log("Current User Participant : ",currentUserParticipant);
-      
-      // TODO: Check captain status from room data structure
-      setIsCaptain(currentUserParticipant?.isCaptain === true); // Tạm thời, cần check structure thực tế
-      setHasPaidDeposit(currentUserParticipant?.depositPaid === true);
-    } else {
-      // Fallback to mock data
-      const currentUserPlayer = mockRoomData.teams.players.find(
-        (player) => player?.id === user?.userId,
+    if (savedFormation?.formationName && savedFormation?.assignments?.length !== undefined) {
+      setSelectedFormation(savedFormation.formationName);
+      setAssignments(
+        savedFormation.assignments.map((a) => ({ slotId: a.slotId, playerId: a.playerId })),
       );
-      setIsCaptain(currentUserPlayer?.isCaptain === true);
-      setHasPaidDeposit(false);
     }
-  }, [displayRoom, mockRoomData.teams.players, user?.userId]);
+  }, [displayRoom?.roomId, teamKey, savedFormation?.formationName, JSON.stringify(savedFormation?.assignments ?? [])]);
 
-  // Convert team players to FormationPlayer type
+  useEffect(() => {
+    if (!displayRoom) return;
+    const currentUserParticipant = [
+      ...(displayRoom.participants.teamA || []),
+      ...(displayRoom.participants.teamB || []),
+      ...(displayRoom.participants.unassigned || []),
+    ].find((p) => p.userId === user?.userId);
+    setIsCaptain(currentUserParticipant?.isCaptain === true);
+    setHasPaidDeposit(currentUserParticipant?.depositPaid === true);
+  }, [displayRoom, user?.userId]);
+
+  // Convert team players to FormationPlayer type (chỉ từ room data thật)
   const formationPlayers: FormationPlayer[] = React.useMemo(() => {
-    if (roomData) {
-      const teamParticipants =
-        selectedTeam === "teamA"
-          ? roomData.participants.teamA
-          : roomData.participants.teamB;
-
-      return teamParticipants.map<FormationPlayer>((p) => ({
-        id: p.userId,
-        name: p.fullName || "Player",
-        avatar: p.avatarUrl
-          ? { uri: p.avatarUrl }
-          : require("@assets/images/icon.png"),
-        role: (p.position || "MF") as FormationPlayer["role"],
-        isCaptain: p.userId === roomData.hostId,
-      }));
-    }
-
-    // Fallback to mock data when no real room data yet
-    return mockRoomData.teams.players.map((player) => ({
-      id: player.id,
-      name: player.name,
-      avatar: player.avatar,
-      role: player.role,
-      isCaptain: player.isCaptain,
+    if (!roomData) return [];
+    const teamParticipants =
+      selectedTeam === "teamA"
+        ? roomData.participants.teamA
+        : roomData.participants.teamB;
+    return teamParticipants.map<FormationPlayer>((p) => ({
+      id: p.userId,
+      name: p.fullName || "Player",
+      avatar: p.avatarUrl
+        ? { uri: p.avatarUrl }
+        : require("@assets/images/icon.png"),
+      role: (p.position || "MF") as FormationPlayer["role"],
+      isCaptain: p.userId === roomData.hostId,
     }));
   }, [roomData, selectedTeam]);
 
@@ -233,6 +151,14 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     () => getFormation(formatForFormation, selectedFormation),
     [formatForFormation, selectedFormation],
   );
+
+  // Vị trí được captain assign cho user hiện tại – chỉ có khi user nằm trong team và có slotId
+  const myAssignment = useMemo(() => assignments.find((a) => a.playerId === user?.userId), [assignments, user?.userId]);
+  const myAssignedSlotLabel = useMemo(() => {
+    if (!myAssignment || !formationConfig) return null;
+    const slot = formationConfig.slots.find((s) => s.id === myAssignment.slotId);
+    return slot?.label ?? myAssignment.slotId;
+  }, [myAssignment, formationConfig]);
 
   /** Gán cầu thủ đang chọn vào slot (captain đã chọn player trước đó) */
   const handleAssignToSlot = (slotId: string) => {
@@ -246,14 +172,19 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
   };
 
   const handleSaveFormation = async () => {
-    const formationData: FormationData = {
+    const payload = {
+      team: teamKey as "A" | "B",
       formationName: selectedFormation,
       format: formatForFormation,
-      assignments,
+      assignments: assignments.map((a) => ({ slotId: a.slotId, playerId: a.playerId })),
     };
-    console.log("Saving formation:", formationData);
-    // TODO: API call to save formation
-    // api.saveFormation(roomId, formationData);
+    try {
+      await roomsApi.updateFormation(roomId, payload);
+      // TODO: invalidate room query / show success toast
+    } catch (error) {
+      console.error("Failed to save formation:", error);
+      // TODO: show error toast
+    }
   };
 
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
@@ -330,7 +261,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 <ThemedText variant="primary" size="m" weight="semiBold">
                   {displayRoom?.matchDate
                     ? new Date(displayRoom.matchDate).toLocaleString("vi-VN")
-                    : mockRoomData.datetime}
+                    : "—"}
                 </ThemedText>
               </View>
               <View>
@@ -342,8 +273,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   {t("roomDetail.venue")}
                 </ThemedText>
                 <ThemedText variant="primary" size="m" weight="medium">
-                  {displayRoom?.field?.venue?.venueName ||
-                    mockRoomData.venue.name}
+                  {displayRoom?.field?.venue?.venueName ?? "—"}
                 </ThemedText>
               </View>
             </ThemedView>
@@ -365,7 +295,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 <ThemedText variant="primary" size="l" weight="semiBold">
                   {displayRoom?.matchDate
                     ? new Date(displayRoom.matchDate).toLocaleString("vi-VN")
-                    : mockRoomData.datetime}
+                    : "—"}
                 </ThemedText>
               </View>
               <View>
@@ -448,12 +378,29 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   >
                     {displayRoom
                       ? `${displayRoom.filledSlots}/${displayRoom.totalSlots}`
-                      : `${mockRoomData.teams.players.length} / ${formatForFormation === "5vs5" ? "5" : "7"}`}
+                      : "0/0"}
                   </ThemedText>
                 </View>
               </View>
             </View>
           </ThemedView>
+
+          {/* Chỉ thành viên trong team mới thấy đúng vị trí captain đã assign (khi có slotId từ API) */}
+          {myAssignedSlotLabel && (
+            <ThemedView
+              style={[
+                styles.myPositionCard,
+                { backgroundColor: theme.colors.neonGreen + "18", borderColor: theme.colors.neonGreen + "40" },
+              ]}
+            >
+              <ThemedText variant="secondary" size="s" style={styles.myPositionLabel}>
+                Vị trí của bạn
+              </ThemedText>
+              <ThemedText variant="primary" size="l" weight="bold" style={{ color: theme.colors.neonGreen }}>
+                {myAssignedSlotLabel}
+              </ThemedText>
+            </ThemedView>
+          )}
 
           {/* Formation Selector Dropdown */}
           {isCaptain && (
@@ -752,7 +699,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 </ThemedText>
                 <ThemedText variant="primary" size="l" weight="bold">
                   {(
-                    displayRoom?.depositPerPerson || mockRoomData.pricePerPlayer
+                    displayRoom?.depositPerPerson ?? 0
                   ).toLocaleString("vi-VN")}
                   đ
                 </ThemedText>
@@ -885,6 +832,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  myPositionCard: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  myPositionLabel: {
+    marginBottom: 4,
   },
   formatLabel: {
     marginBottom: 8,

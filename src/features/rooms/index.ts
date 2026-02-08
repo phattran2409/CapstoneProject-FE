@@ -17,6 +17,7 @@ export {
   useCreateRoom,
   useKickPlayer,
   useCancelRoom,
+  useUpdateRoomPrivacy,
 } from './hooks';
 
 // ============ Types ============

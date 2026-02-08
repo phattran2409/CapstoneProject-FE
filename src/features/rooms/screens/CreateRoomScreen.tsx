@@ -130,6 +130,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
     createRoom(
       {
+        fieldId: selectedField?.fieldId || '',
         matchDate: datetime.toISOString(),
         startTime: startTimeStr,
         durationMinutes,
@@ -137,15 +138,16 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         roomName: data.roomName,
         description: data.description || '',
         rules: '',
-        fieldId: selectedField?.fieldId || '',
+        visibility: isPrivate ? 'Private' : 'Public',
+        ...(isPrivate && password.trim() ? { password: password.trim() } : {}),
       },
       {
         onSuccess: async (newRoom) => {
           showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
-            // Save active room ID to storage
             if (newRoom?.roomId) {
               await setActiveRoom(newRoom.roomId);
-              navigation?.navigate('RoomInformation', { roomId: newRoom.roomId });
+              // Replace để không quay lại màn tạo phòng
+              navigation?.replace('RoomInformation', { roomId: newRoom.roomId });
             } else {
               navigation?.goBack();
             }

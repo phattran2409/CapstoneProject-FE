@@ -11,6 +11,7 @@ import type {
   ApiResponse,
   MatchRoom,
   MyRoomsResponse,
+  UpdateFormationRequest,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -81,6 +82,18 @@ export const roomsApi = {
   updateRoom: async (id: string, updates: UpdateRoomRequest): Promise<MatchRoom> => {
     const data = await apiClient.patch(`/rooms/${id}`, updates);
     return data;
+  },
+
+  /**
+   * Update room privacy (visibility + password for Private)
+   * PATCH /match-rooms/:id/privacy
+   */
+  updateRoomPrivacy: async (
+    roomId: string,
+    body: { visibility: string; password: string },
+  ): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.PRIVACY.replace(':id', roomId);
+    await apiClient.patch(url, body);
   },
 
   /**
@@ -199,6 +212,20 @@ export const roomsApi = {
       teamAssignment,
       ...(position && { position }),
     });
+    return data;
+  },
+
+  /**
+   * Cập nhật đội hình (vị trí từng thành viên) – chỉ captain
+   * Endpoint: PUT /match-rooms/{roomId}/formation
+   * Payload: UpdateFormationRequest { team, formationName, format, assignments }
+   */
+  updateFormation: async (
+    roomId: string,
+    payload: UpdateFormationRequest,
+  ): Promise<any> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.FORMATION.replace(":id", roomId);
+    const data = await apiClient.put(url, payload);
     return data;
   },
 

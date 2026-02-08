@@ -1,3 +1,5 @@
+import { VenuePhoto } from "@/features/venues";
+
 export type RoomStatus = "open" | "full" | "closed" | "completed" | "cancelled";
 
 // ==================== Match Room Types (from API) ====================
@@ -83,7 +85,7 @@ export interface MatchRoom {
   startTime: string;
   endTime: string;
   durationMinutes: number;
-  venuePhotos : string[] | [];
+  venuePhotos : VenuePhoto[] | [];
   matchFormat: MatchFormat;
   totalSlots: number;
   filledSlots: number;
@@ -91,6 +93,9 @@ export interface MatchRoom {
   totalDepositCollected: number;
   status: MatchRoomStatus;
   createdAt: string;
+  /** "Public" | "Private" */
+  visibility?: string;
+  isPrivate?: boolean;
 }
 
 /**
@@ -117,6 +122,13 @@ export interface MatchRoomFullInfo {
   totalDepositCollected: number;
   status: MatchRoomStatus;
   participants: MatchRoomParticipants;
+  /** Ảnh venue/sân (URL) – dùng ở tab thông tin venue */
+  venuePhotos?: VenuePhoto[] | [];
+  /** Đội hình đã lưu theo từng đội – có thì thành viên mới xem đúng vị trí captain assign */
+  formationByTeam?: {
+    A?: TeamFormationSnapshot;
+    B?: TeamFormationSnapshot;
+  };
   createdAt: string;
 }
 
@@ -202,27 +214,18 @@ export interface RoomFilters {
 
 // ==================== Create/Update Types ====================
 export interface CreateRoomRequest {
-  // format: string;
-  // name: string;
-  // datetime: string;
-  // venueId: string;
-  // fieldId?: string;
-  // durationMinutes?: number;
-  // hostId: string;
-  // totalPlayers?: number;
-  // pricePerPlayer?: number;
-  // description?: string;
-  // isPrivate?: boolean;
-  // password?: string;
-
-  fieldId: string;  
+  fieldId: string;
   matchDate: string;
   startTime: string;
   durationMinutes: number;
-  roomName: string;
   matchFormat: string;
+  roomName: string;
   description: string;
   rules: string;
+  /** "Public" | "Private" */
+  visibility: string;
+  /** Required when visibility is Private */
+  password?: string;
 }
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {
@@ -232,6 +235,34 @@ export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {
 
 export interface JoinRoomRequest {
   roomId: string;
+  password?: string;
+}
+
+// ==================== Formation / Lineup Types ====================
+
+/** Một gán slot – cầu thủ nào đá vị trí nào (slotId: "GK-0", "DF-1", ...) */
+export interface SlotAssignmentPayload {
+  slotId: string;
+  playerId: string;
+}
+
+/** Đội hình đã lưu của một đội – API trả về để thành viên xem đúng vị trí được assign */
+export interface TeamFormationSnapshot {
+  formationName: string;
+  format: string;
+  assignments: SlotAssignmentPayload[];
+}
+
+/** Payload gửi API cập nhật đội hình (vị trí từng thành viên) – captain gửi một lần */
+export interface UpdateFormationRequest {
+  /** Đội cần cập nhật: "A" | "B" */
+  team: "A" | "B";
+  /** Tên đội hình (vd: "3-3", "4-2") */
+  formationName: string;
+  /** Format trận: "5vs5" | "7vs7" */
+  format: string;
+  /** Danh sách gán: mỗi slot (vị trí) gắn với một playerId */
+  assignments: SlotAssignmentPayload[];
 }
 
 // ==================== Message Types ====================

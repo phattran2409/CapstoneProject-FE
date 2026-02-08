@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TouchableOpacity, Image, ScrollView, Alert, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Image, ScrollView, Alert, StyleSheet, Dimensions } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -35,7 +35,7 @@ import {
 } from '../components';
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
-import { formatCurrency } from '@/shared/utils/formatters';
+import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -48,7 +48,7 @@ interface RoomInformationScreenProps {
 const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { roomId } = route?.params;
+  const { roomId, venuePhotos: venuePhotosFromParams } = route?.params ?? {};
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
   const handleGoBack = () => {
@@ -86,6 +86,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Use roomData for display (có real-time updates) hoặc fallback về room từ query
   const displayRoom = roomData || room;
 
+  // ✅ Venue photos: ưu tiên từ API detail, fallback từ params (khi navigate từ MatchesScreen)
+  const venuePhotosToShow = useMemo(
+    () => displayRoom?.venuePhotos?.length ? displayRoom.venuePhotos! : (venuePhotosFromParams ?? []),
+    [displayRoom?.venuePhotos, venuePhotosFromParams],
+  );
 
   // ==================== Deposit progress (realtime) ====================
   const depositTargetTotal = useMemo(() => {
@@ -131,6 +136,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   
   // ✅ Toast hook for notifications
   const toast = useToast();
+
+  console.log('', displayRoom);
   
   /**
    * Callback hiển thị notification - sử dụng Toast thay vì Alert
@@ -919,6 +926,51 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                 Venue & Field Details
               </ThemedText>
 
+              {/* Venue photos: từ API detail hoặc từ params (navigate từ MatchesScreen) */}
+              {venuePhotosToShow.length > 0 && (
+                <View style={styles.venueImagesContainer}>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={(e) => {
+                      const pageWidth = Dimensions.get('window').width - 40;
+                      const index = Math.round(
+                        e.nativeEvent.contentOffset.x / (pageWidth || 1),
+                      );
+                      setSelectedImageIndex(Math.min(index, venuePhotosToShow.length - 1));
+                    }}
+                    style={styles.venuePhotosScroll}
+                  >
+                    {venuePhotosToShow.map((uri, index) => (
+                      <View
+                        key={uri.photoId ?? index}
+                        style={[styles.venueImageWrapper, { width: Dimensions.get('window').width - 40 }]}
+                      >
+                        <Image
+                          source={{ uri: uri.photoUrl }}
+                          style={styles.venueImage}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ))}
+                  </ScrollView>
+                  {venuePhotosToShow.length > 1 && (
+                    <View style={styles.venueDotsRow}>
+                      {venuePhotosToShow.map((_, index) => (
+                        <View key={index} style={styles.venueDot}>
+                          <View style={[styles.venueDot, {
+                            backgroundColor: index === selectedImageIndex
+                              ? theme.colors.neonGreen
+                              : theme.colors.border,
+                          }]} />
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+
               {/* Venue Info Cards */}
               <View style={styles.venueInfoContainer}>
                 {/* Field Info */}
@@ -1015,7 +1067,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         <HostMenuModal
           visible={showMenuModal}
           handleShowMenuModal={() => setShowMenuModal(false)}
-          room={displayRoom}
+          room={{
+            roomId: displayRoom.roomId,
+            roomName: displayRoom.roomName || '',
+            format: displayRoom.matchFormat,
+            datetime: formatDate(displayRoom.matchDate, 'short'),
+            venueName: displayRoom.field.venue.venueName,
+          }}
           handleCancelRoom={handleCancelRoom}
           isCancelling={isCancelling}
         />
@@ -1274,14 +1332,28 @@ const styles = StyleSheet.create({
   venueImagesContainer: {
     marginBottom: 24,
   },
+  venuePhotosScroll: {
+    marginHorizontal: -20,
+  },
   venueImageWrapper: {
-    width: 350,
-    marginRight: 10,
+    paddingHorizontal: 20,
   },
   venueImage: {
     width: '100%',
     height: 220,
     borderRadius: 16,
+  },
+  venueDotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  venueDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   imageIndicators: {
     flexDirection: 'row',

@@ -73,6 +73,12 @@ export interface FormationFieldRef {
 }
 
 // ================== Formation Configurations ==================
+//
+// Số slot cho từng đội hình (vd 3-3: DF=3, MF=0, FW=3) được định nghĩa ở ĐÂY (FE).
+// - FE: bắt buộc có để render UI (ô vị trí, dropdown). Dùng getFormation() / getSlotsCountByLine().
+// - BE: nên lưu bản tương đương (formationName + format → danh sách slotId hợp lệ) để validate
+//   PUT /formation: assignments chỉ chứa đúng slotId của formation đó, đủ/đúng số lượng.
+//
 
 /** 5vs5 Formation Configurations */
 export const FORMATIONS_5VS5: FormationConfig[] = [
@@ -231,3 +237,17 @@ export const getFormationNames = (format: string): string[] => {
   return getFormationsByFormat(format).map((f) => f.name);
 };
 
+/**
+ * Số slot theo từng line (GK, DF, MF, FW) của một đội hình.
+ * Dùng cho hiển thị hoặc validate. Nguồn truth: FE config (BE nên có bản copy để validate API).
+ */
+export const getSlotsCountByLine = (
+  config: FormationConfig | undefined,
+): Record<PositionLine, number> => {
+  const initial: Record<PositionLine, number> = { GK: 0, DF: 0, MF: 0, FW: 0 };
+  if (!config?.slots?.length) return initial;
+  for (const slot of config.slots) {
+    initial[slot.line] = (initial[slot.line] ?? 0) + 1;
+  }
+  return initial;
+};

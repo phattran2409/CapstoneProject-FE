@@ -11,44 +11,30 @@ interface JoinRoomResponse {
   joinDate: string;
 }
 
+export type JoinRoomAsUnassignedArgs = { roomId: string; password?: string };
+
 /**
  * Hook để join một match room với status Unassigned
- * 
- * Flow:
- * 1. Client gọi POST /match-rooms/{roomId}/join
- * 2. Server thêm user vào room với status Unassigned
- * 3. Server broadcast "UserJoinedRoom" event qua SignalR
- * 4. Tất cả clients trong room nhận được toast notification
- * 
- * Sau khi join, user có thể chọn Team A/B bằng useUpdateParticipant hook
- * 
+ * Phòng private: truyền password trong args.
+ *
  * @example
- * const { mutate: joinRoom, isPending } = useJoinRoomAsUnassigned();
- * 
- * joinRoom(roomId, {
- *   onSuccess: (data) => {
- *     console.log('Joined as Unassigned!', data.participantId);
- *     navigation.navigate('RoomInformation', { roomId });
- *   },
- *   onError: (error) => console.error(error),
- * });
+ * joinRoom({ roomId: '123' });
+ * joinRoom({ roomId: '123', password: 'secret' });
  */
 export const useJoinRoomAsUnassigned = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<JoinRoomResponse, Error, string>({
-    mutationFn: (roomId: string) => roomsApi.joinMatchRoom({ roomId }),
+  return useMutation<JoinRoomResponse, Error, JoinRoomAsUnassignedArgs>({
+    mutationFn: (args: JoinRoomAsUnassignedArgs) =>
+      roomsApi.joinMatchRoom({
+        roomId: args.roomId,
+        ...(args.password && { password: args.password }),
+      }),
 
-    onSuccess: (_data, roomId) => {
-      // Invalidate room detail để đảm bảo data đồng bộ
-      queryClient.invalidateQueries({
-        queryKey: roomsKeys.detail(roomId),
-      });
-
-      // Invalidate match rooms list để cập nhật số người
-      queryClient.invalidateQueries({
-        queryKey: roomsKeys.matchRooms(),
-      });
+    onSuccess: (_data, args) => {
+      const roomId = args.roomId;
+      queryClient.invalidateQueries({ queryKey: roomsKeys.detail(roomId) });
+      queryClient.invalidateQueries({ queryKey: roomsKeys.matchRooms() });
     },
   });
 };
