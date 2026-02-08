@@ -31,6 +31,8 @@ export interface MatchItemProps {
   showStatus?: boolean;
 }
 
+const PLACEHOLDER_IMAGE = require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png');
+
 const MatchItem: React.FC<MatchItemProps> = ({
   match,
   variant = 'list',
@@ -38,6 +40,9 @@ const MatchItem: React.FC<MatchItemProps> = ({
   showStatus = true,
 }) => {
   const { theme } = useTheme();
+  const imageSource = match.image?.trim()
+    ? { uri: match.image.trim() }
+    : PLACEHOLDER_IMAGE;
 
   const getStatusIcon = (status?: MatchItemData['status']) => {
     switch (status) {
@@ -93,7 +98,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
       >
         <View style={styles.cardImageWrapper}>
           <Image
-            source={{ uri: match.image }}
+            source={imageSource}
             style={styles.cardImage}
             resizeMode="cover"
           />
@@ -133,7 +138,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
       >
         <View style={styles.compactImageWrapper}>
           <Image
-            source={{ uri: match.image }}
+            source={imageSource}
             style={styles.compactImage}
             resizeMode="cover"
           />
@@ -173,7 +178,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
     >
       <View style={styles.listImageWrapper}>
         <Image
-          source={{ uri: match.image }}
+          source={imageSource}
           style={styles.listImage}
           resizeMode="cover"
         />

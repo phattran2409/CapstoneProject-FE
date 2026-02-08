@@ -62,7 +62,7 @@ const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
     title: room.roomName,
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: room.venuePhotos[0]?.photoUrl,
+    image: room.venuePhotos[0]?.photoUrl || '',
     status: getDisplayStatus(room.status),
     date: formattedDate,
     venue: room.venueName,
