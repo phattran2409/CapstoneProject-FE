@@ -493,6 +493,41 @@ const en = {
       failed: "Failed to save changes. Please try again.",
     },
   },
+  feedback: {
+    intro: {
+      teamA: "TEAM A",
+      teamB: "TEAM B",
+      title: "Help the system balance the match",
+      description:
+        "Fairly evaluate teammates to help us organize more balanced and exciting matches for you.",
+      startButton: "Start evaluation",
+    },
+    rating: {
+      title: "Rate Teammate",
+      subtitle: "SUNDAY MATCH",
+      progress: "PROGRESS",
+      swipeLeft: "SWIPE LEFT",
+      swipeRight: "SWIPE RIGHT",
+      tip: "Tip: Honest ratings help the system balance teams better.",
+    },
+    report: {
+      title: "Report Player",
+      description: "Please let us know why you want to report this player.",
+      submit: "Submit Report",
+    },
+    complete: {
+      title: "Thank you for your feedback!",
+      description:
+        "Your feedback has been recorded. We will use this information to organize more balanced and fair matches.",
+      playersRated: "Players Rated",
+      finishButton: "Finish",
+    },
+    validation: {
+      ratingRequired: "Rating Required",
+      ratingRequiredMessage: "Please select a star rating before submitting.",
+      allPlayersRequired: "Please rate all players before completing.",
+    },
+  },
 };
 
 export default en;

@@ -34,6 +34,11 @@ import { WalletScreen, WalletTopUpScreen } from "@/features/wallet";
 import { PaymentSuccessScreen } from "@/features/payment";
 import { SearchScreen } from "@/features/search";
 import TeamScreen from "@/features/rooms/screens/TeamScreen";
+import {
+  FeedbackIntroScreen,
+  FeedbackRatingScreen,
+  FeedbackCompleteScreen,
+} from "@/screens";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -287,6 +292,30 @@ const StackNavigator: React.FC = () => {
               headerShown: false,
               animation: "slide_from_bottom",
             }}
+            />
+            <Stack.Screen
+              name="FeedbackIntro"
+              component={FeedbackIntroScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackRating"
+              component={FeedbackRatingScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackComplete"
+              component={FeedbackCompleteScreen}
+              options={{
+                headerShown: false,
+                animation: "fade",
+              }}
             />
           </>
         )}

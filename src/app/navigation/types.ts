@@ -35,6 +35,9 @@ export type RootStackParamList = {
     email: string;
   };
   Search: undefined;
+  FeedbackIntro: undefined;
+  FeedbackRating: { roomId: string };
+  FeedbackComplete: undefined;
 };
 
 export type TabParamList = {

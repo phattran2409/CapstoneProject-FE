@@ -489,6 +489,42 @@ const vi = {
       failed: "Không thể lưu thay đổi. Vui lòng thử lại.",
     },
   },
+  feedback: {
+    intro: {
+      teamA: "ĐỘI A",
+      teamB: "ĐỘI B",
+      title: "Giúp hệ thống cân bằng trận đấu",
+      description:
+        "Đánh giá đồng đội một cách công tâm để giúp chúng tôi tổ chức những trận đấu cân sức và hấp dẫn hơn cho bạn.",
+      startButton: "Bắt đầu đánh giá",
+    },
+    rating: {
+      title: "Đánh giá Đồng đội",
+      subtitle: "TRẬN ĐẤU CHỦ NHẬT",
+      progress: "TIẾN TRÌNH",
+      swipeLeft: "VUỐT TRÁI",
+      swipeRight: "VUỐT PHẢI",
+      tip: "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
+    },
+    report: {
+      title: "Báo cáo người chơi",
+      description:
+        "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người chơi này.",
+      submit: "Gửi báo cáo",
+    },
+    complete: {
+      title: "Cảm ơn bạn đã đánh giá!",
+      description:
+        "Đánh giá của bạn đã được ghi nhận. Chúng tôi sẽ sử dụng thông tin này để tổ chức những trận đấu cân sức và công bằng hơn.",
+      playersRated: "Người chơi đã đánh giá",
+      finishButton: "Hoàn thành",
+    },
+    validation: {
+      ratingRequired: "Đánh giá bắt buộc",
+      ratingRequiredMessage: "Vui lòng chọn số sao đánh giá trước khi gửi.",
+      allPlayersRequired: "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
+    },
+  },
 };
 
 export default vi;

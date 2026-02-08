@@ -44,6 +44,11 @@ export { default as LeaderboardScreen } from '../features/leaderboard/screens/Le
 // Onboarding Feature Screens
 export { default as OnboardingScreen, checkOnboardingStatus } from '../features/onboarding/screens/OnboardingScreen';
 
+// Feedback Feature Screens
+export { default as FeedbackIntroScreen } from '../features/feedback/screens/FeedbackIntroScreen';
+export { default as FeedbackRatingScreen } from '../features/feedback/screens/FeedbackRatingScreen';
+export { default as FeedbackCompleteScreen } from '../features/feedback/screens/FeedbackCompleteScreen';
+
 // Shared Screens (not feature-specific)
 export { default as HomeScreen } from './HomeScreen';
 export { default as SplashScreen } from '../features/splash/screens/SplashScreen';  

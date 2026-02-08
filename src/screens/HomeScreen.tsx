@@ -206,6 +206,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.iconButton}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("FeedbackIntro");
+              }
+            }}
+          >
+            <Ionicons
+              name="star-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
             onPress={() => navigation.navigate("Search" as any)}
           >
             <Ionicons
