@@ -1,158 +1,165 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedCard, ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components';
+import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
+import { RootStackParamList, TabParamList } from '@/app/navigation/types';
+import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
+import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom } from '@/features/rooms';
 
-type RootStackParamList = {
-  Matches: undefined;
-  Profile: undefined;
-  MatchDetail: { matchId: string };
-  CreateRoom: undefined;
-  RoomInformation: { roomId: string };
-};
-
-type MatchesScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Matches'>;
+type MatchesScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Matches'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface MatchesScreenProps {
   navigation: MatchesScreenNavigationProp;
 }
 
-interface Match {
-  id: string;
-  title: string;
-  format: string;
-  players: string;
-  image: any;
-  date?: string;
-  status?: 'win' | 'lose' | 'draw';
-}
+// Helper function to convert MatchRoom to MatchItemData
+const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
+  // Convert matchFormat to display format
+  const formatMap: Record<string, string> = {
+    'FiveVsFive': '5vs5',
+    'SevenVsSeven': '7vs7',
+  };
+  
+  // Format date
+  const matchDate = new Date(room.matchDate);
+  const formattedDate = matchDate.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  // Determine status for display
+  const getDisplayStatus = (status: string): MatchItemData['status'] => {
+    switch (status) {
+      case 'Open':
+        return 'ongoing';
+      case 'Full':
+        return 'ongoing';
+      case 'Completed':
+        return 'win'; // Default, could be dynamic based on result
+      case 'Cancelled':
+        return 'lose';
+      default:
+        return 'ongoing';
+    }
+  };
+
+  return {
+    id: room.roomId,
+    title: room.roomName,
+    format: formatMap[room.matchFormat] || room.matchFormat,
+    players: `${room.filledSlots}/${room.totalSlots}`,
+    image: room.venuePhotos[0] || require('@assets/images/icon.png'),
+    status: getDisplayStatus(room.status),
+    date: formattedDate,
+    venue: room.venueName,
+    time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
+  };
+};
 
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const scrollHandler = useScrollToHideTabBar();
+  const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // Mock data - replace with real data from API
-  const ongoingMatches: Match[] = [
-    {
-      id: '1',
-      title: 'Giao hữu cuối tuần',
-      format: '5vs5',
-      players: '7/10',
-      image: require('@assets/images/icon.png'), // Replace with actual match images
-    },
-    {
-      id: '2',
-      title: 'Team Anh Em',
-      format: '7vs7',
-      players: '12/14',
-      image: require('@assets/images/icon.png'), // Replace with actual match images
-    },
-  ];
+  // Fetch match rooms from API
+  const { 
+    matchRooms, 
+    loading, 
+    refreshing, 
+    loadingMore,
+    hasMore,
+    refresh,
+    loadMore 
+  } = useMatchRooms();
 
-  const recentMatches: Match[] = [
-    {
-      id: '1',
-      title: 'Giao hữu cuối tuần',
-      date: '18/07/2024',
-      status: 'win',
-      image: require('@assets/images/icon.png'),
-      format: '5vs5',
-      players: '10/10',
-    },
-    {
-      id: '4',
-      title: 'Team Anh Em',
-      date: '15/07/2024',
-      status: 'lose',
-      image: require('@assets/images/icon.png'),
-      format: '7vs7',
-      players: '14/14',
-    },
-    {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-      {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-       {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-       {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-       {
-      id: '5',
-      title: 'Đá cho vui',
-      date: '12/07/2024',
-      status: 'draw',
-      image: require('@assets/images/icon.png'),
-      format: '6vs6',
-      players: '12/12',
-    },
-  ];
+  // Convert API data to MatchItemData format
+  const matches = useMemo(() => {
+    return matchRooms.map(convertMatchRoomToMatchItemData);
+  }, [matchRooms]);
 
-  const getStatusIcon = (status?: 'win' | 'lose' | 'draw') => {
-    switch (status) {
-      case 'win':
-        return <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />;
-      case 'lose':
-        return <Ionicons name="sad-outline" size={24} color="#ef4444" />;
-      case 'draw':
-        return <Ionicons name="git-compare-outline" size={24} color="#6b7280" />;
-      default:
-        return null;
+  // Split matches for display (first 2 as featured, rest as list)
+  const featuredMatches = useMemo(() => matches.slice(0, matches.length ), [matches]);
+  const listMatches = useMemo(() => matches.slice(0,matches.length), [matches]);
+  
+  
+  const handleMatchPress = useCallback((matchId: string) => {
+    const match = matches.find(m => m.id === matchId);
+    if (match) {
+      setSelectedMatch(match);
+      setModalVisible(true);
     }
-  };
+  }, [matches]);
 
-  const getStatusText = (status?: 'win' | 'lose' | 'draw') => {
-    if (!status) return '';
-    return t(`home.matchStatus.${status}`);
+  // Handle scroll to bottom for pagination
+  const handleScroll = useCallback((event: any) => {
+    scrollHandler(event);
+    
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const paddingToBottom = 50;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+    
+    if (isCloseToBottom && hasMore && !loadingMore) {
+      loadMore();
+    }
+  }, [scrollHandler, hasMore, loadingMore, loadMore]);
+
+  // ✅ Hook để join room (tự động thêm vào Unassigned)
+  const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
+
+  const handleViewDetail = (matchId: string) => {
+    // Gọi API join để thêm user vào room (Unassigned)
+    // Server sẽ broadcast UserJoinedRoom event → toast cho tất cả members
+    joinRoomAsUnassigned(matchId, {
+      onSuccess: () => {
+        // Join thành công → Navigate đến RoomInformation
+        navigation.navigate('RoomInformation', { roomId: matchId });
+      },
+      onError: (error: any) => {
+        // Nếu đã là participant hoặc lỗi khác → vẫn navigate để xem thông tin
+        console.log('Join room error (may already be participant):', error?.message);
+        navigation.navigate('RoomInformation', { roomId: matchId });
+      },
+    });
   };
 
   return (
-    <ThemedSafeAreaView className="flex-1 py-10">
+    <ThemedSafeAreaView>
       {/* Header */}
-      <ThemedView className="flex-row justify-between items-center px-5 py-4">
+      <ThemedView
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.xl,
+          },
+        ]}
+      >
         <ThemedText size="xxl" weight="bold" variant="primary">
           {t("matches.title", "Trận đấu")}
         </ThemedText>
-        <View className="flex-row items-center gap-4">
-          <TouchableOpacity className="w-10 h-10 items-center justify-center">
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="search"
               size={24}
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity className="w-10 h-10 items-center justify-center">
+          <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="filter"
               size={24}
@@ -162,130 +169,164 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         </View>
       </ThemedView>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Ongoing Matches Section */}
-        <ThemedView className="mb-8">
-          <ThemedText
-            style={{ color: theme.colors.neonGreen }}
-            size="xl"
-            weight="bold"
-            className="px-5 mb-4"
-          >
-            {t("home.ongoingMatches")}
-          </ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            className="gap-4"
-          >
-            {ongoingMatches.map((match, index) => (
-              <ThemedCard
-                key={match.id}
-                padding={0}
-                variant="outlined"
-                className="rounded-3xl overflow-hidden mr-4 border-1 border-[#2a2a2a]"
-              >
-                <TouchableOpacity
-                  key={match.id}
-                  className="overflow-hidden bg-transparent"
-                  style={{ width: 280 }}
-                  onPress={() => {
-                    navigation.navigate("RoomInformation", {
-                      roomId: match.id,
-                    });
-                  }}
-                >
-                  <Image
-                    source={match.image}
-                    className="w-full h-40"
-                    resizeMode="cover"
-                  />
-                  <ThemedView className="p-4 bg-transparent">
-                    <ThemedText size="l" weight="bold" className="mb-2">
-                      {match.title}
-                    </ThemedText>
-                    <ThemedText variant="secondary" size="s">
-                      {match.format} - ({match.players})
-                    </ThemedText>
-                  </ThemedView>
-                </TouchableOpacity>
-              </ThemedCard>
-            ))}
-          </ScrollView>
-        </ThemedView>
+      {/* Active Room Banner - Chỉ hiển thị khi có active room */}
+      <ActiveRoomBannerV2 />
 
-        {/* Recent Matches Section */}
-        <ThemedView className="px-5 mb-24">
-          <ThemedText
-            style={{ color: theme.colors.neonGreen }}
-            size="xl"
-            weight="bold"
-            className="mb-4"
-          >
-            {t("home.recentMatches")}
-          </ThemedText>
-          <ScrollView className="gap-3" style={{ height: 300 }} scrollEnabled={true} showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }} >
-            {recentMatches.map((match) => (
-              <TouchableOpacity
-                key={match.id}
-                className="rounded-2xl p-3 flex-row items-center"
-                onPress={() => {
-                  navigation.navigate("RoomInformation", { roomId: match.id });
-                }}
-              >
-                <Image
-                  source={match.image}
-                  className="w-20 h-20 rounded-xl"
-                  resizeMode="cover"
-                />
-                <View className="flex-1 ml-4">
-                  <ThemedText size="m" weight="semiBold" className="mb-1">
-                    {match.title}
-                  </ThemedText>
-                  <ThemedText variant="secondary" size="s">
-                    {match.date} - {getStatusText(match.status)}
-                  </ThemedText>
-                </View>
-                <View>{getStatusIcon(match.status)}</View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </ThemedView>
+      <ScrollView 
+        style={styles.flex1}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        nestedScrollEnabled={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            colors={[theme.colors.neonGreen]}
+            tintColor={theme.colors.neonGreen}
+          />
+        }
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.neonGreen} />
+          </View>
+        ) : (
+          <>
+            {/* Featured Matches Section */}
+            {featuredMatches.length > 0 && (
+              <MatchList
+                matches={featuredMatches}
+                title={t("home.RecommendMatches")}
+                variant="horizontal"
+                itemVariant="card"
+                onMatchPress={handleMatchPress}
+                showStatus={true}
+              />
+            )}
 
-          <ThemedView className="absolute bottom-0 left-0 right-0 px-5 pb-8 bg-gradient-to-t from-dark-black to-transparent">
-        
-      </ThemedView>
+            {/* All Matches Section */}
+            {listMatches.length > 0 && (
+              <MatchList
+                matches={listMatches}
+                title={t("home.recentMatches", "Trận đấu gần đây")}
+                variant="vertical"
+                itemVariant="list"
+                onMatchPress={handleMatchPress}
+                showStatus={true}
+                containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
+              />
+            )}
+
+            {/* Loading more indicator */}
+            {loadingMore && (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator size="small" color={theme.colors.neonGreen} />
+              </View>
+            )}
+
+            {/* Empty state */}
+            {matches.length === 0 && !loading && (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="football-outline" size={64} color={theme.colors.textSecondary} />
+                <ThemedText variant="secondary" size="m" style={{ marginTop: theme.spacing.m }}>
+                  {t("matches.noMatches", "Chưa có trận đấu nào")}
+                </ThemedText>
+              </View>
+            )}
+          </>
+        )}
       </ScrollView>
 
       {/* Floating Create Button */}
-    <TouchableOpacity
-          className="rounded-2xl py-4 flex-row items-center justify-center"
-          style={{
+      <TouchableOpacity
+        style={[
+          styles.createButton,
+          {
             backgroundColor: theme.colors.neonGreen,
             shadowColor: theme.colors.neonGreen,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-          onPress={() => {
-            navigation.navigate("CreateRoom");
-          }}
+            borderRadius: theme.radius.l,
+            paddingVertical: theme.spacing.m,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginHorizontal: theme.spacing.l,
+            marginBottom: theme.spacing.l,
+          },
+        ]}
+        onPress={() => {
+          navigation.navigate("CreateRoom");
+        }}
+      >
+        <Ionicons name="add" size={24} color={theme.colors.background} />
+        <ThemedText
+          size="l"
+          weight="bold"
+          style={{ marginLeft: 8, color: theme.colors.background }}
         >
-          <Ionicons name="add" size={24} color={theme.colors.background} />
-          <ThemedText
-            size="l"
-            weight="bold"
-            className="ml-2"
-            style={{ color: theme.colors.background }}
-          >
-            {t("home.createNewRoom")}
-          </ThemedText>
-        </TouchableOpacity>
+          {t("home.createNewRoom", "Tạo phòng mới")}
+        </ThemedText>
+      </TouchableOpacity>
+
+      {/* Match Detail Modal */}
+      <MatchDetailModal
+        visible={modalVisible}
+        match={selectedMatch}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedMatch(null);
+        }}
+        onViewDetail={handleViewDetail}
+      />
     </ThemedSafeAreaView>
   );
 };
 
-export default MatchesScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  flex1: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createButton: {
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 100,
+  },
+  loadingMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 100,
+  },
+});
 
+export default MatchesScreen;

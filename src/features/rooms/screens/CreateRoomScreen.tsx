@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Switch, Alert } from 'react-native';
+import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   ThemedSafeAreaView, 
   ThemedView, 
@@ -12,79 +11,110 @@ import {
   ThemedScrollView,
   ThemedIcon 
 } from '@/shared/components/themed';
-import { useCreateRoom } from '@/features/rooms';
-
-type RootStackParamList = {
-  Matches: undefined;
-  CreateRoom: undefined;
-  VenueSelection: undefined;
-};
+import { useCreateRoom, useActiveRoomStore } from '@/features/rooms';
+import { RootStackParamList } from '@/app/navigation/types';
+import { useAuthStore } from '@/features/auth';
+import { Venue, Field, TimeSlot } from '@/features/venues/types/venue.types';
+import Alert from '@/shared/components/Alert';
+import { useAlert } from '@/shared/hooks/useAlert';
+import { Controller, useForm } from 'react-hook-form';
+import { RoomFormData, roomSchema } from '../validation/roomSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
+type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
 
 interface CreateRoomScreenProps {
   navigation?: CreateRoomScreenNavigationProp;
-  route?: {
-    params?: {
-      selectedVenue?: Venue;
-    };
-  };
-}
-
-interface Venue {
-  id: string;
-  name: string;
-  address: string;
-  price: number;
-  rating: number;
-  image: any;
+  route?: CreateRoomScreenRouteProp;
 }
 
 type MatchFormat = '5vs5' | '7vs7';
+type DurationMinutes = 30 | 60 | 90 | 120;
+
+const DURATION_OPTIONS: DurationMinutes[] = [ 60, 90, 120];
 
 const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-
+  const { user } = useAuthStore();
+  const { visible, alertOptions, showInfo, showSuccess, showDanger, hideAlert } = useAlert();
   const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('5vs5');
-  const [roomName, setRoomName] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState<DurationMinutes>(60);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RoomFormData>({
+    resolver: zodResolver(roomSchema),
+    defaultValues: {
+      roomName: '',
+      description: '',
+    },
+  });
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(
     route?.params?.selectedVenue || null
   );
+  const [selectedField, setSelectedField] = useState<Field | null>(
+    route?.params?.selectedField || null
+  );
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
+    route?.params?.selectedTimeSlot || null
+  );
   const [matchDate, setMatchDate] = useState(new Date());
   const [matchTime, setMatchTime] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   // ✅ Use React Query mutation
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
+  const { setActiveRoom } = useActiveRoomStore();
+  
+  const FormatMatch = (format: MatchFormat) : string => {
+    switch (format) {
+      case '5vs5':
+        return 'FiveVsFive';
+      case '7vs7':
+        return 'SevenVsSeven';
+      default:
+        return '';
+    }
+  }
 
-  // Update venue when returning from VenueSelection
+  // Update data when returning from VenueSelection / VenueDetail (TimeSlot + date from field)
   React.useEffect(() => {
     if (route?.params?.selectedVenue) {
       setSelectedVenue(route.params.selectedVenue);
     }
-  }, [route?.params?.selectedVenue]);
-
-  const handleCreateRoom = () => {
-    // Validate
-    if (!roomName.trim()) {
-      Alert.alert(t('createRoom.title'), t('createRoom.validation.nameRequired'));
-      return;
+    if (route?.params?.selectedField) {
+      setSelectedField(route.params.selectedField);
     }
+    if (route?.params?.selectedTimeSlot) {
+      setSelectedTimeSlot(route.params.selectedTimeSlot);
+      const [hours, minutes] = route.params.selectedTimeSlot.startTime.split(':').map(Number);
+      const newTime = new Date();
+      newTime.setHours(hours, minutes, 0, 0);
+      setMatchTime(newTime);
+    }
+    if (route?.params?.selectedDate) {
+      const d = new Date(route.params.selectedDate + 'T00:00:00');
+      if (!isNaN(d.getTime())) setMatchDate(d);
+    }
+  }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot, route?.params?.selectedDate]);
+
+  const handleCreateRoom = (data: RoomFormData) => {
+    // Validate
+
     if (!selectedVenue) {
-      Alert.alert(t('createRoom.title'), t('createRoom.validation.venueRequired'));
+      showInfo(t('createRoom.title'), t('createRoom.validation.venueRequired'));
       return;
     }
     if (isPrivate && !password.trim()) {
-      Alert.alert(t('createRoom.title'), t('createRoom.validation.passwordRequired'));
+      showInfo(t('createRoom.title'), t('createRoom.validation.passwordRequired'));
       return;
     }
-
-    // Combine date and time
+    
     const datetime = new Date(
       matchDate.getFullYear(),
       matchDate.getMonth(),
@@ -93,23 +123,36 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       matchTime.getMinutes()
     );
 
-    // ✅ Call create room mutation
+    // Use TimeSlot from field when available; otherwise fallback to matchDate/matchTime
+    const startTimeStr = selectedTimeSlot?.startTime
+      ? selectedTimeSlot.startTime.substring(0, 5)
+      : formatTime(matchTime);
+
     createRoom(
       {
-        format: selectedFormat,
-        datetime: datetime.toISOString(),
-        venueId: selectedVenue.id,
-        name: roomName,
-        isPrivate,
-        password: isPrivate ? password : undefined,
+        matchDate: datetime.toISOString(),
+        startTime: startTimeStr,
+        durationMinutes,
+        matchFormat: FormatMatch(selectedFormat),
+        roomName: data.roomName,
+        description: data.description || '',
+        rules: '',
+        fieldId: selectedField?.fieldId || '',
       },
       {
-        onSuccess: (newRoom) => {
-          Alert.alert('Success', 'Room created successfully!');
-          navigation?.goBack();
+        onSuccess: async (newRoom) => {
+          showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
+            // Save active room ID to storage
+            if (newRoom?.roomId) {
+              await setActiveRoom(newRoom.roomId);
+              navigation?.navigate('RoomInformation', { roomId: newRoom.roomId });
+            } else {
+              navigation?.goBack();
+            }
+          });
         },
         onError: (error: any) => {
-          Alert.alert('Error', error.message || 'Failed to create room');
+          showDanger(t('common.error'), error.message || t('createRoom.errorMessage'), () => {});
         },
       }
     );
@@ -130,18 +173,147 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       hour12: false,
     });
   };
+  const getErrorMessage = (message?: string) => {
+    if (!message) return '';
+    return message.startsWith('createRoom.validation.') ? t(message) : message;
+  }
+
+  const styles = StyleSheet.create({
+    safeArea: {
+      paddingVertical: 40,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingVertical: 24,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      marginBottom: 12,
+    },
+    formatRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    formatButton: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 16,
+    },
+    formatButtonText: {
+      textAlign: 'center',
+    },
+    durationRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    durationButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    durationButtonText: {
+      textAlign: 'center',
+    },
+    inputContainer: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+    },
+    venueButton: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    venueContent: {
+      flex: 1,
+    },
+    venueAddress: {
+      marginTop: 4,
+    },
+    dateTimeRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 24,
+    },
+    dateTimeContainer: {
+      flex: 1,
+    },
+    dateTimeButton: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    settingsContainer: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    passwordContainer: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    passwordInput: {
+      flex: 1,
+    },
+    createButton: {
+      borderRadius: 16,
+      paddingVertical: 16,
+      marginTop: 16,
+    },
+    createButtonText: {
+      textAlign: 'center',
+    },
+    errorText: {
+      fontSize: 12,
+      marginTop: 4,
+      marginLeft: 4,
+    },
+  });
 
   return (
-    <ThemedSafeAreaView className='py-10'>
+    <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
       <ThemedView 
-        className="flex-row items-center justify-between px-5 py-4"
-        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+        style={[styles.header, { borderBottomWidth: 1, borderBottomColor: theme.colors.border }]}
       >
-        <View className="flex-row items-center gap-3">
+        <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => navigation?.goBack()}
-            className="w-10 h-10 items-center justify-center"
+            style={styles.backButton}
           >
             <ThemedIcon name="arrow-back"  size={24} variant="secondary" />
           </TouchableOpacity>
@@ -152,37 +324,33 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       </ThemedView>
 
       <ThemedScrollView showsVerticalScrollIndicator={false}>
-        <View className="px-5 py-6">
+        <View style={styles.scrollContent}>
           {/* Match Format Selection */}
-          <View className="mb-6">
-            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.selectFormat')}
             </ThemedText>
-            <View className="flex-row gap-3">
+            <View style={styles.formatRow}>
               <TouchableOpacity
-                className="flex-1 py-4 rounded-2xl"
-                style={{ backgroundColor: selectedFormat === '5vs5' ? theme.colors.neonGreen : theme.colors.surface }}
+                style={[styles.formatButton, { backgroundColor: selectedFormat === '5vs5' ? theme.colors.neonGreen : theme.colors.surface }]}
                 onPress={() => setSelectedFormat('5vs5')}
               >
                 <ThemedText 
                   size="l" 
                   weight="bold" 
-                  className="text-center"
-                  style={{ color: selectedFormat === '5vs5' ? '#000' : theme.colors.textSecondary }}
+                  style={[styles.formatButtonText, { color: selectedFormat === '5vs5' ? '#000' : theme.colors.textSecondary }]}
                 >
                   5 vs 5
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 py-4 rounded-2xl"
-                style={{ backgroundColor: selectedFormat === '7vs7' ? theme.colors.neonGreen : theme.colors.surface }}
+                style={[styles.formatButton, { backgroundColor: selectedFormat === '7vs7' ? theme.colors.neonGreen : theme.colors.surface }]}
                 onPress={() => setSelectedFormat('7vs7')}
               >
                 <ThemedText 
                   size="l" 
                   weight="bold" 
-                  className="text-center"
-                  style={{ color: selectedFormat === '7vs7' ? '#000' : theme.colors.textSecondary }}
+                  style={[styles.formatButtonText, { color: selectedFormat === '7vs7' ? '#000' : theme.colors.textSecondary }]}
                 >
                   7 vs 7
                 </ThemedText>
@@ -190,51 +358,71 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             </View>
           </View>
 
-          {/* Room Name */}
-          <View className="mb-6">
-            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
-              {t('createRoom.roomName')}
+          {/* Duration Selection */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('createRoom.duration')}
             </ThemedText>
-            <ThemedView 
-              variant="surface"
-              className="rounded-2xl px-4 py-4"
-              style={{ borderWidth: 1, borderColor: theme.colors.border }}
-            >
-              <TextInput
-                style={{ color: theme.colors.text, fontSize: 16 }}
-                placeholder={t('createRoom.roomNamePlaceholder')}
-                placeholderTextColor={theme.colors.textSecondary}
-                value={roomName}
-                onChangeText={setRoomName}
-              />
-            </ThemedView>
+            <View style={styles.durationRow}>
+              {DURATION_OPTIONS.map((duration) => (
+                <TouchableOpacity
+                  key={duration}
+                  style={[
+                    styles.durationButton, 
+                    { 
+                      backgroundColor: durationMinutes === duration 
+                        ? theme.colors.neonGreen 
+                        : theme.colors.surface,
+                      borderWidth: 1,
+                      borderColor: durationMinutes === duration 
+                        ? theme.colors.neonGreen 
+                        : theme.colors.border,
+                    }
+                  ]}
+                  onPress={() => setDurationMinutes(duration)}
+                >
+                  <ThemedText 
+                    size="m" 
+                    weight="semiBold" 
+                    style={[
+                      styles.durationButtonText, 
+                      { 
+                        color: durationMinutes === duration 
+                          ? '#000' 
+                          : theme.colors.textSecondary 
+                      }
+                    ]}
+                  >
+                    {duration} {t('createRoom.minutes')}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-
-          {/* Venue Selection */}
-          <View className="mb-6">
-            <ThemedText variant='muted' size="m" weight="semiBold" className="mb-3">
+            {/* Venue Selection */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.venue')}
             </ThemedText>
             <TouchableOpacity
-              className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-              style={{ 
+              style={[styles.venueButton, { 
                 backgroundColor: theme.colors.surface,
                 borderWidth: 1, 
                 borderColor: theme.colors.border 
-              }}
+              }]}
               onPress={() => navigation?.navigate('VenueSelection')}
             >
               {selectedVenue ? (
-                <View className="flex-1">
+                <View style={styles.venueContent}>
                   <ThemedText variant="muted" size="m" weight="semiBold">
                     {selectedVenue.name}
                   </ThemedText>
-                  <ThemedText variant="secondary" size="s" className="mt-1">
+                  <ThemedText variant="secondary" size="s" style={styles.venueAddress}>
                     {selectedVenue.address}
                   </ThemedText>
                 </View>
               ) : (
-                <ThemedText variant="secondary" size="m" className="flex-1">
+                <ThemedText variant="secondary" size="m" style={styles.venueContent}>
                   {t('createRoom.venuePlaceholder')}
                 </ThemedText>
               )}
@@ -242,91 +430,122 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             </TouchableOpacity>
           </View>
 
-          {/* Date and Time */}
-          <View className="flex-row gap-3 mb-6">
-            {/* Date */}
-            <View className="flex-1">
-              <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
+          {/* Room Name */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('createRoom.roomName')}
+            </ThemedText>
+            <Controller
+              control={control}
+              name="roomName"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ThemedView 
+                  variant="surface"
+                  style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
+                >
+                  <TextInput
+                    style={{ color: theme.colors.text, fontSize: 16 }}
+                    placeholder={t('createRoom.roomNamePlaceholder')}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </ThemedView>
+              )}
+            />
+          {errors.roomName && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {getErrorMessage(errors.roomName.message)}
+            </Text>
+          )}
+          </View>
+          {/* Description */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('createRoom.description')}
+            </ThemedText>
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ThemedView 
+                  variant="surface"
+                  style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
+                >
+                  <TextInput
+                    style={{ color: theme.colors.text, fontSize: 16 }}
+                    placeholder={t('createRoom.descriptionPlaceholder')}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </ThemedView>
+              )}
+            />
+          {errors.description && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {getErrorMessage(errors.description.message)}
+            </Text>
+          )}
+          </View>
+
+          {/* Date and Time - read-only from TimeSlot khi đã chọn sân (DateTimePicker đã tắt) */}
+          <View style={styles.dateTimeRow}>
+            <View style={styles.dateTimeContainer}>
+              <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.matchDate')}
               </ThemedText>
-              <TouchableOpacity
-                className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-                style={{ 
+              <View
+                style={[styles.dateTimeButton, { 
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1, 
-                  borderColor: theme.colors.border 
-                }}
-                onPress={() => setShowDatePicker(true)}
+                  borderColor: theme.colors.border,
+                  opacity: selectedTimeSlot ? 1 : 0.7,
+                }]}
+                pointerEvents="none"
               >
                 <ThemedText variant="muted" size="m">
                   {formatDate(matchDate)}
                 </ThemedText>
                 <ThemedIcon name="calendar" size={20} variant="secondary" />
-              </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Time */}
-            <View className="flex-1">
-              <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
+            <View style={styles.dateTimeContainer}>
+              <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.matchTime')}
               </ThemedText>
-              <TouchableOpacity
-                className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-                style={{ 
+              <View
+                style={[styles.dateTimeButton, { 
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1, 
-                  borderColor: theme.colors.border 
-                }}
-                onPress={() => setShowTimePicker(true)}
+                  borderColor: theme.colors.border,
+                  opacity: selectedTimeSlot ? 1 : 0.7,
+                }]}
+                pointerEvents="none"
               >
                 <ThemedText variant="muted" size="m">
-                  {formatTime(matchTime)}
+                  {selectedTimeSlot ? selectedTimeSlot.startTime.substring(0, 5) : formatTime(matchTime)}
                 </ThemedText>
-                <ThemedIcon  name="time" size={20} variant="secondary" />
-              </TouchableOpacity>
+                <ThemedIcon name="time" size={20} variant="secondary" />
+              </View>
             </View>
           </View>
-
-            {/* Date Picker */}
-            {showDatePicker && (
-              <DateTimePicker
-                value={matchDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    setMatchDate(selectedDate);
-                  }
-                }}
-              />
-            )}
-
-            {/* Time Picker */}
-            {showTimePicker && (
-              <DateTimePicker
-                value={matchTime}
-                mode="time"
-                display="default"
-                is24Hour={true}
-                onChange={(event, selectedTime) => {
-                  setShowTimePicker(false);
-                  if (selectedTime) {
-                    setMatchTime(selectedTime);
-                  }
-                }}
-              />
-            )}
+          {!selectedTimeSlot && (
+            <ThemedText variant="muted" size="s" style={{ marginTop: 4 }}>
+              Chọn sân (venue) và khung giờ để tự động điền ngày & giờ
+            </ThemedText>
+          )}
 
           {/* Room Settings */}
-          <View className="mb-6">
-            <ThemedText variant="muted" size="m" weight="semiBold" className="mb-3">
+          <View style={styles.section}>
+            <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>
               {t('createRoom.roomSettings')}
             </ThemedText>
             <ThemedView 
               variant="surface"
-              className="rounded-2xl px-4 py-4 flex-row items-center justify-between"
-              style={{ borderWidth: 1, borderColor: theme.colors.border }}
+              style={[styles.settingsContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
             >
               <ThemedText variant="muted" size="m">
                 {t('createRoom.privateRoom')}
@@ -342,18 +561,16 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
           {/* Password (if private) */}
           {isPrivate && (
-            <View className="mb-6">
-              <ThemedText size="m" weight="semiBold" className="mb-3">
+            <View style={styles.section}>
+              <ThemedText size="m" weight="semiBold" style={styles.sectionTitle}>
                 {t('createRoom.password')}
               </ThemedText>
               <ThemedView 
                 variant="surface"
-                className="rounded-2xl px-4 py-4 flex-row items-center"
-                style={{ borderWidth: 1, borderColor: theme.colors.border }}
+                style={[styles.passwordContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
               >
                 <TextInput
-                  className="flex-1"
-                  style={{ color: theme.colors.text, fontSize: 16 }}
+                  style={[styles.passwordInput, { color: theme.colors.text, fontSize: 16 }]}
                   placeholder={t('createRoom.passwordPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={password}
@@ -373,23 +590,39 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
             {/* Create Button */}
             <TouchableOpacity
-              className="rounded-2xl py-4 mt-4"
-              style={{
+              style={[styles.createButton, {
                 backgroundColor: theme.colors.neonGreen,
                 shadowColor: theme.colors.neonGreen,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
                 elevation: 8,
-              }}
-              onPress={handleCreateRoom}
+              }]}
+              onPress={handleSubmit(handleCreateRoom)}
             >
-              <ThemedText size="l" weight="bold" className="text-center" style={{ color: '#000' }}>
+              <ThemedText size="l" weight="bold" style={[styles.createButtonText, { color: '#000' }]}>
                 {t('createRoom.createButton')}
               </ThemedText>
             </TouchableOpacity>
           </View>
-        </ThemedScrollView> 
+        </ThemedScrollView>
+
+        {/* Custom Alert */}
+        {alertOptions && (
+          <Alert
+            visible={visible}
+            type={alertOptions.type}
+            title={alertOptions.title}
+            message={alertOptions.message}
+            confirmText={alertOptions.confirmText}
+            cancelText={alertOptions.cancelText}
+            onConfirm={alertOptions.onConfirm}
+            onCancel={alertOptions.onCancel}
+            onClose={hideAlert}
+            autoClose={alertOptions.autoClose}
+            autoCloseDelay={alertOptions.autoCloseDelay}
+          />
+        )}
     </ThemedSafeAreaView>
    
   );

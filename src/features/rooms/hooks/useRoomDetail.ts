@@ -11,11 +11,11 @@ import { roomsKeys } from '../api/roomsKeys';
  * @example
  * const { data: room, isLoading, error, refetch } = useRoomDetail('123');
  */
-export const useRoomDetail = (roomId: string) => {
+export const useRoomDetail = (roomId: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: roomsKeys.detail(roomId),
     queryFn: () => roomsApi.getRoomFullInfo(roomId),
-    enabled: !!roomId,  // Only fetch if roomId exists
+    enabled: options?.enabled !== false && !!roomId,  // Only fetch if roomId exists and enabled
     staleTime: 2 * 60 * 1000,  // 2 minutes
     gcTime: 5 * 60 * 1000,      // 5 minutes
   });

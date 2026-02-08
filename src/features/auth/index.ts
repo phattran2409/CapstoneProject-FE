@@ -11,6 +11,9 @@ export {
   useLogout,
   useProfile,
   useUpdateProfile,
+  useGoogleSignIn,
+  useForgotPassword,
+  useChangePassword,
 } from './hooks';
 
 // ============ Types ============
@@ -20,10 +23,14 @@ export type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  OTPRequest,
+  SendOTPRequest,
   OTPResponse,
   VerifyOTPRequest,
   VerifyOTPResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
 } from './types/auth.types';
 
 // ============ Store ============

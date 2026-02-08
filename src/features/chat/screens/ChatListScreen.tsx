@@ -1,160 +1,97 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/shared/theme';
-import { useChatRooms } from '@/features/chat';
-import { RootStackParamList } from '@/app/navigation/types';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/shared/theme";
+import { RootStackParamList } from "@/app/navigation/types";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import {
+  AnimatedSearchBar,
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+  LoadingMoreIndicator,
+} from "@/shared/components";
+import { useChatConversations } from "../hooks";
+import { ChatItem, ChatItemData } from "../components";
+import { useDebounce } from "@/shared/hooks";
 
-type ChatListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ChatList'>;
+type ChatListScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ChatList"
+>;
 
 interface ChatListScreenProps {
   navigation: ChatListScreenNavigationProp;
 }
 
-interface ChatItem {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  isOnline: boolean;
-  avatar?: any;
-}
-
 const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
-  // ✅ Fetch chat rooms from API
-  const { data: chatRooms, isLoading, refetch } = useChatRooms();
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Mock data fallback
-  const mockChats: ChatItem[] = [
-    {
-      id: '1',
-      name: 'Đội bóng The Avengers',
-      lastMessage: 'Tuyệt vời! Hẹn gặp lại vào cuối tuần.',
-      timestamp: '10:42 AM',
-      isOnline: true,
-    },
-    {
-      id: '2',
-      name: 'Ronaldo',
-      lastMessage: 'Bạn sẵn sàng cho trận đấu tối nay...',
-      timestamp: '9:15 AM',
-      isOnline: true,
-    },
-    {
-      id: '3',
-      name: 'Messi',
-      lastMessage: 'Kế hoạch cho trận 5vs5 thế nào?',
-      timestamp: t('chat.yesterday'),
-      isOnline: false,
-    },
-    {
-      id: '4',
-      name: 'Neymar Jr',
-      lastMessage: 'Đã nhận được lời mời của bạn.',
-      timestamp: t('chat.friday'),
-      isOnline: false,
-    },
-  ];
+  const {
+    chatConversations,
+    loading,
+    refreshing,
+    loadingMore,
+    error,
+    refresh,
+    loadMore,
+    setChatConversations,
+  } = useChatConversations({ pageSize: 20, searchTerm: debouncedSearchQuery });
 
-  const renderChatItem = ({ item }: { item: ChatItem }) => (
-    <TouchableOpacity
-      style={{
-        flexDirection: 'row',
-        padding: theme.spacing.m,
-        backgroundColor: theme.colors.surface,
-        marginBottom: theme.spacing.xs,
-        alignItems: 'center',
-      }}
-      onPress={() => navigation.navigate('Chat', { chatId: item.id, chatName: item.name })}
-    >
-      <View style={{ position: 'relative' }}>
-        <View
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: theme.colors.border,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Ionicons name="person" size={32} color={theme.colors.textSecondary} />
-        </View>
-        {item.isOnline && (
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              width: 16,
-              height: 16,
-              borderRadius: 8,
-              backgroundColor: theme.colors.neonGreen,
-              borderWidth: 2,
-              borderColor: theme.colors.surface,
-            }}
-          />
-        )}
-      </View>
-      <View style={{ flex: 1, marginLeft: theme.spacing.m }}>
-        <Text
-          style={{
-            fontSize: theme.fontSizes.m,
-            color: theme.colors.text,
-            fontWeight: '600',
-            marginBottom: theme.spacing.xs,
-          }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            fontSize: theme.fontSizes.s,
-            color: theme.colors.textSecondary,
-          }}
-          numberOfLines={1}
-        >
-          {item.lastMessage}
-        </Text>
-      </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        <Text
-          style={{
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.textSecondary,
-            marginBottom: theme.spacing.xs,
-          }}
-        >
-          {item.timestamp}
-        </Text>
-        {item.isOnline && (
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: theme.colors.neonGreen,
-            }}
-          />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+  const chats: ChatItemData[] =
+    chatConversations?.map((c) => ({
+      id: c.otherUserId,
+      name: c.otherUserName,
+      lastMessage: c.lastMessage,
+      timestamp: c.lastMessageAt,
+      isOnline: c.isOnline,
+      avatar: c.otherUserAvatarUrl,
+    })) ?? [];
+
+  const handleChatPress = (chatId: string, chatName: string) => {
+    navigation.navigate("Chat", { chatId, chatName });
+  };
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <EmptyState
+        icon="chatbubble-outline"
+        title={t("chat.noConversations")}
+        description={t("chat.noConversations")}
+      />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <LoadingMoreIndicator />;
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {/* Header */}
       <View
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
           paddingHorizontal: theme.spacing.m,
           paddingVertical: theme.spacing.m,
           borderBottomWidth: 1,
@@ -168,22 +105,51 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
           style={{
             fontSize: theme.fontSizes.l,
             color: theme.colors.text,
-            fontWeight: '700',
+            fontWeight: "700",
           }}
         >
-          {t('chat.title')}
+          {t("chat.title")}
         </Text>
-        <TouchableOpacity>
-          <Ionicons name="add" size={24} color={theme.colors.text} />
+        <TouchableOpacity onPress={() => setIsSearchVisible(!isSearchVisible)}>
+          <Ionicons
+            name="search"
+            size={24}
+            color={theme.colors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={mockChats}
-        renderItem={renderChatItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: theme.spacing.m }}
+      <AnimatedSearchBar
+        visible={isSearchVisible}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onClose={() => setIsSearchVisible(false)}
+        placeholder={t("chat.searchPlaceholder", {
+          defaultValue: "Search chats",
+        })}
       />
+      {loading && <ListSkeleton />}
+      {error && <ErrorState error={error} onRetry={refresh} />}
+
+      {!loading && !error && (
+        <FlatList
+          data={chats}
+          renderItem={({ item }) => (
+            <ChatItem item={item} onPress={handleChatPress} />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: theme.spacing.m }}
+          ListEmptyComponent={renderEmpty}
+          ListFooterComponent={renderFooter}
+          onRefresh={refresh}
+          refreshing={refreshing}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -195,5 +161,3 @@ const styles = StyleSheet.create({
 });
 
 export default ChatListScreen;
-
-

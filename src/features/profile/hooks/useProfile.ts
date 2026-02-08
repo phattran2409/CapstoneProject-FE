@@ -1,22 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { profileKeys } from '../api/profileKeys';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { profileKeys } from "../api/profileKeys";
 import {
-  getMyProfile,
   getUserProfile,
   updateMyProfile,
   updateAvatar,
-  updatePreferences,
-} from '../api/profileApi';
-import { UpdateProfileData, UpdatePreferencesData } from '../types/profile.types';
-
-// Get my profile
-export const useMyProfile = () => {
-  return useQuery({
-    queryKey: profileKeys.me(),
-    queryFn: getMyProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
+} from "../api/profileApi";
+import { UpdateProfileData } from "../types/profile.types";
+import { useAuthStore } from "@/features/auth/store/authStore";
 
 // Get user profile by ID
 export const useUserProfile = (userId: string) => {
@@ -33,12 +23,15 @@ export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateProfileData) => updateMyProfile(data),
+    mutationFn: ({
+      userId,
+      data,
+    }: {
+      userId: string;
+      data: UpdateProfileData;
+    }) => updateMyProfile(userId, data),
     onSuccess: (updatedProfile) => {
-      // Update cached profile
       queryClient.setQueryData(profileKeys.me(), updatedProfile);
-      
-      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
   });
@@ -47,25 +40,18 @@ export const useUpdateProfile = () => {
 // Update avatar
 export const useUpdateAvatar = () => {
   const queryClient = useQueryClient();
+  const updateUserAvatar = useAuthStore((state) => state.updateUserAvatar);
 
   return useMutation({
-    mutationFn: (avatarUri: string) => updateAvatar(avatarUri),
-    onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(profileKeys.me(), updatedProfile);
+    mutationFn: (file: File | { uri: string; type: string; name: string }) =>
+      updateAvatar(file),
+    onSuccess: (response) => {
+      // Update auth store with new avatar URL
+      if (response.data?.avatarUrl) {
+        updateUserAvatar(response.data.avatarUrl);
+      }
+      // Invalidate all profile queries to refetch
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
   });
 };
-
-// Update preferences
-export const useUpdatePreferences = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdatePreferencesData) => updatePreferences(data),
-    onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(profileKeys.me(), updatedProfile);
-    },
-  });
-};
-

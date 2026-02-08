@@ -1,25 +1,25 @@
-import React from 'react';
-import { SafeAreaView, ViewProps } from 'react-native';
-import { useTheme } from '../../theme';
+import React from "react";
+import { SafeAreaView, ViewProps } from "react-native";
+import { useTheme } from "../../theme";
 
 interface ThemedSafeAreaViewProps extends ViewProps {
-  variant?: 'default' | 'card' | 'surface';
+  variant?: "default" | "card" | "surface";
   children?: React.ReactNode;
 }
 
-export const ThemedSafeAreaView: React.FC<ThemedSafeAreaViewProps> = ({ 
-  variant = 'default',
-  style, 
+export const ThemedSafeAreaView: React.FC<ThemedSafeAreaViewProps> = ({
+  variant = "default",
+  style,
   children,
-  ...props 
+  ...props
 }) => {
   const { theme } = useTheme();
 
   const getBackgroundColor = () => {
     switch (variant) {
-      case 'card':
+      case "card":
         return theme.colors.card;
-      case 'surface':
+      case "surface":
         return theme.colors.surface;
       default:
         return theme.colors.background;
@@ -27,15 +27,11 @@ export const ThemedSafeAreaView: React.FC<ThemedSafeAreaViewProps> = ({
   };
 
   return (
-    <SafeAreaView 
-      style={[
-        { flex: 1, backgroundColor: getBackgroundColor() },
-        style
-      ]} 
+    <SafeAreaView
+      style={[{ flex: 1, backgroundColor: getBackgroundColor() }, style]}
       {...props}
     >
       {children}
     </SafeAreaView>
   );
 };
-

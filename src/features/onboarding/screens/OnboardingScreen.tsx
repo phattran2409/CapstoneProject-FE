@@ -6,6 +6,7 @@ import {
   ImageBackground,
   TouchableOpacity,
   Animated,
+  StyleSheet,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { storage } from "@/shared/utils/storage";
@@ -34,7 +35,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   const language = useAppStore((state) => state.language);
   const setLanguage = useAppStore((state) => state.setLanguage);
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { theme } = useTheme();
+  
   const handleComplete = async () => {
     await storage.setItem(ONBOARDING_KEY, "true");
     onComplete();
@@ -109,13 +111,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   const currentSlide = slides[currentIndex];
 
   return (
-    <View className="flex-1 bg-black">
+    <View style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
       <Animated.View
-        className="flex-1"
-        style={{
-          opacity: fadeAnim,
-          transform: [{ translateX: slideAnim }],
-        }}
+        style={[
+          styles.flex1,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateX: slideAnim }],
+          },
+        ]}
       >
         <ImageBackground
           source={currentSlide.image}
@@ -133,12 +137,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
               height: height * 0.25,
             }}
           >
-            <View className="px-6 pt-12">
+            <View style={{ paddingHorizontal: 24, paddingTop: 48 }}>
               <TouchableOpacity
                 onPress={() => setLanguage(language === "vi" ? "en" : "vi")}
-                className="flex-row items-center px-5 py-3 mb-2 bg-gray-800 rounded-[40px] w-[100px]"
+                style={[styles.languageButton, { backgroundColor: '#1f2937', borderRadius: 40, width: 110 }]}
               >
-                <Text className="flex-1 text-white">
+                <Text style={{ flex: 1, color: theme.colors.softWhite }}>
                   {language === "vi" ? "Tiếng Việt" : "English "}
                 </Text>
               </TouchableOpacity>
@@ -160,45 +164,47 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
             }}
           >
             {/* Content */}
-            <View className="px-6 items-center">
-              <Text className="text-3xl font-bold text-white text-center mb-3">
+            <View style={{ paddingHorizontal: 24, alignItems: 'center' }}>
+              <Text style={[styles.title, { color: theme.colors.softWhite }]}>
                 {currentSlide.title}
               </Text>
-              <Text className="text-base text-white/80 text-center leading-6 mb-8">
+              <Text style={[styles.description, { color: 'rgba(255, 255, 255, 0.8)' }]}>
                 {currentSlide.description}
               </Text>
 
               {/* Pagination dots */}
-              <View className="flex-row justify-center mb-8">
+              <View style={styles.pagination}>
                 {slides.map((_, index) => (
                   <View
                     key={index}
-                    className={`h-2 rounded mx-1 ${
-                      index === currentIndex
-                        ? "w-6 bg-green-400"
-                        : "w-2 bg-white/40"
-                    }`}
+                    style={[
+                      styles.dot,
+                      {
+                        width: index === currentIndex ? 24 : 8,
+                        backgroundColor: index === currentIndex ? '#4ade80' : 'rgba(255, 255, 255, 0.4)',
+                      },
+                    ]}
                   />
                 ))}
               </View>
 
               {/* Buttons */}
-              <View className="flex-row justify-between w-full px-2">
+              <View style={styles.buttonsContainer}>
                 {currentIndex < slides.length - 1 ? (
                   <>
                     <TouchableOpacity
                       onPress={handleSkip}
-                      className="py-3.5 px-6"
+                      style={styles.skipButton}
                     >
-                      <Text className="text-white/70 text-base">
+                      <Text style={[styles.skipText, { color: 'rgba(255, 255, 255, 0.7)' }]}>
                         {t("onboarding_1.skip")}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={handleNext}
-                      className="bg-neon-green py-3.5 px-8 rounded-[25px]"
+                      style={[styles.nextButton, { backgroundColor: theme.colors.neonGreen, borderRadius: 25 }]}
                     >
-                      <Text className="text-black text-base font-semibold">
+                      <Text style={[styles.nextText, { color: theme.colors.darkBlack }]}>
                         {t("onboarding_1.next")}
                       </Text>
                     </TouchableOpacity>
@@ -206,9 +212,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
                 ) : (
                   <TouchableOpacity
                     onPress={handleComplete}
-                    className="bg-neon-green py-3.5 px-8 rounded-[25px] flex-1 items-center"
+                    style={[styles.doneButton, { backgroundColor: theme.colors.neonGreen, borderRadius: 25 }]}
                   >
-                    <Text className="text-black text-base font-semibold">
+                    <Text style={[styles.doneText, { color: theme.colors.darkBlack }]}>
                       {t("onboarding_1.done")}
                     </Text>
                   </TouchableOpacity>
@@ -221,6 +227,75 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  flex1: {
+    flex: 1,
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  description: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  skipButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  skipText: {
+    fontSize: 16,
+  },
+  nextButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+  },
+  nextText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  doneButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    flex: 1,
+    alignItems: 'center',
+  },
+  doneText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export const checkOnboardingStatus = async (): Promise<boolean> => {
   const hasSeenOnboarding = await storage.getItem(ONBOARDING_KEY);

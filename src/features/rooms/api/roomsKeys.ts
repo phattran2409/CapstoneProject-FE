@@ -1,4 +1,4 @@
-import type { RoomFilters } from '../types/room.types';
+import type { RoomFilters, MatchRoomFilters } from '../types/room.types';
 
 /**
  * Query keys for React Query
@@ -11,6 +11,15 @@ export const roomsKeys = {
   // Lists of rooms
   lists: () => [...roomsKeys.all, 'list'] as const,
   list: (filters: RoomFilters) => [...roomsKeys.lists(), filters] as const,
+
+  myRooms: () => [...roomsKeys.all, 'my-rooms'] as const,
+
+  // List of room by user
+  listByUser: (userId: string) => [...roomsKeys.lists(), userId] as const,
+  
+  // Match rooms (paginated)
+  matchRooms: () => [...roomsKeys.all, 'match-rooms'] as const,
+  matchRoomsList: (filters?: MatchRoomFilters) => [...roomsKeys.matchRooms(), filters] as const,
   
   // Room details
   details: () => [...roomsKeys.all, 'detail'] as const,

@@ -5,30 +5,45 @@
 
 // ============ Hooks ============
 export {
-  useRooms,
+  useMatchRooms,
   useRoomDetail,
-  useJoinRoom,
+  useMatchRoomDetail,
+  useJoinMatchRoom,
+  useJoinRoomAsUnassigned,
+  useUpdateParticipant,
+  useLeaveMatchRoom,
   useRoomMessages,
   useSendMessage,
   useCreateRoom,
+  useKickPlayer,
+  useCancelRoom,
 } from './hooks';
 
 // ============ Types ============
 export type {
-  Room,
-  RoomFullInfo,
   RoomFilters,
   RoomStatus,
-  Player,
-  Team,
-  Message,
   CreateRoomRequest,
   JoinRoomRequest,
   SendMessageRequest,
+  // Match Room Types
+  MatchRoom,
+  MatchRoomsResponse,
+  MatchRoomFilters,
+  MatchRoomFullInfo,
+  MatchRoomHost,
+  MatchRoomField,
+  MatchRoomVenue,
+  MatchRoomParticipant,
+  MatchRoomParticipants,
+  MatchRoomStatus,
+  MatchFormat,
+  TeamAssignment,
 } from './types/room.types';
 
 // ============ UI Store (for internal use within rooms feature) ============
 export { useRoomUIStore } from './store/roomUIStore';
+export { useActiveRoomStore } from './store/activeRoomStore';
 
 // ============ Screens ============
 // export * from './screens';

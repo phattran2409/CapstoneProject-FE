@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { View, Image, Animated } from "react-native";
+import { View, Image, Animated, Text, StyleSheet } from "react-native";
+import { useTheme } from "@/shared/theme";
 
 const SplashScreen = () => {
+  const { theme } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
@@ -50,13 +52,13 @@ const SplashScreen = () => {
   ];
 
   return (
-    <View className="flex-1 bg-black justify-center items-center">
+    <View style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
       <Animated.View
         style={{
           opacity: fadeAnim,
           transform: [{ scale: scaleAnim }],
+          marginBottom: 20,
         }}
-        className="mb-5"
       >
         <Image
           source={require("../../../assets/kickify/logo_only.png")}
@@ -65,23 +67,25 @@ const SplashScreen = () => {
         />
       </Animated.View>
 
-      <View className="flex-row mt-2.5">
+      <View style={styles.lettersContainer}>
         {letters.map((letter, index) => (
           <Animated.Text
             key={index}
-            style={{
-              color: colors[index],
-              opacity: letterAnims[index],
-              transform: [
-                {
-                  translateY: letterAnims[index].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
-            }}
-            className="text-5xl font-bold"
+            style={[
+              styles.letter,
+              {
+                color: colors[index],
+                opacity: letterAnims[index],
+                transform: [
+                  {
+                    translateY: letterAnims[index].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
           >
             {letter}
           </Animated.Text>
@@ -95,6 +99,7 @@ const SplashScreen = () => {
 };
 
 const LoadingDots = () => {
+  const { theme } = useTheme();
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;
   const dot3 = useRef(new Animated.Value(0)).current;
@@ -142,29 +147,58 @@ const LoadingDots = () => {
   }, []);
 
   return (
-    <View className="flex-row mt-10 gap-2">
+    <View style={styles.dotsContainer}>
       {[dot1, dot2, dot3].map((anim, i) => (
         <Animated.View
           key={i}
-          style={{
-            opacity: anim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.3, 1],
-            }),
-            transform: [
-              {
-                scale: anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 1.3],
-                }),
-              },
-            ],
-          }}
-          className="w-2.5 h-2.5 rounded-full bg-neon-green"
+          style={[
+            styles.dot,
+            {
+              backgroundColor: theme.colors.neonGreen,
+              opacity: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.3, 1],
+              }),
+              transform: [
+                {
+                  scale: anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 1.3],
+                  }),
+                },
+              ],
+            },
+          ]}
         />
       ))}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lettersContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  letter: {
+    fontSize: 48,
+    fontWeight: '700',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    marginTop: 40,
+    gap: 8,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+});
 
 export default SplashScreen;

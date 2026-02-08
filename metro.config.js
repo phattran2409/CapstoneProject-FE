@@ -1,7 +1,17 @@
 const { getDefaultConfig } = require('expo/metro-config');
-const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withNativeWind(config, { input: './global.css' });
+// Improve Metro bundler performance and stability
+config.server = {
+  ...config.server,
+  enhanceMiddleware: (middleware) => {
+    return middleware;
+  },
+};
+
+// Increase timeout for large projects
+config.watchFolders = [__dirname];
+
+module.exports = config;
 

@@ -1,45 +1,39 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { authApi } from '../api/authApi';
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { setAuthToken } from '@/shared/api/client';
 import { useAuthStore } from '../store/authStore';
 
 /**
  * Hook to handle user logout
- * Clears all auth data and cache
+ * Clears all auth tokens and cache
  * 
  * @example
- * const { mutate: logout, isPending } = useLogout();
+ * const { logout, isPending } = useLogout();
  * 
- * logout(undefined, {
- *   onSuccess: () => navigation.navigate('Login'),
- * });
+ * const handleLogout = () => {
+ *   logout();
+ *   navigation.navigate('Login');
+ * };
  */
 export const useLogout = () => {
   const queryClient = useQueryClient();
-  const { setUser, setToken } = useAuthStore();
+  const reset = useAuthStore((state) => state.reset);
 
-  return useMutation({
-    mutationFn: () => authApi.logout(),
+  const logout = useCallback(async () => {
+    // Clear auth token from API client
+    await setAuthToken(null);
     
-    onSuccess: () => {
-      // Clear auth token
-      setAuthToken(null);
-      
-      // Clear auth store
-      setUser(null);
-      setToken(null);
-      
-      // Clear all React Query cache
-      queryClient.clear();
-    },
+    // Reset auth store (clears user, token, isAuthenticated)
+    reset();
     
-    onError: () => {
-      // Even on error, clear local auth
-      setAuthToken(null);
-      setUser(null);
-      setToken(null);
-      queryClient.clear();
-    },
-  });
+    // Clear all React Query cache
+    queryClient.clear();
+  }, [reset, queryClient]);
+
+  return { 
+    mutate: logout,  // For backward compatibility
+    logout,
+    isPending: false 
+  };
 };
 

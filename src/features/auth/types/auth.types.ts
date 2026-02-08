@@ -1,14 +1,18 @@
 // ==================== User Types ====================
 export interface User {
-  id: string;
-  name: string;
+  userId: string;
+  fullName: string;
   email: string;
-  phone?: string;
-  avatar?: string;
+  role?: string;
+  avatarUrl?: string;
   position?: string;
   rating?: number;
   totalMatches?: number;
   createdAt?: string;
+  isEmailVerified?: boolean;
+  isActive?: boolean;
+  accessToken?: string;
+  refreshToken?: string;
 }
 
 // ==================== Auth Request/Response Types ====================
@@ -18,23 +22,24 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  success: boolean;
-  token: string;
-  user: User;
-  message?: string;
+  // success: boolean;
+  // token: string;
+  // user: User;
+  // message?: string;
+  isSuccess: boolean;
+  data?: User;
 }
 
 export interface RegisterRequest {
-  name: string;
+  fullName: string;
   email: string;
-  phone?: string;
   password: string;
 }
 
 export interface RegisterResponse extends LoginResponse {}
 
-export interface OTPRequest {
-  phone: string;
+export interface ReSendOTPRequest {
+  userId: string;
 }
 
 export interface OTPResponse {
@@ -44,13 +49,15 @@ export interface OTPResponse {
 }
 
 export interface VerifyOTPRequest {
-  phone: string;
+  userId: string;
   otp: string;
 }
 
 export interface VerifyOTPResponse {
-  success: boolean;
-  message: string;
+  isSuccess: boolean;
+  data: {
+    "userId": string;
+  };
 }
 
 export interface RefreshTokenRequest {
@@ -60,6 +67,28 @@ export interface RefreshTokenRequest {
 export interface RefreshTokenResponse {
   token: string;
   refreshToken?: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  isSuccess: boolean;
+  data : {
+    email: string;
+  }
+}
+
+export interface ChangePasswordRequest {
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  isSuccess: boolean;
+  message?: string;
 }
 
 // ==================== Auth State ====================

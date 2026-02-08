@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "600662709460",
+    "project_id": "kickyfi",
+    "storage_bucket": "kickyfi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600662709460:android:fc67847442f91bb7ac5741",
+        "android_client_info": {
+          "package_name": "com.kickify.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "600662709460-2u7v746k4l5jvj4g8ehcclbsj5itqf1i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kickify.app",
+            "certificate_hash": "6d4541b67fc933af634ae89ffb6771bd6223ae53"
+          }
+        },
+        {
+          "client_id": "600662709460-dbltm9v1qnnkosq16f41hbdn7qt952nk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kickyfi.app",
+            "certificate_hash": "247741ddf937c5c04fbb54ef93944fd18b1b5a9a"
+          }
+        },
+        {
+          "client_id": "600662709460-m0tclu997im6r5qliinv06hj7ut542ag.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBj_ueYa5o5u-nv2JaKqR6ScXOlgQnknb4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "600662709460-m0tclu997im6r5qliinv06hj7ut542ag.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

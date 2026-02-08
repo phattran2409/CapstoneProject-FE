@@ -4,14 +4,20 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  OTPRequest,
+  SendOTPRequest,
   OTPResponse,
   VerifyOTPRequest,
   VerifyOTPResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   User,
+  ReSendOTPRequest,
 } from '../types/auth.types';
+import { API_CONFIG } from '@/shared/constants/api';
 
 /**
  * Auth API functions
@@ -22,7 +28,7 @@ export const authApi = {
    * Login with email and password
    */
   login: async (request: LoginRequest): Promise<LoginResponse> => {
-    const data = await apiClient.post('/auth/login', { email: request.email, password: request.password });
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, { email: request.email, password: request.password });
     return data;
   },
 
@@ -30,23 +36,29 @@ export const authApi = {
    * Register new user
    */
   register: async (request: RegisterRequest): Promise<RegisterResponse> => {
-    const data = await apiClient.post('/auth/register', request);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.REGISTER, request);
     return data;
   },
 
   /**
-   * Send OTP to phone number
+   * Send/Resend OTP to email
    */
-  sendOTP: async (request: OTPRequest): Promise<OTPResponse> => {
-    const data = await apiClient.post('/auth/send-otp', request);
+  sendOTP: async (request: SendOTPRequest): Promise<OTPResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL, request);
     return data;
   },
 
+  reSendOTP: async (request: ReSendOTPRequest): Promise<OTPResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.RESEND_OTP, request);
+    return data;
+  },
+   
   /**
    * Verify OTP
    */
   verifyOTP: async (request: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
-    const data = await apiClient.post('/auth/verify-otp', request);
+    console.log(request);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL, request);
     return data;
   },
 
@@ -78,6 +90,32 @@ export const authApi = {
    */
   updateProfile: async (updates: Partial<User>): Promise<User> => {
     const data = await apiClient.patch('/auth/profile', updates);
+    return data;
+  },
+
+  /**
+   * Login/Register with Google
+   * Backend will verify the ID token and create/login user
+   */
+  googleLogin: async (request: { uid: string }): Promise<LoginResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN, { uid: request.uid });
+    return data;
+  },
+
+  /**
+   * Send forgot password email
+   */
+  forgotPassword: async (request: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, request);
+    return data;
+  },
+
+  /**
+   * Change user password
+   */
+  changePassword: async (request: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    console.log('request change password :', request);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
     return data;
   },
 };

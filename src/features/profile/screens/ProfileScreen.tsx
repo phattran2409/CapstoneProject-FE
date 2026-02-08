@@ -6,12 +6,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
-import { ThemedText } from '@/shared/components/themed';
+import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 import { useAuthStore, useLogout } from '@/features/auth';
-import { useMyProfile } from '@/features/profile/hooks';
+
 import { useAppStore } from '@/store/appStore';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
+import { use } from 'i18next';
 
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Profile'>,
@@ -31,73 +33,45 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [matchNotifications, setMatchNotifications] = useState(true);
   const [newsUpdates, setNewsUpdates] = useState(false);
 
-  // ✅ Fetch user profile from API
-  const { data: profile, isLoading: isLoadingProfile } = useMyProfile();
-  
-  // ✅ Use logout mutation
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  // ✅ Use logout
+  const { logout } = useLogout();
+  const scrollHandler = useScrollToHideTabBar();
 
   const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () => {
-        const parent = navigation.getParent();
-        if (parent) {
-          parent.navigate('Login');
-        }
-      },
-    });
+    logout();
   };
 
   const handleAvatarPress = () => {
     const parent = navigation.getParent();
     if (parent) {
-      parent.navigate('PersonalPage');
-    }
-  };
-
-  const handleChatListPress = () => {
-    const parent = navigation.getParent();
-    if (parent) {
-      parent.navigate('ChatList');
+      parent.navigate('PersonalPage', { userId: user?.userId });
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={{ padding: theme.spacing.m }}>
-        {/* Header: title + chat icon */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: theme.spacing.l,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: theme.fontSizes.xxl,
-              color: theme.colors.text,
-              fontWeight: '700',
-            }}
-          >
-            {t('profile.title')}
-          </Text>
-          <TouchableOpacity
-            onPress={handleChatListPress}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: theme.colors.surface,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Ionicons name="chatbubbles-outline" size={23} color={theme.colors.neonGreen} />
-          </TouchableOpacity>
-        </View>
-        
+    <ThemedSafeAreaView>
+      {/* Header */}
+     
+
+      <ThemedScrollView 
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
+         <ThemedView
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.xl,
+          },
+        ]}
+      >
+        <ThemedText variant="primary" size="xxl" weight="bold">
+          {t('profile.title')}
+        </ThemedText>
+      </ThemedView>
+        <ThemedView style={{ paddingHorizontal: theme.spacing.l, paddingTop: theme.spacing.l }}>      
         {/* Compact Profile Section - rectangular card leading to personal page */}
         <TouchableOpacity
           onPress={handleAvatarPress}
@@ -127,7 +101,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               marginRight: theme.spacing.m,
             }}
           >
-            <Ionicons name="person" size={36} color={theme.colors.textSecondary} />
+            {user?.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            ) : (
+              <Image source={require('../../../assets/images/default_avatar.png')} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            )}
           </View>
 
           {/* Name + info */}
@@ -140,7 +118,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: theme.spacing.xs / 2,
               }}
             >
-              {user?.name || 'Tuấn Anh Nguyễn'}
+              {user?.fullName || 'Người dùng'}
             </Text>
             <Text
               style={{
@@ -149,7 +127,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               }}
               numberOfLines={1}
             >
-              {t('profile.position')}: {t('profile.forward')} · {t('profile.matchesCount', { count: 25 })}
+              Trang cá nhân
             </Text>
           </View>
 
@@ -174,27 +152,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           >
             {t('profile.account')}
           </Text>
-          <TouchableOpacity
-            style={[
-              styles.settingItem,
-              {
-                backgroundColor: theme.colors.surface,
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.border,
-                paddingVertical: theme.spacing.m,
-                paddingHorizontal: theme.spacing.m,
-                borderRadius: theme.radius.m,
-                marginBottom: theme.spacing.xs,
-              },
-            ]}
-            onPress={handleAvatarPress}
-          >
-            <Ionicons name="person-outline" size={24} color={theme.colors.text} />
-            <Text style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}>
-              {t('profile.editPersonalInfo')}
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+      
           <TouchableOpacity
             style={[
               styles.settingItem,
@@ -383,34 +341,40 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
         {/* Logout Button */}
         <TouchableOpacity
-          className="rounded-2xl py-4 mt-4"
-          style={{
-            backgroundColor: theme.colors.neonGreen,
-            shadowColor: theme.colors.neonGreen,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
+          style={[
+            styles.logoutButton,
+            {
+              backgroundColor: theme.colors.neonGreen,
+              shadowColor: theme.colors.neonGreen,
+              borderRadius: theme.radius.l,
+              paddingVertical: theme.spacing.m,
+              marginTop: theme.spacing.m,
+            },
+          ]}
           onPress={handleLogout}
         >
           <ThemedText 
             size="l" 
             weight="bold" 
-            className="text-center" 
-            style={{ color: theme.colors.background }}
+            style={{ color: theme.colors.background, textAlign: 'center' }}
           >
             {t('common.buttons.logout')}
           </ThemedText>
         </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        </ThemedView>
+      </ThemedScrollView>
+    </ThemedSafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   settingItem: {
     flexDirection: 'row',
@@ -422,6 +386,12 @@ const styles = StyleSheet.create({
   },
   settingValue: {
     marginRight: 4,
+  },
+  logoutButton: {
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
 

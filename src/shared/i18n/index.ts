@@ -17,13 +17,14 @@ const getDeviceLanguage = (): SupportedLanguage => {
   return locale.toLowerCase().startsWith('vi') ? 'vi' : 'en';
 };
 
-const defaultLanguage = getDeviceLanguage();
+// Default to Vietnamese for new installations
+const defaultLanguage: SupportedLanguage = 'vi';
 
 i18n.use(initReactI18next).init({
-  compatibilityJSON: 'v3',
+  compatibilityJSON: 'v4',
   resources,
   lng: defaultLanguage,
-  fallbackLng: 'en',
+  fallbackLng: 'vi',
   interpolation: {
     escapeValue: false,
   },

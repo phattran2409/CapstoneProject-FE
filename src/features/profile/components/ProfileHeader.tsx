@@ -1,26 +1,179 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ActionSheetIOS,
+  Platform,
+  Alert,
+} from "react-native";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { FriendshipActionButton } from "./FriendshipActionButton";
+import { FriendshipStatus } from "@/features/friends/types/friends.types";
+import { JerseyBadge } from "./JerseyBadge";
+import * as ImagePicker from "expo-image-picker";
+import { useAlert } from "@/shared/hooks";
+import { useUpdateAvatar } from "../hooks";
+import { useToast } from "@/shared/toast";
 
 interface ProfileHeaderProps {
+  avatar?: string;
   name: string;
   elo: number;
-  rank: string;
-  quote?: string;
+  description?: string;
+  position?: string;
+  shirtNumber?: number;
+  isCurrentUser?: boolean;
   onEditPress?: () => void;
+  // Friendship actions
+  friendshipStatus?: FriendshipStatus;
+  onAddFriend?: () => void;
+  onRemoveFriend?: () => void;
+  onAcceptRequest?: () => void;
+  onCancelRequest?: () => void;
+  isFriendshipLoading?: boolean;
 }
 
+//SVG Jersey Badge
+JerseyBadge;
+
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+  avatar,
   name,
   elo,
-  rank,
-  quote = 'King of the Pitch',
+  description,
+  position,
+  shirtNumber,
+  isCurrentUser,
   onEditPress,
+  friendshipStatus,
+  onAddFriend,
+  onRemoveFriend,
+  onAcceptRequest,
+  onCancelRequest,
+  isFriendshipLoading = false,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const toast = useToast();
+  const { mutateAsync: updateAvatar } = useUpdateAvatar();
+
+  const handleUploadImage = async (uri: string) => {
+    try {
+      // Create file object for upload
+      const file = {
+        uri: uri,
+        type: "image/jpeg",
+        name: `avatar_${Date.now()}.jpg`,
+      };
+      // Upload avatar
+      await updateAvatar(file);
+      toast.success(t("Cập nhật ảnh đại diện thành công!"));
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error(t("Không thể cập nhật ảnh đại diện. Vui lòng thử lại!"));
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      // Request camera permission
+      const permissionResult =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        toast.error(t("Bạn cần cấp quyền truy cập camera!"));
+        return;
+      }
+
+      // Take photo
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await handleUploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      toast.error(t("Không thể chụp ảnh. Vui lòng thử lại!"));
+    }
+  };
+
+  const handlePickFromLibrary = async () => {
+    try {
+      // Request media library permission
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        toast.error(t("Bạn cần cấp quyền truy cập thư viện ảnh!"));
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await handleUploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      toast.error(t("Không thể chọn ảnh. Vui lòng thử lại!"));
+    }
+  };
+
+  const handleAvatarUpload = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Hủy", "Chụp ảnh", "Chọn từ thư viện"],
+          cancelButtonIndex: 0,
+          title: "Chọn ảnh đại diện",
+          message: "Bạn muốn chọn ảnh từ đâu?",
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleTakePhoto();
+          } else if (buttonIndex === 2) {
+            handlePickFromLibrary();
+          }
+        },
+      );
+    } else {
+      // Android
+      Alert.alert(
+        "Chọn ảnh đại diện",
+        "Bạn muốn chọn ảnh từ đâu?",
+        [
+          {
+            text: "Chụp ảnh",
+            onPress: handleTakePhoto,
+          },
+          {
+            text: "Chọn từ thư viện",
+            onPress: handlePickFromLibrary,
+          },
+          {
+            text: "Hủy",
+            style: "cancel",
+          },
+        ],
+        { cancelable: true },
+      );
+    }
+  };
 
   return (
     <View style={[styles.container, { marginBottom: theme.spacing.l }]}>
@@ -30,38 +183,74 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           styles.avatar,
           {
             borderColor: theme.colors.neonGreen,
-            backgroundColor: '#E8D5C4',
+            backgroundColor: "#E8D5C4",
             marginBottom: theme.spacing.m,
           },
         ]}
       >
-        <Ionicons name="person" size={60} color={theme.colors.textSecondary} />
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <Image
+            source={require("../../../assets/images/default_avatar.png")}
+            style={styles.avatar}
+          />
+        )}
+        {isCurrentUser && (
+          <TouchableOpacity
+            onPress={handleAvatarUpload}
+            style={[
+              styles.changeAvatarButton,
+              { backgroundColor: theme.colors.neonGreen },
+            ]}
+          >
+            <Ionicons name="camera" size={16} color={theme.colors.black} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Name */}
-      <Text
-        style={[
-          styles.name,
-          {
-            fontSize: theme.fontSizes.xxl,
-            color: theme.colors.text,
-            marginBottom: theme.spacing.xs,
-          },
-        ]}
-      >
-        {name}
-      </Text>
-
+      <View style={{ alignItems: "center", marginBottom: theme.spacing.m }}>
+        <Text
+          style={[
+            styles.name,
+            {
+              fontSize: theme.fontSizes.xxl,
+              color: theme.colors.text,
+              marginBottom: theme.spacing.xs,
+            },
+          ]}
+        >
+          {name}
+        </Text>
+        {/* Bio */}
+        {description && (
+          <Text
+            style={[
+              styles.quote,
+              {
+                fontSize: theme.fontSizes.m,
+              color: theme.colors.textSecondary,
+              textAlign: "center",
+            },
+          ]}
+        >
+          {description}
+        </Text>
+        )}
+      </View>
+      
       {/* Rank Badge */}
+      {elo && (
       <View
         style={[
           styles.badge,
           {
-            backgroundColor: theme.colors.border === '#E0E0E0' ? '#2C2C2C' : '#2C2C2C',
+            backgroundColor:
+              theme.colors.border === "#E0E0E0" ? "#2C2C2C" : "#2C2C2C",
             borderRadius: theme.radius.m,
             paddingVertical: theme.spacing.s,
             paddingHorizontal: theme.spacing.m,
-            marginBottom: theme.spacing.m,
           },
         ]}
       >
@@ -88,88 +277,157 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             },
           ]}
         >
-          {rank}
-        </Text>
+          Điểm Elo
+        </Text>       
       </View>
+      )}
+      {shirtNumber && position && (
+        <JerseyBadge
+          number={shirtNumber}
+          accent={theme.colors.neonGreen}
+          text={position}
+        />
+      )}
 
-      {/* Quote */}
-      <Text
-        style={[
-          styles.quote,
-          {
-            fontSize: theme.fontSizes.m,
-            color: theme.colors.textSecondary,
-            marginBottom: theme.spacing.m,
-            textAlign: 'center',
-          },
-        ]}
-      >
-        "{quote} - Chuyên gia kiến tạo"
-      </Text>
-
-      {/* Edit Button */}
-      <TouchableOpacity
-        onPress={onEditPress}
-        style={[
-          styles.editButton,
-          {
-            backgroundColor: theme.colors.neonGreen,
-            borderRadius: theme.radius.m,
-            paddingVertical: theme.spacing.s,
-            paddingHorizontal: theme.spacing.xl,
-          },
-        ]}
-      >
-        <Text
+      {/* Edit Button or Friendship Action Button */}
+      {isCurrentUser ? (
+        <TouchableOpacity
+          onPress={onEditPress}
           style={[
-            styles.editButtonText,
+            styles.editButton,
             {
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.white,
+              backgroundColor: theme.colors.neonGreen,
+              borderRadius: theme.radius.m,
+              paddingVertical: theme.spacing.s,
+              paddingHorizontal: theme.spacing.xl,
             },
           ]}
         >
-          {t('personalPage.editProfile')}
-        </Text>
-      </TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: theme.spacing.s,
+            }}
+          >
+            <Ionicons name="pencil" size={18} color={theme.colors.black} />
+            <Text
+              style={[
+                styles.editButtonText,
+                {
+                  fontSize: theme.fontSizes.m,
+                  color: theme.colors.background,
+                },
+              ]}
+            >
+              {t("personalPage.editProfile")}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      ) : (
+        friendshipStatus && (
+          <FriendshipActionButton
+            status={friendshipStatus}
+            onAddFriend={onAddFriend || (() => {})}
+            onRemoveFriend={onRemoveFriend || (() => {})}
+            onAcceptRequest={onAcceptRequest}
+            onCancelRequest={onCancelRequest}
+            isLoading={isFriendshipLoading}
+          />
+        )
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
   },
   name: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   elo: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   rank: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   quote: {
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   editButton: {
     paddingVertical: 8,
     paddingHorizontal: 32,
   },
   editButtonText: {
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  addFriendButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 32,
+  },
+  addFriendButtonText: {
+    fontWeight: "600",
+  },
+  statsContainer: {
+    marginTop: 20,
+    marginHorizontal: 16,
+    flexDirection: "row",
+    gap: 12,
+  },
+  jerseyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 12,
+  },
+  positionContainer: {
+    alignItems: "flex-start",
+  },
+  positionLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  positionText: {
+    fontWeight: "800",
+    fontSize: 18,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  innerBorder: {
+    position: "absolute",
+    top: 1,
+    left: 1,
+    right: 1,
+    bottom: 1,
+    borderRadius: 15,
+    borderWidth: 1,
+    pointerEvents: "none",
+  },
+  changeAvatarButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
-
