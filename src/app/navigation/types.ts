@@ -35,8 +35,16 @@ export type RootStackParamList = {
     email: string;
   };
   Search: undefined;
+  EloBreakdown:
+    | {
+        eloDelta?: number;
+        matchLabel?: string;
+        isWin?: boolean;
+      }
+    | undefined;
   FeedbackIntro: undefined;
-  FeedbackRating: { roomId: string };
+  FeedbackMatchResult: { roomId: string };
+  FeedbackRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
   FeedbackComplete: undefined;
 };
 

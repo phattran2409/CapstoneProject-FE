@@ -38,7 +38,9 @@ import {
   FeedbackIntroScreen,
   FeedbackRatingScreen,
   FeedbackCompleteScreen,
+  EloBreakdownScreen,
 } from "@/screens";
+import FeedbackMatchResultScreen from "@/features/feedback/screens/FeedbackMatchResultScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -127,6 +129,14 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen
               name="Leaderboard"
               component={LeaderboardScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="EloBreakdown"
+              component={EloBreakdownScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
@@ -299,6 +309,14 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackMatchResult"
+              component={FeedbackMatchResultScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
               }}
             />
             <Stack.Screen

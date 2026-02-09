@@ -80,7 +80,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
   }));
 
   const handleStart = () => {
-    navigation.navigate("FeedbackRating", { roomId: "" });
+    navigation.navigate("FeedbackMatchResult", { roomId: "" });
   };
 
   const handleClose = () => {

@@ -41,11 +41,15 @@ export { default as ChatScreen } from '../features/chat/screens/ChatScreen';
 // Leaderboard Feature Screens
 export { default as LeaderboardScreen } from '../features/leaderboard/screens/LeaderboardScreen';
 
+// Breakdown / Elo Screens
+export { default as EloBreakdownScreen } from '../features/breakdown/screens/EloBreakdownScreen';
+
 // Onboarding Feature Screens
 export { default as OnboardingScreen, checkOnboardingStatus } from '../features/onboarding/screens/OnboardingScreen';
 
 // Feedback Feature Screens
 export { default as FeedbackIntroScreen } from '../features/feedback/screens/FeedbackIntroScreen';
+export { default as FeedbackMatchResultScreen } from '../features/feedback/screens/FeedbackMatchResultScreen';
 export { default as FeedbackRatingScreen } from '../features/feedback/screens/FeedbackRatingScreen';
 export { default as FeedbackCompleteScreen } from '../features/feedback/screens/FeedbackCompleteScreen';
 

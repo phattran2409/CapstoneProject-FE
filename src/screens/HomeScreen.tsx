@@ -221,6 +221,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconButton}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate("EloBreakdown");
+              }
+            }}
+          >
+            <Ionicons
+              name="stats-chart-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
             onPress={() => navigation.navigate("Search" as any)}
           >
             <Ionicons

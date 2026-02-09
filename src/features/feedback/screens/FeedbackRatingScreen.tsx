@@ -79,6 +79,8 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   const progressAnim = useSharedValue(0);
   const nextCardAnim = useSharedValue(0);
 
+  const { roomId, matchResult } = route.params;
+
   React.useEffect(() => {
     const progress = (currentIndex + 1) / MOCK_PLAYERS.length;
     progressAnim.value = withSpring(progress);
@@ -152,8 +154,12 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       comment: comments[p.id] || "",
     }));
 
-    // Submit all ratings (no validation - freedom to skip players)
-    console.log("Submitting ratings:", allRatings);
+    // Submit all ratings cùng với kết quả trận đấu
+    console.log("Submitting feedback:", {
+      roomId,
+      matchResult,
+      ratings: allRatings,
+    });
 
     // Navigate to completion screen
     navigation.replace("FeedbackComplete");
