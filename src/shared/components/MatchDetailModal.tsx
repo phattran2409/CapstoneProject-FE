@@ -9,6 +9,7 @@ import { useTheme } from '@/shared/theme';
 import { ThemedText, ThemedIcon, ThemedView } from '@/shared/components/themed';
 import { MatchItemData } from './MatchItem';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { getImageSource } from '../utils/imageSource';
 
 export interface MatchDetailModalProps {
   visible: boolean;
@@ -105,7 +106,7 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           >
             {/* Match Image */}
             <Image
-              source={match.image}
+              source={getImageSource(match.image)}
               style={styles.matchImage}
               resizeMode="cover"
             />

@@ -8,17 +8,20 @@ import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useTheme } from '@/shared/theme';
 import { ThemedText, ThemedIcon } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { getImageSource } from '../utils/imageSource';
 
 export interface MatchItemData {
   id: string;
   title: string;
   format?: string;
   players?: string;
-  image: any;
+  image: string;
   date?: string;
   status?: 'win' | 'lose' | 'draw' | 'ongoing' | 'upcoming';
   venue?: string;
   time?: string;
+  /** Hiển thị badge "Riêng tư" khi true */
+  isPrivate?: boolean;
 }
 
 
@@ -29,6 +32,8 @@ export interface MatchItemProps {
   showStatus?: boolean;
 }
 
+// const PLACEHOLDER_IMAGE = require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png');
+
 const MatchItem: React.FC<MatchItemProps> = ({
   match,
   variant = 'list',
@@ -36,6 +41,10 @@ const MatchItem: React.FC<MatchItemProps> = ({
   showStatus = true,
 }) => {
   const { theme } = useTheme();
+
+  // const imageSource = match.image?.trim()
+  //   ? { uri: match.image.trim() }
+  //   : PLACEHOLDER_IMAGE;
 
   const getStatusIcon = (status?: MatchItemData['status']) => {
     switch (status) {
@@ -66,6 +75,16 @@ const MatchItem: React.FC<MatchItemProps> = ({
     return statusMap[status] || '';
   };
 
+  const PrivateBadge = () =>
+    match.isPrivate ? (
+      <View style={[styles.privateBadge, { backgroundColor: theme.colors.surface }]}>
+        <Ionicons name="lock-closed" size={12} color={theme.colors.textSecondary} />
+        <ThemedText size="xs" weight="semiBold" style={styles.privateBadgeText}>
+          Riêng tư
+        </ThemedText>
+      </View>
+    ) : null;
+
   if (variant === 'card') {
     return (
       <TouchableOpacity
@@ -79,11 +98,14 @@ const MatchItem: React.FC<MatchItemProps> = ({
         onPress={() => onPress?.(match.id)}
         activeOpacity={0.8}
       >
-        <Image
-          source={match.image}
-          style={styles.cardImage}
-          resizeMode="cover"
-        />
+        <View style={styles.cardImageWrapper}>
+          <Image
+            source={getImageSource(match.image)}
+            style={styles.cardImage}
+            resizeMode="cover"
+          />
+          <PrivateBadge />
+        </View>
         <View style={styles.cardContent}>
           <ThemedText size="l" weight="bold" style={styles.cardTitle}>
             {match.title}
@@ -116,11 +138,14 @@ const MatchItem: React.FC<MatchItemProps> = ({
         onPress={() => onPress?.(match.id)}
         activeOpacity={0.8}
       >
-        <Image
-          source={match.image}
-          style={styles.compactImage}
-          resizeMode="cover"
-        />
+        <View style={styles.compactImageWrapper}>
+          <Image
+            source={getImageSource(match.image)}
+            style={styles.compactImage}
+            resizeMode="cover"
+          />
+          <PrivateBadge />
+        </View>
         <View style={styles.compactContent}>
           <ThemedText size="m" weight="semiBold" numberOfLines={1}>
             {match.title}
@@ -153,11 +178,14 @@ const MatchItem: React.FC<MatchItemProps> = ({
       onPress={() => onPress?.(match.id)}
       activeOpacity={0.8}
     >
-      <Image
-        source={match.image}
-        style={styles.listImage}
-        resizeMode="cover"
-      />
+      <View style={styles.listImageWrapper}>
+        <Image
+          source={getImageSource(match.image)}
+          style={styles.listImage}
+          resizeMode="cover"
+        />
+        <PrivateBadge />
+      </View>
       <View style={styles.listContent}>
         <ThemedText size="m" weight="semiBold" style={styles.listTitle} numberOfLines={1}>
           {match.title}
@@ -198,9 +226,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     width: 280,
   },
+  cardImageWrapper: {
+    position: 'relative',
+  },
   cardImage: {
     width: '100%',
     height: 160,
+  },
+  privateBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  privateBadgeText: {
+    marginTop: 0,
   },
   cardContent: {
     padding: 16,
@@ -220,6 +265,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     marginBottom: 12,
+  },
+  listImageWrapper: {
+    position: 'relative',
   },
   listImage: {
     width: 80,
@@ -254,6 +302,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 8,
+  },
+  compactImageWrapper: {
+    position: 'relative',
   },
   compactImage: {
     width: 50,

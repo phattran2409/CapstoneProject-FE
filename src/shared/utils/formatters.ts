@@ -16,7 +16,7 @@ export const formatDate = (date: Date | string | number, format: DateFormatType 
     time: { hour: '2-digit', minute: '2-digit' },
   };
 
-  return new Intl.DateTimeFormat('en-US', options[format] || options.short).format(new Date(date));
+  return new Intl.DateTimeFormat('vi-VN', options[format] || options.short).format(new Date(date));
 };
 
 // Format phone number

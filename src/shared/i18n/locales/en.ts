@@ -210,6 +210,14 @@ const en = {
     teamB: "Team B",
     emptySlot: "Available",
     joinButton: "Join Match",
+    status: "Status",
+    teamName: "Team Name",
+    teamJoinButton: {
+      join: "Join Team",
+      joinFirst: "Join a team first",
+      joining: "Joining...",
+    },
+    teamCountLabel: "Number of players",
   },
   login: {
     title: "Login",

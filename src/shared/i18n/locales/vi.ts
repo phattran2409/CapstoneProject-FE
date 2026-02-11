@@ -207,6 +207,14 @@ const vi = {
     teamB: "Đội B",
     emptySlot: "Còn trống",
     joinButton: "Tham gia trận đấu",
+    teamName: "Tên đội",
+    teamJoinButton: {
+      join: "Tham gia đội",
+      joinFirst: "Tham gia đội trước",
+      joining: "Đang tham gia...",
+    },
+    status: "Trạng thái",
+    teamCountLabel: "Số lượng cầu thủ",
   },
   login: {
     title: "Đăng nhập",

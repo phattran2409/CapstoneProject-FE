@@ -1,5 +1,5 @@
 import { User } from "@/features/profile/types/profile.types";
-import { Venue, Field, TimeSlot } from "@/features/venues/types/venue.types";
+import { Venue, Field, TimeSlot, VenuePhoto } from "@/features/venues/types/venue.types";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -15,7 +15,7 @@ export type RootStackParamList = {
   } | undefined;
   VenueSelection: undefined;
   VenueDetail: { venueId: string };
-  RoomInformation: { roomId: string };
+  RoomInformation: { roomId: string; venuePhotos?: VenuePhoto[] };
   Team: { roomId: string; team: "A" | "B" };
   PersonalPage: { userId?: string };
   ProfileDetail: { player: User };

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TouchableOpacity, Image, ScrollView, Alert, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -12,6 +12,7 @@ import {
   ThemedIcon,
   ThemedCard 
 } from '@/shared/components/themed';
+import Alert from "@/shared/components/Alert";
 import { RootStackParamList } from '@/app/navigation/types';
 import { 
   useMatchRoomDetail,
@@ -33,9 +34,9 @@ import {
   PositionSelectionModal,
   type PlayerPosition,
 } from '../components';
-import { useMatchRoomSignalR, useMatchRoomSignalRHandlers } from '@/shared/hooks';
+import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
-import { formatCurrency } from '@/shared/utils/formatters';
+import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -48,7 +49,7 @@ interface RoomInformationScreenProps {
 const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { roomId } = route?.params;
+  const { roomId, venuePhotos: venuePhotosFromParams } = route?.params ?? {};
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
   const handleGoBack = () => {
@@ -73,7 +74,16 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   const { user } = useAuthStore();
   
-  // ✅ Local room data state for real-time updates
+  // ✅ Custom alert & toast
+  const {
+    visible: alertVisible,
+    alertOptions,
+    showDanger,
+    showInfo,
+    showSuccess,
+    showConfirm,
+    hideAlert,
+  } = useAlert();
   const [roomData, setRoomData] = useState<MatchRoomFullInfo | null>(null);
   
   // ✅ Sync room data from React Query
@@ -86,6 +96,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Use roomData for display (có real-time updates) hoặc fallback về room từ query
   const displayRoom = roomData || room;
 
+  // ✅ Venue photos: ưu tiên từ API detail, fallback từ params (khi navigate từ MatchesScreen)
+  const venuePhotosToShow = useMemo(
+    () => displayRoom?.venuePhotos?.length ? displayRoom.venuePhotos! : (venuePhotosFromParams ?? []),
+    [displayRoom?.venuePhotos, venuePhotosFromParams],
+  );
 
   // ==================== Deposit progress (realtime) ====================
   const depositTargetTotal = useMemo(() => {
@@ -115,6 +130,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     return allParticipants.find(p => p.userId === user.userId) || null;
   }, [displayRoom, user?.userId]);
 
+  // ✅ User must choose Team A/B (not Unassigned) before joining match screen
+  const hasSelectedTeam =
+    currentUserParticipant?.teamAssignment === "A" ||
+    currentUserParticipant?.teamAssignment === "B";
+
+  const canJoinMatch = !!currentUserParticipant && hasSelectedTeam;
+
   // ✅ Selected team (A, B, or null)
   const [selectedTeam, setSelectedTeam] = useState<TeamAssignment | null>(null);
   
@@ -131,6 +153,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   
   // ✅ Toast hook for notifications
   const toast = useToast();
+
+  console.log('', displayRoom);
   
   /**
    * Callback hiển thị notification - sử dụng Toast thay vì Alert
@@ -158,52 +182,43 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
    */
   const handleKickedFromRoom = useCallback((payload: any) => {
     if (payload.kickedUserId === user?.userId) {
-      Alert.alert(
+      showDanger(
         'Bạn đã bị kick',
         payload.reason || 'Bạn đã bị kick khỏi phòng bởi host',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              if (navigation?.canGoBack()) {
-                navigation.goBack();
-              } else {
-                nav.reset({
-                  index: 0,
-                  routes: [{ name: 'MainTabs' }],
-                });
-              }
-            },
-          },
-        ]
+        () => {
+          if (navigation?.canGoBack()) {
+            navigation.goBack();
+          } else {
+            nav.reset({
+              index: 0,
+              routes: [{ name: 'MainTabs' }],
+            });
+          }
+        },
       );
     }
-  }, [user?.userId, navigation, nav]);
+  }, [user?.userId, navigation, nav, showDanger, nav]);
 
   /**
    * Callback khi room bị xóa - điều hướng về trang trước
    */
   const handleRoomDeleted = useCallback(() => {
-    Alert.alert(
+    showInfo(
       'Phòng đã bị xóa',
       'Phòng đã bị xóa bởi host hoặc đã hết người chơi.',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            if (navigation?.canGoBack()) {
-              navigation.goBack();
-            } else {
-              nav.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs' }],
-              });
-            }
-          },
-        },
-      ]
+      () => {
+        if (navigation?.canGoBack()) {
+          navigation.goBack();
+        } else {
+          nav.reset({
+            index: 0,
+            routes: [{ name: 'MainTabs' }],
+          });
+        }
+      },
+      false,
     );
-  }, [navigation, nav]);
+  }, [navigation, nav, showInfo]);
 
   /**
    * Callback khi host thay đổi
@@ -214,13 +229,12 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     
     // Nếu user hiện tại trở thành host
     if (newHostId === user?.userId) {
-      Alert.alert(
+      showSuccess(
         'Bạn đã trở thành Host!',
         'Host cũ đã rời khỏi phòng. Bạn được chỉ định làm host mới.',
-        [{ text: 'OK' }]
       );
     }
-  }, [user?.userId, refetch]);
+  }, [user?.userId, refetch, showSuccess]);
 
   // ✅ Tạo SignalR handlers
   const signalRHandlers = useMatchRoomSignalRHandlers({
@@ -244,13 +258,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Handle open position selection modal
   const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
     if (!user) {
-      Alert.alert('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để tham gia phòng');
+      showInfo('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để tham gia phòng');
       return;
     }
 
     // User phải là participant (đã join vào Unassigned từ MatchesScreen)
     if (!currentUserParticipant) {
-      Alert.alert('Chưa tham gia', 'Bạn cần tham gia phòng trước khi chọn đội');
+      showInfo('Chưa tham gia', 'Bạn cần tham gia phòng trước khi chọn đội');
       return;
     }
 
@@ -308,92 +322,99 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   const handleJoinMatch = () => {
     if (!currentUserParticipant) {
-      Alert.alert('Please join a team', 'You need to join a team before entering the match');
+      showInfo(
+        "Bạn chưa tham gia phòng",
+        "Bạn cần tham gia phòng trước khi vào màn đội hình",
+      );
       return;
     }
-    // Ưu tiên team hiện tại nếu user đã ở Team A/B, mặc định A nếu vẫn Unassigned
-    const currentTeam = currentUserParticipant.teamAssignment === 'B' ? 'B' : 'A';
-    navigation?.navigate('Team', { roomId, team: currentTeam });
+
+    if (!hasSelectedTeam) {
+      showInfo(
+        "Chọn đội trước khi vào sân",
+        "Vui lòng chọn Team A hoặc Team B rồi mới vào màn đội hình.",
+      );
+      return;
+    }
+
+    // Ưu tiên team hiện tại (A/B) – tới đây chắc chắn không còn Unassigned
+    const currentTeam = currentUserParticipant.teamAssignment === "B" ? "B" : "A";
+    navigation?.navigate("Team", { roomId, team: currentTeam });
   };
 
   // ✅ Handle kick player (host only)
   const handleKickPlayer = (userId: string, playerName: string) => {
-    Alert.alert(
+    showDanger(
       'Kick Player',
       `Are you sure you want to kick ${playerName} from the room?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Kick',
-          style: 'destructive',
-          onPress: () => {
-            kickPlayer(
-              { roomId, playerId: userId },
-              {
-                onSuccess: () => {
-                  Alert.alert('Success', 'Player has been kicked from the room');
-                  refetch();
-                },
-                onError: (error: any) => {
-                  Alert.alert('Error', error.message || 'Failed to kick player');
-                },
-              }
-            );
-          },
-        },
-      ]
+      () => {
+        kickPlayer(
+          { roomId, playerId: userId },
+          {
+            onSuccess: () => {
+              showSuccess('Success', 'Player has been kicked from the room');
+              refetch();
+            },
+            onError: (error: any) => {
+              showDanger('Error', error.message || 'Failed to kick player', () => {});
+            },
+          }
+        );
+      },
+      undefined,
+      'Kick',
+      'Cancel',
     );
   };
 
   // ✅ Handle cancel room (host only)
   const handleCancelRoom = () => {
-    Alert.alert(
+    showDanger(
       'Cancel Room',
       'Are you sure you want to cancel this room? This action cannot be undone.',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: () => {
-            cancelRoom(roomId, {
-              onSuccess: () => {
-                Alert.alert('Success', 'Room has been cancelled');
-                navigation?.goBack();
-              },
-              onError: (error: any) => {
-                Alert.alert('Error', error.message || 'Failed to cancel room');
-              },
+      () => {
+        cancelRoom(roomId, {
+          onSuccess: () => {
+            showSuccess('Success', 'Room has been cancelled', () => {
+              navigation?.goBack();
             });
           },
-        },
-      ]
+          onError: (error: any) => {
+            showDanger('Error', error.message || 'Failed to cancel room', () => {});
+          },
+        });
+      },
+      undefined,
+      'Yes, Cancel',
+      'No',
     );
   };
 
   // ✅ Handle leave room
   const handleLeaveRoom = () => {
-    Alert.alert(
+    showConfirm(
       t('roomDetail.leaveRoomTitle', 'Rời phòng'),
       t('roomDetail.leaveRoomMessage', 'Bạn có chắc muốn rời khỏi phòng này?'),
-      [
-        { text: t('common.cancel', 'Hủy'), style: 'cancel' },
-        {
-          text: t('roomDetail.leaveRoomConfirm', 'Rời phòng'),
-          style: 'destructive',
-          onPress: () => {
-            leaveMatchRoom(roomId, {
-              onSuccess: () => {
-                toast.success(t('roomDetail.leaveRoomSuccess', 'Rời phòng'), t('roomDetail.leaveRoomSuccessDesc', 'Bạn đã rời khỏi phòng'));
-                handleGoBack();
-              },
-              onError: (error: any) => {
-                toast.error(t('common.error', 'Lỗi'), error.message || t('roomDetail.leaveRoomError', 'Không thể rời phòng'));
-              },
-            });
+      () => {
+        leaveMatchRoom(roomId, {
+          onSuccess: () => {
+            toast.success(
+              t('roomDetail.leaveRoomSuccess', 'Rời phòng'),
+              t('roomDetail.leaveRoomSuccessDesc', 'Bạn đã rời khỏi phòng'),
+            );
+            handleGoBack();
           },
-        },
-      ]
+          onError: (error: any) => {
+            toast.error(
+              t('common.error', 'Lỗi'),
+              error.message || t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
+            );
+          },
+        });
+      },
+      undefined,
+      t('roomDetail.leaveRoomConfirm', 'Rời phòng'),
+      t('common.cancel', 'Hủy'),
     );
   };
 
@@ -919,6 +940,51 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                 Venue & Field Details
               </ThemedText>
 
+              {/* Venue photos: từ API detail hoặc từ params (navigate từ MatchesScreen) */}
+              {venuePhotosToShow.length > 0 && (
+                <View style={styles.venueImagesContainer}>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={(e) => {
+                      const pageWidth = Dimensions.get('window').width - 40;
+                      const index = Math.round(
+                        e.nativeEvent.contentOffset.x / (pageWidth || 1),
+                      );
+                      setSelectedImageIndex(Math.min(index, venuePhotosToShow.length - 1));
+                    }}
+                    style={styles.venuePhotosScroll}
+                  >
+                    {venuePhotosToShow.map((uri, index) => (
+                      <View
+                        key={uri.photoId ?? index}
+                        style={[styles.venueImageWrapper, { width: Dimensions.get('window').width - 40 }]}
+                      >
+                        <Image
+                          source={{ uri: uri.photoUrl }}
+                          style={styles.venueImage}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ))}
+                  </ScrollView>
+                  {venuePhotosToShow.length > 1 && (
+                    <View style={styles.venueDotsRow}>
+                      {venuePhotosToShow.map((_, index) => (
+                        <View key={index} style={styles.venueDot}>
+                          <View style={[styles.venueDot, {
+                            backgroundColor: index === selectedImageIndex
+                              ? theme.colors.neonGreen
+                              : theme.colors.border,
+                          }]} />
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+
               {/* Venue Info Cards */}
               <View style={styles.venueInfoContainer}>
                 {/* Field Info */}
@@ -1010,12 +1076,36 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         </View>
       </ThemedScrollView>
 
+      {/* Global Alert component for this screen */}
+      {alertOptions && (
+        <Alert
+          visible={alertVisible}
+          type={alertOptions.type}
+          title={alertOptions.title}
+          message={alertOptions.message}
+          confirmText={alertOptions.confirmText}
+          cancelText={alertOptions.cancelText}
+          onConfirm={alertOptions.onConfirm}
+          onCancel={alertOptions.onCancel}
+          onClose={alertOptions.onClose ?? hideAlert}
+          showCloseButton={alertOptions.showCloseButton}
+          autoClose={alertOptions.autoClose}
+          autoCloseDelay={alertOptions.autoCloseDelay}
+        />
+      )}
+
       {/* Host Menu Modal */}
       {isHost && (
         <HostMenuModal
           visible={showMenuModal}
           handleShowMenuModal={() => setShowMenuModal(false)}
-          room={displayRoom}
+          room={{
+            roomId: displayRoom.roomId,
+            roomName: displayRoom.roomName || '',
+            format: displayRoom.matchFormat,
+            datetime: formatDate(displayRoom.matchDate, 'short'),
+            venueName: displayRoom.field.venue.venueName,
+          }}
           handleCancelRoom={handleCancelRoom}
           isCancelling={isCancelling}
         />
@@ -1045,26 +1135,28 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           style={[
             styles.joinButton,
             {
-              backgroundColor: currentUserParticipant ? theme.colors.neonGreen : theme.colors.border,
-              shadowColor: currentUserParticipant ? theme.colors.neonGreen : 'transparent',
+              backgroundColor: canJoinMatch ? theme.colors.neonGreen : theme.colors.border,
+              shadowColor: canJoinMatch ? theme.colors.neonGreen : 'transparent',
             }
           ]}
           onPress={handleJoinMatch}
-          disabled={!currentUserParticipant || isUpdatingParticipant}
+          disabled={!canJoinMatch || isUpdatingParticipant}
         >
           <ThemedText 
             size="l" 
             weight="bold" 
             style={[
               styles.joinButtonText,
-              { color: currentUserParticipant ? '#000' : theme.colors.textSecondary }
+              { color: canJoinMatch ? '#000' : theme.colors.textSecondary }
             ]}
           >
             {isUpdatingParticipant 
-              ? 'Joining...' 
-              : currentUserParticipant 
-                ? t('roomDetail.joinButton') 
-                : 'Join a team first'
+              ? t('roomDetail.teamJoinButton.joining')
+              : !currentUserParticipant
+                ? t('roomDetail.teamJoinButton.joinFirst')
+                : hasSelectedTeam
+                  ? t('roomDetail.teamJoinButton.join')
+                  : t('roomDetail.teamJoinButton.joinFirst')
             }
           </ThemedText>
         </TouchableOpacity>
@@ -1274,14 +1366,28 @@ const styles = StyleSheet.create({
   venueImagesContainer: {
     marginBottom: 24,
   },
+  venuePhotosScroll: {
+    marginHorizontal: -20,
+  },
   venueImageWrapper: {
-    width: 350,
-    marginRight: 10,
+    paddingHorizontal: 20,
   },
   venueImage: {
     width: '100%',
     height: 220,
     borderRadius: 16,
+  },
+  venueDotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  venueDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   imageIndicators: {
     flexDirection: 'row',

@@ -12,6 +12,8 @@ import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom } from '@/features/rooms';
+import { PrivateRoomPasswordModal } from '../components';
+import type { VenuePhoto } from '@/features/venues/types/venue.types';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -28,6 +30,7 @@ const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
   const formatMap: Record<string, string> = {
     'FiveVsFive': '5vs5',
     'SevenVsSeven': '7vs7',
+    'ElevenVsEleven': '11vs11',
   };
   
   // Format date
@@ -59,11 +62,12 @@ const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
     title: room.roomName,
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: room.venuePhotos[0] || require('@assets/images/icon.png'),
+    image: room.venuePhotos[0]?.photoUrl || '',
     status: getDisplayStatus(room.status),
     date: formattedDate,
     venue: room.venueName,
     time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
+    isPrivate: room.isPrivate ?? (room.visibility === 'Private'),
   };
 };
 
@@ -73,6 +77,13 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [pendingJoinParams, setPendingJoinParams] = useState<{
+    roomId: string;
+    params: { roomId: string; venuePhotos?: VenuePhoto[] };
+    roomName?: string;
+  } | null>(null);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
 
   // Fetch match rooms from API
   const { 
@@ -120,19 +131,60 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
 
   const handleViewDetail = (matchId: string) => {
-    // Gọi API join để thêm user vào room (Unassigned)
-    // Server sẽ broadcast UserJoinedRoom event → toast cho tất cả members
-    joinRoomAsUnassigned(matchId, {
-      onSuccess: () => {
-        // Join thành công → Navigate đến RoomInformation
-        navigation.navigate('RoomInformation', { roomId: matchId });
-      },
-      onError: (error: any) => {
-        // Nếu đã là participant hoặc lỗi khác → vẫn navigate để xem thông tin
-        console.log('Join room error (may already be participant):', error?.message);
-        navigation.navigate('RoomInformation', { roomId: matchId });
-      },
-    });
+    const match = matches.find((m) => m.id === matchId);
+    const room = matchRooms.find((r) => r.roomId === matchId);
+    const venuePhotos = room?.venuePhotos;
+    const params = { roomId: matchId, ...(venuePhotos?.length ? { venuePhotos } : {}) };
+
+    if (match?.isPrivate) {
+      setModalVisible(false);
+      setSelectedMatch(null);
+      setPendingJoinParams({
+        roomId: matchId,
+        params,
+        roomName: match.title,
+      });
+      setPasswordError(undefined);
+      setPasswordModalVisible(true);
+      return;
+    }
+
+    joinRoomAsUnassigned(
+      { roomId: matchId },
+      {
+        onSuccess: () => {
+          navigation.navigate('RoomInformation', params);
+        },
+        onError: (error: any) => {
+          console.log('Join room error (may already be participant):', error?.message);
+          navigation.navigate('RoomInformation', params);
+        },
+      }
+    );
+  };
+
+  const handlePasswordConfirm = (password: string) => {
+    if (!pendingJoinParams) return;
+    setPasswordError(undefined);
+    joinRoomAsUnassigned(
+      { roomId: pendingJoinParams.roomId, password },
+      {
+        onSuccess: () => {
+          setPasswordModalVisible(false);
+          setPendingJoinParams(null);
+          navigation.navigate('RoomInformation', pendingJoinParams.params);
+        },
+        onError: (error: any) => {
+          setPasswordError(error?.message ?? 'Mật khẩu không đúng. Vui lòng thử lại.');
+        },
+      }
+    );
+  };
+
+  const handlePasswordModalCancel = () => {
+    setPasswordModalVisible(false);
+    setPendingJoinParams(null);
+    setPasswordError(undefined);
   };
 
   return (
@@ -277,6 +329,16 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           setSelectedMatch(null);
         }}
         onViewDetail={handleViewDetail}
+      />
+
+      {/* Modal nhập mật khẩu khi vào phòng private */}
+      <PrivateRoomPasswordModal
+        visible={passwordModalVisible}
+        roomName={pendingJoinParams?.roomName}
+        onConfirm={handlePasswordConfirm}
+        onCancel={handlePasswordModalCancel}
+        isLoading={isJoining}
+        errorMessage={passwordError}
       />
     </ThemedSafeAreaView>
   );

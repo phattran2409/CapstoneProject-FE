@@ -5,6 +5,7 @@ import type {
   MatchRoomFullInfo,
   MatchRoomParticipant,
   TeamAssignment,
+  TeamFormationSnapshot,
 } from "@/features/rooms/types/room.types";
 import type {
   UseMatchRoomSignalROptions,
@@ -19,6 +20,7 @@ import type {
   RoomTypingPayload,
   RoomStopTypingPayload,
   ParticipantPaidEvent,
+  FormationUpdatedPayload,
 } from "./useMatchRoomSignalR";
 
 export interface UseMatchRoomSignalRHandlersOptions {
@@ -51,6 +53,9 @@ export interface UseMatchRoomSignalRHandlersOptions {
 
   // Payment callbacks
   onParticipantPaid?: (payload: ParticipantPaidEvent) => void;
+
+  // Formation callbacks
+  onFormationUpdated?: (payload: FormationUpdatedPayload) => void;
 
   // Toast/Alert notifications
   showNotification?: (
@@ -99,6 +104,7 @@ export const useMatchRoomSignalRHandlers = (
     onUserStopTyping,
     showNotification,
     onParticipantPaid: onParticipantPaidCallback,
+    onFormationUpdated: onFormationUpdatedCallback,
   } = options;
 
   const queryClient = useQueryClient();
@@ -754,6 +760,73 @@ export const useMatchRoomSignalRHandlers = (
     ],
   );
 
+  /**
+   * Handler khi captain cập nhật đội hình thành công
+   */
+  const onFormationUpdated = useCallback(
+    (payload: FormationUpdatedPayload) => {
+      console.log("⚽ Handler - FormationUpdated:", payload);
+
+      if (payload.roomId !== roomId) return;
+
+      // Cập nhật room data - ghi đè formation của team được update
+      if (setRoomData) {
+        setRoomData((prev) => {
+          if (!prev) return prev;
+
+          // Map payload sang TeamFormationSnapshot format
+          // Cần suy format từ matchFormat của room
+          const format =
+            prev.matchFormat === "FiveVsFive"
+              ? "5vs5"
+              : prev.matchFormat === "SevenVsSeven"
+                ? "7vs7"
+                : "11vs11";
+
+          const updatedFormation: TeamFormationSnapshot = {
+            formationName: payload.formationName,
+            format: format,
+            assignments: payload.assignments.map((a) => ({
+              slotId: a.slotId,
+              playerId: a.playerId,
+            })),
+          };
+
+          return {
+            ...prev,
+            formations: {
+              ...prev.formations,
+              [payload.team]: updatedFormation,
+            },
+          };
+        });
+      }
+
+      // Invalidate queries để đồng bộ với server
+      queryClient.invalidateQueries({
+        queryKey: roomsKeys.detail(roomId),
+      });
+
+      // Hiển thị notification
+      if (showNotification) {
+        showNotification(
+          `Team ${payload.team} đã đổi đội hình thành ${payload.formationName}`,
+          "info",
+        );
+      }
+
+      // Custom callback
+      onFormationUpdatedCallback?.(payload);
+    },
+    [
+      roomId,
+      setRoomData,
+      queryClient,
+      showNotification,
+      onFormationUpdatedCallback,
+    ],
+  );
+
   return {
     roomId,
     onUserJoinedRoom,
@@ -768,5 +841,6 @@ export const useMatchRoomSignalRHandlers = (
     onRoomUserStopTyping,
     onError,
     onParticipantPaid,
+    onFormationUpdated,
   };
 };

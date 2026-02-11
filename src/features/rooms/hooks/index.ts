@@ -10,4 +10,4 @@ export { useRoomMessages, useSendMessage } from './useRoomMessages';
 export { useCreateRoom } from './useCreateRoom';
 export { useKickPlayer } from './useKickPlayer';
 export { useCancelRoom } from './useCancelRoom';
-
+export { useUpdateRoomPrivacy } from './useUpdateRoomPrivacy';
