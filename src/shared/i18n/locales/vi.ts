@@ -140,6 +140,16 @@ const vi = {
       eloRating: "Điểm ELO",
     },
   },
+  rank: {
+    tiers: {
+      Amateur: "Nghiệp dư",
+      SemiPro: "Bán chuyên",
+      Pro: "Chuyên nghiệp",
+      Master: "Cao thủ",
+      Elite: "Tinh hoa",
+      Legend: "Huyền thoại",
+    },
+  },
   createRoom: {
     title: "Tạo Phòng Đấu",
     duration: "Thời Lượng",

@@ -19,14 +19,15 @@ import * as ImagePicker from "expo-image-picker";
 import { useAlert } from "@/shared/hooks";
 import { useUpdateAvatar } from "../hooks";
 import { useToast } from "@/shared/toast";
+import { RankBadge } from "@/shared/components";
 
 interface ProfileHeaderProps {
   avatar?: string;
-  name: string;
+  name?: string;
   elo: number;
-  description?: string;
-  position?: string;
-  shirtNumber?: number;
+  description?: string | null;
+  position?: string | null;
+  shirtNumber?: number | null;
   isCurrentUser?: boolean;
   onEditPress?: () => void;
   // Friendship actions
@@ -230,64 +231,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               styles.quote,
               {
                 fontSize: theme.fontSizes.m,
-              color: theme.colors.textSecondary,
-              textAlign: "center",
-            },
-          ]}
-        >
-          {description}
-        </Text>
+                color: theme.colors.textSecondary,
+                textAlign: "center",
+              },
+            ]}
+          >
+            {description}
+          </Text>
         )}
       </View>
-      
-      {/* Rank Badge */}
-      {elo && (
-      <View
-        style={[
-          styles.badge,
-          {
-            backgroundColor:
-              theme.colors.border === "#E0E0E0" ? "#2C2C2C" : "#2C2C2C",
-            borderRadius: theme.radius.m,
-            paddingVertical: theme.spacing.s,
-            paddingHorizontal: theme.spacing.m,
-          },
-        ]}
-      >
-        <Ionicons name="trophy" size={18} color={theme.colors.neonGreen} />
-        <Text
-          style={[
-            styles.elo,
-            {
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.neonGreen,
-              marginLeft: theme.spacing.xs,
-            },
-          ]}
-        >
-          {elo.toLocaleString()}
-        </Text>
-        <Text
-          style={[
-            styles.rank,
-            {
-              fontSize: theme.fontSizes.m,
-              color: theme.colors.white,
-              marginLeft: theme.spacing.s,
-            },
-          ]}
-        >
-          Điểm Elo
-        </Text>       
-      </View>
-      )}
-      {shirtNumber && position && (
-        <JerseyBadge
-          number={shirtNumber}
-          accent={theme.colors.neonGreen}
-          text={position}
-        />
-      )}
 
       {/* Edit Button or Friendship Action Button */}
       {isCurrentUser ? (

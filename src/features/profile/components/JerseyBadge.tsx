@@ -68,7 +68,7 @@ export const JerseyBadge: React.FC<{
         >
           {t("personalPage.position")}
         </Text>
-        <Text style={[styles.positionText, { color: accent }]}>{text}</Text>
+        <Text style={[styles.positionText, { color: theme.colors.text }]}>{text}</Text>
       </View>
     </View>
   );
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   jerseyRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 5,
   },
   positionContainer: {
     flexDirection: "column",

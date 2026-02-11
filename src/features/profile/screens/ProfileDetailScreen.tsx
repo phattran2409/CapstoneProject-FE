@@ -16,6 +16,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { RouteProp } from "@react-navigation/native";
+import { TrustScoreCard } from "../components/TrustScoreCard";
 
 type ProfileDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -170,6 +171,11 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Trust Score Section */}
+        <View style={styles.section}>
+          <TrustScoreCard score={85} variant="detailed" />
+        </View>
+
         {/* Stats Overview */}
         <View style={styles.section}>
           <Text

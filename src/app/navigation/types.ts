@@ -1,5 +1,10 @@
 import { User } from "@/features/profile/types/profile.types";
-import { Venue, Field, TimeSlot, VenuePhoto } from "@/features/venues/types/venue.types";
+import {
+  Venue,
+  Field,
+  TimeSlot,
+  VenuePhoto,
+} from "@/features/venues/types/venue.types";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -7,18 +12,21 @@ export type RootStackParamList = {
   OTPVerification: { email: string; userId: string };
   MainTabs: undefined;
   Leaderboard: undefined;
-  CreateRoom: {
-    selectedVenue?: Venue;
-    selectedField?: Field;
-    selectedTimeSlot?: TimeSlot;
-    selectedDate?: string; // YYYY-MM-DD from FieldsModal
-  } | undefined;
+  CreateRoom:
+    | {
+        selectedVenue?: Venue;
+        selectedField?: Field;
+        selectedTimeSlot?: TimeSlot;
+        selectedDate?: string; // YYYY-MM-DD from FieldsModal
+      }
+    | undefined;
   VenueSelection: undefined;
   VenueDetail: { venueId: string };
   RoomInformation: { roomId: string; venuePhotos?: VenuePhoto[] };
   Team: { roomId: string; team: "A" | "B" };
   PersonalPage: { userId?: string };
   ProfileDetail: { player: User };
+  Achievements: undefined;
   ChatList: undefined;
   Friends: undefined;
   FriendRequests: undefined;

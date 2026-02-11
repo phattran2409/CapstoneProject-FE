@@ -13,30 +13,27 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Friend } from '../types/friends.types';
 import { getRelativeTime } from '@/shared/utils';
+import { RankBadge } from '@/shared/components';
+import { getRankInfoFromElo } from '@/shared/components/RankBadge';
 
 export const FriendCard: React.FC<{
-    friend: Friend;
-    onPress?: () => void;
-    onMessagePress?: () => void;
-    onInvitePress?: () => void;
-  }> = ({ friend, onPress, onMessagePress, onInvitePress }) => {
-    const { theme, isDark } = useTheme();
-    const { t } = useTranslation();
-  
-    const getRankColor = (elo: number) => {
-      if (elo >= 3000) return '#FFD700'; // Gold
-      if (elo >= 2500) return '#C0C0C0'; // Silver
-      if (elo >= 2000) return '#CD7F32'; // Bronze
-      return theme.colors.neonGreen;
-    };
+  friend: Friend;
+  onPress?: () => void;
+  onMessagePress?: () => void;
+  onInvitePress?: () => void;
+}> = ({ friend, onPress, onMessagePress, onInvitePress }) => {
+  const { theme, isDark } = useTheme();
+  const { t } = useTranslation();
 
-    // Adjust gradient colors based on theme
-    const gradientColors: [string, string] = isDark
-      ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']
-      : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.90)'];
+  const rank = getRankInfoFromElo(friend.currentElo, theme.colors.neonGreen);
 
-  
-    return (
+  // Adjust gradient colors based on theme
+  const gradientColors: [string, string] = isDark
+    ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.02)']
+    : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.90)'];
+
+
+  return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <BlurView
           intensity={isDark ? 40 : 80}
@@ -67,7 +64,7 @@ export const FriendCard: React.FC<{
                   styles.avatar,
                   {
                     backgroundColor: theme.colors.surface,
-                    borderColor: getRankColor(friend.currentElo),
+                    borderColor: rank.color,
                   },
                 ]}
               >
@@ -105,30 +102,7 @@ export const FriendCard: React.FC<{
               </View>
 
               <View style={styles.statsRow}>
-                <View
-                  style={[
-                    styles.eloBadge,
-                    {
-                      backgroundColor: isDark
-                        ? `${getRankColor(friend.currentElo)}20`
-                        : `${getRankColor(friend.currentElo)}15`,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="trophy"
-                    size={12}
-                    color={getRankColor(friend.currentElo)}
-                  />
-                  <Text
-                    style={[
-                      styles.eloText,
-                      { color: getRankColor(friend.currentElo) },
-                    ]}
-                  >
-                    {friend.currentElo}
-                  </Text>
-                </View>
+                <RankBadge elo={friend.currentElo} size="small" showElo />
                 {friend.preferredPositions && (
                   <View
                     style={[

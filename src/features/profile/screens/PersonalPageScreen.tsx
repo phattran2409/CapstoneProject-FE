@@ -16,7 +16,12 @@ import { useTheme } from "@/shared/theme";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { ProfileHeader, AnalysisTab, EditProfileForm } from "../components";
+import {
+  ProfileHeader,
+  AnalysisTab,
+  EditProfileForm,
+  ProfileStatsCard,
+} from "../components";
 import { ThemedText } from "@/shared/components/themed";
 import { UpdateProfileData } from "../types/profile.types";
 import {
@@ -375,11 +380,11 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           <View style={{ backgroundColor: theme.colors.background }}>
             <ProfileHeader
               avatar={profile?.avatarUrl}
-              name={profile?.fullName || "Unknown User"}
+              name={profile?.fullName}
               elo={profile?.playerProfile?.currentElo || 0}
-              description={profile?.bio || "N/A"}
-              position={profile?.preferredPositions || "N/A"}
-              shirtNumber={profile?.shirtNumber || 0}
+              description={profile?.bio}
+              position={profile?.preferredPositions}
+              shirtNumber={profile?.shirtNumber}
               isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}
               friendshipStatus={friendshipStatus?.status}
@@ -393,6 +398,22 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
                 isRespondingToRequest
               }
             />
+
+            {/* Profile Stats Card */}
+            <View
+              style={{
+                paddingHorizontal: theme.spacing.m,
+                marginBottom: theme.spacing.m,
+              }}
+            >
+              <ProfileStatsCard
+                trustScore={87}
+                elo={profile?.playerProfile?.currentElo || 1200}
+                shirtNumber={profile?.shirtNumber ?? undefined}
+                position={profile?.preferredPositions ?? undefined}
+                onAchievementsPress={() => navigation.navigate("Achievements")}
+              />
+            </View>
 
             {/* Navigation Tabs */}
             <View

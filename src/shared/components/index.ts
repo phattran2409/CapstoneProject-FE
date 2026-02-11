@@ -46,3 +46,5 @@ export { LikeButton } from "./LikeButton";
 export type { LikeButtonProps } from "./LikeButton";
 export { PostActions } from "./PostActions";
 export type { PostActionsProps } from "./PostActions";
+export { RankBadge } from "./RankBadge";
+export type { RankBadgeProps, RankInfo, RankTier } from "./RankBadge";

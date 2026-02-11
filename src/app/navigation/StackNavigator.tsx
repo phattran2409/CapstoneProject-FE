@@ -12,6 +12,7 @@ import {
   RoomDetailScreen,
   PersonalPageScreen,
   ProfileDetailScreen,
+  AchievementsScreen,
   ChatListScreen,
   ChatScreen,
   RoomChatScreen,
@@ -198,7 +199,7 @@ const StackNavigator: React.FC = () => {
                 animation: "slide_from_right",
               }}
             />
-             
+
             <Stack.Screen
               name="Profile"
               component={ProfileScreen}
@@ -218,6 +219,14 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen
               name="ProfileDetail"
               component={ProfileDetailScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="Achievements"
+              component={AchievementsScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
@@ -296,12 +305,12 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
-            name="RoomChat"
-            component={RoomChatScreen}
-            options={{
-              headerShown: false,
-              animation: "slide_from_bottom",
-            }}
+              name="RoomChat"
+              component={RoomChatScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_bottom",
+              }}
             />
             <Stack.Screen
               name="FeedbackIntro"

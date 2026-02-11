@@ -143,6 +143,16 @@ const en = {
       eloRating: "ELO Rating",
     },
   },
+  rank: {
+    tiers: {
+      Amateur: "Amateur",
+      SemiPro: "Semi-Pro",
+      Pro: "Pro",
+      Master: "Master",
+      Elite: "Elite",
+      Legend: "Legend",
+    },
+  },
   createRoom: {
     title: "Create Room",
     duration: "Duration",
