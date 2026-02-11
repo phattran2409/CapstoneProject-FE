@@ -26,6 +26,7 @@ export const useRoomChatMessages = ({
   const pagination = usePagination<RoomChatMessage>({
     queryKey: [...chatKeys.roomChat(roomId), channel],
     fetchFunction: async (page, size) => {
+      // Backend expects channel as number (0=General, 1=TeamA, 2=TeamB)
       const result = await getRoomChat(roomId, channel.toString(), page, size);
       return {
         data: result.messages,

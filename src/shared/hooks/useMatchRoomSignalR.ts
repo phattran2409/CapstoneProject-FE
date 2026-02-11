@@ -176,9 +176,13 @@ export interface PlayerKickedPayload {
 
 /**
  * Room Chat Channel enum
+ * Matches backend RoomChatChannel enum:
+ * - General (0): All participants can see and send messages
+ * - TeamA (1): Only Team A members can see and send messages
+ * - TeamB (2): Only Team B members can see and send messages
  */
 export enum RoomChatChannel {
-  All = 0,
+  General = 0,
   TeamA = 1,
   TeamB = 2,
 }
@@ -191,12 +195,14 @@ export interface TeamChatSwitchedPayload {
 export interface RoomMessage {
   messageId: string;
   roomId: string;
-  channel: number; // RoomChatChannel as number (0=All, 1=TeamA, 2=TeamB)
+  channel: number; // RoomChatChannel as number (0=General, 1=TeamA, 2=TeamB)
   senderId: string;
   senderFullName: string;
   senderAvatarUrl: string | null;
+  senderTeam?: "A" | "B" | "Unassigned" | null; // TeamAssignment from backend
   messageText: string;
   sentAt: string;
+  isEdited?: boolean; // Optional field from backend
 }
 
 /**
@@ -298,6 +304,35 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
   const normalizeLeftRoomGroupPayload = useCallback((raw: any): LeftRoomGroupPayload => {
     return {
       roomId: raw?.RoomId ?? raw?.roomId ?? "",
+    };
+  }, []);
+
+  const normalizeRoomMessage = useCallback((raw: any): RoomMessage => {
+    // Backend sends PascalCase, normalize to camelCase
+    const channelRaw = raw?.Channel ?? raw?.channel ?? 0;
+    const senderTeamRaw = raw?.SenderTeam ?? raw?.senderTeam;
+    
+    // Convert TeamAssignment enum to string
+    let senderTeam: "A" | "B" | "Unassigned" | null = null;
+    if (senderTeamRaw === 1 || senderTeamRaw === "A" || senderTeamRaw === "TeamAssignment.A") {
+      senderTeam = "A";
+    } else if (senderTeamRaw === 2 || senderTeamRaw === "B" || senderTeamRaw === "TeamAssignment.B") {
+      senderTeam = "B";
+    } else if (senderTeamRaw === 0 || senderTeamRaw === "Unassigned" || senderTeamRaw === "TeamAssignment.Unassigned") {
+      senderTeam = "Unassigned";
+    }
+
+    return {
+      messageId: raw?.MessageId ?? raw?.messageId ?? "",
+      roomId: raw?.RoomId ?? raw?.roomId ?? "",
+      channel: typeof channelRaw === "number" ? channelRaw : parseInt(channelRaw, 10),
+      senderId: raw?.SenderId ?? raw?.senderId ?? "",
+      senderFullName: raw?.SenderFullName ?? raw?.senderFullName ?? "",
+      senderAvatarUrl: raw?.SenderAvatarUrl ?? raw?.senderAvatarUrl ?? null,
+      senderTeam,
+      messageText: raw?.MessageText ?? raw?.messageText ?? "",
+      sentAt: raw?.SentAt ?? raw?.sentAt ?? "",
+      isEdited: raw?.IsEdited ?? raw?.isEdited ?? false,
     };
   }, []);
 
@@ -405,7 +440,8 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         );
 
         // Receive single room message
-        hubConnection.on("ReceiveRoomMessage", (payload: RoomMessage) => {
+        hubConnection.on("ReceiveRoomMessage", (raw: any) => {
+          const payload = normalizeRoomMessage(raw);
           console.log("📨 ReceiveRoomMessage:", payload);
           optionsRef.current.onReceiveRoomMessage?.(payload);
         });
@@ -413,7 +449,18 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         // Receive room messages (pagination)
         hubConnection.on(
           "ReceiveRoomMessages",
-          (payload: RoomMessagesPayload) => {
+          (raw: any) => {
+            // Backend sends GetRoomMessagesQueryResponse with Messages array
+            const messages = (raw?.Messages ?? raw?.messages ?? []).map((m: any) =>
+              normalizeRoomMessage(m),
+            );
+            const payload: RoomMessagesPayload = {
+              messages,
+              page: raw?.Page ?? raw?.page ?? 1,
+              pageSize: raw?.PageSize ?? raw?.pageSize ?? 50,
+              totalCount: raw?.TotalCount ?? raw?.totalCount ?? 0,
+              totalPages: raw?.TotalPages ?? raw?.totalPages ?? 0,
+            };
             console.log("📨 ReceiveRoomMessages:", payload);
             optionsRef.current.onReceiveRoomMessages?.(payload);
           },
@@ -559,7 +606,7 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
       }
       setHasJoinedRoomGroup(false);
     };
-  }, [roomId]);
+  }, [roomId, normalizeRoomMessage]);
 
   // ==================== Hub Methods (Client -> Server) ====================
 
@@ -630,28 +677,39 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
    */
   const switchTeamChat = useCallback(
     async (newTeamAssignment: "A" | "B" | "Unassigned") => {
+      // Ensure we've joined the room group before switching channels
+      if (!hasJoinedRoomGroup) {
+        console.warn("⚠️ Cannot switch team chat: not joined room group yet");
+        throw new Error("Not joined room group");
+      }
       await invokeHubMethod("SwitchTeamChat", roomId, newTeamAssignment);
     },
-    [invokeHubMethod, roomId],
+    [invokeHubMethod, roomId, hasJoinedRoomGroup],
   );
 
   /**
    * Send a message to room chat
    * Backend: SendRoomMessage(roomId, channel, messageText) - channel là int
-   * @param channel - RoomChatChannel enum (0=All, 1=TeamA, 2=TeamB)
+   * @param channel - RoomChatChannel enum (0=General, 1=TeamA, 2=TeamB)
    * @param messageText - Message content
    */
   const sendRoomMessage = useCallback(
     async (channel: RoomChatChannel, messageText: string) => {
+      // Ensure we've joined the room group before sending messages
+      if (!hasJoinedRoomGroup) {
+        console.warn("⚠️ Cannot send message: not joined room group yet");
+        throw new Error("Not joined room group");
+      }
       await invokeHubMethod("SendRoomMessage", roomId, channel as number, messageText);
     },
-    [invokeHubMethod, roomId],
+    [invokeHubMethod, roomId, hasJoinedRoomGroup],
   );
 
   /**
    * Get room messages (pagination)
    * Backend: GetRoomMessages(roomId, channel, page, pageSize) - channel là int
-   * @param channel - RoomChatChannel enum
+   * Note: This method uses IUserContext in backend, so ensure hasJoinedRoomGroup is true
+   * @param channel - RoomChatChannel enum (0=General, 1=TeamA, 2=TeamB)
    * @param page - Page number (default: 1)
    * @param pageSize - Page size (default: 50)
    */
@@ -661,33 +719,44 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
       page: number = 1,
       pageSize: number = 50,
     ) => {
+      // Ensure we've joined the room group before getting messages
+      if (!hasJoinedRoomGroup) {
+        console.warn("⚠️ Cannot get room messages: not joined room group yet");
+        throw new Error("Not joined room group");
+      }
       await invokeHubMethod("GetRoomMessages", roomId, channel as number, page, pageSize);
     },
-    [invokeHubMethod, roomId],
+    [invokeHubMethod, roomId, hasJoinedRoomGroup],
   );
 
   /**
    * Notify that user is typing
    * Backend: RoomTyping(roomId, channel) - channel là int
-   * @param channel - RoomChatChannel enum
+   * @param channel - RoomChatChannel enum (0=General, 1=TeamA, 2=TeamB)
    */
   const roomTyping = useCallback(
     async (channel: RoomChatChannel) => {
+      if (!hasJoinedRoomGroup) {
+        return; // Silently fail if not joined yet
+      }
       await invokeHubMethod("RoomTyping", roomId, channel as number);
     },
-    [invokeHubMethod, roomId],
+    [invokeHubMethod, roomId, hasJoinedRoomGroup],
   );
 
   /**
    * Notify that user stopped typing
    * Backend: RoomStopTyping(roomId, channel) - channel là int
-   * @param channel - RoomChatChannel enum
+   * @param channel - RoomChatChannel enum (0=General, 1=TeamA, 2=TeamB)
    */
   const roomStopTyping = useCallback(
     async (channel: RoomChatChannel) => {
+      if (!hasJoinedRoomGroup) {
+        return; // Silently fail if not joined yet
+      }
       await invokeHubMethod("RoomStopTyping", roomId, channel as number);
     },
-    [invokeHubMethod, roomId],
+    [invokeHubMethod, roomId, hasJoinedRoomGroup],
   );
 
   return {

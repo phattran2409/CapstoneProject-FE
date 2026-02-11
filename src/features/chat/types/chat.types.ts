@@ -106,8 +106,10 @@ export interface SendChatMessageRoomData {
   senderId: string;
   senderFullName: string;
   senderAvatarUrl: string | null;
+  senderTeam: number; // TeamAssignment enum: 0=Unassigned, 1=A, 2=B
   messageText: string;
   sentAt: string;
+  isEdited?: boolean; // Optional, may not be in response
 }
 
 // ===== Mark as read (/api/chat/read/{fromUserId}) =====
