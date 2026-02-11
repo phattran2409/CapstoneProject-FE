@@ -34,6 +34,8 @@ export const API_CONFIG = {
       UPDATE_PARTICIPANT: "/match-rooms/:id/participants/me",
       /** Cập nhật đội hình (vị trí từng thành viên) – captain */
       FORMATION: "/match-rooms/:id/formation",
+      /** Cập nhật tên đội – captain */
+      TEAM_NAME: "/match-rooms/:id/team-name",
       /** Cập nhật privacy (Private/Public + password) */
       PRIVACY: "/match-rooms/:id/privacy",
       PROCESS_PAYMENT: "bookings/process-payment",

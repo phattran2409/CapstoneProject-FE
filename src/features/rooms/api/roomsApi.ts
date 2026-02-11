@@ -12,6 +12,7 @@ import type {
   MatchRoom,
   MyRoomsResponse,
   UpdateFormationRequest,
+  UpdateTeamNameRequest,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -226,6 +227,20 @@ export const roomsApi = {
   ): Promise<any> => {
     const url = API_CONFIG.ENDPOINTS.ROOMS.FORMATION.replace(":id", roomId);
     const data = await apiClient.put(url, payload);
+    return data;
+  },
+
+  /**
+   * Cập nhật tên đội – chỉ captain
+   * PATCH /match-rooms/{roomId}/team-name
+   * Payload: { team: "A" | "B", name: string }
+   */
+  updateTeamName: async (
+    roomId: string,
+    payload: UpdateTeamNameRequest,
+  ): Promise<any> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.TEAM_NAME.replace(":id", roomId);
+    const data = await apiClient.patch(url, payload);
     return data;
   },
 

@@ -32,6 +32,8 @@ const MATCH_ROOM_HUB_EVENTS = {
   UserKicked: "UserKicked",
   // Payment-related events
   ParticipantPaid: "ParticipantPaid",
+  // Formation-related events
+  FormationUpdated: "FormationUpdated",
 } as const;
 
 /**
@@ -71,6 +73,9 @@ export interface UseMatchRoomSignalROptions {
 
   // Payment events
   onParticipantPaid?: (payload: ParticipantPaidEvent) => void;
+
+  // Formation events
+  onFormationUpdated?: (payload: FormationUpdatedPayload) => void;
 }
 
 // ==================== Payload Types ====================
@@ -244,6 +249,22 @@ export interface ParticipantPaidEvent {
   amountPaid: number;
   totalDepositCollected: number;
   paidAt: string;
+}
+
+/**
+ * Payload khi captain cập nhật đội hình thành công
+ * Backend: FormationUpdated event
+ */
+export interface FormationUpdatedPayload {
+  roomId: string;
+  team: "A" | "B";
+  formationName: string;
+  assignments: Array<{
+    playerId: string;
+    slotId: string;
+    position: string; // "Goalkeeper" | "Defender" | "Midfielder" | "Forward"
+  }>;
+  updatedAt: string;
 }
 
 /**
@@ -440,6 +461,15 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           (payload: ParticipantPaidEvent) => {
             console.log("💵 ParticipantPaid:", payload);
             optionsRef.current.onParticipantPaid?.(payload);
+          },
+        );
+
+        // Formation updated (captain saved formation)
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.FormationUpdated,
+          (payload: FormationUpdatedPayload) => {
+            console.log("⚽ FormationUpdated:", payload);
+            optionsRef.current.onFormationUpdated?.(payload);
           },
         );
 

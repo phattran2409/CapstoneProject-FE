@@ -8,6 +8,7 @@ import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useTheme } from '@/shared/theme';
 import { ThemedText, ThemedIcon } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { getImageSource } from '../utils/imageSource';
 
 export interface MatchItemData {
   id: string;
@@ -31,7 +32,7 @@ export interface MatchItemProps {
   showStatus?: boolean;
 }
 
-const PLACEHOLDER_IMAGE = require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png');
+// const PLACEHOLDER_IMAGE = require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png');
 
 const MatchItem: React.FC<MatchItemProps> = ({
   match,
@@ -40,9 +41,10 @@ const MatchItem: React.FC<MatchItemProps> = ({
   showStatus = true,
 }) => {
   const { theme } = useTheme();
-  const imageSource = match.image?.trim()
-    ? { uri: match.image.trim() }
-    : PLACEHOLDER_IMAGE;
+
+  // const imageSource = match.image?.trim()
+  //   ? { uri: match.image.trim() }
+  //   : PLACEHOLDER_IMAGE;
 
   const getStatusIcon = (status?: MatchItemData['status']) => {
     switch (status) {
@@ -98,7 +100,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
       >
         <View style={styles.cardImageWrapper}>
           <Image
-            source={imageSource}
+            source={getImageSource(match.image)}
             style={styles.cardImage}
             resizeMode="cover"
           />
@@ -138,7 +140,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
       >
         <View style={styles.compactImageWrapper}>
           <Image
-            source={imageSource}
+            source={getImageSource(match.image)}
             style={styles.compactImage}
             resizeMode="cover"
           />
@@ -178,7 +180,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
     >
       <View style={styles.listImageWrapper}>
         <Image
-          source={imageSource}
+          source={getImageSource(match.image)}
           style={styles.listImage}
           resizeMode="cover"
         />

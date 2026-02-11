@@ -124,10 +124,15 @@ export interface MatchRoomFullInfo {
   participants: MatchRoomParticipants;
   /** Ảnh venue/sân (URL) – dùng ở tab thông tin venue */
   venuePhotos?: VenuePhoto[] | [];
-  /** Đội hình đã lưu theo từng đội – có thì thành viên mới xem đúng vị trí captain assign */
-  formationByTeam?: {
-    A?: TeamFormationSnapshot;
-    B?: TeamFormationSnapshot;
+  /** Đội hình đã lưu theo từng đội – null nếu chưa có captain assign */
+  formations?: {
+    A: TeamFormationSnapshot | null;
+    B: TeamFormationSnapshot | null;
+  };
+  /** Tên tùy chỉnh của từng đội (captain có thể cập nhật) */
+  teamNames?: {
+    A?: string | null;
+    B?: string | null;
   };
   createdAt: string;
 }
@@ -263,6 +268,14 @@ export interface UpdateFormationRequest {
   format: string;
   /** Danh sách gán: mỗi slot (vị trí) gắn với một playerId */
   assignments: SlotAssignmentPayload[];
+}
+
+/** Payload gửi API cập nhật tên đội – captain */
+export interface UpdateTeamNameRequest {
+  /** Đội cần cập nhật: "A" | "B" */
+  team: "A" | "B";
+  /** Tên đội (string) */
+  name: string;
 }
 
 // ==================== Message Types ====================
