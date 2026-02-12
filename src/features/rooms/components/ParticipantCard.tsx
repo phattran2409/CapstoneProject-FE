@@ -4,6 +4,7 @@ import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { MatchRoomParticipant } from '../types/room.types';
+import { CaptainBadge } from './CaptainBadge';
 
 interface ParticipantCardProps {
   participant: MatchRoomParticipant;
@@ -43,6 +44,13 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
           }
         ]}
       >
+        {/* Captain badge on top-left corner */}
+        {participant.isCaptain && (
+          <View style={styles.captainBadgeWrapper}>
+            <CaptainBadge compact />
+          </View>
+        )}
+
         {/* Avatar */}
         <View style={styles.avatarContainer}>
           {participant.avatarUrl ? (
@@ -143,6 +151,12 @@ const styles = StyleSheet.create({
   name: {
     textAlign: 'center',
     marginTop: 2,
+  },
+  captainBadgeWrapper: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    zIndex: 1,
   },
   statusContainer: {
     flexDirection: 'row',

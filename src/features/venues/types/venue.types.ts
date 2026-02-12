@@ -5,7 +5,7 @@ export interface Venue {
   latitude: number;
   longitude: number;
   description: string;
-  amenities: string[];
+  amenities: string;
   contactPhone: string;
   contactEmail: string;
   amentities: string | null;
@@ -26,7 +26,7 @@ export interface VenueDetail {
   contactPhone: string | null;
   contactEmail: string | null;
   description: string | null;
-  amenities: string[] | null;
+  amenities: string | null;
   fields: VenueFieldDetail[];
   operatingHours: OperatingHour[];
   photos: VenuePhoto[];
@@ -77,6 +77,7 @@ export interface Field {
   fieldName: string;
   fieldType: string;
   // maxPlayers?: number;
+  hourlyRate: number;
   description?: string;
   status?: 'available' | 'booked' | 'maintenance';
 }

@@ -28,6 +28,7 @@ import {
   type PositionLine,
   type FormationData,
 } from "@/shared/components/formation";
+import { CaptainBadge } from "../components";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useMatchRoomDetail, type MatchRoomFullInfo } from "@/features/rooms";
 import { roomsApi } from "@/features/rooms/api/roomsApi";
@@ -152,12 +153,6 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     setHasPaidDeposit(currentUserParticipant?.depositPaid === true);
   }, [displayRoom, user?.userId]);
 
-  // ==================== SignalR Integration ====================
-  
-  /**
-   * Callback khi nhận FormationUpdated event từ SignalR
-   * Cập nhật local state nếu event là cho team hiện tại
-   */
   const handleFormationUpdated = useCallback(
     (payload: FormationUpdatedPayload) => {
       if (payload.team === teamKey) {
@@ -222,11 +217,16 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
   /** Gán cầu thủ đang chọn vào slot (captain đã chọn player trước đó) */
   const handleAssignToSlot = (slotId: string) => {
-    if (!selectedPlayerId || !isCaptain) return;
+    if (!selectedPlayerId || !isCaptain) {
+      toast.warning("Vui lòng chọn cầu thủ ở bên dưới",
+        "rồi bấm vào ô vị trí ở trên để gán", 
+      );
+      return;
+    }
     setAssignments((prev) => {
       const withoutPlayer = prev.filter((a) => a.playerId !== selectedPlayerId);
       const withoutSlot = withoutPlayer.filter((a) => a.slotId !== slotId);
-      return [...withoutSlot, { slotId, playerId: selectedPlayerId }];
+      return [...withoutSlot, { slotId, playerId: selectedPlayerId || "" }];
     });
     setSelectedPlayerId(null);
   };
@@ -348,6 +348,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     }
   };
 
+  
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -787,8 +788,9 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
               <ScrollView
                 style={styles.playerListScroll}
                 showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
               >
-                {formationPlayers.map((player) => {
+                {formationPlayers.map((player, index) => {
                   const assigned = assignments.find(
                     (a) => a.playerId === player.id,
                   );
@@ -798,7 +800,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   const isSelected = selectedPlayerId === player.id;
                   return (
                     <TouchableOpacity
-                      key={player.id}
+                      key={`${player.id}-${index}`}
                       style={[
                         styles.playerRow,
                         {
@@ -837,12 +839,15 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                           </View>
                         )}
                         <View>
-                          <ThemedText
-                            size="m"
-                            weight={isSelected ? "bold" : "medium"}
-                          >
-                            {player.name}
-                          </ThemedText>
+                          <View style={styles.playerNameRow}>
+                            <ThemedText
+                              size="m"
+                              weight={isSelected ? "bold" : "medium"}
+                            >
+                              {player.name}
+                            </ThemedText>
+                            {player.isCaptain && <CaptainBadge compact />}
+                          </View>
                           {player.role && (
                             <ThemedText size="xs" variant="secondary">
                               {player.role}
@@ -1182,6 +1187,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  playerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   playerAvatar: {
     width: 40,

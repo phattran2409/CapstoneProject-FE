@@ -249,12 +249,14 @@ export interface JoinRoomRequest {
 export interface SlotAssignmentPayload {
   slotId: string;
   playerId: string;
+  playerName: string;
+  position: string;
 }
 
 /** Đội hình đã lưu của một đội – API trả về để thành viên xem đúng vị trí được assign */
 export interface TeamFormationSnapshot {
   formationName: string;
-  format: string;
+  teamName: string;
   assignments: SlotAssignmentPayload[];
 }
 

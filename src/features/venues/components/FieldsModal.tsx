@@ -346,7 +346,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
             />
           )}
 
-          {/* Fields List */}
+          {/* Fields List */} 
           <ScrollView 
             style={styles.fieldsScrollView}
             showsVerticalScrollIndicator={false}

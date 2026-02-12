@@ -33,6 +33,7 @@ import {
   EmptySlotCard, 
   PositionSelectionModal,
   type PlayerPosition,
+  InviteFriendsModal,
 } from '../components';
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
@@ -144,6 +145,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [activeTab, setActiveTab] = useState<'teams' | 'host' | 'venue'>('teams');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
+  const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   
   // ✅ Position selection modal state
   const [showPositionModal, setShowPositionModal] = useState(false);
@@ -455,6 +457,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     );
   }
 
+  const shareUrl = `kickify://room/${displayRoom.roomId}`;
+  const shareMessage = `Join my football match!\n\nFormat: ${displayRoom.matchFormat}\nDate: ${formatDate(
+    displayRoom.matchDate,
+    'short',
+  )} ${displayRoom.startTime} - ${displayRoom.endTime}\nVenue: ${
+    displayRoom.field.venue.venueName
+  }\n\nJoin here: ${shareUrl}`;
 
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
@@ -478,6 +487,18 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         </View>
         
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            onPress={() => {
+              setInviteFriendsVisible(true);
+            }}
+            style={styles.menuButton}
+          >
+            <Ionicons
+              name="people-outline"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
           {/* Leave Room Button (when user is participant) */}
           {currentUserParticipant && (
             <TouchableOpacity
@@ -1093,6 +1114,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           autoCloseDelay={alertOptions.autoCloseDelay}
         />
       )}
+
+      {/* Invite Friends Modal */}
+      <InviteFriendsModal
+        visible={inviteFriendsVisible}
+        shareMessage={shareMessage}
+        onClose={() => setInviteFriendsVisible(false)}
+      />
 
       {/* Host Menu Modal */}
       {isHost && (

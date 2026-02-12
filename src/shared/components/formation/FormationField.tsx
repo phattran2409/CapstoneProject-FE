@@ -164,6 +164,18 @@ const FormationField = forwardRef<FormationFieldRef, FormationFieldProps>(
       [getFormationData, resetFormation, setAssignmentsFromData]
     );
 
+    // Sync internal assignments when parent initialAssignments prop changes
+    useEffect(() => {
+      if (!initialAssignments || initialAssignments.length === 0) {
+        return;
+      }
+      const mapped: Record<string, string> = {};
+      initialAssignments.forEach((a) => {
+        mapped[a.slotId] = a.playerId;
+      });
+      setAssignments(mapped);
+    }, [initialAssignments]);
+
     // Handle player selection from bench
     const handlePlayerSelect = useCallback((player: FormationPlayer) => {
       console.log('[FormationField] Player selected from bench:', player.id, player.name);
