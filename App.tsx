@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import React, { useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -14,6 +14,8 @@ import { TabBarVisibilityProvider } from './src/shared/context/TabBarVisibilityC
 import { AppToast } from './src/shared/toast';
 import { useActiveRoomStore } from './src/features/rooms';
 import i18n from './src/shared/i18n';
+import *  as Notifications from 'expo-notifications';
+
 
 const AppContent: React.FC = () => {
   const { isDark } = useTheme();
@@ -28,6 +30,44 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     loadActiveRoom();
   }, []);
+
+  // Setup notification handler
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowAlert: true,
+    }),
+  });
+
+  // Setup Android notification channel (quan trọng cho Android 8+)
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+        sound: 'default',
+        showBadge: true,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+  const sub = Notifications.addNotificationReceivedListener((notification) => {
+    console.log('📩 Notification received in app:', notification);
+  });
+
+  const clickSub = Notifications.addNotificationResponseReceivedListener((response) => {
+    console.log('🖱 Notification clicked:', response);
+  });
+
+  return () => {
+    sub.remove();
+    clickSub.remove();
+  };
+}, []);
 
   return (
     <>

@@ -11,6 +11,7 @@ export const useVenues = (filters?: VenueFilters) => {
       const result = await getVenues({
         page,
         pageSize: size,
+        fieldType: filters?.fieldType ?? undefined,
         sportType: filters?.sportType ?? undefined,
       });
       return {

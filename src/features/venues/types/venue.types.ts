@@ -104,9 +104,11 @@ export interface TimeSlot {
 }
 
 export interface VenueFilters {
-  page? :number;
-  pageSize? :number;
-  sportType? : string | null;
+  page?: number;
+  pageSize?: number;
+  /** Filter theo loại sân: FiveVsFive, SevenVsSeven, ElevenVsEleven */
+  fieldType?: string | null;
+  sportType?: string | null;
 }
 
 

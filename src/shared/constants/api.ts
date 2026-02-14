@@ -22,6 +22,9 @@ export const API_CONFIG = {
       CHANGE_PASSWORD: "/auth/change-password",
       RESEND_OTP: "/auth/resend-otp",
     },
+    USERS: {
+      FCM_TOKEN: "/users/fcm-token",
+    },
     ROOMS: {
       LIST: "/match-rooms",
       JOIN: "/match-rooms/:id/join",

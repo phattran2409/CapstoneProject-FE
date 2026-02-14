@@ -13,7 +13,7 @@ export type RootStackParamList = {
     selectedTimeSlot?: TimeSlot;
     selectedDate?: string; // YYYY-MM-DD from FieldsModal
   } | undefined;
-  VenueSelection: undefined;
+  VenueSelection: { matchFormat?: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' } | undefined;
   VenueDetail: { venueId: string };
   RoomInformation: { roomId: string; venuePhotos?: VenuePhoto[] };
   Team: { roomId: string; team: "A" | "B" };

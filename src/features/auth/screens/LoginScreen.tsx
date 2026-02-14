@@ -25,6 +25,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { loginSchema, forgotPasswordSchema, type LoginFormData } from "../validation/authSchemas";
 import { ScrollView } from "react-native";
 import { RootStackParamList } from "@/app/navigation/types";
+import { authApi } from "@/features/auth/api";
+import { getFcmToken } from "@/shared/firebase/messaging";
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -76,19 +78,33 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             t("login.success.title", "Đăng nhập thành công"),
             t("login.success.message", "Chào mừng bạn trở lại!")
           );
+          // Sau khi login thành công, lấy FCM token và gửi lên BE
+          registerFcmToken();
           // Navigation tự động xảy ra khi isAuthenticated thay đổi
         },
         onError: (error: any) => {
-          
+          const isNotVerified =
+            error?.code === "NotVerified" || error?.status === 409;
+          const userId =
+            error?.userId ?? error?.details?.userId;
+
+          if (isNotVerified && userId) {
+            toast.info(
+              t("login.errors.notVerified", "Tài khoản chưa xác thực"),
+              t("login.errors.notVerifiedMessage", "Vui lòng nhập mã OTP gửi đến email của bạn.")
+            );
+            navigation.navigate("OTPVerification", {
+              email: data.email,
+              userId: String(userId),
+            });
+            return;
+          }
+
           toast.error(
             t("login.errors.failed", "Đăng nhập thất bại"),
-            error.message ||
+            error?.message ||
               t("login.errors.invalidCredentials", "Thông tin đăng nhập không hợp lệ")
           );
-          if(error.code  == "NotVerified") {
-            navigation.navigate("OTPVerification", {email: data.email, userId: error.userId});
-          }
-          console.log(error);
         },
       }
     );
@@ -101,6 +117,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           t("login.success.title", "Đăng nhập thành công"),
           t("login.success.googleMessage", "Đăng nhập bằng Google thành công!")
         );
+        // Sau khi login Google thành công, cũng đăng ký FCM token
+
         // Navigation tự động xảy ra khi isAuthenticated thay đổi
       },
       onError: (error: any) => {

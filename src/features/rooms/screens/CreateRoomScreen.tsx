@@ -401,7 +401,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 borderWidth: 1, 
                 borderColor: theme.colors.border 
               }]}
-              onPress={() => navigation?.navigate('VenueSelection')}
+              onPress={() => navigation?.navigate('VenueSelection', { matchFormat: FormatMatch(selectedFormat) })}
             >
               {selectedVenue ? (
                 <View style={styles.venueContent}>

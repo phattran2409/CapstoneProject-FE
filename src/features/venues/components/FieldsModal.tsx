@@ -42,6 +42,8 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
   
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  /** fieldId -> true = đang mở rộng xem các slot đã đặt */
+  const [showBookedSlotsByFieldId, setShowBookedSlotsByFieldId] = useState<Record<string, boolean>>({});
 
   // handle change date picker
   const handleDateChange = useCallback(
@@ -68,10 +70,15 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
       setSelectedTimeKey(null);
       setSelectedSlot(null);
       setExpandedFieldId(null);
+      setShowBookedSlotsByFieldId({});
       setAvailabilityCache({});
       setLoadingFields({});
     }
   }, [visible]);
+
+  const toggleShowBookedSlots = useCallback((fieldId: string) => {
+    setShowBookedSlotsByFieldId(prev => ({ ...prev, [fieldId]: !prev[fieldId] }));
+  }, []);
 
   // Fetch availability when a field is expanded
   const fetchFieldAvailability = useCallback(async (fieldId: string) => {
@@ -259,31 +266,44 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
           </View>
         )}
 
-        {/* Booked slots */}
+        {/* Booked slots - toggle để xem/ẩn */}
         {bookedSlots.length > 0 && (
           <View style={styles.slotGroup}>
-            <Text style={[styles.slotGroupTitle, { color: '#EF4444' }]}>
-              {t('fieldsModal.bookedLabel', 'Đã đặt')} ({bookedSlots.length})
-            </Text>
-            <View style={styles.timeSlotsGrid}>
-              {bookedSlots.map((slot, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.timeSlotChip,
-                    styles.timeSlotBooked,
-                    { backgroundColor: '#1a1a1a', borderColor: '#3a3a3a' },
-                  ]}
-                >
-                  <Text style={[styles.timeSlotText, { color: '#666' }]}>
-                    {slot.startTime}
-                  </Text>
-                  <Text style={[styles.timeSlotPrice, { color: '#555' }]}>
-                    {t('fieldsModal.bookedShort', 'Đã đặt')}
-                  </Text>
-                </View>
-              ))}
-            </View>
+            <TouchableOpacity
+              style={styles.bookedSlotsHeader}
+              onPress={() => toggleShowBookedSlots(field.fieldId)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.slotGroupTitle, { color: '#EF4444' }]}>
+                {t('fieldsModal.bookedLabel', 'Đã đặt')} ({bookedSlots.length})
+              </Text>
+              <Ionicons
+                name={showBookedSlotsByFieldId[field.fieldId] ? 'chevron-up' : 'chevron-down'}
+                size={22}
+                color={theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+            {showBookedSlotsByFieldId[field.fieldId] && (
+              <View style={styles.timeSlotsGrid}>
+                {bookedSlots.map((slot, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.timeSlotChip,
+                      styles.timeSlotBooked,
+                      { backgroundColor: '#1a1a1a', borderColor: '#3a3a3a' },
+                    ]}
+                  >
+                    <Text style={[styles.timeSlotText, { color: '#666' }]}>
+                      {slot.startTime}
+                    </Text>
+                    <Text style={[styles.timeSlotPrice, { color: '#555' }]}>
+                      {t('fieldsModal.bookedShort', 'Đã đặt')}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -629,6 +649,13 @@ const styles = StyleSheet.create({
   slotGroupTitle: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  bookedSlotsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    marginBottom: 4,
   },
   timeSlotsGrid: {
     flexDirection: 'row',

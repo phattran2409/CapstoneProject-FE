@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,8 @@ import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useDebounce } from "@/shared/hooks";
 import { EloLeaderboardSection } from "@/features/leaderboard";
 import { useAuthStore } from "@/features/auth";
+import { authApi } from "@/features/auth/api";
+import { getFcmToken } from "@/shared/firebase/messaging";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, "Home">,
@@ -54,6 +56,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
   const { user } = useAuthStore();
+  const hasSyncedFcmRef = useRef(false);
+
+  // Đăng ký / đồng bộ FCM token sau khi user đã đăng nhập và vào Home
+  useEffect(() => {
+    const syncFcmToken = async () => {
+      try {
+        if (!user) return;
+        if (hasSyncedFcmRef.current) return; // Đã sync rồi trong session này
+        const token = await getFcmToken();
+        if (!token) return;
+        await authApi.updateFcmToken(token);
+        hasSyncedFcmRef.current = true;
+        console.log("✅ FCM token registered from HomeScreen");
+      } catch (error) {
+        console.error("❌ Failed to register FCM token from HomeScreen:", error);
+      }
+    };
+
+    syncFcmToken();
+  }, [user?.userId]);
 
   // Use paginated posts hook
   const {

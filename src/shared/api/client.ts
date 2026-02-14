@@ -305,6 +305,7 @@ apiClient.interceptors.response.use(
       apiError.message = data?.detail || data?.message || data?.error || error.message;
       apiError.code = data?.title || data?.code;
       apiError.details = data;
+      if (data?.userId != null) apiError.userId = String(data.userId);
       
       console.log('🔍 API Error:', data);
 

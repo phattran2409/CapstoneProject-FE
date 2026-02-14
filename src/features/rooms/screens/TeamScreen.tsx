@@ -127,20 +127,30 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
   }, [formatForFormation, selectedFormation]);
 
   // Khởi tạo đội hình + assignments từ API khi có – chỉ thành viên trong team mới có dữ liệu và xem đúng vị trí captain assign
-  const savedFormation = displayRoom?.formations?.[teamKey];
+  const savedFormation = displayRoom?.formations?.[selectedTeam];
   useEffect(() => {
-    // Xử lý null an toàn: nếu savedFormation là null hoặc undefined, giữ assignments rỗng
-    if (savedFormation && savedFormation.formationName && savedFormation.assignments?.length !== undefined) {
-      setSelectedFormation(savedFormation.formationName);
-      setAssignments(
-        savedFormation.assignments.map((a) => ({ slotId: a.slotId, playerId: a.playerId })),
-      );
-    } else {
-      if (availableFormations.length > 0 && !availableFormations.includes(selectedFormation)) {
-        setSelectedFormation(availableFormations[0]);
-      }
+    // Nếu không có dữ liệu đội hình từ API thì không ghi đè state local
+    if (
+      !savedFormation ||
+      !savedFormation.formationName ||
+      !savedFormation.assignments ||
+      savedFormation.assignments.length === 0
+    ) {
+      return;
     }
-  }, [displayRoom?.roomId, teamKey, savedFormation?.formationName, JSON.stringify(savedFormation?.assignments ?? []), availableFormations, selectedFormation]);
+
+    // Chỉ khi formation từ API thay đổi thì mới sync lại state local
+    setSelectedFormation(savedFormation.formationName);
+    setAssignments(
+      savedFormation.assignments.map((a) => ({
+        slotId: a.slotId,
+        playerId: a.playerId,
+      })),
+    );
+  }, [
+    savedFormation?.formationName,
+    JSON.stringify(savedFormation?.assignments ?? []),
+  ]);
 
   useEffect(() => {
     if (!displayRoom) return;
@@ -284,11 +294,14 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     const payload = {
       team: teamKey as "A" | "B",
       formationName: selectedFormation,
-      format: formatForFormation,
-      assignments: assignments.map((a) => ({
-        slotId: a.slotId,
-        playerId: a.playerId,
-      })),
+      assignments: assignments.map((a) => {
+        const slot = formationConfig?.slots.find((s) => s.id === a.slotId);
+        return {
+          slotId: a.slotId,
+          playerId: a.playerId,
+          position: slot?.line || "",
+        };
+      }),
     };
     try {
       await roomsApi.updateFormation(roomId, payload);
