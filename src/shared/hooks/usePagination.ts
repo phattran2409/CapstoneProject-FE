@@ -51,19 +51,28 @@ export function usePagination<T>({
   // Track if this is initial load
   const isInitialLoad = useRef(true);
 
-  // Reset accumulated data and page when queryKey changes (e.g. filter change)
-  const queryKeyRef = useRef(queryKey);
-  useEffect(() => {
-    if (JSON.stringify(queryKeyRef.current) !== JSON.stringify(queryKey)) {
-      queryKeyRef.current = queryKey;
-      setAccumulatedData([]);
-      setCurrentPage(1);
-      isInitialLoad.current = true;
-    }
-  }, [queryKey]);
+  // Khi queryKey đổi (search/filter): reset ngay về trang 1 và clear data trong cùng render
+  // để fetch đúng page 1 và không giữ cache/dữ liệu cũ
+  const queryKeySerialized = JSON.stringify(queryKey);
+  const prevQueryKeyRef = useRef(queryKeySerialized);
+  const isKeyChanged = prevQueryKeyRef.current !== queryKeySerialized;
+  if (isKeyChanged) {
+    prevQueryKeyRef.current = queryKeySerialized;
+    isInitialLoad.current = true;
+  }
 
-  // Create query key with page
-  const paginatedQueryKey = [...queryKey, { page: currentPage, pageSize }];
+  const effectivePage = isKeyChanged ? 1 : currentPage;
+  const effectiveData = isKeyChanged ? [] : accumulatedData;
+
+  // Sync state khi queryKey đổi (setState để lần render sau currentPage/accumulatedData khớp)
+  useEffect(() => {
+    setAccumulatedData([]);
+    setCurrentPage(1);
+    isInitialLoad.current = true;
+  }, [queryKeySerialized]);
+
+  // Create query key with page (dùng effectivePage để fetch đúng trang 1 khi đổi filter)
+  const paginatedQueryKey = [...queryKey, { page: effectivePage, pageSize }];
 
   // Main query for current page
   const {
@@ -74,7 +83,7 @@ export function usePagination<T>({
     refetch,
   } = useQuery({
     queryKey: paginatedQueryKey,
-    queryFn: () => fetchFunction(currentPage, pageSize),
+    queryFn: () => fetchFunction(effectivePage, pageSize),
     staleTime,
     enabled,
   });
@@ -149,7 +158,7 @@ export function usePagination<T>({
     : null;
 
   return {
-    data: accumulatedData,
+    data: isKeyChanged ? effectiveData : accumulatedData,
     loading,
     refreshing,
     loadingMore,

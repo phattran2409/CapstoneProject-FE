@@ -25,12 +25,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
           roomId: (roomId: string) => roomId,
         },
       },
-      RoomDetail: {
-        path: 'room/:roomId/detail',
-        parse: {
-          roomId: (roomId: string) => roomId,
-        },
-      },
       // Other screens
       Leaderboard: 'leaderboard',
       CreateRoom: 'create-room',

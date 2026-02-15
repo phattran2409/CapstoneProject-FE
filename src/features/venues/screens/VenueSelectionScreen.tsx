@@ -10,6 +10,7 @@ import { useVenues, Venue, Field, TimeSlot } from '@/features/venues';
 import { RootStackParamList } from '@/app/navigation/types';
 import { FieldsModal } from '../components';
 import { EmptyState, LoadingMoreIndicator } from '@/shared/components';
+import { useDebounce } from '@/shared/hooks';
 
 /** Filter theo fieldType của API: FiveVsFive, SevenVsSeven, ElevenVsEleven */
 type FieldTypeFilter = '' | 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
@@ -26,8 +27,9 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchTerm = useDebounce(searchQuery, 500);
   const [selectedFilter, setSelectedFilter] = useState<FieldTypeFilter>(
-    (route?.params?.matchFormat as FieldTypeFilter) ?? 'all'
+    (route?.params?.matchFormat as FieldTypeFilter) ?? ''
   );
   const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
   const [selectedVenueForFields, setSelectedVenueForFields] = useState<Venue | null>(null);
@@ -53,6 +55,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   } = useVenues({
     pageSize: 5,
     fieldType: selectedFilter === '' ? undefined : selectedFilter,
+    searchName: debouncedSearchTerm.trim() || undefined,
   });
 
   // const formatPrice = (price: number) => {

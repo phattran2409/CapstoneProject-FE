@@ -1,20 +1,20 @@
 import 'react-native-reanimated';
 import React, { useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, useTheme } from './src/shared/theme';
-import { StackNavigator } from './src/app/navigation';
+import { StackNavigator, navigationRef } from './src/app/navigation';
 import { linking } from './src/app/navigation/linking';
 import { useAppStore } from './src/store';
 import { queryClient } from './src/shared/api/queryClient';
 import { TabBarVisibilityProvider } from './src/shared/context/TabBarVisibilityContext';
 import { AppToast } from './src/shared/toast';
 import { useActiveRoomStore } from './src/features/rooms';
+import { useNotificationListeners } from './src/shared/notifications';
 import i18n from './src/shared/i18n';
-import *  as Notifications from 'expo-notifications';
 
 
 const AppContent: React.FC = () => {
@@ -31,48 +31,12 @@ const AppContent: React.FC = () => {
     loadActiveRoom();
   }, []);
 
-  // Setup notification handler
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowAlert: true,
-    }),
-  });
-
-  // Setup Android notification channel (quan trọng cho Android 8+)
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'Default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-        sound: 'default',
-        showBadge: true,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-  const sub = Notifications.addNotificationReceivedListener((notification) => {
-    console.log('📩 Notification received in app:', notification);
-  });
-
-  const clickSub = Notifications.addNotificationResponseReceivedListener((response) => {
-    console.log('🖱 Notification clicked:', response);
-  });
-
-  return () => {
-    sub.remove();
-    clickSub.remove();
-  };
-}, []);
+  useNotificationListeners();
 
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <NavigationContainer linking={linking}>
+      <NavigationContainer ref={navigationRef} linking={linking}>
         <StackNavigator />
       </NavigationContainer>
       <AppToast />

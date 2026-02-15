@@ -13,6 +13,7 @@ export const useVenues = (filters?: VenueFilters) => {
         pageSize: size,
         fieldType: filters?.fieldType ?? undefined,
         sportType: filters?.sportType ?? undefined,
+        searchName: filters?.searchName ?? undefined,
       });
       return {
         data: result.data.venues,

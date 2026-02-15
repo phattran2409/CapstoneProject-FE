@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TouchableOpacity, Image, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -10,7 +10,6 @@ import {
   ThemedText,
   ThemedScrollView,
   ThemedIcon,
-  ThemedCard 
 } from '@/shared/components/themed';
 import Alert from "@/shared/components/Alert";
 import { RootStackParamList } from '@/app/navigation/types';
@@ -29,9 +28,11 @@ import SplashScreen from '@/features/splash/screens/SplashScreen';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { 
   HostMenuModal, 
-  ParticipantCard, 
-  EmptySlotCard, 
   PositionSelectionModal,
+  RoomInfoCard,
+  HostTabContent,
+  VenueTabContent,
+  TeamLineup,
   type PlayerPosition,
   InviteFriendsModal,
 } from '../components';
@@ -596,503 +597,70 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           <>
           {/* Room Info Section */}
           <View style={styles.roomInfoSection}>
-            {/* Format */}
-            <ThemedView 
-              style={[
-                styles.infoCard,
-                { backgroundColor: theme.colors.surface }
-              ]}
-            >
-              <View 
-                style={[
-                  styles.infoIconContainer,
-                  { backgroundColor: theme.colors.neonGreen + '20' }
-                ]}
-              >
-                <ThemedIcon name="people" size={24} variant="accent" />
-              </View>
-              <View style={styles.infoContent}>
-                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
-                  {t('roomDetail.format')}
-                </ThemedText>
-                <ThemedText variant="primary" size="xl" weight="bold">
-                  {displayRoom.matchFormat === 'FiveVsFive' ? '5v5' : displayRoom.matchFormat === 'SevenVsSeven' ? '7v7' : displayRoom.matchFormat}
-                </ThemedText>
-              </View>
-            </ThemedView>
-
-            {/* Datetime */}
-            <ThemedView 
-              style={[
-                styles.infoCard,
-                { backgroundColor: theme.colors.surface }
-              ]}
-            >
-              <View 
-                style={[
-                  styles.infoIconContainer,
-                  { backgroundColor: theme.colors.neonGreen + '20' }
-                ]}
-              >
-                <ThemedIcon name="time" size={24} variant="accent" />
-              </View>
-              <View style={styles.infoContent}>
-                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
-                  {t('roomDetail.datetime')}
-                </ThemedText>
-                <ThemedText variant="primary" size="l" weight="semiBold">
-                  {new Date(displayRoom.matchDate).toLocaleDateString('vi-VN')} • {displayRoom.startTime} - {displayRoom.endTime}
-                </ThemedText>
-              </View>
-            </ThemedView>
-
-            {/* Venue */}
-            <ThemedView 
-              style={[
-                styles.infoCard,
-                { backgroundColor: theme.colors.surface }
-              ]}
-            >
-              <View 
-                style={[
-                  styles.infoIconContainer,
-                  { backgroundColor: theme.colors.neonGreen + '20' }
-                ]}
-              >
-                <ThemedIcon name="location" size={24} variant="accent" />
-              </View>
-              <View style={styles.infoContent}>
-                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
-                  {t('roomDetail.venue')}
-                </ThemedText>
-                <ThemedText variant="primary" size="m" weight="medium">
-                  {displayRoom.field.fieldName} - {displayRoom.field.venue.venueName}
-                </ThemedText>
-                <ThemedText variant="secondary" size="s">
-                  {displayRoom.field.venue.address}
-                </ThemedText>
-              </View>
-            </ThemedView>
-
-            {/* Deposit */}
-            <ThemedView 
-              style={[
-                styles.infoCard,
-                { backgroundColor: theme.colors.surface }
-              ]}
-            >
-              <View 
-                style={[
-                  styles.infoIconContainer,
-                  { backgroundColor: theme.colors.neonGreen + '20' }
-                ]}
-              >
-                <ThemedIcon name="cash" size={24} variant="accent" />
-              </View>
-              <View style={styles.infoContent}>
-                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
-                  Deposit / Person
-                </ThemedText>
-                <ThemedText variant="primary" size="l" weight="semiBold">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayRoom.depositPerPerson)}
-                </ThemedText>
-              </View>
-            </ThemedView>
-
-            {/* Total Deposit Collected */}
-            <ThemedView 
-              style={[
-                styles.infoCard,
-                { backgroundColor: theme.colors.surface }
-              ]}
-            >
-              <View 
-                style={[
-                  styles.infoIconContainer,
-                  { backgroundColor: theme.colors.neonGreen + '20' }
-                ]}
-              >
-                <ThemedIcon name="trophy" size={24} variant="accent" />
-              </View>
-              <View style={styles.infoContent}>
-                <ThemedText variant="secondary" size="xs" style={styles.infoLabel}>
-                  Tổng tiền đã thu
-                </ThemedText>
-                <ThemedText variant="primary" size="l" weight="semiBold">
-                  {/* {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(depositCollected)} */}
-                  {formatCurrency(depositCollected, 'VND') || '0'}
-                </ThemedText>
-                {depositTargetTotal > 0 && (
-                  <ThemedText variant="secondary" size="xs">
-                    {Math.round(depositProgress * 100)}% quỹ trận đấu
-                  </ThemedText>
-                )}
-              </View>
-            </ThemedView>
-            
-
-          
+            <RoomInfoCard
+              icon="people"
+              label={t('roomDetail.format')}
+              value={displayRoom.matchFormat === 'FiveVsFive' ? '5v5' : displayRoom.matchFormat === 'SevenVsSeven' ? '7v7' : displayRoom.matchFormat}
+              valueSize="xl"
+              valueWeight="bold"
+            />
+            <RoomInfoCard
+              icon="time"
+              label={t('roomDetail.datetime')}
+              value={`${new Date(displayRoom.matchDate).toLocaleDateString('vi-VN')} • ${displayRoom.startTime} - ${displayRoom.endTime}`}
+            />
+            <RoomInfoCard
+              icon="location"
+              label={t('roomDetail.venue')}
+              value={`${displayRoom.field.fieldName} - ${displayRoom.field.venue.venueName}`}
+              subValue={displayRoom.field.venue.address}
+              valueSize="m"
+              valueWeight="medium"
+            />
+            <RoomInfoCard
+              icon="cash"
+              label="Deposit / Person"
+              value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayRoom.depositPerPerson)}
+            />
+            <RoomInfoCard
+              icon="trophy"
+              label="Tổng tiền đã thu"
+              value={formatCurrency(depositCollected, 'VND') || '0'}
+              subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% quỹ trận đấu` : undefined}
+            />
           </View>
 
           {/* Team Lineup Section */}
-          <View style={styles.teamLineupSection}>
-            <View style={styles.teamLineupHeader}>
-              <ThemedText variant="primary" size="l" weight="bold">
-                {t('roomDetail.teamLineup')} ({displayRoom.filledSlots}/{displayRoom.totalSlots})
-              </ThemedText>
-              {/* SignalR Connection Indicator */}
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View 
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: isSignalRConnected ? theme.colors.neonGreen : theme.colors.textSecondary,
-                    marginRight: 4,
-                  }}
-                />
-                <ThemedText variant="secondary" size="xs">
-                  {isSignalRConnected ? 'Live' : 'Offline'}
-                </ThemedText>
-              </View>
-            </View>
-
-            {/* Team A */}
-            <View style={styles.teamContainer}>
-              <View style={styles.teamHeader}>
-                <ThemedIcon name="shield" size={20} variant="accent" />
-                <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-                  Team A
-                </ThemedText>
-                {currentUserParticipant?.teamAssignment === 'A' && (
-                  <View 
-                    style={[
-                      styles.selectedTeamBadge,
-                      { backgroundColor: theme.colors.neonGreen + '30' }
-                    ]}
-                  >
-                    <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                      Your Team
-                    </ThemedText>
-                  </View>
-                )}
-              </View>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.playersScrollContainer}
-              >
-                {displayRoom.participants.teamA.map((participant) => (
-                  <ParticipantCard
-                    key={participant.participantId}
-                    participant={participant}
-                    teamColor="#4CAF50"
-                    isHost={isHost}
-                    currentUserId={user?.userId}
-                    isKicking={isKicking}
-                    onKickPlayer={handleKickPlayer}
-                  />
-                ))}
-                {/* Add empty slots for Team A - always show when team has room so user can switch teams */}
-                {displayRoom.participants.teamA.length < displayRoom.totalSlots / 2 && (
-                  <EmptySlotCard
-                    teamAssignment="A"
-                    teamColor="#4CAF50"
-                    isJoining={isUpdatingParticipant && pendingTeamAssignment === 'A'}
-                    onPress={handleOpenPositionModal}
-                  />
-                )}
-              </ScrollView>
-            </View>
-
-            {/* Team B */}
-            <View style={styles.teamContainer}>
-              <View style={styles.teamHeader}>
-                <ThemedIcon name="shield" size={20} variant="accent" />
-                <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-                  Team B
-                </ThemedText>
-                {currentUserParticipant?.teamAssignment === 'B' && (
-                  <View 
-                    style={[
-                      styles.selectedTeamBadge,
-                      { backgroundColor: theme.colors.neonGreen + '30' }
-                    ]}
-                  >
-                    <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                      Your Team
-                    </ThemedText>
-                  </View>
-                )}
-              </View>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.playersScrollContainer}
-              >
-                {displayRoom.participants.teamB.map((participant) => (
-                  <ParticipantCard
-                    key={participant.participantId}
-                    participant={participant}
-                    teamColor="#2196F3"
-                    isHost={isHost}
-                    currentUserId={user?.userId}
-                    isKicking={isKicking}
-                    onKickPlayer={handleKickPlayer}
-                  />
-                ))}
-                {/* Add empty slots for Team B - always show when team has room so user can switch teams */}
-                {displayRoom.participants.teamB.length < displayRoom.totalSlots / 2 && (
-                  <EmptySlotCard
-                    teamAssignment="B"
-                    teamColor="#2196F3"
-                    isJoining={isUpdatingParticipant && pendingTeamAssignment === 'B'}
-                    onPress={handleOpenPositionModal}
-                  />
-                )}
-              </ScrollView>
-            </View>
-
-            {/* Unassigned Players */}
-            {displayRoom.participants.unassigned.length > 0 && (
-              <View style={styles.teamContainer}>
-                <View style={styles.teamHeader}>
-                  <ThemedIcon name="people" size={20} variant="secondary" />
-                  <ThemedText variant="secondary" size="m" weight="bold" style={styles.teamName}>
-                    Unassigned
-                  </ThemedText>
-                </View>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.playersScrollContainer}
-                >
-                  {displayRoom.participants.unassigned.map((participant) => (
-                    <ParticipantCard
-                      key={participant.participantId}
-                      participant={participant}
-                      teamColor="#9E9E9E"
-                      isHost={isHost}
-                      currentUserId={user?.userId}
-                      isKicking={isKicking}
-                      onKickPlayer={handleKickPlayer}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-          </View>
+          <TeamLineup
+            displayRoom={displayRoom}
+            t={t}
+            isSignalRConnected={isSignalRConnected}
+            currentUserParticipant={currentUserParticipant}
+            isHost={isHost}
+            currentUserId={user?.userId}
+            isKicking={isKicking}
+            onKickPlayer={handleKickPlayer}
+            isUpdatingParticipant={isUpdatingParticipant}
+            pendingTeamAssignment={pendingTeamAssignment}
+            onOpenPositionModal={handleOpenPositionModal}
+            onParticipantPress={(userId) => navigation?.navigate('PersonalPage', { userId })}
+          />
             </>
           )}
 
           {/* Host Info Tab Content */}
           {activeTab === 'host' && displayRoom.host && (
-            <View>
-              <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
-                Host Information
-              </ThemedText>
-              
-              <ThemedCard style={styles.hostCard}>
-                <View style={styles.hostHeader}>
-                  <Image
-                    source={{ uri: displayRoom.host.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayRoom.host.fullName) }}
-                    style={styles.hostAvatar}
-                  />
-                  <View style={styles.hostInfo}>
-                    <ThemedText size="xl" weight="bold" style={styles.hostName}>
-                      {displayRoom.host.fullName}
-                    </ThemedText>
-                    <ThemedText variant="secondary" size="s">
-                      Host ID: {displayRoom.host.userId.slice(0, 8)}...
-                    </ThemedText>
-                  </View>
-                </View>
-
-                {/* Room Description */}
-                {displayRoom.description && (
-                  <View style={styles.hostBio}>
-                    <ThemedText variant="secondary" size="xs" style={{ marginBottom: 4 }}>
-                      Description
-                    </ThemedText>
-                    <ThemedText size="m">
-                      {displayRoom.description}
-                    </ThemedText>
-                  </View>
-                )}
-
-                {/* Room Rules */}
-                {displayRoom.rules && (
-                  <View style={[styles.hostBio, { marginTop: 12 }]}>
-                    <ThemedText variant="secondary" size="xs" style={{ marginBottom: 4 }}>
-                      Rules
-                    </ThemedText>
-                    <ThemedText size="m">
-                      {displayRoom.rules}
-                    </ThemedText>
-                  </View>
-                )}
-
-                {/* Contact via venue */}
-                {displayRoom.field.venue.contactPhone && (
-                  <View style={styles.hostContact}>
-                    <View 
-                      style={[
-                        styles.hostContactItem,
-                        { backgroundColor: theme.colors.neonGreen + '10' }
-                      ]}
-                    >
-                      <ThemedText variant="secondary" size="xs" style={styles.contactLabel}>
-                        Venue Contact
-                      </ThemedText>
-                      <ThemedText size="s" weight="medium">
-                        {displayRoom.field.venue.contactPhone}
-                      </ThemedText>
-                    </View>
-                  </View>
-                )}
-              </ThemedCard>
-            </View>
+            <HostTabContent displayRoom={displayRoom} />
           )}
 
           {/* Venue Details Tab Content */}
           {activeTab === 'venue' && displayRoom.field && (
-            <View>
-              <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
-                Venue & Field Details
-              </ThemedText>
-
-              {/* Venue photos: từ API detail hoặc từ params (navigate từ MatchesScreen) */}
-              {venuePhotosToShow.length > 0 && (
-                <View style={styles.venueImagesContainer}>
-                  <ScrollView
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onMomentumScrollEnd={(e) => {
-                      const pageWidth = Dimensions.get('window').width - 40;
-                      const index = Math.round(
-                        e.nativeEvent.contentOffset.x / (pageWidth || 1),
-                      );
-                      setSelectedImageIndex(Math.min(index, venuePhotosToShow.length - 1));
-                    }}
-                    style={styles.venuePhotosScroll}
-                  >
-                    {venuePhotosToShow.map((uri, index) => (
-                      <View
-                        key={uri.photoId ?? index}
-                        style={[styles.venueImageWrapper, { width: Dimensions.get('window').width - 40 }]}
-                      >
-                        <Image
-                          source={{ uri: uri.photoUrl }}
-                          style={styles.venueImage}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    ))}
-                  </ScrollView>
-                  {venuePhotosToShow.length > 1 && (
-                    <View style={styles.venueDotsRow}>
-                      {venuePhotosToShow.map((_, index) => (
-                        <View key={index} style={styles.venueDot}>
-                          <View style={[styles.venueDot, {
-                            backgroundColor: index === selectedImageIndex
-                              ? theme.colors.neonGreen
-                              : theme.colors.border,
-                          }]} />
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              )}
-
-              {/* Venue Info Cards */}
-              <View style={styles.venueInfoContainer}>
-                {/* Field Info */}
-                <ThemedCard style={styles.venueLocationCard}>
-                  <View style={styles.venueInfoHeader}>
-                    <ThemedIcon name="football" size={20} variant="accent" />
-                    <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                      Field
-                    </ThemedText>
-                  </View>
-                  <ThemedText size="l" weight="semiBold">
-                    {displayRoom.field.fieldName}
-                  </ThemedText>
-                  <ThemedText variant="secondary" size="s">
-                    Type: {displayRoom.field.fieldType === 'FiveVsFive' ? '5v5' : displayRoom.field.fieldType === 'SevenVsSeven' ? '7v7' : displayRoom.field.fieldType}
-                  </ThemedText>
-                </ThemedCard>
-
-                {/* Price */}
-                <View style={styles.venueInfoRow}>
-                  <ThemedCard style={styles.venueInfoCard}>
-                    <View style={styles.venueInfoHeader}>
-                      <ThemedIcon name="cash" size={20} variant="accent" />
-                      <ThemedText size="xs" variant="secondary" style={styles.venueInfoLabel}>
-                        Field Rate/Hour
-                      </ThemedText>
-                    </View>
-                    <ThemedText size="xl" weight="bold">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayRoom.field.hourlyRate)}
-                    </ThemedText>
-                  </ThemedCard>
-
-                  <ThemedCard style={styles.venueInfoCard}>
-                    <View style={styles.venueInfoHeader}>
-                      <ThemedIcon name="time" size={20} variant="accent" />
-                      <ThemedText size="xs" variant="secondary" style={styles.venueInfoLabel}>
-                        Duration
-                      </ThemedText>
-                    </View>
-                    <ThemedText size="xl" weight="bold">
-                      {displayRoom.durationMinutes} min
-                    </ThemedText>
-                  </ThemedCard>
-                </View>
-
-                {/* Venue Info */}
-                <ThemedCard style={styles.venueLocationCard}>
-                  <View style={styles.venueInfoHeader}>
-                    <ThemedIcon name="business" size={20} variant="accent" />
-                    <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                      Venue
-                    </ThemedText>
-                  </View>
-                  <ThemedText size="l" weight="semiBold">
-                    {displayRoom.field.venue.venueName}
-                  </ThemedText>
-                </ThemedCard>
-
-                {/* Location */}
-                <ThemedCard style={styles.venueLocationCard}>
-                  <View style={styles.venueInfoHeader}>
-                    <ThemedIcon name="location" size={20} variant="accent" />
-                    <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                      Address
-                    </ThemedText>
-                  </View>
-                  <ThemedText variant="secondary" size="m">
-                    {displayRoom.field.venue.address}
-                  </ThemedText>
-                </ThemedCard>
-
-                {/* Contact */}
-                {displayRoom.field.venue.contactPhone && (
-                  <ThemedCard style={styles.venueLocationCard}>
-                    <View style={styles.venueInfoHeader}>
-                      <ThemedIcon name="call" size={20} variant="accent" />
-                      <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                        Contact
-                      </ThemedText>
-                    </View>
-                    <ThemedText size="m">
-                      {displayRoom.field.venue.contactPhone}
-                    </ThemedText>
-                  </ThemedCard>
-                )}
-              </View>
-            </View>
+            <VenueTabContent
+              displayRoom={displayRoom}
+              venuePhotosToShow={venuePhotosToShow}
+              selectedImageIndex={selectedImageIndex}
+              onImageIndexChange={setSelectedImageIndex}
+            />
           )}
         </View>
       </ThemedScrollView>
@@ -1292,182 +860,6 @@ const styles = StyleSheet.create({
   },
   roomInfoSection: {
     marginBottom: 24,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-  },
-  infoIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    marginBottom: 4,
-  },
-  teamLineupSection: {
-    marginBottom: 24,
-  },
-  teamLineupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  teamContainer: {
-    marginBottom: 24,
-  },
-  teamHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  teamName: {
-    marginLeft: 4,
-  },
-  selectedTeamBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  playersScrollContainer: {
-    gap: 12,
-  },
-  sectionTitle: {
-    marginBottom: 16,
-  },
-  hostCard: {
-    padding: 20,
-    borderRadius: 16,
-  },
-  hostHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  hostAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
-  },
-  hostInfo: {
-    flex: 1,
-  },
-  hostName: {
-    marginBottom: 4,
-  },
-  hostRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  hostRatingText: {
-    marginLeft: 4,
-  },
-  hostBio: {
-    marginBottom: 16,
-  },
-  hostContact: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  hostContactItem: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 12,
-  },
-  contactLabel: {
-    marginBottom: 4,
-  },
-  venueImagesContainer: {
-    marginBottom: 24,
-  },
-  venuePhotosScroll: {
-    marginHorizontal: -20,
-  },
-  venueImageWrapper: {
-    paddingHorizontal: 20,
-  },
-  venueImage: {
-    width: '100%',
-    height: 220,
-    borderRadius: 16,
-  },
-  venueDotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-  },
-  venueDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  imageIndicators: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 12,
-    gap: 8,
-  },
-  imageIndicator: {
-    height: 8,
-    borderRadius: 4,
-  },
-  venueInfoContainer: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  venueInfoRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  venueInfoCard: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 16,
-  },
-  venueInfoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  venueInfoLabel: {
-    marginLeft: 8,
-  },
-  venueLocationCard: {
-    padding: 16,
-    borderRadius: 16,
-  },
-  venueCoordinates: {
-    marginTop: 4,
-  },
-  venueAmenitiesCard: {
-    padding: 16,
-    borderRadius: 16,
-  },
-  amenitiesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  amenityTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
   },
   joinButtonContainer: {
     paddingHorizontal: 20,
