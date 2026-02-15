@@ -71,7 +71,7 @@ const convertToField = (venueField: VenueFieldDetail): Field => ({
   fieldId: venueField.fieldId,
   fieldName: venueField.fieldName,
   fieldType: venueField.fieldType,
-  pricePerHour: venueField.hourlyRate,
+  hourlyRate: venueField.hourlyRate,
 });
 
 const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route }) => {
@@ -97,7 +97,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
       latitude: venue.latitude,
       longitude: venue.longitude,
       description: venue.description || '',
-      amenities: venue.amenities || [],
+      amenities: venue.amenities || '',
       contactPhone: venue.contactPhone || '',
       contactEmail: venue.contactEmail || '',
       amentities: null,
@@ -378,20 +378,20 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
               )}
 
               {/* Amenities */}
-              {venue.amenities && venue.amenities.length > 0 && (
+              {venue.amenities !== null && venue.amenities !== undefined && (
                 <View style={styles.section}>
                   <Text style={[styles.sectionTitle, { color: theme.colors.softWhite }]}>
                     Tiện ích
                   </Text>
                   <View style={styles.amenitiesContainer}>
-                    {venue.amenities.map((amenity, index) => (
+                    {venue.amenities.split(',').map((amenity, index) => (
                       <View
                         key={index}
                         style={[styles.amenityTag, { backgroundColor: '#2a2a2a' }]}
                       >
                         <Ionicons name="checkmark-circle" size={16} color={theme.colors.neonGreen} />
                         <Text style={[styles.amenityText, { color: theme.colors.softWhite }]}>
-                          {amenity}
+                          {amenity.trim()}
                         </Text>
                       </View>
                     ))}

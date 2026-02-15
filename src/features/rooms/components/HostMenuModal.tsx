@@ -4,19 +4,15 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
-  Image,
-  ActivityIndicator,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed/ThemedText';
-import { usePaginatedFriends } from '@/features/friends/hooks';
-import { useSendChatMessage } from '@/features/chat/hooks/useChatMessages';
 import { useAuthStore } from '@/features/auth';
 import { ShareRoom } from './ShareRoom';
 import PrivateRoomPasswordModal from './PrivateRoomPasswordModal';
 import { useUpdateRoomPrivacy } from '../hooks/useUpdateRoomPrivacy';
+import { InviteFriendsModal } from './InviteFriendsModal';
 
 interface HostMenuModalProps {
   room: {
@@ -45,12 +41,6 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
   const [privacyError, setPrivacyError] = useState<string | undefined>(undefined);
-
-  const { friends, loading: friendsLoading, refresh: refreshFriends } = usePaginatedFriends({
-    pageSize: 20,
-    enabled: inviteFriendsVisible,
-  });
-  const { mutate: sendChatMessage, isPending: isSendingMessage } = useSendChatMessage();
   const { mutate: updateRoomPrivacy, isPending: isUpdatingPrivacy } = useUpdateRoomPrivacy();
 
   const shareUrl = `kickify://room/${room.roomId}`;
@@ -64,25 +54,6 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
   const handleInviteFriends = () => {
     handleShowMenuModal();
     setInviteFriendsVisible(true);
-    refreshFriends();
-  };
-
-  const handleSendToFriend = (receiverId: string) => {
-    if (!user?.userId) return;
-    sendChatMessage(
-      {
-        senderId: user.userId,
-        receiverId,
-        messageText: shareMessage,
-        messageType: 'Text',
-      },
-      {
-        onSuccess: () => {
-          setInviteFriendsVisible(false);
-        },
-        onError: () => {},
-      }
-    );
   };
 
   const handleSetPrivateRoom = () => {
@@ -191,62 +162,11 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
       />
 
       {/* Modal mời bạn bè - gửi nội dung phòng qua chat */}
-      <Modal
+      <InviteFriendsModal
         visible={inviteFriendsVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setInviteFriendsVisible(false)}
-      >
-        <View style={[styles.inviteOverlay, { backgroundColor: theme.colors.overlay || 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.inviteBox, { backgroundColor: theme.colors.background }]}>
-            <View style={[styles.inviteHeader, { borderBottomColor: theme.colors.border }]}>
-              <ThemedText size="xl" weight="bold">
-                Mời bạn bè vào phòng
-              </ThemedText>
-              <TouchableOpacity onPress={() => setInviteFriendsVisible(false)} style={styles.inviteClose}>
-                <Ionicons name="close" size={24} color={theme.colors.text} />
-              </TouchableOpacity>
-            </View>
-            {friendsLoading ? (
-              <View style={styles.inviteLoading}>
-                <ActivityIndicator size="large" color={primaryColor} />
-              </View>
-            ) : (
-              <ScrollView style={styles.inviteList} contentContainerStyle={styles.inviteListContent}>
-                {friends.length === 0 ? (
-                  <ThemedText variant="secondary" size="m" style={styles.inviteEmpty}>
-                    Chưa có bạn bè. Thêm bạn để mời.
-                  </ThemedText>
-                ) : (
-                  friends.map((friend) => (
-                    <View
-                      key={friend.userId}
-                      style={[styles.inviteRow, { borderBottomColor: theme.colors.border }]}
-                    >
-                      <Image
-                        source={{ uri: friend.avatarUrl || undefined }}
-                        style={styles.inviteAvatar}
-                      />
-                      <ThemedText size="m" weight="medium" style={styles.inviteName} numberOfLines={1}>
-                        {friend.fullName}
-                      </ThemedText>
-                      <TouchableOpacity
-                        style={[styles.inviteSendBtn, { backgroundColor: primaryColor }]}
-                        onPress={() => handleSendToFriend(friend.userId)}
-                        disabled={isSendingMessage}
-                      >
-                        <ThemedText size="s" weight="bold" style={{ color: '#000' }}>
-                          Gửi
-                        </ThemedText>
-                      </TouchableOpacity>
-                    </View>
-                  ))
-                )}
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </Modal>
+        shareMessage={shareMessage}
+        onClose={() => setInviteFriendsVisible(false)}
+      />
 
       <PrivateRoomPasswordModal
         visible={privacyModalVisible}
@@ -294,60 +214,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 16,
     alignItems: 'center',
-  },
-  inviteOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  inviteBox: {
-    maxHeight: '70%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  inviteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-  inviteClose: {
-    padding: 4,
-  },
-  inviteLoading: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  inviteList: {
-    maxHeight: 400,
-  },
-  inviteListContent: {
-    paddingBottom: 24,
-  },
-  inviteEmpty: {
-    padding: 24,
-    textAlign: 'center',
-  },
-  inviteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    gap: 12,
-  },
-  inviteAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#333',
-  },
-  inviteName: {
-    flex: 1,
-  },
-  inviteSendBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
   },
 });
 

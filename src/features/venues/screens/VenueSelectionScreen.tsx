@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, TextInput, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -10,22 +11,35 @@ import { RootStackParamList } from '@/app/navigation/types';
 import { FieldsModal } from '../components';
 import { EmptyState, LoadingMoreIndicator } from '@/shared/components';
 
+/** Filter theo fieldType của API: FiveVsFive, SevenVsSeven, ElevenVsEleven */
+type FieldTypeFilter = '' | 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
 
 type VenueSelectionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VenueSelection'>;
+type VenueSelectionScreenRouteProp = RouteProp<RootStackParamList, 'VenueSelection'>;
 
 interface VenueSelectionScreenProps {
   navigation?: VenueSelectionScreenNavigationProp;
+  route?: VenueSelectionScreenRouteProp;
 }
 
-const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation }) => {
+const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<'all' | '5vs5' | '7vs7'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<FieldTypeFilter>(
+    (route?.params?.matchFormat as FieldTypeFilter) ?? 'all'
+  );
   const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
   const [selectedVenueForFields, setSelectedVenueForFields] = useState<Venue | null>(null);
 
-  // ✅ Fetch venues from API
+  useEffect(() => {
+    const format = route?.params?.matchFormat as FieldTypeFilter | undefined;
+    if (format && ['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'].includes(format)) {
+      setSelectedFilter(format);
+    }
+  }, [route?.params?.matchFormat]);
+
+  // ✅ Fetch venues from API (sportType gửi fieldType: FiveVsFive, SevenVsSeven, ElevenVsEleven)
   const { 
     venues,
     loading,
@@ -38,7 +52,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
     setVenues,
   } = useVenues({
     pageSize: 5,
-    sportType: selectedFilter === 'all' ? undefined : selectedFilter,
+    fieldType: selectedFilter === '' ? undefined : selectedFilter,
   });
 
   // const formatPrice = (price: number) => {
@@ -248,21 +262,21 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
           )}
         </View>
 
-        {/* Format Filter */}
+        {/* Format Filter (fieldType: FiveVsFive, SevenVsSeven, ElevenVsEleven) */}
         <View style={styles.filterContainer}>
           <TouchableOpacity
             style={[
               styles.filterButton,
               {
-                backgroundColor: selectedFilter === 'all' ? theme.colors.neonGreen : '#1a1a1a',
+                backgroundColor: selectedFilter === '' ? theme.colors.neonGreen : '#1a1a1a',
                 paddingHorizontal: theme.spacing.m,
                 paddingVertical: 8,
                 borderRadius: theme.radius.m,
               },
             ]}
-            onPress={() => setSelectedFilter('all')}
+            onPress={() => setSelectedFilter('')}
           >
-            <Text style={[styles.filterText, { color: selectedFilter === 'all' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
+            <Text style={[styles.filterText, { color: selectedFilter === '' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
               {t('venueSelection.allFormats')}
             </Text>
           </TouchableOpacity>
@@ -270,15 +284,15 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
             style={[
               styles.filterButton,
               {
-                backgroundColor: selectedFilter === '5vs5' ? theme.colors.neonGreen : '#1a1a1a',
+                backgroundColor: selectedFilter === 'FiveVsFive' ? theme.colors.neonGreen : '#1a1a1a',
                 paddingHorizontal: theme.spacing.m,
                 paddingVertical: 8,
                 borderRadius: theme.radius.m,
               },
             ]}
-            onPress={() => setSelectedFilter('5vs5')}
+            onPress={() => setSelectedFilter('FiveVsFive')}
           >
-            <Text style={[styles.filterText, { color: selectedFilter === '5vs5' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
+            <Text style={[styles.filterText, { color: selectedFilter === 'FiveVsFive' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
               5 vs 5
             </Text>
           </TouchableOpacity>
@@ -286,16 +300,32 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation 
             style={[
               styles.filterButton,
               {
-                backgroundColor: selectedFilter === '7vs7' ? theme.colors.neonGreen : '#1a1a1a',
+                backgroundColor: selectedFilter === 'SevenVsSeven' ? theme.colors.neonGreen : '#1a1a1a',
                 paddingHorizontal: theme.spacing.m,
                 paddingVertical: 8,
                 borderRadius: theme.radius.m,
               },
             ]}
-            onPress={() => setSelectedFilter('7vs7')}
+            onPress={() => setSelectedFilter('SevenVsSeven')}
           >
-            <Text style={[styles.filterText, { color: selectedFilter === '7vs7' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
+            <Text style={[styles.filterText, { color: selectedFilter === 'SevenVsSeven' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
               7 vs 7
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              {
+                backgroundColor: selectedFilter === 'ElevenVsEleven' ? theme.colors.neonGreen : '#1a1a1a',
+                paddingHorizontal: theme.spacing.m,
+                paddingVertical: 8,
+                borderRadius: theme.radius.m,
+              },
+            ]}
+            onPress={() => setSelectedFilter('ElevenVsEleven')}
+          >
+            <Text style={[styles.filterText, { color: selectedFilter === 'ElevenVsEleven' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
+              11 vs 11
             </Text>
           </TouchableOpacity>
         </View>

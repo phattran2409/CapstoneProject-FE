@@ -263,8 +263,7 @@ const FormationField = forwardRef<FormationFieldRef, FormationFieldProps>(
       setSelectedSlotId(null);
     }, []);
 
-    // Debug log
-    console.log('[FormationField] Render - editable:', editable, 'selectedPlayerId:', selectedPlayerId, 'formation:', formation?.name);
+    // NOTE: Avoid logging on every render (causes spam + slows down dev build)
 
     if (!formation) {
       return (

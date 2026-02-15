@@ -18,6 +18,7 @@ import type {
   ReSendOTPRequest,
 } from '../types/auth.types';
 import { API_CONFIG } from '@/shared/constants/api';
+import type { ApiResponse } from '@/shared/api/types';
 
 /**
  * Auth API functions
@@ -116,6 +117,16 @@ export const authApi = {
   changePassword: async (request: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
     console.log('request change password :', request);
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
+    return data;
+  },
+
+  /**
+   * Update FCM token for push notifications
+   */
+  updateFcmToken: async (fcmToken: string): Promise<ApiResponse<void>> => {
+    const data = await apiClient.put(API_CONFIG.ENDPOINTS.USERS.FCM_TOKEN, {
+      fcmToken,
+    });
     return data;
   },
 };

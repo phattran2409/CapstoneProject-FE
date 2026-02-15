@@ -126,8 +126,8 @@ export interface MatchRoomFullInfo {
   venuePhotos?: VenuePhoto[] | [];
   /** Đội hình đã lưu theo từng đội – null nếu chưa có captain assign */
   formations?: {
-    A: TeamFormationSnapshot | null;
-    B: TeamFormationSnapshot | null;
+    teamA: TeamFormationSnapshot | null;
+    teamB: TeamFormationSnapshot | null;
   };
   /** Tên tùy chỉnh của từng đội (captain có thể cập nhật) */
   teamNames?: {
@@ -249,12 +249,14 @@ export interface JoinRoomRequest {
 export interface SlotAssignmentPayload {
   slotId: string;
   playerId: string;
+  playerName?: string;
+  position: string;
 }
 
 /** Đội hình đã lưu của một đội – API trả về để thành viên xem đúng vị trí được assign */
 export interface TeamFormationSnapshot {
   formationName: string;
-  format: string;
+  teamName?: string;
   assignments: SlotAssignmentPayload[];
 }
 
@@ -264,8 +266,6 @@ export interface UpdateFormationRequest {
   team: "A" | "B";
   /** Tên đội hình (vd: "3-3", "4-2") */
   formationName: string;
-  /** Format trận: "5vs5" | "7vs7" */
-  format: string;
   /** Danh sách gán: mỗi slot (vị trí) gắn với một playerId */
   assignments: SlotAssignmentPayload[];
 }

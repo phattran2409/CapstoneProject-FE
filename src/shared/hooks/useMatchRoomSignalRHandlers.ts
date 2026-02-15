@@ -775,29 +775,23 @@ export const useMatchRoomSignalRHandlers = (
           if (!prev) return prev;
 
           // Map payload sang TeamFormationSnapshot format
-          // Cần suy format từ matchFormat của room
-          const format =
-            prev.matchFormat === "FiveVsFive"
-              ? "5vs5"
-              : prev.matchFormat === "SevenVsSeven"
-                ? "7vs7"
-                : "11vs11";
-
           const updatedFormation: TeamFormationSnapshot = {
-            formationName: payload.formationName,
-            format: format,
+            formationName: payload.formationName, 
             assignments: payload.assignments.map((a) => ({
               slotId: a.slotId,
               playerId: a.playerId,
+              position: a.position,
             })),
+          };
+
+          const updatedFormations: { teamA?: TeamFormationSnapshot | null; teamB?: TeamFormationSnapshot | null } = {
+            teamA: prev.formations?.teamA ? { ...prev.formations.teamA, ...updatedFormation } : updatedFormation,
+            teamB: prev.formations?.teamB ? { ...prev.formations.teamB, ...updatedFormation } : updatedFormation,
           };
 
           return {
             ...prev,
-            formations: {
-              ...prev.formations,
-              [payload.team]: updatedFormation,
-            },
+            formations: updatedFormations,
           };
         });
       }

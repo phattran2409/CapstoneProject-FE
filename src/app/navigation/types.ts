@@ -12,15 +12,13 @@ export type RootStackParamList = {
   OTPVerification: { email: string; userId: string };
   MainTabs: undefined;
   Leaderboard: undefined;
-  CreateRoom:
-    | {
-        selectedVenue?: Venue;
-        selectedField?: Field;
-        selectedTimeSlot?: TimeSlot;
-        selectedDate?: string; // YYYY-MM-DD from FieldsModal
-      }
-    | undefined;
-  VenueSelection: undefined;
+  CreateRoom: {
+    selectedVenue?: Venue;
+    selectedField?: Field;
+    selectedTimeSlot?: TimeSlot;
+    selectedDate?: string; // YYYY-MM-DD from FieldsModal
+  } | undefined;
+  VenueSelection: { matchFormat?: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' } | undefined;
   VenueDetail: { venueId: string };
   RoomInformation: { roomId: string; venuePhotos?: VenuePhoto[] };
   Team: { roomId: string; team: "A" | "B" };

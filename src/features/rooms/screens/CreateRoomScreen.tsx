@@ -29,8 +29,8 @@ interface CreateRoomScreenProps {
   route?: CreateRoomScreenRouteProp;
 }
 
-type MatchFormat = '5vs5' | '7vs7';
-type DurationMinutes = 30 | 60 | 90 | 120;
+type MatchFormat = '5vs5' | '7vs7' | '11vs11';
+type DurationMinutes = 60 | 90 | 120;
 
 const DURATION_OPTIONS: DurationMinutes[] = [ 60, 90, 120];
 
@@ -77,6 +77,8 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         return 'FiveVsFive';
       case '7vs7':
         return 'SevenVsSeven';
+      case '11vs11':
+        return 'ElevenVsEleven';
       default:
         return '';
     }
@@ -333,30 +335,17 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               {t('createRoom.selectFormat')}
             </ThemedText>
             <View style={styles.formatRow}>
-              <TouchableOpacity
-                style={[styles.formatButton, { backgroundColor: selectedFormat === '5vs5' ? theme.colors.neonGreen : theme.colors.surface }]}
-                onPress={() => setSelectedFormat('5vs5')}
-              >
-                <ThemedText 
-                  size="l" 
-                  weight="bold" 
-                  style={[styles.formatButtonText, { color: selectedFormat === '5vs5' ? '#000' : theme.colors.textSecondary }]}
+              {["5vs5", "7vs7" , "11vs11"].map((format) => (
+                <TouchableOpacity
+                  key={format}
+                  style={[styles.formatButton, { backgroundColor: selectedFormat === format ? theme.colors.neonGreen : theme.colors.surface }]}
+                  onPress={() => setSelectedFormat(format as MatchFormat)}
                 >
-                  5 vs 5
-                </ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.formatButton, { backgroundColor: selectedFormat === '7vs7' ? theme.colors.neonGreen : theme.colors.surface }]}
-                onPress={() => setSelectedFormat('7vs7')}
-              >
-                <ThemedText 
-                  size="l" 
-                  weight="bold" 
-                  style={[styles.formatButtonText, { color: selectedFormat === '7vs7' ? '#000' : theme.colors.textSecondary }]}
-                >
-                  7 vs 7
-                </ThemedText>
-              </TouchableOpacity>
+                  <ThemedText size="l" weight="bold" style={[styles.formatButtonText, { color: selectedFormat === format ? '#000' : theme.colors.textSecondary }]}>
+                    {format}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
 
@@ -412,7 +401,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 borderWidth: 1, 
                 borderColor: theme.colors.border 
               }]}
-              onPress={() => navigation?.navigate('VenueSelection')}
+              onPress={() => navigation?.navigate('VenueSelection', { matchFormat: FormatMatch(selectedFormat) })}
             >
               {selectedVenue ? (
                 <View style={styles.venueContent}>

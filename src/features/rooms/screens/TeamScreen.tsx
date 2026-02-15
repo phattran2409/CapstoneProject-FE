@@ -28,6 +28,7 @@ import {
   type PositionLine,
   type FormationData,
 } from "@/shared/components/formation";
+import { CaptainBadge } from "../components";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useMatchRoomDetail, type MatchRoomFullInfo } from "@/features/rooms";
 import { roomsApi } from "@/features/rooms/api/roomsApi";
@@ -126,20 +127,30 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
   }, [formatForFormation, selectedFormation]);
 
   // Khởi tạo đội hình + assignments từ API khi có – chỉ thành viên trong team mới có dữ liệu và xem đúng vị trí captain assign
-  const savedFormation = displayRoom?.formations?.[teamKey];
+  const savedFormation = displayRoom?.formations?.[selectedTeam];
   useEffect(() => {
-    // Xử lý null an toàn: nếu savedFormation là null hoặc undefined, giữ assignments rỗng
-    if (savedFormation && savedFormation.formationName && savedFormation.assignments?.length !== undefined) {
-      setSelectedFormation(savedFormation.formationName);
-      setAssignments(
-        savedFormation.assignments.map((a) => ({ slotId: a.slotId, playerId: a.playerId })),
-      );
-    } else {
-      if (availableFormations.length > 0 && !availableFormations.includes(selectedFormation)) {
-        setSelectedFormation(availableFormations[0]);
-      }
+    // Nếu không có dữ liệu đội hình từ API thì không ghi đè state local
+    if (
+      !savedFormation ||
+      !savedFormation.formationName ||
+      !savedFormation.assignments ||
+      savedFormation.assignments.length === 0
+    ) {
+      return;
     }
-  }, [displayRoom?.roomId, teamKey, savedFormation?.formationName, JSON.stringify(savedFormation?.assignments ?? []), availableFormations, selectedFormation]);
+
+    // Chỉ khi formation từ API thay đổi thì mới sync lại state local
+    setSelectedFormation(savedFormation.formationName);
+    setAssignments(
+      savedFormation.assignments.map((a) => ({
+        slotId: a.slotId,
+        playerId: a.playerId,
+      })),
+    );
+  }, [
+    savedFormation?.formationName,
+    JSON.stringify(savedFormation?.assignments ?? []),
+  ]);
 
   useEffect(() => {
     if (!displayRoom) return;
@@ -152,12 +163,6 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     setHasPaidDeposit(currentUserParticipant?.depositPaid === true);
   }, [displayRoom, user?.userId]);
 
-  // ==================== SignalR Integration ====================
-  
-  /**
-   * Callback khi nhận FormationUpdated event từ SignalR
-   * Cập nhật local state nếu event là cho team hiện tại
-   */
   const handleFormationUpdated = useCallback(
     (payload: FormationUpdatedPayload) => {
       if (payload.team === teamKey) {
@@ -222,11 +227,16 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
   /** Gán cầu thủ đang chọn vào slot (captain đã chọn player trước đó) */
   const handleAssignToSlot = (slotId: string) => {
-    if (!selectedPlayerId || !isCaptain) return;
+    if (!selectedPlayerId || !isCaptain) {
+      toast.warning("Vui lòng chọn cầu thủ ở bên dưới",
+        "rồi bấm vào ô vị trí ở trên để gán", 
+      );
+      return;
+    }
     setAssignments((prev) => {
       const withoutPlayer = prev.filter((a) => a.playerId !== selectedPlayerId);
       const withoutSlot = withoutPlayer.filter((a) => a.slotId !== slotId);
-      return [...withoutSlot, { slotId, playerId: selectedPlayerId }];
+      return [...withoutSlot, { slotId, playerId: selectedPlayerId || "" }];
     });
     setSelectedPlayerId(null);
   };
@@ -284,11 +294,14 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     const payload = {
       team: teamKey as "A" | "B",
       formationName: selectedFormation,
-      format: formatForFormation,
-      assignments: assignments.map((a) => ({
-        slotId: a.slotId,
-        playerId: a.playerId,
-      })),
+      assignments: assignments.map((a) => {
+        const slot = formationConfig?.slots.find((s) => s.id === a.slotId);
+        return {
+          slotId: a.slotId,
+          playerId: a.playerId,
+          position: slot?.line || "",
+        };
+      }),
     };
     try {
       await roomsApi.updateFormation(roomId, payload);
@@ -348,6 +361,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     }
   };
 
+  
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -787,8 +801,9 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
               <ScrollView
                 style={styles.playerListScroll}
                 showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
               >
-                {formationPlayers.map((player) => {
+                {formationPlayers.map((player, index) => {
                   const assigned = assignments.find(
                     (a) => a.playerId === player.id,
                   );
@@ -798,7 +813,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   const isSelected = selectedPlayerId === player.id;
                   return (
                     <TouchableOpacity
-                      key={player.id}
+                      key={`${player.id}-${index}`}
                       style={[
                         styles.playerRow,
                         {
@@ -837,12 +852,15 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                           </View>
                         )}
                         <View>
-                          <ThemedText
-                            size="m"
-                            weight={isSelected ? "bold" : "medium"}
-                          >
-                            {player.name}
-                          </ThemedText>
+                          <View style={styles.playerNameRow}>
+                            <ThemedText
+                              size="m"
+                              weight={isSelected ? "bold" : "medium"}
+                            >
+                              {player.name}
+                            </ThemedText>
+                            {player.isCaptain && <CaptainBadge compact />}
+                          </View>
                           {player.role && (
                             <ThemedText size="xs" variant="secondary">
                               {player.role}
@@ -1182,6 +1200,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  playerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   playerAvatar: {
     width: 40,
