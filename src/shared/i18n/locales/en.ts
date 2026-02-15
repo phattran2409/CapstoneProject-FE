@@ -499,6 +499,7 @@ const en = {
     comment: "comment",
     edit: "Edit",
     delete: "Delete",
+    report: "Report",
     save: "Save",
     editTitle: "Edit {{type}}",
     deleteConfirmTitle: "Delete {{type}}?",
@@ -544,6 +545,51 @@ const en = {
       ratingRequired: "Rating Required",
       ratingRequiredMessage: "Please select a star rating before submitting.",
       allPlayersRequired: "Please rate all players before completing.",
+    },
+  },
+  reportModal: {
+    title: {
+      post: "Report Post",
+      user: "Report User",
+    },
+    description: {
+      post: "Please let us know why you want to report this post.",
+      user: "Please let us know why you want to report this user.",
+    },
+    reasons: {
+      post: {
+        spam: "Spam or advertising",
+        inappropriate: "Inappropriate content",
+        harassment: "Harassment or bullying",
+        false_information: "False information",
+        copyright: "Copyright violation",
+        other: "Other reason",
+      },
+      user: {
+        inappropriate_behavior: "Inappropriate behavior",
+        harassment: "Harassment or bullying",
+        spam: "Spam or advertising",
+        fake_account: "Fake account",
+        scam: "Scam",
+        other: "Other reason",
+      },
+    },
+    customReason: {
+      label: "Please describe the reason",
+      placeholder: "Enter your report reason...",
+    },
+    submit: "Submit Report",
+    validation: {
+      noReason: "Please select a report reason",
+      noCustomReason: "Please enter a report reason",
+    },
+    success: {
+      post: "Post report submitted successfully",
+      user: "User report submitted successfully",
+    },
+    error: {
+      post: "Failed to submit post report. Please try again.",
+      user: "Failed to submit user report. Please try again.",
     },
   },
 };

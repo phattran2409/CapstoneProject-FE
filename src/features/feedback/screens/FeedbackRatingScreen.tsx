@@ -16,6 +16,7 @@ import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useToast } from "@/shared/toast";
+import { ReportModal } from "@/shared/components";
 import SwipeableRatingCard, { Player } from "../components/SwipeableRatingCard";
 import Animated, {
   useSharedValue,
@@ -71,10 +72,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [comments, setComments] = useState<Record<string, string>>({});
   const [showReportModal, setShowReportModal] = useState(false);
-  const [reportReason, setReportReason] = useState("");
-  const [reportingPlayerId, setReportingPlayerId] = useState<string | null>(
-    null,
-  );
+  const [isReporting, setIsReporting] = useState(false);
 
   const progressAnim = useSharedValue(0);
   const nextCardAnim = useSharedValue(0);
@@ -200,8 +198,31 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   }, [currentIndex, navigation]);
 
   const handleReport = () => {
-    console.log("Report clicked");
-  }
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async (reason: string, customReason?: string) => {
+    setIsReporting(true);
+    try {
+      // TODO: Implement actual report API call
+      console.log("Reporting player:", {
+        playerId: currentPlayer.id,
+        reason,
+        customReason,
+      });
+      
+      // Simulate API call
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
+      
+      setShowReportModal(false);
+      toast.info(t("reportModal.success.user"));
+    } catch (error) {
+      console.error("Error reporting player:", error);
+      toast.error(t("reportModal.error.user"));
+    } finally {
+      setIsReporting(false);
+    }
+  };
 
 
   const handleBack = () => {
@@ -358,8 +379,56 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
           "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
         )}
       </Text>
-
     </SafeAreaView>
+  );
+};
+
+// Report Modal - Render outside SafeAreaView to ensure it's always on top
+const FeedbackRatingScreenWithModal: React.FC<FeedbackRatingScreenProps> = (
+  props,
+) => {
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const toast = useToast();
+  const { route } = props;
+  const currentPlayer = MOCK_PLAYERS[0]; // This will be handled by the main component
+
+  const handleReportSubmit = async (reason: string, customReason?: string) => {
+    setIsReporting(true);
+    try {
+      // TODO: Implement actual report API call
+      console.log("Reporting player:", {
+        playerId: currentPlayer.id,
+        reason,
+        customReason,
+      });
+
+      // Simulate API call
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
+
+      setShowReportModal(false);
+      toast.info(t("reportModal.success.user"));
+    } catch (error) {
+      console.error("Error reporting player:", error);
+      toast.error(t("reportModal.error.user"));
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
+  return (
+    <>
+      <FeedbackRatingScreen {...props} />
+      <ReportModal
+        visible={showReportModal}
+        type="user"
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportSubmit}
+        isLoading={isReporting}
+      />
+    </>
   );
 };
 

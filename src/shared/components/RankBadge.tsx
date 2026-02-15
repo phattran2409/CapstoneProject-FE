@@ -1,14 +1,14 @@
 import React from "react";
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  Image,
+} from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
-import Svg, {
-  Path,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Stop,
-  Text as SvgText,
-} from "react-native-svg";
 
 export type RankTier =
   | "Amateur"
@@ -104,7 +104,7 @@ export const getRankInfoFromElo = (
   return {
     tier: "Amateur",
     label: "Amateur",
-    color: "#9CA3AF", // Gray
+    color: "#afa89cff", // Gray
     icon: "ellipse",
   };
 };
@@ -161,7 +161,7 @@ export const RankBadge: React.FC<RankBadgeProps> = ({
         style,
       ]}
     >
-      <RankIcon tier={rank.tier} color={rank.color} size={iconSize * 2} />
+      <RankIcon tier={rank.tier} size={iconSize * 4} />
       {showLabel && (
         <Text
           style={[
@@ -169,6 +169,7 @@ export const RankBadge: React.FC<RankBadgeProps> = ({
             {
               color: rank.color,
               fontSize,
+              marginTop: isLarge ? -24 : 0,
             },
             textStyle,
           ]}
@@ -185,8 +186,8 @@ export const RankBadge: React.FC<RankBadgeProps> = ({
             {
               color: eloColor || rank.color,
               fontSize: 14,
-              marginTop: 4,
             },
+            { marginBottom: 30 },
             textStyle,
           ]}
         >
@@ -197,57 +198,25 @@ export const RankBadge: React.FC<RankBadgeProps> = ({
   );
 };
 
-const RankIcon: React.FC<{ tier: RankTier; color: string; size: number }> = ({
+const RankIcon: React.FC<{ tier: RankTier; size: number }> = ({
   tier,
-  color,
   size,
 }) => {
-  const gradientId = `rankBadgeGradient-${tier}`;
-
-  const letterMap: Record<RankTier, string> = {
-    Amateur: "A",
-    SemiPro: "S",
-    Pro: "P",
-    Master: "M",
-    Elite: "E",
-    Legend: "L",
+  const images: Record<RankTier, any> = {
+    Amateur: require("../../assets/rank/Amateur.png"),
+    SemiPro: require("../../assets/rank/Semi-Pro.png"),
+    Pro: require("../../assets/rank/Pro.png"),
+    Master: require("../../assets/rank/Master.png"),
+    Elite: require("../../assets/rank/Elite.png"),
+    Legend: require("../../assets/rank/Legend.png"),
   };
 
   return (
-    <Svg width={size} height={size} viewBox="0 0 40 40">
-      <Defs>
-        <SvgLinearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <Stop offset="0%" stopColor={color} stopOpacity={1} />
-          <Stop offset="100%" stopColor="#020617" stopOpacity={1} />
-        </SvgLinearGradient>
-      </Defs>
-
-      {/* Shield body */}
-      <Path
-        d="M20 2 L33 8 L33 22 L20 38 L7 22 L7 8 Z"
-        fill={`url(#${gradientId})`}
-        stroke={color}
-        strokeWidth={2}
-      />
-
-      {/* Inner highlight */}
-      <Path
-        d="M20 6 L30 10 L30 21 L20 34 L10 21 L10 10 Z"
-        fill="rgba(15,23,42,0.6)"
-      />
-
-      {/* Tier letter */}
-      <SvgText
-        x="20"
-        y="23"
-        fill="#FFFFFF"
-        fontSize={14}
-        fontWeight="700"
-        textAnchor="middle"
-      >
-        {letterMap[tier]}
-      </SvgText>
-    </Svg>
+    <Image
+      source={images[tier]}
+      style={{ width: size, height: size }}
+      resizeMode="contain"
+    />
   );
 };
 
@@ -259,7 +228,7 @@ const styles = StyleSheet.create({
   },
   containerColumn: {
     flexDirection: "column",
-    gap: 4,
+    gap: 0,
   },
   text: {
     fontWeight: "600",

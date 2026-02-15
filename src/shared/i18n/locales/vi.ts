@@ -495,6 +495,7 @@ const vi = {
     comment: "bình luận",
     edit: "Chỉnh sửa",
     delete: "Xóa",
+    report: "Báo cáo",
     save: "Lưu",
     editTitle: "Chỉnh sửa {{type}}",
     deleteConfirmTitle: "Xóa {{type}}?",
@@ -541,6 +542,51 @@ const vi = {
       ratingRequired: "Đánh giá bắt buộc",
       ratingRequiredMessage: "Vui lòng chọn số sao đánh giá trước khi gửi.",
       allPlayersRequired: "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
+    },
+  },
+  reportModal: {
+    title: {
+      post: "Báo cáo bài viết",
+      user: "Báo cáo người dùng",
+    },
+    description: {
+      post: "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo bài viết này.",
+      user: "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người dùng này.",
+    },
+    reasons: {
+      post: {
+        spam: "Spam hoặc quảng cáo",
+        inappropriate: "Nội dung không phù hợp",
+        harassment: "Quấy rối hoặc bắt nạt",
+        false_information: "Thông tin sai sự thật",
+        copyright: "Vi phạm bản quyền",
+        other: "Lý do khác",
+      },
+      user: {
+        inappropriate_behavior: "Hành vi không phù hợp",
+        harassment: "Quấy rối hoặc bắt nạt",
+        spam: "Spam hoặc quảng cáo",
+        fake_account: "Tài khoản giả mạo",
+        scam: "Lừa đảo",
+        other: "Lý do khác",
+      },
+    },
+    customReason: {
+      label: "Vui lòng mô tả lý do",
+      placeholder: "Nhập lý do báo cáo của bạn...",
+    },
+    submit: "Gửi báo cáo",
+    validation: {
+      noReason: "Vui lòng chọn lý do báo cáo",
+      noCustomReason: "Vui lòng nhập lý do báo cáo",
+    },
+    success: {
+      post: "Đã gửi báo cáo bài viết thành công",
+      user: "Đã gửi báo cáo người dùng thành công",
+    },
+    error: {
+      post: "Không thể gửi báo cáo bài viết. Vui lòng thử lại.",
+      user: "Không thể gửi báo cáo người dùng. Vui lòng thử lại.",
     },
   },
 };

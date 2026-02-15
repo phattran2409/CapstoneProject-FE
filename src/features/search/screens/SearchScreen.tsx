@@ -20,7 +20,7 @@ import {
   LoadingMoreIndicator,
 } from "@/shared/components";
 import { useDebounce } from "@/shared/hooks";
-import { usePaginatedFriends } from "@/features/friends/hooks";
+import { usePaginatedPlayers } from "@/features/friends/hooks";
 import { usePaginatedPosts } from "@/features/post/hooks";
 import { SearchTabFilter, SearchResultItem } from "../components";
 import {
@@ -29,7 +29,7 @@ import {
   SearchResultItem as SearchResultItemType,
 } from "../types/search.types";
 import {
-  transformFriendToSearchResult,
+  transformPlayersToSearchResult,
   transformPostToSearchResult,
 } from "../utils/transformers";
 
@@ -70,16 +70,16 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     },
   ];
 
-  // Fetch players (friends)
+  // Fetch players 
   const {
-    friends,
+    users,
     loading: loadingPlayers,
     loadingMore: loadingMorePlayers,
     loadMore: loadMorePlayers,
     refresh: refreshPlayers,
     refreshing: refreshingPlayers,
     error: errorPlayers,
-  } = usePaginatedFriends({
+  } = usePaginatedPlayers({
     pageSize: 10,
     searchTerm: debouncedSearchQuery,
     enabled: activeFilter === "all" || activeFilter === "players",
@@ -105,7 +105,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     let results: SearchResultItemType[] = [];
 
     if (activeFilter === "all" || activeFilter === "players") {
-      const playerResults = friends.map(transformFriendToSearchResult);
+      const playerResults = users.map(transformPlayersToSearchResult);
       results = [...results, ...playerResults];
     }
 
@@ -123,7 +123,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     }
 
     return results;
-  }, [friends, posts, activeFilter]);
+  }, [users, posts, activeFilter]);
 
   // Loading states
   const loading = loadingPlayers || loadingPosts;

@@ -14,12 +14,13 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FriendshipActionButton } from "./FriendshipActionButton";
 import { FriendshipStatus } from "@/features/friends/types/friends.types";
-import { JerseyBadge } from "./JerseyBadge";
 import * as ImagePicker from "expo-image-picker";
 import { useAlert } from "@/shared/hooks";
 import { useUpdateAvatar } from "../hooks";
 import { useToast } from "@/shared/toast";
 import { RankBadge } from "@/shared/components";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface ProfileHeaderProps {
   avatar?: string;
@@ -36,11 +37,9 @@ interface ProfileHeaderProps {
   onRemoveFriend?: () => void;
   onAcceptRequest?: () => void;
   onCancelRequest?: () => void;
+  onAchievementsPress?: () => void;
   isFriendshipLoading?: boolean;
 }
-
-//SVG Jersey Badge
-JerseyBadge;
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   avatar,
@@ -56,6 +55,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onRemoveFriend,
   onAcceptRequest,
   onCancelRequest,
+  onAchievementsPress,
   isFriendshipLoading = false,
 }) => {
   const { theme } = useTheme();
@@ -211,7 +211,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       </View>
 
       {/* Name */}
-      <View style={{ alignItems: "center", marginBottom: theme.spacing.m }}>
+      <View style={{ alignItems: "center" }}>
         <Text
           style={[
             styles.name,
@@ -234,11 +234,23 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 color: theme.colors.textSecondary,
                 textAlign: "center",
               },
+              { marginBottom: theme.spacing.m },
             ]}
           >
             {description}
           </Text>
         )}
+      </View>
+
+      <View style={styles.rankSection}>
+        <RankBadge
+          elo={elo}
+          size="large"
+          showElo
+          transparent
+          showLabel={true}
+          eloColor={theme.colors.text}
+        />
       </View>
 
       {/* Edit Button or Friendship Action Button */}
@@ -250,8 +262,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {
               backgroundColor: theme.colors.neonGreen,
               borderRadius: theme.radius.m,
-              paddingVertical: theme.spacing.s,
-              paddingHorizontal: theme.spacing.xl,
+              paddingVertical: theme.spacing.m,
+              width: "90%",
+              maxWidth: 400,
+              alignItems: "center",
             },
           ]}
         >
@@ -285,9 +299,58 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             onAcceptRequest={onAcceptRequest}
             onCancelRequest={onCancelRequest}
             isLoading={isFriendshipLoading}
+            style={{
+              width: "90%",
+              maxWidth: 400,
+              alignSelf: "center",
+              alignItems: "center",
+            }}
           />
         )
       )}
+      <TouchableOpacity
+      onPress={onAchievementsPress}
+        activeOpacity={0.7}
+        style={{ width: "90%", maxWidth: 400, marginTop: theme.spacing.m }}
+      >
+        <BlurView
+          intensity={40}
+          tint="dark"
+          style={[styles.card, { borderRadius: theme.radius.m, width: "100%" }]}
+        >
+          <LinearGradient
+            colors={[`${theme.colors.neonGreen}20`, "transparent"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cardGradient}
+          >
+            <View style={styles.achievementsContent}>
+              <View
+                style={[
+                  styles.achievementsIcon,
+                  { backgroundColor: `${theme.colors.neonGreen}30` },
+                ]}
+              >
+                <Ionicons
+                  name="trophy"
+                  size={20}
+                  color={theme.colors.neonGreen}
+                />
+              </View>
+              <Text
+                style={[styles.achievementsTitle, { color: theme.colors.text }]}
+              >
+                Thành tựu
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.neonGreen}
+              />
+            </View>
+          </LinearGradient>
+        </BlurView>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -321,8 +384,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   editButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 32,
+    paddingVertical: 12,
   },
   editButtonText: {
     fontWeight: "600",
@@ -381,5 +443,37 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+  },
+  card: {
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  cardGradient: {
+    padding: 16,
+    width: "100%",
+  },
+  achievementsContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  achievementsIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  achievementsTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  rankSection: {
+    alignItems: "center",
+    marginTop: -10,
+    marginBottom: 12,
+    transform: [{ scale: 1.3 }],
   },
 });

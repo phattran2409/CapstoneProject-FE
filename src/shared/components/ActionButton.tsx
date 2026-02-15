@@ -15,13 +15,19 @@ import { useTranslation } from "react-i18next";
 import { useAlert } from "@/shared/hooks/useAlert";
 import { validateContent as validateContentUtil } from "@/shared/utils";
 import { useToast } from "../toast";
+import ReportModal from "./ReportModal";
 
 export interface ActionButtonProps {
   contentType: "post" | "comment";
   contentId: string;
   currentContent: string;
-  onEdit: (contentId: string, newContent: string) => void | Promise<void>;
-  onDelete: (contentId: string) => void | Promise<void>;
+  onEdit?: (contentId: string, newContent: string) => void | Promise<void>;
+  onDelete?: (contentId: string) => void | Promise<void>;
+  onReport?: (
+    contentId: string,
+    reason: string,
+    customReason?: string,
+  ) => void | Promise<void>;
   isLoading?: boolean;
 }
 
@@ -31,6 +37,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   currentContent,
   onEdit,
   onDelete,
+  onReport,
   isLoading = false,
 }) => {
   const { theme } = useTheme();
@@ -39,9 +46,11 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   const toast = useToast();
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [editedContent, setEditedContent] = useState(currentContent);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   const handleMenuPress = () => {
     setShowMenu(true);
@@ -52,6 +61,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   };
 
   const handleEditPress = () => {
+    if (!onEdit) return;
     setShowMenu(false);
     setEditedContent(currentContent);
     setValidationError(null);
@@ -59,6 +69,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   };
 
   const handleDeletePress = () => {
+    if (!onDelete) return;
     setShowMenu(false);
     showDanger(
       t("actionButton.deleteConfirmTitle", {
@@ -90,6 +101,27 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     );
   };
 
+  const handleReportPress = () => {
+    setShowMenu(false);
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async (reason: string, customReason?: string) => {
+    if (!onReport) return;
+
+    setIsReporting(true);
+    try {
+      await onReport(contentId, reason, customReason);
+      setShowReportModal(false);
+      toast.info(t("reportModal.success.post"));
+    } catch (error) {
+      console.error("Error reporting:", error);
+      toast.error(t("reportModal.error.post"));
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
   const validateContent = (content: string): boolean => {
     const { isValid, errorKey } = validateContentUtil(content);
 
@@ -103,6 +135,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   };
 
   const handleSaveEdit = async () => {
+    if (!onEdit) return;
     if (!validateContent(editedContent)) {
       return;
     }
@@ -156,37 +189,66 @@ const ActionButton: React.FC<ActionButtonProps> = ({
             ]}
           >
             {/* Edit Option */}
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                { borderBottomColor: theme.colors.border },
-              ]}
-              onPress={handleEditPress}
-            >
-              <Ionicons
-                name="create-outline"
-                size={22}
-                color={theme.colors.neonGreen}
-              />
-              <Text style={[styles.menuText, { color: theme.colors.text }]}>
-                {t("actionButton.edit")}
-              </Text>
-            </TouchableOpacity>
+            {onEdit && (
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  { borderBottomColor: theme.colors.border },
+                ]}
+                onPress={handleEditPress}
+              >
+                <Ionicons
+                  name="create-outline"
+                  size={22}
+                  color={theme.colors.neonGreen}
+                />
+                <Text style={[styles.menuText, { color: theme.colors.text }]}>
+                  {t("actionButton.edit")}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Report Option */}
+            {onReport && (
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  { borderBottomColor: theme.colors.border },
+                ]}
+                onPress={handleReportPress}
+              >
+                <Ionicons
+                  name="flag-outline"
+                  size={22}
+                  color={theme.colors.warning || "#FFA500"}
+                />
+                <Text
+                  style={[
+                    styles.menuText,
+                    { color: theme.colors.warning || "#FFA500" },
+                  ]}
+                >
+                  {t("actionButton.report", "Báo cáo")}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Delete Option */}
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleDeletePress}
-            >
-              <Ionicons
-                name="trash-outline"
-                size={22}
-                color={theme.colors.error}
-              />
-              <Text style={[styles.menuText, { color: theme.colors.error }]}>
-                {t("actionButton.delete")}
-              </Text>
-            </TouchableOpacity>
+            {onDelete && (
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleDeletePress}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={22}
+                  color={theme.colors.error}
+                />
+                <Text style={[styles.menuText, { color: theme.colors.error }]}>
+                  {t("actionButton.delete")}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </Pressable>
       </Modal>
@@ -398,6 +460,17 @@ const ActionButton: React.FC<ActionButtonProps> = ({
             </View>
           </View>
         </Modal>
+      )}
+
+      {/* Report Modal */}
+      {onReport && (
+        <ReportModal
+          visible={showReportModal}
+          type="post"
+          onClose={() => setShowReportModal(false)}
+          onSubmit={handleReportSubmit}
+          isLoading={isReporting}
+        />
       )}
     </>
   );

@@ -1,20 +1,20 @@
-import { Friend } from "@/features/friends/types/friends.types";
+import { Friend, Players } from "@/features/friends/types/friends.types";
 import { Post } from "@/features/post/types/post.types";
 import { SearchResultItem } from "../types/search.types";
 
 /**
  * Transform Friend data to SearchResultItem
  */
-export const transformFriendToSearchResult = (
-  friend: Friend,
+export const transformPlayersToSearchResult = (
+  players: Players,
 ): SearchResultItem => {
   return {
-    id: friend.userId,
+    id: players.userId,
     type: "players",
-    title: friend.fullName, 
+    title: players.fullName, 
     subtitle: "Player",
-    avatarUrl: friend.avatarUrl,
-    data: friend,
+    avatarUrl: players.avatarUrl,
+    data: players,
   };
 };  
 

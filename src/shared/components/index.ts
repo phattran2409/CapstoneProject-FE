@@ -46,5 +46,7 @@ export { LikeButton } from "./LikeButton";
 export type { LikeButtonProps } from "./LikeButton";
 export { PostActions } from "./PostActions";
 export type { PostActionsProps } from "./PostActions";
-export { RankBadge } from "./RankBadge";
+export { RankBadge, getRankInfoFromElo } from "./RankBadge";
 export type { RankBadgeProps, RankInfo, RankTier } from "./RankBadge";
+export { default as ReportModal } from "./ReportModal";
+export type { ReportModalProps, ReportType } from "./ReportModal";

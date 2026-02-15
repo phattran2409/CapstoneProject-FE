@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -16,12 +18,7 @@ import { useTheme } from "@/shared/theme";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import {
-  ProfileHeader,
-  AnalysisTab,
-  EditProfileForm,
-  ProfileStatsCard,
-} from "../components";
+import { ProfileHeader, AnalysisTab, EditProfileForm } from "../components";
 import { ThemedText } from "@/shared/components/themed";
 import { UpdateProfileData } from "../types/profile.types";
 import {
@@ -63,6 +60,7 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
   const formatMap: Record<string, string> = {
     FiveVsFive: "5vs5",
     SevenVsSeven: "7vs7",
+    ElevenVsEleven: "11vs11",
   };
 
   // Format date
@@ -77,9 +75,9 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
   const getDisplayStatus = (status: string): MatchItemData["status"] => {
     switch (status) {
       case "Open":
-        return "upcoming";
+        return "ongoing";
       case "Full":
-        return "upcoming";
+        return "ongoing";
       case "InProgress":
         return "ongoing";
       case "Completed":
@@ -93,10 +91,16 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
 
   return {
     id: room.roomId,
-    title: room.field?.fieldName || room.field?.venue?.venueName || "Unknown",
+    title:
+      room.roomName ||
+      room.field?.fieldName ||
+      room.field?.venue?.venueName ||
+      "Unknown",
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: require("@assets/images/icon.png"),
+    image:
+      room.venuePhotos?.[0]?.photoUrl ||
+      require("../../../assets/images/Gemini_Generated_Image_olny3jolny3jolny.png"),
     status: getDisplayStatus(room.status),
     date: formattedDate,
     venue: room.field?.venue?.venueName,
@@ -172,6 +176,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     refreshing: matchesRefreshing,
     loadingMore: matchesLoadingMore,
     error: matchesError,
+    hasMore: matchesHasMore,
     refresh: matchesRefresh,
     loadMore: matchesLoadMore,
   } = useMyRooms();
@@ -190,8 +195,66 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     RoleFactor: 65,
   };
 
+  // Memoize converted matches
+  const listMatches = useMemo(() => {
+    return matches.map(convertMyRoomToMatchItemData);
+  }, [matches]);
+
+  // Handle scroll for pagination
+  const handleScroll = useCallback(
+    (event: any) => {
+      const { layoutMeasurement, contentOffset, contentSize } =
+        event.nativeEvent;
+      const paddingToBottom = 50;
+      const isCloseToBottom =
+        layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - paddingToBottom;
+
+      if (isCloseToBottom) {
+        if (
+          activeTab === "history" &&
+          !matchesLoading &&
+          !matchesLoadingMore &&
+          matchesHasMore
+        ) {
+          matchesLoadMore();
+        } else if (
+          activeTab === "posts" &&
+          !postsLoading &&
+          !postsLoadingMore
+        ) {
+          postsLoadMore();
+        }
+      }
+    },
+    [
+      activeTab,
+      matchesLoading,
+      matchesLoadingMore,
+      matchesHasMore,
+      matchesLoadMore,
+      postsLoading,
+      postsLoadingMore,
+      postsLoadMore,
+    ],
+  );
+
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    if (activeTab === "history") {
+      matchesRefresh();
+    } else if (activeTab === "posts") {
+      postsRefresh();
+    }
+    // Analysis tab usually doesn't need refresh or handles it differently
+  }, [activeTab, matchesRefresh, postsRefresh]);
+
   const handleEditProfile = () => {
     setShowEditForm(true);
+  };
+
+  const handleAchievementsPress = () => {
+    navigation.navigate("Achievements");
   };
 
   // Profile update mutations
@@ -290,34 +353,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     );
   };
 
-  const renderMatchesFooter = () => {
-    if (!matchesLoadingMore) return null;
-    return <LoadingMoreIndicator />;
-  };
-
-  const renderMatchesEmpty = () => {
-    if (matchesLoading) return null;
-    return (
-      <EmptyState
-        icon="football-outline"
-        title="Chưa có trận đấu nào"
-        description="Bạn chưa tham gia trận đấu nào"
-      />
-    );
-  };
-
-  const renderMatchItem = ({ item }: { item: any }) => {
-    const matchItemData = convertMyRoomToMatchItemData(item);
-    return (
-      <MatchItem
-        match={matchItemData}
-        variant="list"
-        onPress={handleMatchPress}
-        showStatus={true}
-      />
-    );
-  };
-
   const renderPostItem = ({ item }: { item: Post }) => (
     <PostItem
       post={item}
@@ -375,6 +410,18 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled={true}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={
+                activeTab === "history" ? matchesRefreshing : postsRefreshing
+              }
+              onRefresh={handleRefresh}
+              colors={[theme.colors.neonGreen]}
+              tintColor={theme.colors.neonGreen}
+            />
+          }
         >
           {/* Profile Section */}
           <View style={{ backgroundColor: theme.colors.background }}>
@@ -387,6 +434,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
               shirtNumber={profile?.shirtNumber}
               isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}
+              onAchievementsPress={handleAchievementsPress}
               friendshipStatus={friendshipStatus?.status}
               onAddFriend={handleAddFriend}
               onRemoveFriend={handleRemoveFriend}
@@ -398,22 +446,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
                 isRespondingToRequest
               }
             />
-
-            {/* Profile Stats Card */}
-            <View
-              style={{
-                paddingHorizontal: theme.spacing.m,
-                marginBottom: theme.spacing.m,
-              }}
-            >
-              <ProfileStatsCard
-                trustScore={87}
-                elo={profile?.playerProfile?.currentElo || 1200}
-                shirtNumber={profile?.shirtNumber ?? undefined}
-                position={profile?.preferredPositions ?? undefined}
-                onAchievementsPress={() => navigation.navigate("Achievements")}
-              />
-            </View>
 
             {/* Navigation Tabs */}
             <View
@@ -502,22 +534,30 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
                 {/* Matches List with Load More */}
                 {!matchesLoading && !matchesError && (
-                  <FlatList
-                    data={matches}
-                    keyExtractor={(match) => match.roomId}
-                    renderItem={renderMatchItem}
-                    ListFooterComponent={renderMatchesFooter}
-                    ListEmptyComponent={renderMatchesEmpty}
-                    onEndReached={matchesLoadMore}
-                    onEndReachedThreshold={0.5}
-                    refreshing={matchesRefreshing}
-                    onRefresh={matchesRefresh}
-                    scrollEnabled={false}
-                    nestedScrollEnabled={true}
-                    contentContainerStyle={{
-                      paddingHorizontal: theme.spacing.m,
-                    }}
-                  />
+                  <>
+                    <MatchList
+                      matches={listMatches}
+                      variant="vertical"
+                      itemVariant="list"
+                      onMatchPress={handleMatchPress}
+                      showStatus={true}
+                      containerStyle={{ marginBottom: 16 }}
+                      emptyMessage={t(
+                        "matches.noMatches",
+                        "Chưa có trận đấu nào",
+                      )}
+                    />
+                    {matchesLoadingMore && (
+                      <View
+                        style={{ paddingVertical: 20, alignItems: "center" }}
+                      >
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.neonGreen}
+                        />
+                      </View>
+                    )}
+                  </>
                 )}
               </View>
             )}
