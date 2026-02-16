@@ -51,6 +51,15 @@ export const PostItem: React.FC<PostItemProps> = ({
     await deletePost(postId);
   };
 
+  const handleReportPost = async (
+    postId: string,
+    reason: string,
+    customReason?: string,
+  ) => {
+    // TODO: Implement report API
+    console.log("Report post:", postId, reason, customReason);
+  };
+
   return (
     <ThemedView
       style={[
@@ -114,15 +123,14 @@ export const PostItem: React.FC<PostItemProps> = ({
           </View>
         </View>
 
-        {isOwnPost && (
-          <ActionButton
-            contentType="post"
-            contentId={post.postId}
-            currentContent={post.content}
-            onEdit={handleEditPost}
-            onDelete={handleDeletePost}
-          />
-        )}
+        <ActionButton
+          contentType="post"
+          contentId={post.postId}
+          currentContent={post.content}
+          onEdit={isOwnPost ? handleEditPost : undefined}
+          onDelete={isOwnPost ? handleDeletePost : undefined}
+          onReport={!isOwnPost ? handleReportPost : undefined}
+        />
       </View>
 
       {/* Post Content */}

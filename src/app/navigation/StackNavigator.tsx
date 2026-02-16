@@ -12,6 +12,7 @@ import {
   RoomDetailScreen,
   PersonalPageScreen,
   ProfileDetailScreen,
+  AchievementsScreen,
   ChatListScreen,
   ChatScreen,
   RoomChatScreen,
@@ -34,6 +35,13 @@ import { WalletScreen, WalletTopUpScreen } from "@/features/wallet";
 import { PaymentSuccessScreen } from "@/features/payment";
 import { SearchScreen } from "@/features/search";
 import TeamScreen from "@/features/rooms/screens/TeamScreen";
+import {
+  FeedbackIntroScreen,
+  FeedbackRatingScreen,
+  FeedbackCompleteScreen,
+  EloBreakdownScreen,
+} from "@/screens";
+import FeedbackMatchResultScreen from "@/features/feedback/screens/FeedbackMatchResultScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -128,6 +136,14 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
+              name="EloBreakdown"
+              component={EloBreakdownScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
               name="CreateRoom"
               component={CreateRoomScreen}
               options={{
@@ -183,7 +199,7 @@ const StackNavigator: React.FC = () => {
                 animation: "slide_from_right",
               }}
             />
-             
+
             <Stack.Screen
               name="Profile"
               component={ProfileScreen}
@@ -203,6 +219,14 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen
               name="ProfileDetail"
               component={ProfileDetailScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="Achievements"
+              component={AchievementsScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
@@ -281,12 +305,44 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
-            name="RoomChat"
-            component={RoomChatScreen}
-            options={{
-              headerShown: false,
-              animation: "slide_from_bottom",
-            }}
+              name="RoomChat"
+              component={RoomChatScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackIntro"
+              component={FeedbackIntroScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackMatchResult"
+              component={FeedbackMatchResultScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackRating"
+              component={FeedbackRatingScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackComplete"
+              component={FeedbackCompleteScreen}
+              options={{
+                headerShown: false,
+                animation: "fade",
+              }}
             />
           </>
         )}

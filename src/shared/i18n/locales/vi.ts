@@ -140,6 +140,16 @@ const vi = {
       eloRating: "Điểm ELO",
     },
   },
+  rank: {
+    tiers: {
+      Amateur: "Nghiệp dư",
+      SemiPro: "Bán chuyên",
+      Pro: "Chuyên nghiệp",
+      Master: "Cao thủ",
+      Elite: "Tinh hoa",
+      Legend: "Huyền thoại",
+    },
+  },
   createRoom: {
     title: "Tạo Phòng Đấu",
     duration: "Thời Lượng",
@@ -485,6 +495,7 @@ const vi = {
     comment: "bình luận",
     edit: "Chỉnh sửa",
     delete: "Xóa",
+    report: "Báo cáo",
     save: "Lưu",
     editTitle: "Chỉnh sửa {{type}}",
     deleteConfirmTitle: "Xóa {{type}}?",
@@ -495,6 +506,87 @@ const vi = {
       required: "Nội dung không được để trống",
       tooLong: "Nội dung không được vượt quá 5000 ký tự",
       failed: "Không thể lưu thay đổi. Vui lòng thử lại.",
+    },
+  },
+  feedback: {
+    intro: {
+      teamA: "ĐỘI A",
+      teamB: "ĐỘI B",
+      title: "Giúp hệ thống cân bằng trận đấu",
+      description:
+        "Đánh giá đồng đội một cách công tâm để giúp chúng tôi tổ chức những trận đấu cân sức và hấp dẫn hơn cho bạn.",
+      startButton: "Bắt đầu đánh giá",
+    },
+    rating: {
+      title: "Đánh giá Đồng đội",
+      subtitle: "TRẬN ĐẤU CHỦ NHẬT",
+      progress: "TIẾN TRÌNH",
+      swipeLeft: "VUỐT TRÁI",
+      swipeRight: "VUỐT PHẢI",
+      tip: "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
+    },
+    report: {
+      title: "Báo cáo người chơi",
+      description:
+        "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người chơi này.",
+      submit: "Gửi báo cáo",
+    },
+    complete: {
+      title: "Cảm ơn bạn đã đánh giá!",
+      description:
+        "Đánh giá của bạn đã được ghi nhận. Chúng tôi sẽ sử dụng thông tin này để tổ chức những trận đấu cân sức và công bằng hơn.",
+      playersRated: "Người chơi đã đánh giá",
+      finishButton: "Hoàn thành",
+    },
+    validation: {
+      ratingRequired: "Đánh giá bắt buộc",
+      ratingRequiredMessage: "Vui lòng chọn số sao đánh giá trước khi gửi.",
+      allPlayersRequired: "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
+    },
+  },
+  reportModal: {
+    title: {
+      post: "Báo cáo bài viết",
+      user: "Báo cáo người dùng",
+    },
+    description: {
+      post: "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo bài viết này.",
+      user: "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người dùng này.",
+    },
+    reasons: {
+      post: {
+        spam: "Spam hoặc quảng cáo",
+        inappropriate: "Nội dung không phù hợp",
+        harassment: "Quấy rối hoặc bắt nạt",
+        false_information: "Thông tin sai sự thật",
+        copyright: "Vi phạm bản quyền",
+        other: "Lý do khác",
+      },
+      user: {
+        inappropriate_behavior: "Hành vi không phù hợp",
+        harassment: "Quấy rối hoặc bắt nạt",
+        spam: "Spam hoặc quảng cáo",
+        fake_account: "Tài khoản giả mạo",
+        scam: "Lừa đảo",
+        other: "Lý do khác",
+      },
+    },
+    customReason: {
+      label: "Vui lòng mô tả lý do",
+      placeholder: "Nhập lý do báo cáo của bạn...",
+    },
+    submit: "Gửi báo cáo",
+    validation: {
+      noReason: "Vui lòng chọn lý do báo cáo",
+      noCustomReason: "Vui lòng nhập lý do báo cáo",
+    },
+    success: {
+      post: "Đã gửi báo cáo bài viết thành công",
+      user: "Đã gửi báo cáo người dùng thành công",
+    },
+    error: {
+      post: "Không thể gửi báo cáo bài viết. Vui lòng thử lại.",
+      user: "Không thể gửi báo cáo người dùng. Vui lòng thử lại.",
     },
   },
 };

@@ -1,5 +1,10 @@
 import { User } from "@/features/profile/types/profile.types";
-import { Venue, Field, TimeSlot, VenuePhoto } from "@/features/venues/types/venue.types";
+import {
+  Venue,
+  Field,
+  TimeSlot,
+  VenuePhoto,
+} from "@/features/venues/types/venue.types";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -19,6 +24,7 @@ export type RootStackParamList = {
   Team: { roomId: string; team: "A" | "B" };
   PersonalPage: { userId?: string };
   ProfileDetail: { player: User };
+  Achievements: undefined;
   ChatList: undefined;
   Friends: undefined;
   FriendRequests: undefined;
@@ -35,6 +41,17 @@ export type RootStackParamList = {
     email: string;
   };
   Search: undefined;
+  EloBreakdown:
+    | {
+        eloDelta?: number;
+        matchLabel?: string;
+        isWin?: boolean;
+      }
+    | undefined;
+  FeedbackIntro: undefined;
+  FeedbackMatchResult: { roomId: string };
+  FeedbackRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
+  FeedbackComplete: undefined;
 };
 
 export type TabParamList = {

@@ -6,10 +6,11 @@ export type RoomStatus = "open" | "full" | "closed" | "completed" | "cancelled";
 
 export type MatchRoomStatus =
   | "Open"
-  | "Full"
+  | "Locked"
   | "Closed"
   | "InProgress"
   | "Completed"
+  | "Reviewing"
   | "Cancelled";
 export type MatchFormat = "FiveVsFive" | "SevenVsSeven" | string;
 export type TeamAssignment = "A" | "B" | "Unassigned";

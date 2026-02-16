@@ -143,6 +143,16 @@ const en = {
       eloRating: "ELO Rating",
     },
   },
+  rank: {
+    tiers: {
+      Amateur: "Amateur",
+      SemiPro: "Semi-Pro",
+      Pro: "Pro",
+      Master: "Master",
+      Elite: "Elite",
+      Legend: "Legend",
+    },
+  },
   createRoom: {
     title: "Create Room",
     duration: "Duration",
@@ -489,6 +499,7 @@ const en = {
     comment: "comment",
     edit: "Edit",
     delete: "Delete",
+    report: "Report",
     save: "Save",
     editTitle: "Edit {{type}}",
     deleteConfirmTitle: "Delete {{type}}?",
@@ -499,6 +510,86 @@ const en = {
       required: "Content cannot be empty",
       tooLong: "Content cannot exceed 5000 characters",
       failed: "Failed to save changes. Please try again.",
+    },
+  },
+  feedback: {
+    intro: {
+      teamA: "TEAM A",
+      teamB: "TEAM B",
+      title: "Help the system balance the match",
+      description:
+        "Fairly evaluate teammates to help us organize more balanced and exciting matches for you.",
+      startButton: "Start evaluation",
+    },
+    rating: {
+      title: "Rate Teammate",
+      subtitle: "SUNDAY MATCH",
+      progress: "PROGRESS",
+      swipeLeft: "SWIPE LEFT",
+      swipeRight: "SWIPE RIGHT",
+      tip: "Tip: Honest ratings help the system balance teams better.",
+    },
+    report: {
+      title: "Report Player",
+      description: "Please let us know why you want to report this player.",
+      submit: "Submit Report",
+    },
+    complete: {
+      title: "Thank you for your feedback!",
+      description:
+        "Your feedback has been recorded. We will use this information to organize more balanced and fair matches.",
+      playersRated: "Players Rated",
+      finishButton: "Finish",
+    },
+    validation: {
+      ratingRequired: "Rating Required",
+      ratingRequiredMessage: "Please select a star rating before submitting.",
+      allPlayersRequired: "Please rate all players before completing.",
+    },
+  },
+  reportModal: {
+    title: {
+      post: "Report Post",
+      user: "Report User",
+    },
+    description: {
+      post: "Please let us know why you want to report this post.",
+      user: "Please let us know why you want to report this user.",
+    },
+    reasons: {
+      post: {
+        spam: "Spam or advertising",
+        inappropriate: "Inappropriate content",
+        harassment: "Harassment or bullying",
+        false_information: "False information",
+        copyright: "Copyright violation",
+        other: "Other reason",
+      },
+      user: {
+        inappropriate_behavior: "Inappropriate behavior",
+        harassment: "Harassment or bullying",
+        spam: "Spam or advertising",
+        fake_account: "Fake account",
+        scam: "Scam",
+        other: "Other reason",
+      },
+    },
+    customReason: {
+      label: "Please describe the reason",
+      placeholder: "Enter your report reason...",
+    },
+    submit: "Submit Report",
+    validation: {
+      noReason: "Please select a report reason",
+      noCustomReason: "Please enter a report reason",
+    },
+    success: {
+      post: "Post report submitted successfully",
+      user: "User report submitted successfully",
+    },
+    error: {
+      post: "Failed to submit post report. Please try again.",
+      user: "Failed to submit user report. Please try again.",
     },
   },
 };

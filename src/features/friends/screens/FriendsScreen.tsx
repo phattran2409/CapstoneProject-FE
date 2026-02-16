@@ -165,10 +165,6 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
                   });
                 }
               }}
-              onInvitePress={() => {
-                // TODO: Invite to match
-                console.log("Invite pressed:", item.fullName);
-              }}
             />
           )}
           contentContainerStyle={[

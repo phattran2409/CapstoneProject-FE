@@ -6,3 +6,6 @@ export { EditProfileForm } from "./EditProfileForm";
 export { ProfileFormField } from "./ProfileFormField";
 export { ProfileSelectionField } from "./ProfileSelectionField";
 export { FriendshipActionButton } from "./FriendshipActionButton";
+export { TrustScoreCard } from "./TrustScoreCard";
+export { AchievementItem } from "./AchievementItem";
+export type { Achievement } from "./AchievementItem";

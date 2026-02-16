@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FriendRequests } from "../types/friends.types";
 import { getRelativeTime } from "@/shared/utils";
+import { RankBadge, getRankInfoFromElo } from "@/shared/components";
 
 export interface FriendRequestCardProps {
   request: FriendRequests;
@@ -26,13 +27,6 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
 
-  const getRankColor = (elo: number) => {
-    if (elo >= 3000) return "#FFD700"; // Gold
-    if (elo >= 2500) return "#C0C0C0"; // Silver
-    if (elo >= 2000) return "#CD7F32"; // Bronze
-    return theme.colors.neonGreen;
-  };
-
   // Adjust gradient colors based on theme
   const gradientColors: [string, string] = isDark
     ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)"]
@@ -43,8 +37,15 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
     ? `${theme.colors.neonGreen}30`
     : `${theme.colors.neonGreen}40`;
 
+  // Get rank info for avatar border
+  const rankInfo = getRankInfoFromElo(
+    request.currentElo,
+    theme.colors.neonGreen,
+  );
+  const avatarBorderColor = rankInfo.color;
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{padding: 16}}>
       <BlurView
         intensity={isDark ? 40 : 80}
         tint={isDark ? "dark" : "light"}
@@ -74,7 +75,7 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
                 styles.avatar,
                 {
                   backgroundColor: theme.colors.surface,
-                  borderColor: getRankColor(request.currentElo),
+                  borderColor: avatarBorderColor,
                 },
               ]}
             >
@@ -102,29 +103,41 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
                 {request.requesterFullName}
               </Text>
               {request.currentElo >= 2500 && (
-                <Ionicons name="checkmark-circle" size={16} color={theme.colors.neonGreen} style={{ marginLeft: 4 }} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={theme.colors.neonGreen}
+                  style={{ marginLeft: 4 }}
+                />
               )}
             </View>
-            <Text
-              style={[styles.username, { color: theme.colors.textSecondary }]}
-            >
-              @{request.requesterFullName}
-            </Text>
 
             <View style={styles.statsRow}>
-              <View style={[
-                styles.eloBadge, 
-                { backgroundColor: isDark ? `${getRankColor(request.currentElo)}20` : `${getRankColor(request.currentElo)}15` }
-              ]}>
-                <Ionicons name="trophy" size={12} color={getRankColor(request.currentElo)} />
-                <Text style={[styles.eloText, { color: getRankColor(request.currentElo) }]}>{request.currentElo}</Text>
-              </View>
+              <RankBadge
+                elo={request.currentElo}
+                size="small"
+                showElo
+                style={{ paddingHorizontal: 25 }}
+              />
               {request.preferredPositions && (
-                <View style={[
-                  styles.positionBadge, 
-                  { backgroundColor: isDark ? `${theme.colors.neonGreen}15` : `${theme.colors.neonGreen}10` }
-                ]}>
-                  <Text style={[styles.positionText, { color: theme.colors.neonGreen }]}>{request.preferredPositions}</Text>
+                <View
+                  style={[
+                    styles.positionBadge,
+                    {
+                      backgroundColor: isDark
+                        ? `${theme.colors.neonGreen}15`
+                        : `${theme.colors.neonGreen}10`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.positionText,
+                      { color: theme.colors.neonGreen },
+                    ]}
+                  >
+                    {request.preferredPositions}
+                  </Text>
                 </View>
               )}
             </View>

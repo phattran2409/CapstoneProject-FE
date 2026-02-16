@@ -133,6 +133,15 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
     navigation.goBack();
   };
 
+  const handleReportPost = async (
+    postId: string,
+    reason: string,
+    customReason?: string,
+  ) => {
+    // TODO: Implement report API
+    console.log("Report post:", postId, reason, customReason);
+  };
+
   const handleEditComment = async (commentId: string, newContent: string) => {
     await updateComment({ commentId, content: newContent });
     refresh();
@@ -253,16 +262,15 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
               </View>
             </View>
 
-            {/* Action Button for own posts */}
-            {isOwnPost && (
-              <ActionButton
-                contentType="post"
-                contentId={post.postId}
-                currentContent={post.content}
-                onEdit={handleEditPost}
-                onDelete={handleDeletePost}
-              />
-            )}
+            {/* Action Button always visible */}
+            <ActionButton
+              contentType="post"
+              contentId={post.postId}
+              currentContent={post.content}
+              onEdit={isOwnPost ? handleEditPost : undefined}
+              onDelete={isOwnPost ? handleDeletePost : undefined}
+              onReport={!isOwnPost ? handleReportPost : undefined}
+            />
           </View>
 
           {/* Post Title and Content */}

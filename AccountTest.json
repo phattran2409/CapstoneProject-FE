@@ -1,0 +1,48 @@
+{
+    "accounts": [
+        {
+            "email": "gigig69384@helesco.com",
+            "password": "mnbvcxz123"
+        },  
+        {
+            "email": "amg63115@toaik.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "qvz61904@laoia.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user03@gmail.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user04@gmail.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user05@gmail.com",
+            "password": "mnbvcxz123"    
+        },
+        {
+            "email": "user06@gmail.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user07@gmail.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user08@gmail.com", 
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user09@gmail.com",
+            "password": "mnbvcxz123"
+        },
+        {
+            "email": "user10@gmail.com",
+            "password": "mnbvcxz123"
+        }
+    ]
+}

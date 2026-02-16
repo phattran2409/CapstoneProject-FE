@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { RadarChart } from './RadarChart';
-import { AIAssessmentCard } from './AIAssessmentCard';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { RadarChart } from "./RadarChart";
+import { AIAssessmentCard } from "./AIAssessmentCard";
 
 interface AnalysisTabProps {
   stats: {
@@ -21,22 +21,25 @@ interface AnalysisTabProps {
   };
 }
 
-export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) => {
+export const AnalysisTab: React.FC<AnalysisTabProps> = ({
+  stats,
+  radarData,
+}) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
   const assessments = [
     {
-      title: 'Tiềm năng thủ lĩnh',
+      title: "Tiềm năng thủ lĩnh",
       description: `Dựa trên ${stats.matches} trận đấu, bạn duy trì sự ổn định đáng kinh ngạc. Tỷ lệ thắng ${stats.winRate}% là minh chứng rõ ràng cho khả năng dẫn dắt đội bóng của bạn.`,
-      icon: 'star' as const,
+      icon: "star" as const,
       iconColor: theme.colors.neonGreen,
     },
     {
-      title: 'Cần cải thiện RoleFactor',
+      title: "Cần cải thiện RoleFactor",
       description:
-        'Biểu đồ năng lực cho thấy RoleFactor của bạn hơi thấp so với Rank Diamond I. Hãy tích cực tham gia vào các pha phối hợp nhóm hơn để tối ưu hóa hiệu suất.',
-      icon: 'bar-chart' as const,
+        "Biểu đồ năng lực cho thấy RoleFactor của bạn hơi thấp so với Rank Diamond I. Hãy tích cực tham gia vào các pha phối hợp nhóm hơn để tối ưu hóa hiệu suất.",
+      icon: "bar-chart" as const,
       iconColor: theme.colors.textSecondary,
     },
   ];
@@ -48,9 +51,9 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) =>
         style={[
           styles.header,
           {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
             marginBottom: theme.spacing.l,
           },
         ]}
@@ -61,13 +64,14 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) =>
             {
               fontSize: theme.fontSizes.xl,
               color: theme.colors.text,
-              fontWeight: '700',
+              fontWeight: "700",
             },
           ]}
         >
-          {t('personalPage.analysis.title', { defaultValue: 'Biểu đồ năng lực' })}
+          {t("personalPage.analysis.title", {
+            defaultValue: "Biểu đồ Hồ sơ Thi đấu",
+          })}
         </Text>
- 
       </View>
 
       {/* Radar Chart */}
@@ -75,105 +79,23 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) =>
         style={[
           styles.chartContainer,
           {
-            alignItems: 'center',
+            alignItems: "center",
             marginBottom: theme.spacing.l,
           },
         ]}
       >
-        <RadarChart data={radarData} />
+        <RadarChart
+          data={{
+            form: radarData.Perf / 50 - 1, // Convert 0-100 to -1..1
+            winRate: radarData.WinLoss / 100, // Convert 0-100 to 0..1
+            avgStar: (radarData.Feedback / 100) * 5, // Convert 0-100 to 0..5
+            sentiment: radarData.Sentiment / 100, // Convert 0-100 to 0..1
+            trust: radarData.Trust, // Keep 0-100
+            contribution: radarData.RoleFactor / 100, // Convert 0-100 to 0..1
+          }}
+        />
       </View>
 
-      {/* Stats Cards */}
-      <View
-        style={[
-          styles.statsContainer,
-          {
-            flexDirection: 'row',
-            gap: theme.spacing.s,
-            marginBottom: theme.spacing.xl,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.statCard,
-            {
-              flex: 1,
-              backgroundColor: theme.colors.surface,
-              borderRadius: theme.radius.m,
-              padding: theme.spacing.m,
-              alignItems: 'center',
-            },
-          ]}
-        >
-          <Ionicons name="football" size={24} color={theme.colors.neonGreen} />
-          <Text
-            style={[
-              styles.statLabel,
-              {
-                fontSize: theme.fontSizes.s,
-                color: theme.colors.textSecondary,
-                marginTop: theme.spacing.xs,
-                marginBottom: theme.spacing.xs,
-              },
-            ]}
-          >
-            {t('personalPage.stats.matches', { defaultValue: 'SỐ TRẬN' })}
-          </Text>
-          <Text
-            style={[
-              styles.statValue,
-              {
-                fontSize: theme.fontSizes.xxl,
-                color: theme.colors.text,
-                fontWeight: '700',
-              },
-            ]}
-          >
-            {stats.matches}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.statCard,
-            {
-              flex: 1,
-              backgroundColor: theme.colors.surface,
-              borderRadius: theme.radius.m,
-              padding: theme.spacing.m,
-              alignItems: 'center',
-            },
-          ]}
-        >
-          <Ionicons name="trending-up" size={24} color={theme.colors.neonGreen} />
-          <Text
-            style={[
-              styles.statLabel,
-              {
-                fontSize: theme.fontSizes.s,
-                color: theme.colors.textSecondary,
-                marginTop: theme.spacing.xs,
-                marginBottom: theme.spacing.xs,
-              },
-            ]}
-          >
-            {t('personalPage.stats.winRate', { defaultValue: 'TỶ LỆ THẮNG' })}
-          </Text>
-          <Text
-            style={[
-              styles.statValue,
-              {
-                fontSize: theme.fontSizes.xxl,
-                color: theme.colors.text,
-                fontWeight: '700',
-              },
-            ]}
-          >
-            {stats.winRate}%
-          </Text>
-        </View>
-      </View>
 
       {/* AI Assessment Section */}
       <View style={styles.assessmentSection}>
@@ -181,8 +103,8 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) =>
           style={[
             styles.assessmentHeader,
             {
-              flexDirection: 'row',
-              alignItems: 'center',
+              flexDirection: "row",
+              alignItems: "center",
               marginBottom: theme.spacing.m,
             },
           ]}
@@ -194,13 +116,13 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({ stats, radarData }) =>
               {
                 fontSize: theme.fontSizes.l,
                 color: theme.colors.text,
-                fontWeight: '700',
+                fontWeight: "700",
                 marginLeft: theme.spacing.s,
               },
             ]}
           >
-            {t('personalPage.analysis.aiAssessment', {
-              defaultValue: 'Đánh giá & Phân tích AI',
+            {t("personalPage.analysis.aiAssessment", {
+              defaultValue: "Đánh giá & Phân tích AI",
             })}
           </Text>
         </View>
@@ -227,14 +149,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   seasonTag: {
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
   seasonText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   chartContainer: {
     marginBottom: 24,
@@ -243,14 +165,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   statCard: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statLabel: {
     marginTop: 4,
     marginBottom: 4,
   },
   statValue: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
   assessmentSection: {
     marginTop: 8,
@@ -259,7 +181,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   assessmentTitle: {
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
-

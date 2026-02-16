@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { RouteProp } from "@react-navigation/native";
+import { TrustScoreCard } from "../components/TrustScoreCard";
+import { ReportModal } from "@/shared/components";
+import { useToast } from "@/shared/toast";
 
 type ProfileDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -104,6 +107,9 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
   const { theme } = useTheme();
   const { user } = useAuthStore();
   const { t } = useTranslation();
+  const toast = useToast();
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   // Get player data from route params
   const player = route.params.player;
@@ -147,6 +153,27 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
         : foot;
   };
 
+  const handleReportSubmit = async (reason: string, customReason?: string) => {
+    setIsReporting(true);
+    try {
+      // TODO: Implement actual report API call
+      console.log("Reporting user:", {
+
+      });
+      
+      // Simulate API call
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
+      
+      setShowReportModal(false);
+      toast.info(t("reportModal.success.user"));
+    } catch (error) {
+      console.error("Error reporting user:", error);
+      toast.error(t("reportModal.error.user"));
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -170,6 +197,11 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Trust Score Section */}
+        <View style={styles.section}>
+          <TrustScoreCard score={85} variant="detailed" />
+        </View>
+
         {/* Stats Overview */}
         <View style={styles.section}>
           <Text
@@ -407,9 +439,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
                 borderColor: theme.colors.error,
               },
             ]}
-            onPress={() => {
-              /* Report issue */
-            }}
+            onPress={() => setShowReportModal(true)}
           >
             <Ionicons name="warning" size={20} color={theme.colors.error} />
             <Text
@@ -424,6 +454,15 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Report Modal */}
+      <ReportModal
+        visible={showReportModal}
+        type="user"
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportSubmit}
+        isLoading={isReporting}
+      />
     </SafeAreaView>
   );
 };

@@ -11,6 +11,7 @@ import { linking } from './src/app/navigation/linking';
 import { useAppStore } from './src/store';
 import { queryClient } from './src/shared/api/queryClient';
 import { TabBarVisibilityProvider } from './src/shared/context/TabBarVisibilityContext';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppToast } from './src/shared/toast';
 import { useActiveRoomStore } from './src/features/rooms';
 import { useNotificationListeners } from './src/shared/notifications';
@@ -34,13 +35,13 @@ const AppContent: React.FC = () => {
   useNotificationListeners();
 
   return (
-    <>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <NavigationContainer ref={navigationRef} linking={linking}>
         <StackNavigator />
       </NavigationContainer>
       <AppToast />
-    </>
+    </GestureHandlerRootView>
   );
 };
 
@@ -65,7 +66,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   render() {
@@ -74,11 +75,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Something went wrong</Text>
           <Text style={styles.errorMessage}>
-            {this.state.error?.message || 'Unknown error'}
+            {this.state.error?.message || "Unknown error"}
           </Text>
-          <Text style={styles.errorStack}>
-            {this.state.error?.stack}
-          </Text>
+          <Text style={styles.errorStack}>{this.state.error?.stack}</Text>
         </View>
       );
     }
@@ -90,27 +89,27 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 const styles = StyleSheet.create({
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   errorTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 10,
   },
   errorMessage: {
     fontSize: 16,
-    color: '#ff6b6b',
+    color: "#ff6b6b",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorStack: {
     fontSize: 12,
-    color: '#888',
-    fontFamily: 'monospace',
+    color: "#888",
+    fontFamily: "monospace",
   },
 });
 
@@ -131,4 +130,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  ViewStyle,
 } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,7 @@ interface FriendshipActionButtonProps {
   onAcceptRequest?: () => void;
   onCancelRequest?: () => void;
   isLoading?: boolean;
+  style?: ViewStyle;
 }
 
 export const FriendshipActionButton: React.FC<FriendshipActionButtonProps> = ({
@@ -29,6 +31,7 @@ export const FriendshipActionButton: React.FC<FriendshipActionButtonProps> = ({
   onAcceptRequest,
   onCancelRequest,
   isLoading = false,
+  style,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -119,6 +122,7 @@ export const FriendshipActionButton: React.FC<FriendshipActionButtonProps> = ({
             paddingHorizontal: theme.spacing.xl,
             opacity: isLoading ? 0.6 : buttonConfig.opacity,
           },
+          style,
         ]}
       >
         <View
