@@ -33,6 +33,7 @@ import {
   HostTabContent,
   VenueTabContent,
   TeamLineup,
+  MatchCountdown,
   type PlayerPosition,
   InviteFriendsModal,
 } from '../components';
@@ -466,6 +467,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     displayRoom.field.venue.venueName
   }\n\nJoin here: ${shareUrl}`;
 
+  console.log('displayRoom', displayRoom.matchDate, displayRoom.startTime, displayRoom.endTime);
+
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -525,6 +528,32 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           )}
         </View>
       </ThemedView>
+
+      {/* Countdown dưới header khi trận đang InProgress */}
+      {/* {displayRoom.status === 'InProgress' && (
+        // <MatchCountdown
+        //   matchDate={displayRoom.matchDate}
+        //   startTime={displayRoom.startTime}
+        //   endTime={displayRoom.endTime}
+        //   status={displayRoom.status}
+        //   variant="inline"
+        // />
+      )} */}
+
+      <MatchCountdown
+        matchDate={"2026-02-19T10:00:00"}
+        startTime={"22:00:00"}
+        endTime={"23:16:00"}
+        status={"InProgress"}
+        variant="inline"
+      />
+      {/* <MatchCountdown
+        matchDate={displayRoom.matchDate}
+        startTime={displayRoom.startTime}
+        endTime={displayRoom.endTime}
+        status={displayRoom.status}
+        variant="overlay"
+      /> */}
 
       {/* Tab Navigation */}
       <View 

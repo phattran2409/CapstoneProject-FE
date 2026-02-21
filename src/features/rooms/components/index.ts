@@ -6,4 +6,10 @@ export { PositionSelectionModal, type PlayerPosition } from './PositionSelection
 export { default as PrivateRoomPasswordModal } from './PrivateRoomPasswordModal';
 export { InviteFriendsModal } from './InviteFriendsModal';
 export { CaptainBadge } from './CaptainBadge';
-export { RoomInfoCard, HostTabContent, VenueTabContent, TeamLineup } from './roomInformation';
+export {
+  RoomInfoCard,
+  HostTabContent,
+  VenueTabContent,
+  TeamLineup,
+  MatchCountdown,
+} from './roomInformation';
