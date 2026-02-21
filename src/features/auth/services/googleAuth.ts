@@ -5,8 +5,8 @@ import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 // Configure Google Sign-In (chỉ cần gọi 1 lần khi app start)
 // Lấy webClientId từ environment variable
 const getWebClientId = (): string => {
-  // @ts-ignore - Expo environment variables
-  return process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID as string | undefined;
+  return clientId ?? '';
 };
 
 // Configure Google Sign-In
