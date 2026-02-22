@@ -236,3 +236,14 @@ export const toggleCommentLike = async (
 
   return response as unknown as ApiResponse;
 };
+
+// Like/Unlike reply (stub until backend is ready)
+export const toggleReplyLike = async (
+  commentId: string,
+  replyId: string,
+): Promise<ApiResponse> => {
+  const response = await apiClient.post(
+    `/comments/${commentId}/replies/${replyId}/like`,
+  );
+  return response as unknown as ApiResponse;
+};

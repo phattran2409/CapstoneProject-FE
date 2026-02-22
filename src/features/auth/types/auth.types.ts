@@ -38,6 +38,11 @@ export interface RegisterRequest {
 
 export interface RegisterResponse extends LoginResponse {}
 
+/** Request to send or resend OTP (e.g. to email after register) */
+export interface SendOTPRequest {
+  userId: string;
+}
+
 export interface ReSendOTPRequest {
   userId: string;
 }

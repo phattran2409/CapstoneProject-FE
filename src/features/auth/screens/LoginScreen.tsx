@@ -79,7 +79,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             t("login.success.message", "Chào mừng bạn trở lại!")
           );
           // Sau khi login thành công, lấy FCM token và gửi lên BE
-          registerFcmToken();
+          getFcmToken().then((token) => {
+            if (token) authApi.updateFcmToken(token);
+          });
           // Navigation tự động xảy ra khi isAuthenticated thay đổi
         },
         onError: (error: any) => {

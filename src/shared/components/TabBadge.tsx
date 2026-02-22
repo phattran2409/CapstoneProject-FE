@@ -18,7 +18,7 @@ export const TabBadge: React.FC = () => {
     enabled: !!roomId && !!user,
   });
 
-  const isActive = roomId && room && room.status !== 'completed' && room.status !== 'cancelled';
+  const isActive = roomId && room && room.status !== 'Completed' && room.status !== 'Cancelled';
 
   if (!isActive) {
     return null;
@@ -26,8 +26,8 @@ export const TabBadge: React.FC = () => {
 
   return (
     <View style={[styles.badge, { backgroundColor: theme.colors.neonGreen }]}>
-      {room && room.currentPlayers > 0 && (
-        <Text style={styles.badgeText}>{room.currentPlayers}</Text>
+      {room && room.filledSlots > 0 && (
+        <Text style={styles.badgeText}>{room.filledSlots}</Text>
       )}
     </View>
   );

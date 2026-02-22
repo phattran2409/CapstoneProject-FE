@@ -65,24 +65,6 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
     ElevenVsEleven: "11vs11",
   };
 
-  // Determine status for display
-  const getDisplayStatus = (status: string): MatchItemData["status"] => {
-    switch (status) {
-      case "Open":
-        return "Open";
-      case "Locked":
-        return "Locked";
-      case "InProgress":
-        return "InProgress";
-      case "Completed":
-        return "Completed"; // Default, could be dynamic based on result
-      case "Cancelled":
-        return "Cancelled";
-      default:
-        return "Open";
-    }
-  };
-
   return {
     id: room.roomId,
     title:
@@ -93,9 +75,7 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
     image: getImageSource(room.venuePhotos?.[0]?.photoUrl),
-      // room.venuePhotos?.[0]?.photoUrl ||
-      // require("../../../assets/images/Gemini_Generated_Image_olny3jolny3jolny.png"),
-    status: getDisplayStatus(room.status),
+    status: room.status,
     date: formatDate(room.matchDate),
     venue: room.field?.venue?.venueName,
     time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,

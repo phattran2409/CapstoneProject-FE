@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '../api/authApi';
-import type { ReSendOTPRequest, SendOTPRequest, VerifyOTPRequest } from '../types/auth.types';
+import type { ReSendOTPRequest, VerifyOTPRequest } from '../types/auth.types';
 
 /**
  * Hook to send OTP to phone number
@@ -18,11 +18,12 @@ import type { ReSendOTPRequest, SendOTPRequest, VerifyOTPRequest } from '../type
  *   }
  * );
  */
-// export const useSendOTP = () => {
-//   return useMutation({
-//     mutationFn: (request: SendOTPRequest) => authApi.sendOTP(request),
-//   });
-// };
+/** Send OTP (e.g. after register) – uses same API as resend with userId */
+export const useSendOTP = () => {
+  return useMutation({
+    mutationFn: (request: ReSendOTPRequest) => authApi.sendOTP(request),
+  });
+};
 
 export const useResendOTP = () => {
   return useMutation({

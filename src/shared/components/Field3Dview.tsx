@@ -210,7 +210,8 @@ const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress
       {/* Overlay: Player Cards */}
       <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
         {players.map((player, index) => {
-          const pos = getFormatPosition(format, index, lineUpName);
+          const formatKey = format === '7vs7' ? '7vs7' : '5vs5';
+          const pos = getFormatPosition(formatKey, index, lineUpName);
          
           if (!player) {
             // Empty slot - dashed circle
@@ -225,7 +226,7 @@ const Field3DView: React.FC<Field3DViewProps> = ({ players, style, onPlayerPress
                     top: pos.y as any,
                   },
                 ]}
-                onPress={() => onPlayerPress?.()}
+                onPress={() => onPlayerPress?.(null)}
               >
                 <ThemedText variant="secondary" size="xl" weight="bold">+</ThemedText>
               </TouchableOpacity>

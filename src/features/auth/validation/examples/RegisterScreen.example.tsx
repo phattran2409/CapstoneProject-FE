@@ -40,8 +40,9 @@ export const RegisterScreenExample: React.FC = () => {
   const onSubmit = (data: RegisterFormData) => {
     // Transform to API request format (omit confirmPassword)
     const requestData = registerRequestSchema.parse(data);
-    
-    register(requestData, {
+    register(
+      { fullName: requestData.name, email: requestData.email, password: requestData.password },
+      {
       onSuccess: () => {
         // Handle success
       },
@@ -49,7 +50,8 @@ export const RegisterScreenExample: React.FC = () => {
         // Handle error
         console.error(error);
       },
-    });
+    }
+    );
   };
 
   return (

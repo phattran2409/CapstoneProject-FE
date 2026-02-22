@@ -8,6 +8,7 @@ import { View, TouchableOpacity, Modal, Image, StyleSheet, ScrollView } from 're
 import { useTheme } from '@/shared/theme';
 import { ThemedText, ThemedIcon, ThemedView } from '@/shared/components/themed';
 import { MatchItemData } from './MatchItem';
+import { MatchRoomStatus } from '@/features/rooms';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { getImageSource } from '../utils/imageSource';
 
@@ -28,31 +29,39 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
   if (!match) return null;
 
-  const getStatusIcon = (status?: MatchItemData['status']) => {
+  const getStatusIcon = (status?: MatchRoomStatus) => {
     switch (status) {
-      case 'win':
+      case 'Locked':
+        return <Ionicons name="lock-closed" size={24} color={theme.colors.textSecondary} />;
+      case 'Closed':
+        return <Ionicons name="close-outline" size={24} color={theme.colors.textSecondary} />;
+      case 'Completed':
         return <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />;
-      case 'lose':
+      case 'Cancelled':
         return <Ionicons name="sad-outline" size={24} color="#ef4444" />;
-      case 'draw':
+      case 'Reviewing':
         return <Ionicons name="git-compare-outline" size={24} color="#6b7280" />;
-      case 'ongoing':
+      case 'InProgress':
         return <Ionicons name="pulse" size={24} color={theme.colors.neonGreen} />;
-      case 'upcoming':
+      case 'Open':
+      case 'Full':
         return <Ionicons name="time-outline" size={24} color={theme.colors.info} />;
       default:
         return null;
     }
   };
 
-  const getStatusText = (status?: MatchItemData['status']) => {
+  const getStatusText = (status?: MatchRoomStatus) => {
     if (!status) return '';
-    const statusMap: Record<string, string> = {
-      win: 'Thắng',
-      lose: 'Thua',
-      draw: 'Hòa',
-      ongoing: 'Đang diễn ra',
-      upcoming: 'Sắp diễn ra',
+    const statusMap: Record<MatchRoomStatus, string> = {
+      Open: 'Mở',
+      Full: 'Đã đủ',
+      Locked: 'Đã khóa',
+      Closed: 'Đã đóng',
+      InProgress: 'Đang diễn ra',
+      Completed: 'Hoàn thành',
+      Reviewing: 'Đang xem xét',
+      Cancelled: 'Đã hủy',
     };
     return statusMap[status] || '';
   };

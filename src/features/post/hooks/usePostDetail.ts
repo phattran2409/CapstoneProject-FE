@@ -2,13 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { postKeys } from "../api/postKeys";
 import {
   getPostDetail,
+  toggleReplyLike,
   // TODO: Uncomment when backend APIs are ready
   // getPostComments,
   // togglePostLike,
   // createComment,
   // createReply,
   // toggleCommentLike,
-  toggleReplyLike,
 } from "../api/postApi";
 import { Post, Comment } from "../types/post.types";
 

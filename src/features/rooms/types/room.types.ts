@@ -6,6 +6,7 @@ export type RoomStatus = "open" | "full" | "closed" | "completed" | "cancelled";
 
 export type MatchRoomStatus =
   | "Open"
+  | "Full"
   | "Locked"
   | "Closed"
   | "InProgress"
@@ -59,6 +60,9 @@ export interface MatchRoomParticipant {
   depositPaid: boolean;
   joinDate: string;
 }
+
+/** Alias for participant in room/team context */
+export type Player = MatchRoomParticipant;
 
 /**
  * Participants grouped by team

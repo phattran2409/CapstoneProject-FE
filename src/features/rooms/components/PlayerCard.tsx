@@ -92,7 +92,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   }
 
   // Player card with beautiful background and effects
-  const canKick = isHost && !player.isConfirmed && player.userId !== currentUserId;
+  const isConfirmed = player.depositPaid ?? true;
+  const canKick = isHost && !isConfirmed && player.userId !== currentUserId;
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -126,7 +127,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               style={[styles.kickButton, { backgroundColor: '#EF4444' }]}
               onPress={(e) => {
                 e.stopPropagation();
-                onKickPlayer(player.userId, player.user?.name || 'Player');
+                onKickPlayer(player.userId, player.fullName || 'Player');
               }}
               disabled={isKicking}
             >
@@ -146,9 +147,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                 }
               ]}
             >
-              {player.user?.avatar ? (
+              {player.avatarUrl ? (
                 <Image
-                  source={{ uri: player.user.avatar }}
+                  source={{ uri: player.avatarUrl }}
                   style={styles.playerAvatarImage}
                   resizeMode="cover"
                 />
@@ -160,7 +161,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             </View>
             
             {/* Confirmed Badge */}
-            {player.isConfirmed && (
+            {isConfirmed && (
               <View 
                 style={[
                   styles.confirmedBadge,
@@ -189,7 +190,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               style={styles.playerNameText}
               numberOfLines={1}
             >
-              {player.user?.name || 'Unknown'}
+              {player.fullName || 'Unknown'}
             </ThemedText>
           </View>
         </View>

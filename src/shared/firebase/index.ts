@@ -1,4 +1,4 @@
-export { app, auth } from './config';
+export { auth } from './config';
 export { default } from './config';
 
 

@@ -30,7 +30,7 @@ export const authApi = {
    */
   login: async (request: LoginRequest): Promise<LoginResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, { email: request.email, password: request.password });
-    return data;
+    return data as unknown as LoginResponse;
   },
 
   /**
@@ -38,7 +38,7 @@ export const authApi = {
    */
   register: async (request: RegisterRequest): Promise<RegisterResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.REGISTER, request);
-    return data;
+    return data as unknown as RegisterResponse;
   },
 
   /**
@@ -46,12 +46,12 @@ export const authApi = {
    */
   sendOTP: async (request: SendOTPRequest): Promise<OTPResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL, request);
-    return data;
+    return data as unknown as OTPResponse;
   },
 
   reSendOTP: async (request: ReSendOTPRequest): Promise<OTPResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.RESEND_OTP, request);
-    return data;
+    return data as unknown as OTPResponse;
   },
    
   /**
@@ -60,7 +60,7 @@ export const authApi = {
   verifyOTP: async (request: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
     console.log(request);
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL, request);
-    return data;
+    return data as unknown as VerifyOTPResponse;
   },
 
   /**
@@ -75,7 +75,7 @@ export const authApi = {
    */
   refreshToken: async (request: RefreshTokenRequest): Promise<RefreshTokenResponse> => {
     const data = await apiClient.post('/auth/refresh', request);
-    return data;
+    return data as unknown as RefreshTokenResponse;
   },
 
   /**
@@ -83,7 +83,7 @@ export const authApi = {
    */
   getProfile: async (): Promise<User> => {
     const data = await apiClient.get('/auth/profile');
-    return data;
+    return data as unknown as User;
   },
 
   /**
@@ -91,7 +91,7 @@ export const authApi = {
    */
   updateProfile: async (updates: Partial<User>): Promise<User> => {
     const data = await apiClient.patch('/auth/profile', updates);
-    return data;
+    return data as unknown as User;
   },
 
   /**
@@ -100,7 +100,7 @@ export const authApi = {
    */
   googleLogin: async (request: { uid: string }): Promise<LoginResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.GOOGLE_LOGIN, { uid: request.uid });
-    return data;
+    return data as unknown as LoginResponse;
   },
 
   /**
@@ -108,7 +108,7 @@ export const authApi = {
    */
   forgotPassword: async (request: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, request);
-    return data;
+    return data as unknown as ForgotPasswordResponse;
   },
 
   /**
@@ -117,7 +117,7 @@ export const authApi = {
   changePassword: async (request: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
     console.log('request change password :', request);
     const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
-    return data;
+    return data as unknown as ChangePasswordResponse;
   },
 
   /**
@@ -127,7 +127,7 @@ export const authApi = {
     const data = await apiClient.put(API_CONFIG.ENDPOINTS.USERS.FCM_TOKEN, {
       fcmToken,
     });
-    return data;
+    return data as unknown as ApiResponse<void>;
   },
 };
 

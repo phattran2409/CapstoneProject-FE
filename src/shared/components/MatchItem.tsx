@@ -46,7 +46,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
   //   ? { uri: match.image.trim() }
   //   : PLACEHOLDER_IMAGE;
 
-  const getStatusIcon = (status?: MatchItemData["status"]) => {
+  const getStatusIcon = (status?: MatchRoomStatus) => {
     switch (status) {
       case "Locked":
         return (
@@ -71,6 +71,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
           <Ionicons name="pulse" size={24} color={theme.colors.neonGreen} />
         );
       case "Open":
+      case "Full":
         return (
           <Ionicons name="time-outline" size={24} color={theme.colors.info} />
         );
@@ -79,14 +80,17 @@ const MatchItem: React.FC<MatchItemProps> = ({
     }
   };
 
-  const getStatusText = (status?: MatchItemData["status"]) => {
+  const getStatusText = (status?: MatchRoomStatus) => {
     if (!status) return "";
-    const statusMap: Record<string, string> = {
-      win: "Thắng",
-      lose: "Thua",
-      draw: "Hòa",
-      ongoing: "Đang diễn ra",
-      upcoming: "Sắp diễn ra",
+    const statusMap: Record<MatchRoomStatus, string> = {
+      Open: "Mở",
+      Full: "Đã đủ",
+      Locked: "Đã khóa",
+      Closed: "Đã đóng",
+      InProgress: "Đang diễn ra",
+      Completed: "Hoàn thành",
+      Reviewing: "Đang xem xét",
+      Cancelled: "Đã hủy",
     };
     return statusMap[status] || "";
   };

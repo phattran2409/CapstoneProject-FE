@@ -35,12 +35,12 @@ export const roomsApi = {
       ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
     };
     const data = await apiClient.get("/match-rooms", { params });
-    return data;
+    return data as unknown as MatchRoomsResponse;
   },
 
   getMyRooms: async (): Promise<MyRoomsResponse> => {
     const data = await apiClient.get("/match-rooms/mine");
-    return data;
+    return data as unknown as MyRoomsResponse;
   },
 
   /**
@@ -82,7 +82,7 @@ export const roomsApi = {
    */
   updateRoom: async (id: string, updates: UpdateRoomRequest): Promise<MatchRoom> => {
     const data = await apiClient.patch(`/rooms/${id}`, updates);
-    return data;
+    return data as unknown as MatchRoom;
   },
 
   /**
@@ -125,7 +125,7 @@ export const roomsApi = {
     const data = await apiClient.get("/messages", {
       params: { roomId },
     });
-    return data;
+    return data as unknown as Message[];
   },
 
   /**
@@ -136,7 +136,7 @@ export const roomsApi = {
       ...request,
       createdAt: new Date().toISOString(),
     });
-    return data;
+    return data as unknown as Message;
   },
 
   /**

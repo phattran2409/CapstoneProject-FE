@@ -41,29 +41,13 @@ const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
     year: 'numeric',
   });
 
-  // Determine status for display
-  const getDisplayStatus = (status: string): MatchItemData['status'] => {
-    switch (status) {
-      case 'Open':
-        return 'ongoing';
-      case 'Full':
-        return 'ongoing';
-      case 'Completed':
-        return 'win'; // Default, could be dynamic based on result
-      case 'Cancelled':
-        return 'lose';
-      default:
-        return 'ongoing';
-    }
-  };
-
   return {
     id: room.roomId,
     title: room.roomName,
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
     image: room.venuePhotos[0]?.photoUrl || '',
-    status: getDisplayStatus(room.status),
+    status: room.status,
     date: formattedDate,
     venue: room.venueName,
     time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,

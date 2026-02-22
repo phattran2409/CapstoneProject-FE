@@ -51,11 +51,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   return (
     <ThemedSafeAreaView>
       {/* Header */}
-     
-
-      <ThemedScrollView 
+      <ThemedScrollView
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        contentContainerStyle={styles.scrollContent}
       >
          <ThemedView
         style={[
@@ -339,7 +338,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </View>
 
 
-        {/* Logout Button */}
+        {/* Logout Button - thêm marginBottom để không bị CustomTabBar đè, dễ bấm */}
         <TouchableOpacity
           style={[
             styles.logoutButton,
@@ -349,6 +348,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               borderRadius: theme.radius.l,
               paddingVertical: theme.spacing.m,
               marginTop: theme.spacing.m,
+              marginBottom: theme.spacing.xl,
             },
           ]}
           onPress={handleLogout}
@@ -370,6 +370,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  /** Khoảng trống đáy để nội dung không bị CustomTabBar (height 70 + bottom 20) đè, dễ scroll và bấm logout */
+  scrollContent: {
+    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',

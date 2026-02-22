@@ -4,6 +4,7 @@ import { roomsKeys } from "@/features/rooms/api/roomsKeys";
 import type {
   MatchRoomFullInfo,
   MatchRoomParticipant,
+  MatchRoomStatus,
   TeamAssignment,
   TeamFormationSnapshot,
 } from "@/features/rooms/types/room.types";
@@ -471,11 +472,10 @@ export const useMatchRoomSignalRHandlers = (
       if (setRoomData) {
         setRoomData((prev) => {
           if (!prev) return prev;
-
+          const nextStatus: MatchRoomStatus = payload.status as MatchRoomStatus;
           return {
             ...prev,
-            status: payload.status,
-            // Sử dụng filledSlots/totalSlots hoặc legacy currentPlayers/totalPlayers
+            status: nextStatus,
             filledSlots:
               payload.filledSlots ?? payload.currentPlayers ?? prev.filledSlots,
             totalSlots:
@@ -784,14 +784,14 @@ export const useMatchRoomSignalRHandlers = (
             })),
           };
 
-          const updatedFormations: { teamA?: TeamFormationSnapshot | null; teamB?: TeamFormationSnapshot | null } = {
-            teamA: prev.formations?.teamA ? { ...prev.formations.teamA, ...updatedFormation } : updatedFormation,
-            teamB: prev.formations?.teamB ? { ...prev.formations.teamB, ...updatedFormation } : updatedFormation,
+          const nextFormations = {
+            teamA: (payload.team === 'A' ? updatedFormation : prev.formations?.teamA ?? null) as TeamFormationSnapshot | null,
+            teamB: (payload.team === 'B' ? updatedFormation : prev.formations?.teamB ?? null) as TeamFormationSnapshot | null,
           };
 
           return {
             ...prev,
-            formations: updatedFormations,
+            formations: nextFormations,
           };
         });
       }

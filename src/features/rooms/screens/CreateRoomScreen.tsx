@@ -71,7 +71,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
   const { setActiveRoom } = useActiveRoomStore();
   
-  const FormatMatch = (format: MatchFormat) : string => {
+  const FormatMatch = (format: MatchFormat): 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | undefined => {
     switch (format) {
       case '5vs5':
         return 'FiveVsFive';
@@ -80,7 +80,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       case '11vs11':
         return 'ElevenVsEleven';
       default:
-        return '';
+        return undefined;
     }
   }
 
@@ -136,7 +136,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         matchDate: datetime.toISOString(),
         startTime: startTimeStr,
         durationMinutes,
-        matchFormat: FormatMatch(selectedFormat),
+        matchFormat: FormatMatch(selectedFormat) ?? (selectedFormat as string),
         roomName: data.roomName,
         description: data.description || '',
         rules: '',

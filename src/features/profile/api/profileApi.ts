@@ -82,3 +82,10 @@ export const removeFriend = async (friendId: string): Promise<void> => {
     throw error;
   }
 };
+
+// Get match history for a user (stub – implement when backend is ready)
+export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
+  const id = userId || "me";
+  const response = await apiClient.get(`/users/${id}/match-history`);
+  return (response as { data?: unknown[] })?.data ?? [];
+};

@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryProvider } from './QueryProvider';
-import { ThemeProvider } from '@/theme/ThemeContext';
+import { ThemeProvider } from '@/shared/theme/ThemeContext';
 
 interface AppProvidersProps {
   children: React.ReactNode;
