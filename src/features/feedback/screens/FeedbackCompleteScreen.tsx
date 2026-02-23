@@ -92,8 +92,8 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
   }));
 
   const handleFinish = () => {
-    // Navigate back to previous screen or home
-    navigation.getParent()?.goBack();
+   
+    navigation.navigate("MainTabs");
   };
 
   return (

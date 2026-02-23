@@ -294,6 +294,8 @@ const en = {
     linkSocialAccounts: "Link social media accounts",
     notifications: "Notifications",
     matchInvitations: "Notifications",
+    matchNotification: "Match Notification",
+    postNotification: "Post Notification",
     newsUpdates: "News & updates",
     application: "Application",
     language: "Language",
