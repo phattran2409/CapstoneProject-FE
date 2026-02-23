@@ -238,6 +238,7 @@ const vi = {
     loadingText: "Đang đăng nhập...",
     noAccount: "Chưa có tài khoản?",
     registerNow: "Đăng ký ngay",
+    googleLogin: "Đăng nhập với Google",
   },
   register: {
     title: "Tạo tài khoản mới",
@@ -247,6 +248,7 @@ const vi = {
     confirmPasswordLabel: "Xác nhận mật khẩu",
     confirmPasswordPlaceholder: "Nhập lại mật khẩu của bạn",
     alreadyHaveAccount: "Đã có tài khoản?",
+    googleLogin: "Đăng ký với Google",
     errors: {
       allFieldsRequired: "Vui lòng điền đầy đủ thông tin",
       passwordMismatch: "Mật khẩu không khớp",

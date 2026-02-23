@@ -14,6 +14,9 @@ export const useVenues = (filters?: VenueFilters) => {
         fieldType: filters?.fieldType ?? undefined,
         sportType: filters?.sportType ?? undefined,
         searchName: filters?.searchName ?? undefined,
+        latitude: filters?.latitude ?? undefined,
+        longitude: filters?.longitude ?? undefined,
+        radiusKm: filters?.radiusKm ?? undefined,
       });
       return {
         data: result.data.venues,

@@ -389,13 +389,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
             {/* Social Login Buttons */}
             <View style={styles.socialButtons}>
-              {[
-                require("@assets/images/logo_google.png"),
-                require("@assets/images/logo_facebook.png"),
-                require("@assets/images/logo_apple.png"),
-              ].map((logo, index) => (
                 <TouchableOpacity
-                  key={`social-${index}`}
                   style={[
                     styles.socialButton,
                     { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
@@ -403,12 +397,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                   disabled
                 >
                   <Image
-                    source={logo}
+                    source={require("@assets/images/logo_google.png")}
                     style={styles.socialIcon}
                     resizeMode="contain"
                   />
+                  <Text style={{ color: theme.colors.softWhite }}>{t("register.googleLogin")}</Text>
                 </TouchableOpacity>
-              ))}
             </View>
 
             {/* Login Link */}
@@ -526,12 +520,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   socialButtons: {
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 24,
     marginBottom: 24,
   },
   socialButton: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 10,
     width: 64,
     height: 64,
     borderRadius: 16,

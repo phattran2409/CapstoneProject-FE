@@ -188,6 +188,11 @@ const en = {
     allFormats: "All",
     perHour: "Rental price / hour",
     distance: "km",
+    locationPermissionDenied: "Location permission denied",
+    locationPermissionHint: "Enable location to filter venues by radius",
+    filterApplied: "Filter applied: {{km}} km",
+    locationError: "Failed to get location",
+    locationErrorHint: "Try turning on GPS and opening again.",
   },
   fieldsModal: {
     title: "Fields",
@@ -241,6 +246,8 @@ const en = {
     loadingText: "Signing in...",
     noAccount: "Don't have an account?",
     registerNow: "Register now",
+    googleLogin: "Sign in with Google",
+
   },
   register: {
     title: "Create new account",
@@ -250,6 +257,7 @@ const en = {
     confirmPasswordLabel: "Confirm Password",
     confirmPasswordPlaceholder: "Re-enter your password",
     alreadyHaveAccount: "Already have an account?",
+    googleLogin: "Sign up with Google",
     errors: {
       allFieldsRequired: "All fields are required",
       passwordMismatch: "Passwords do not match",

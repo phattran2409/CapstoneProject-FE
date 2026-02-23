@@ -109,6 +109,9 @@ export interface VenueFilters {
   /** Filter theo loại sân: FiveVsFive, SevenVsSeven, ElevenVsEleven */
   fieldType?: string | null;
   sportType?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  radiusKm?: number | null;
   /** Tìm kiếm theo tên/địa chỉ venue (nên dùng giá trị đã debounce) */
   searchName?: string | null;
 }

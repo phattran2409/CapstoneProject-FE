@@ -367,9 +367,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 style={styles.socialIcon}
                 resizeMode="contain"
               />
+              <Text style={{ color: theme.colors.softWhite }}>{t("login.googleLogin")}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.socialButton,
                 { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
@@ -381,9 +382,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 style={styles.socialIcon}
                 resizeMode="contain"
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.socialButton,
                 { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
@@ -395,7 +396,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 style={styles.socialIcon}
                 resizeMode="contain"
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Register Link */}
@@ -617,15 +618,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   socialButtons: {
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 24,
   },
   socialButton: {
+    flex: 1,
     width: 64,
     height: 64,
     borderRadius: 16,
     borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
     alignItems: "center",
     justifyContent: "center",
   },

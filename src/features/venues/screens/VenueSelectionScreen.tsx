@@ -3,14 +3,16 @@ import { View, Text, FlatList, TouchableOpacity, Image, TextInput, StyleSheet } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import * as Location from 'expo-location';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useVenues, Venue, Field, TimeSlot } from '@/features/venues';
 import { RootStackParamList } from '@/app/navigation/types';
-import { FieldsModal } from '../components';
+import { FieldsModal, OptionFilter } from '../components';
 import { EmptyState, LoadingMoreIndicator } from '@/shared/components';
 import { useDebounce } from '@/shared/hooks';
+import Toast from 'react-native-toast-message';
 
 /** Filter theo fieldType của API: FiveVsFive, SevenVsSeven, ElevenVsEleven */
 type FieldTypeFilter = '' | 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
@@ -33,7 +35,11 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   );
   const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
   const [selectedVenueForFields, setSelectedVenueForFields] = useState<Venue | null>(null);
-
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [radiusKm, setRadiusKm] = useState<number | null>(null);
+  const [optionFilterVisible, setOptionFilterVisible] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   useEffect(() => {
     const format = route?.params?.matchFormat as FieldTypeFilter | undefined;
     if (format && ['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'].includes(format)) {
@@ -55,15 +61,11 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   } = useVenues({
     pageSize: 5,
     fieldType: selectedFilter === '' ? undefined : selectedFilter,
+    latitude: latitude,
+    longitude: longitude,
+    radiusKm: radiusKm,
     searchName: debouncedSearchTerm.trim() || undefined,
   });
-
-  // const formatPrice = (price: number) => {
-  //   return new Intl.NumberFormat('vi-VN', {
-  //     style: 'currency',
-  //     currency: 'VND',
-  //   }).format(price);
-  // };
 
   const handleSelectVenue = (venue: Venue) => {
     navigation?.navigate('VenueDetail', { venueId: venue.venueId });
@@ -88,6 +90,61 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
       selectedDate,
     });
   };
+  const handleOpenOptionFilter = () => setOptionFilterVisible(true);
+  const handleCloseOptionFilter = () => setOptionFilterVisible(false);
+
+  const handleApplyRadiusFilter = useCallback(async (radiusKmValue: number) => {
+    setLocationLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log('Status', status);
+      if (status !== 'granted') {
+        Toast.show({
+          type: 'info',
+          text1: t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
+          text2: t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc sân theo bán kính.'),
+        });
+        setRadiusKm(radiusKmValue);
+        setLatitude(null);
+        setLongitude(null);
+        setOptionFilterVisible(false);
+        setLocationLoading(false);
+        return;
+      }
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      console.log('Location', location);
+      setLatitude(location.coords.latitude);
+      setLongitude(location.coords.longitude);
+      setRadiusKm(radiusKmValue);
+      setOptionFilterVisible(false);
+      Toast.show({
+        type: 'success',
+        text1: t('venueSelection.filterApplied', 'Đã áp dụng bán kính {{km}} km', { km: radiusKmValue }),
+      });
+    } catch (err) {
+      Toast.show({
+        type: 'error',
+        text1: t('venueSelection.locationError', 'Không lấy được vị trí'),
+        text2: t('venueSelection.locationErrorHint', 'Thử bật GPS và mở lại.'),
+      });
+      setRadiusKm(radiusKmValue);
+      setOptionFilterVisible(false);
+    } finally {
+      setLocationLoading(false);
+    }
+  }, [t]);
+
+  const handleClearRadiusFilter = useCallback(() => {
+    setLatitude(null);
+    setLongitude(null);
+    setRadiusKm(null);
+  }, []);
+
+  // console.log('Latitude', latitude);  
+  // console.log('Longitude', longitude);
+  // console.log('Radius km', radiusKm);
 
   // Render Venue Item
   const renderVenueItem = useCallback(({ item: venue }: { item: Venue }) => {
@@ -200,7 +257,6 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
       </TouchableOpacity>
     );
   }, [theme, t]);
-
   // Render Footer - Loading More Indicator
   const renderFooter = useCallback(() => {
     if (!loadingMore) return null;
@@ -246,6 +302,19 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
               </Text>
             </View>
           </View>
+          <TouchableOpacity
+            onPress={handleOpenOptionFilter}
+            style={[
+              styles.iconButton,
+              radiusKm != null && { backgroundColor: theme.colors.neonGreen, borderRadius: theme.radius.m },
+            ]}
+          >
+            <Ionicons
+              name="filter"
+              size={22}
+              color={radiusKm != null ? theme.colors.darkBlack : theme.colors.softWhite}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
@@ -365,6 +434,14 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
         onSelectField={handleSelectField}
         theme={theme}
       />
+
+      {/* Option Filter Modal - Bán kính 5, 10, 20 km */}
+      <OptionFilter
+        visible={optionFilterVisible}
+        initialRadiusKm={radiusKm}
+        onClose={handleCloseOptionFilter}
+        onApply={handleApplyRadiusFilter}
+      />
     </SafeAreaView>
   );
 };
@@ -380,7 +457,9 @@ const styles = StyleSheet.create({
     // Styles applied via inline
   },
   headerTop: {
-    // Styles applied via inline
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerLeft: {
     flexDirection: 'row',
