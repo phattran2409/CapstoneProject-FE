@@ -2,10 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "../api/chatKeys";
 import { getRoomChat, sendChatMessageRoom } from "../api/chatApi";
 import type {
-  RoomChatDetailData,
   RoomChatMessage,
   SendChatRoomRequestBody,
-  SendChatMessageRoomData,
 } from "../types/chat.types";
 import { usePagination } from "@/shared/hooks/usePagination";
 import { RoomChatChannel } from "@/shared/hooks/useMatchRoomSignalR";
@@ -35,7 +33,9 @@ export const useRoomChatMessages = ({
       };
     },
     pageSize,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    // Thời gian cache \"tươi\" cho room chat.
+    // Đặt ~1s để tránh spam refetch quá nhanh nhưng vẫn đủ realtime.
+    staleTime: 1000,
     enabled: enabled && !!roomId,
     onError: (error) => {
       console.error("Error fetching room chat messages:", error);
@@ -62,8 +62,14 @@ export const useSendRoomChatMessage = () => {
     mutationFn: (payload: SendChatRoomRequestBody) =>
       sendChatMessageRoom(payload),
     onSuccess: (_data, variables) => {
+      // Invalidate only the channel we sent to, so other channels' cache is preserved
+      const channelKey =
+        variables.channel !== undefined && variables.channel !== null
+          ? Number(variables.channel)
+          : 0;
       queryClient.invalidateQueries({
-        queryKey: chatKeys.roomChat(variables.roomId),
+        queryKey: [...chatKeys.roomChat(variables.roomId), channelKey],
+        exact: false,
       });
     },
   });

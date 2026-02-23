@@ -283,6 +283,8 @@ const vi = {
     linkSocialAccounts: "Liên kết tài khoản mạng xã hội",
     notifications: "Thông báo",
     matchInvitations: "Thông báo",
+    matchNotification: "Thông báo trận đấu",
+    postNotification: "Thông báo bài viết",
     newsUpdates: "Tin tức & cập nhật",
     application: "Ứng dụng",
     language: "Ngôn ngữ",
@@ -541,7 +543,8 @@ const vi = {
     validation: {
       ratingRequired: "Đánh giá bắt buộc",
       ratingRequiredMessage: "Vui lòng chọn số sao đánh giá trước khi gửi.",
-      allPlayersRequired: "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
+      allPlayersRequired:
+        "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
     },
   },
   reportModal: {
