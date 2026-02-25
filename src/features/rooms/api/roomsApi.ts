@@ -33,7 +33,9 @@ export const roomsApi = {
       pageSize: filters?.pageSize || 10,
       ...(filters?.availableOnly && { availableOnly: filters.availableOnly }),
       ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
+      ...(filters?.date && { date: filters.date }),
     };
+    console.log(params);
     const data = await apiClient.get("/match-rooms", { params });
     return data as unknown as MatchRoomsResponse;
   },
