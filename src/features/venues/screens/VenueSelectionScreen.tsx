@@ -121,13 +121,13 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
       setOptionFilterVisible(false);
       Toast.show({
         type: 'success',
-        text1: t('venueSelection.filterApplied', 'Đã áp dụng bán kính {{km}} km', { km: radiusKmValue }),
+        text1: t('venueSelection.filterApplied', { km: radiusKmValue }),
       });
     } catch (err) {
       Toast.show({
         type: 'error',
-        text1: t('venueSelection.locationError', 'Không lấy được vị trí'),
-        text2: t('venueSelection.locationErrorHint', 'Thử bật GPS và mở lại.'),
+        text1: t('venueSelection.locationError'),
+        text2: t('venueSelection.locationErrorHint'),
       });
       setRadiusKm(radiusKmValue);
       setOptionFilterVisible(false);

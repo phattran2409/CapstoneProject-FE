@@ -21,7 +21,7 @@ import type { MatchRoom, MatchRoomFilters, MyRoom } from '../types/room.types';
  */
 export const useMatchRooms = (filters?: Omit<MatchRoomFilters, 'page' | 'pageSize'>) => {
   const pagination = usePagination<MatchRoom>({
-    queryKey: roomsKeys.matchRooms(),
+    queryKey: roomsKeys.matchRoomsList(filters),
     fetchFunction: async (page, pageSize) => {
       const result = await roomsApi.getMatchRooms({ 
         page, 

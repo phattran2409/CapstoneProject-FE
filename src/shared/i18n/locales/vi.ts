@@ -185,6 +185,12 @@ const vi = {
     allFormats: "Tất cả",
     perHour: "Giá thuê / giờ",
     distance: "km",
+    locationPermissionDenied: "Cần quyền vị trí",
+    locationPermissionHint: "Bật vị trí để lọc sân theo bán kính.",
+    filterApplied: "Đã áp dụng bán kính {{km}} km",
+    locationError: "Không thể lấy vị trí",
+    locationErrorHint: "Vui lòng bật GPS và mở lại.",
+    noResultsDescription: "Không tìm thấy sân gần đây. Vui lòng thử lại với tiêu chí tìm kiếm khác.",
   },
   fieldsModal: {
     title: "Danh sách sân",
@@ -285,6 +291,8 @@ const vi = {
     linkSocialAccounts: "Liên kết tài khoản mạng xã hội",
     notifications: "Thông báo",
     matchInvitations: "Thông báo",
+    matchNotification: "Thông báo trận đấu",
+    postNotification: "Thông báo bài viết",
     newsUpdates: "Tin tức & cập nhật",
     application: "Ứng dụng",
     language: "Ngôn ngữ",
@@ -543,7 +551,8 @@ const vi = {
     validation: {
       ratingRequired: "Đánh giá bắt buộc",
       ratingRequiredMessage: "Vui lòng chọn số sao đánh giá trước khi gửi.",
-      allPlayersRequired: "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
+      allPlayersRequired:
+        "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
     },
   },
   reportModal: {
@@ -590,6 +599,13 @@ const vi = {
       post: "Không thể gửi báo cáo bài viết. Vui lòng thử lại.",
       user: "Không thể gửi báo cáo người dùng. Vui lòng thử lại.",
     },
+  },
+  filterRoomMatch: {
+    title: "Lọc phòng đấu",
+    matchDateLabel: "Ngày thi đấu",
+    matchFormatLabel: "Hình thức thi đấu",
+    resetButton: "Đặt lại",
+    applyButton: "Áp dụng",
   },
 };
 

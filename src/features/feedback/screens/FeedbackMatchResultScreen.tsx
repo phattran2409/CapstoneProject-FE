@@ -112,10 +112,8 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={handleBack}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
             {t("feedback.result.headerTitle", "Xác nhận Kết quả")}

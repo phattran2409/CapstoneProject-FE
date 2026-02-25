@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   TextInput,
@@ -33,6 +27,8 @@ import {
   useRoomChatMessages,
   useSendRoomChatMessage,
 } from "@/features/chat/hooks/useRoomChatMessages";
+import { useQueryClient } from "@tanstack/react-query";
+import { chatKeys } from "@/features/chat/api/chatKeys";
 import {
   useMatchRoomSignalR,
   RoomChatChannel,
@@ -49,6 +45,7 @@ import {
   transformRoomMessage,
   addMessageIfNotExists,
 } from "../utils/roomChatHelpers";
+import type { RoomChatMessage } from "../types/chat.types";
 
 type RoomChatScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -86,18 +83,34 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
     return participant?.teamAssignment || null;
   }, [roomData, currentUser]);
 
-  // Channel state - tự động sync với team assignment
-  // Default to General channel (all participants can see)
+  // Channel state - resolved only after roomData is available so reopening shows correct channel
   const getDefaultChannel = useCallback((): RoomChatChannel => {
-    // User can always see General channel, but default to their team channel if assigned
     if (userTeamAssignment === "A") return RoomChatChannel.TeamA;
     if (userTeamAssignment === "B") return RoomChatChannel.TeamB;
-    return RoomChatChannel.General; // Unassigned hoặc chưa có team
+    return RoomChatChannel.General;
   }, [userTeamAssignment]);
 
-  const [currentChannel, setCurrentChannel] = useState<RoomChatChannel>(() => {
-    return getDefaultChannel();
-  });
+  const [currentChannel, setCurrentChannel] = useState<RoomChatChannel | null>(
+    null,
+  );
+
+  // Giả debounce khi đổi channel để tránh spam quá nhanh
+  const [isSwitchingChannel, setIsSwitchingChannel] = useState(false);
+  const channelSwitchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  // Resolve channel once roomData is available (avoids showing General then switching to Team on reopen)
+  useEffect(() => {
+    if (!roomData || currentChannel !== null) return;
+    setCurrentChannel(getDefaultChannel());
+  }, [roomData, currentChannel, getDefaultChannel]);
+
+  // Per-channel message cache so switching General <-> Team doesn't clear messages
+  const [messagesByChannel, setMessagesByChannel] = useState<
+    Record<number, RoomChatMessage[]>
+  >({});
+  const queryClient = useQueryClient();
 
   // Message input state
   const [message, setMessage] = useState("");
@@ -107,7 +120,8 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
   const isAtBottomRef = useRef(true);
   const hasScrolledToBottomRef = useRef(false);
 
-  // Fetch messages từ REST API
+  // Fetch messages từ REST API (channel resolved after roomData; cache is per-channel)
+  const effectiveChannel = currentChannel ?? RoomChatChannel.General;
   const {
     roomChatMessages,
     loading,
@@ -119,10 +133,43 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
     setRoomChatMessages,
   } = useRoomChatMessages({
     roomId,
-    channel: currentChannel,
+    channel: effectiveChannel,
     pageSize: 50,
-    enabled: !!roomId,
+    enabled: !!roomId && currentChannel !== null,
   });
+
+  // Sync hook data into per-channel cache so switching back shows messages immediately
+  // Chỉ sync khi fetch xong (không loading) - tránh ghi đè cache bằng [] khi vừa đổi channel
+  useEffect(() => {
+    if (currentChannel === null) return;
+    if (loading) return; // Đang fetch: không ghi đè cache, giữ tin nhắn đã có
+    if (roomChatMessages === undefined) return;
+    setMessagesByChannel((prev) => ({
+      ...prev,
+      [currentChannel as number]: roomChatMessages,
+    }));
+  }, [currentChannel, roomChatMessages, loading]);
+
+  // Khi đổi channel: nếu cache trống, lấy từ React Query cache (usePagination reset nhưng RQ vẫn giữ)
+  useEffect(() => {
+    if (currentChannel === null || !roomId) return;
+    const ch = currentChannel as number;
+    if (messagesByChannel[ch]?.length) return; // Đã có cache, không cần
+    const cacheKey = [...chatKeys.roomChat(roomId), ch, { page: 1, pageSize: 50 }];
+    const cached = queryClient.getQueryData<{ data: RoomChatMessage[] }>(cacheKey);
+    if (cached?.data?.length) {
+      setMessagesByChannel((prev) => ({ ...prev, [ch]: cached.data }));
+    }
+  }, [currentChannel, roomId, messagesByChannel, queryClient]);
+
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (channelSwitchTimeoutRef.current) {
+        clearTimeout(channelSwitchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Send message mutation
   const { mutateAsync: sendRoomChatMessage, isPending: isSending } =
@@ -181,14 +228,22 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
       },
       [currentUser],
     ),
-    // Room chat callbacks - using helper functions
+    // Room chat callbacks - update both hook state and per-channel cache
     onReceiveRoomMessage: useCallback(
       (newMessage: RoomMessage) => {
-        if (newMessage.channel === (currentChannel as number)) {
+        if (newMessage.channel === (effectiveChannel as number)) {
+          const transformed = transformRoomMessage(newMessage);
           setRoomChatMessages((prev) => {
-            const transformed = transformRoomMessage(newMessage);
-            return addMessageIfNotExists(prev, transformed);
+            const next = addMessageIfNotExists(prev, transformed);
+            return next;
           });
+          setMessagesByChannel((prev) => ({
+            ...prev,
+            [newMessage.channel]: addMessageIfNotExists(
+              prev[newMessage.channel] ?? [],
+              transformed,
+            ),
+          }));
 
           if (isAtBottomRef.current) {
             setTimeout(() => {
@@ -197,28 +252,61 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
           }
         }
       },
-      [currentChannel, setRoomChatMessages],
+      [effectiveChannel, setRoomChatMessages],
     ),
 
     onReceiveRoomMessages: useCallback(
       (payload: RoomMessagesPayload) => {
-        if (payload.messages && payload.messages.length > 0) {
+        if (!payload.messages?.length) return;
+        const channel = payload.messages[0]?.channel ?? effectiveChannel;
+        setMessagesByChannel((prev) => {
+          const existingIds = new Set((prev[channel] ?? []).map((m) => m.messageId));
+          const newMsgs = payload.messages
+            .filter((m: RoomMessage) => !existingIds.has(m.messageId))
+            .map((m: RoomMessage) => transformRoomMessage(m));
+          return {
+            ...prev,
+            [channel]: [...(prev[channel] ?? []), ...newMsgs],
+          };
+        });
+        if (channel === (effectiveChannel as number)) {
           setRoomChatMessages((prev) => {
             const existingIds = new Set(prev.map((m) => m.messageId));
-            const newMessages = payload.messages
+            const newMsgs = payload.messages
               .filter((m: RoomMessage) => !existingIds.has(m.messageId))
               .map((m: RoomMessage) => transformRoomMessage(m));
-            return [...prev, ...newMessages];
+            return [...prev, ...newMsgs];
           });
         }
       },
-      [setRoomChatMessages],
+      [effectiveChannel, setRoomChatMessages],
     ),
   });
 
-  // Typing indicator hook
+  // Handler đổi channel với giả debounce/loading ngắn
+  const handleChangeChannel = useCallback(
+    (nextChannel: RoomChatChannel) => {
+      if (nextChannel === currentChannel) return;
+      if (isSwitchingChannel) return;
+
+      setIsSwitchingChannel(true);
+      setCurrentChannel(nextChannel);
+
+      if (channelSwitchTimeoutRef.current) {
+        clearTimeout(channelSwitchTimeoutRef.current);
+      }
+
+      // Sau một khoảng ngắn, tắt trạng thái loading channel
+      channelSwitchTimeoutRef.current = setTimeout(() => {
+        setIsSwitchingChannel(false);
+      }, 500); // 500ms giả debounce
+    },
+    [currentChannel, isSwitchingChannel],
+  );
+
+  // Typing indicator hook (use effective channel)
   const typingIndicator = useRoomTypingIndicator({
-    currentChannel,
+    currentChannel: effectiveChannel,
     currentUserId: currentUser,
     roomTyping,
     roomStopTyping,
@@ -241,10 +329,13 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
     }
   }, [hasJoinedRoomGroup, isConnected]);
 
-  // Map room messages to MessageList format
+  // Map room messages to MessageList format (use cache so switching channel doesn't clear list)
+  const displayMessages: RoomChatMessage[] =
+    (currentChannel !== null ? messagesByChannel[currentChannel as number] : undefined) ??
+    roomChatMessages ??
+    [];
   const messages: Message[] = useMemo(() => {
-    if (!roomChatMessages) return [];
-    return roomChatMessages.map((m) => ({
+    return displayMessages.map((m: RoomChatMessage) => ({
       id: m.messageId,
       sender: m.senderId,
       senderName: m.senderFullName,
@@ -254,14 +345,13 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
       isRead: true,
       avatar: m.senderAvatarUrl,
     }));
-  }, [roomChatMessages, currentUser]);
+  }, [displayMessages, currentUser]);
 
   // Auto scroll khi load messages lần đầu
   useEffect(() => {
     if (
       !loading &&
-      roomChatMessages &&
-      roomChatMessages.length > 0 &&
+      displayMessages.length > 0 &&
       !hasScrolledToBottomRef.current
     ) {
       hasScrolledToBottomRef.current = true;
@@ -270,25 +360,35 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
         isAtBottomRef.current = true;
       }, 500);
     }
-  }, [loading, roomChatMessages]);
+  }, [loading, displayMessages.length]);
 
   // Track previous channel to detect actual changes
   const prevChannelRef = useRef<RoomChatChannel | null>(null);
-  // Track if this is the initial mount to avoid calling switchTeamChat on mount
   const isInitialMountRef = useRef(true);
 
-  // Handle channel switching via SignalR when channel changes
-  // Note: Messages are loaded via REST API (useRoomChatMessages), not SignalR
-  // SignalR is only used for real-time message updates
+  // Fetch room messages via SignalR when channel is active (backup to REST, helps after reopen)
   useEffect(() => {
-    // Wait for SignalR to be fully connected, room group joined, and ready
-    if (!isConnected || !hasJoinedRoomGroup || !isSignalRReady || !roomId)
+    if (
+      !isConnected ||
+      !hasJoinedRoomGroup ||
+      !isSignalRReady ||
+      !roomId ||
+      currentChannel === null
+    )
+      return;
+    getRoomMessages(effectiveChannel, 1, 50).catch((err) =>
+      console.warn("GetRoomMessages (SignalR) failed:", err),
+    );
+  }, [isSignalRReady, currentChannel, roomId, isConnected, hasJoinedRoomGroup, getRoomMessages]);
+
+  // Handle channel switching via SignalR when channel changes
+  // Note: Messages are loaded via REST + cache; SignalR for real-time updates
+  useEffect(() => {
+    if (!isConnected || !hasJoinedRoomGroup || !isSignalRReady || !roomId || currentChannel === null)
       return;
 
     const isChannelChanged = prevChannelRef.current !== currentChannel;
 
-    // On initial mount, JoinRoomGroup already joins the team channel
-    // So we don't need to call switchTeamChat
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
       prevChannelRef.current = currentChannel;
@@ -296,31 +396,22 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
       return;
     }
 
-    if (!isChannelChanged) return; // Only act on actual channel changes
+    if (!isChannelChanged) return;
 
     prevChannelRef.current = currentChannel;
 
-    // Only switch team chat if switching to a team channel
-    // Note:
-    // - General channel is already joined from JoinRoomGroup, no need to switch
-    // - JoinRoomGroup already joins the user's team channel on initial connection
-    // - So we only need to switch when user manually changes to a different team channel
     if (
       currentChannel === RoomChatChannel.TeamA ||
       currentChannel === RoomChatChannel.TeamB
     ) {
       const teamAssignment =
         currentChannel === RoomChatChannel.TeamA ? "A" : "B";
-      // Only switch if user's team assignment doesn't match the channel they're switching to
-      // This allows users to view other team channels if they have permission
-      // Add delay to ensure user context is fully established (isSignalRReady already has delay)
       if (userTeamAssignment !== teamAssignment) {
         switchTeamChat(teamAssignment).catch((error) => {
           console.error("❌ Failed to switch team chat:", error);
         });
       }
     }
-    // General channel: No action needed, already joined from JoinRoomGroup
 
     hasScrolledToBottomRef.current = false;
   }, [
@@ -349,8 +440,7 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
   const handleMessageListLayout = useCallback(() => {
     if (
       !hasScrolledToBottomRef.current &&
-      roomChatMessages &&
-      roomChatMessages.length > 0
+      displayMessages.length > 0
     ) {
       setTimeout(() => {
         messageListRef.current?.scrollToBottom(false);
@@ -358,7 +448,7 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
         hasScrolledToBottomRef.current = true;
       }, 100);
     }
-  }, [roomChatMessages]);
+  }, [displayMessages.length]);
 
   // Handle typing detection với debounce
   const handleTextChange = useCallback(
@@ -368,10 +458,10 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
     [typingIndicator],
   );
 
-  // Message sender hook
+  // Message sender hook (use effective channel)
   const messageSender = useRoomMessageSender({
     roomId,
-    currentChannel,
+    currentChannel: effectiveChannel,
     isSignalRReady,
     sendRoomMessage,
     sendRoomChatMessage,
@@ -386,7 +476,7 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
 
   // Handle send message
   const handleSend = async () => {
-    if (!message.trim() || !roomId || isSending) return;
+    if (!message.trim() || !roomId || isSending || currentChannel === null) return;
 
     typingIndicator.stopTyping();
     const messageText = message.trim();
@@ -434,34 +524,50 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
           </ThemedText>
         </View>
 
-        {/* Channel Selector */}
-        <View style={styles.channelSelector}>
-          <ChannelButton
-            channel={RoomChatChannel.General}
-            currentChannel={currentChannel}
-            label="Tất cả"
-            onPress={setCurrentChannel}
-          />
-
-          {userTeamAssignment === "A" && (
+        {/* Channel Selector - show once channel resolved */}
+        {currentChannel !== null && (
+          <View style={styles.channelSelector}>
             <ChannelButton
-              channel={RoomChatChannel.TeamA}
+              channel={RoomChatChannel.General}
               currentChannel={currentChannel}
-              label="Team A"
-              onPress={setCurrentChannel}
+              label="Tất cả"
+              onPress={handleChangeChannel}
             />
-          )}
 
-          {userTeamAssignment === "B" && (
-            <ChannelButton
-              channel={RoomChatChannel.TeamB}
-              currentChannel={currentChannel}
-              label="Team B"
-              onPress={setCurrentChannel}
-            />
-          )}
-        </View>
+            {userTeamAssignment === "A" && (
+              <ChannelButton
+                channel={RoomChatChannel.TeamA}
+                currentChannel={currentChannel}
+                label="Team A"
+                onPress={handleChangeChannel}
+              />
+            )}
+
+            {userTeamAssignment === "B" && (
+              <ChannelButton
+                channel={RoomChatChannel.TeamB}
+                currentChannel={currentChannel}
+                label="Team B"
+                onPress={handleChangeChannel}
+              />
+            )}
+          </View>
+        )}
       </View>
+
+      {/* Loading kênh chat giả debounce */}
+      {isSwitchingChannel && (
+        <View
+          style={[
+            styles.channelLoading,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <ThemedText size="xs" variant="secondary">
+            Đang chuyển kênh chat...
+          </ThemedText>
+        </View>
+      )}
 
       {/* Typing Indicator */}
       {typingIndicatorText && (
@@ -544,7 +650,7 @@ const RoomChatScreen: React.FC<RoomChatScreenProps> = ({
 
         <TouchableOpacity
           onPress={handleSend}
-          disabled={!message.trim() || isSending}
+          disabled={!message.trim() || isSending || currentChannel === null}
           style={[
             styles.sendButton,
             {
@@ -602,6 +708,10 @@ const styles = StyleSheet.create({
   typingIndicator: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  channelLoading: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
   },
   emptyContainer: {
     flex: 1,

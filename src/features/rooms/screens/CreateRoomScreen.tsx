@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet } from 'react-native';
+import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -64,6 +64,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   const [matchDate, setMatchDate] = useState(new Date());
   const [matchTime, setMatchTime] = useState(new Date());
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -106,6 +107,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot, route?.params?.selectedDate]);
 
   const handleCreateRoom = (data: RoomFormData) => {
+    setIsLoading(true);
     // Validate
 
     if (!selectedVenue) {
@@ -156,6 +158,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           });
         },
         onError: (error: any) => {
+          setIsLoading(false);
           showDanger(t('common.error'), error.message || t('createRoom.errorMessage'), () => {});
         },
       }
@@ -590,9 +593,10 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 elevation: 8,
               }]}
               onPress={handleSubmit(handleCreateRoom)}
+              disabled={isLoading}
             >
               <ThemedText size="l" weight="bold" style={[styles.createButtonText, { color: '#000' }]}>
-                {t('createRoom.createButton')}
+                {isLoading ? <ActivityIndicator size="small" color={theme.colors.darkBlack} /> : t('createRoom.createButton')}
               </ThemedText>
             </TouchableOpacity>
           </View>

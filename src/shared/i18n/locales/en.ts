@@ -193,6 +193,7 @@ const en = {
     filterApplied: "Filter applied: {{km}} km",
     locationError: "Failed to get location",
     locationErrorHint: "Try turning on GPS and opening again.",
+    noResultsDescription: "No venues found nearby. Please try again with different search criteria.",
   },
   fieldsModal: {
     title: "Fields",
@@ -294,6 +295,8 @@ const en = {
     linkSocialAccounts: "Link social media accounts",
     notifications: "Notifications",
     matchInvitations: "Notifications",
+    matchNotification: "Match Notification",
+    postNotification: "Post Notification",
     newsUpdates: "News & updates",
     application: "Application",
     language: "Language",
@@ -599,6 +602,13 @@ const en = {
       post: "Failed to submit post report. Please try again.",
       user: "Failed to submit user report. Please try again.",
     },
+  },
+  filterRoomMatch: {
+    title: "Filter matches",
+    matchDateLabel: "Match date",
+    matchFormatLabel: "Match format",
+    resetButton: "Reset",
+    applyButton: "Apply",
   },
 };
 

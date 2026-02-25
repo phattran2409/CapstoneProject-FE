@@ -88,27 +88,11 @@ export const FriendCard: React.FC<{
               >
                 {friend.fullName}
               </Text>
-              {friend.currentElo >= 2500 && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={16}
-                  color={theme.colors.neonGreen}
-                  style={{ marginLeft: 4 }}
-                />
-              )}
-            </View>
-
-            <View style={styles.statsRow}>
-              <RankBadge
-                elo={friend.currentElo}
-                size="small"
-                showElo
-                style={{ paddingHorizontal: 20 }}
-              />
               {friend.preferredPositions && (
+                <View style={{ paddingLeft: 10 }}>
                 <View
                   style={[
-                    styles.positionBadge,
+                    styles.positionBadge,               
                     {
                       backgroundColor: isDark
                         ? `${theme.colors.neonGreen}15`
@@ -125,7 +109,26 @@ export const FriendCard: React.FC<{
                     {friend.preferredPositions}
                   </Text>
                 </View>
+                </View>
               )}
+              {friend.currentElo >= 2500 && (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={theme.colors.neonGreen}
+                  style={{ marginLeft: 4 }}
+                />
+              )}
+            </View>
+
+            <View style={styles.statsRow}>
+              <RankBadge
+                elo={friend.currentElo}
+                size="small"
+                showElo
+                style={{ paddingHorizontal: 10 }}
+              />
+          
             </View>
             <Text style={[styles.sentAt, { color: theme.colors.textTertiary }]}>
               Bạn bè kể từ - {getRelativeTime(friend.friendsSince)}
