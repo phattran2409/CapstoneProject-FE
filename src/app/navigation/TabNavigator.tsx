@@ -1,5 +1,4 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../../shared/theme';
 import { TabParamList } from './types';
@@ -21,58 +20,58 @@ const TabNavigator: React.FC = () => {
         headerShown: false,
       }}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeScreen}
         options={{
           tabBarLabel: t('tabs.home'),
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? 'home' : 'home-outline'} 
-              size={size} 
-              color={color} 
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={color}
             />
           ),
         }}
       />
-      <Tab.Screen 
-        name="Matches" 
+      <Tab.Screen
+        name="Matches"
         component={MatchesScreen}
         options={{
           tabBarLabel: t('tabs.matches'),
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? 'calendar' : 'calendar-outline'} 
-              size={size} 
-              color={color} 
+            <Ionicons
+              name={focused ? 'calendar' : 'calendar-outline'}
+              size={size}
+              color={color}
             />
           ),
         }}
       />
-        <Tab.Screen 
-        name="Friends" 
+      <Tab.Screen
+        name="Friends"
         component={FriendsScreen}
         options={{
           tabBarLabel: t('friends.title'),
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? 'people' : 'people-outline'} 
-              size={size} 
-              color={color} 
+            <Ionicons
+              name={focused ? 'people' : 'people-outline'}
+              size={size}
+              color={color}
             />
           ),
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons 
-              name={focused ? 'person' : 'person-outline'} 
-              size={size} 
-              color={color} 
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={size}
+              color={color}
             />
           ),
         }}
@@ -82,4 +81,3 @@ const TabNavigator: React.FC = () => {
 };
 
 export default TabNavigator;
-

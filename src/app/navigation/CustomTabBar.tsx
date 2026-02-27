@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, useWindowDimensions, Image, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { useTheme } from '@/shared/theme';
 import { useTabBarVisibility } from '@/shared/context/TabBarVisibilityContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { TabBadge } from '@/shared/components/TabBadge';
+import Svg, { Path } from 'react-native-svg';
 
 const TAB_BAR_CENTER_BUTTON_SIZE = 56;
 const TAB_BAR_HEIGHT = 70;
@@ -13,6 +15,7 @@ const TAB_BAR_HEIGHT = 70;
 export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const { theme } = useTheme();
   const { animatedStyle } = useTabBarVisibility();
+  const { width: screenWidth } = useWindowDimensions();
 
   const handleCreateRoomPress = () => {
     const parent = navigation.getParent();
@@ -24,6 +27,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
   const routes = state.routes;
   const leftRoutes = routes.slice(0, 2);
   const rightRoutes = routes.slice(2, 4);
+  const isTablet =  screenWidth >= 750 ? true : false;
 
   const renderTab = (route: (typeof routes)[0], index: number, isLeft: boolean) => {
     const globalIndex = isLeft ? index : index + 2;
@@ -54,7 +58,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
     const iconElement = options.tabBarIcon
       ? (options.tabBarIcon as any)({
           focused: isFocused,
-          color: isFocused ? theme.colors.neonGreen : theme.colors.textSecondary,
+          color: isFocused ? theme.colors.neonGreen : theme.colors.white,
           size: 24,
         })
       : null;
@@ -78,7 +82,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
           style={[
             styles.tabLabel,
             {
-              color: isFocused ? theme.colors.neonGreen : theme.colors.textSecondary,
+              color: isFocused ? theme.colors.neonGreen : theme.colors.white,
               fontSize: 12,
               fontWeight: '600',
               marginTop: 5,
@@ -91,71 +95,124 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
     );
   };
 
+  // Tính toán path cho shape cong ở giữa (cho nút +)
+  const horizontalPadding = 20;
+  const barWidth = screenWidth - horizontalPadding * 2;
+  const centerX = barWidth / 2;
+  const curveWidth = 112;
+  const curveDepth = 28; // độ cao phần cong lên
+  const leftCurveStart = centerX - curveWidth / 2;
+  const rightCurveEnd = centerX + curveWidth / 2;
+
+  //
+  const REF_WIDTH = 371;
+  const REF_HEIGHT = isTablet ? 70 : 100; 
+  // const curvedPath = `
+  //   M0,${curveDepth}
+  //   Q0,27,14,27
+  //   H129.7143
+  //   C${leftCurveStart + 16},${curveDepth} ${centerX - 28},0 ${centerX},0
+  //   C${centerX + 28},0 ${rightCurveEnd - 16},${curveDepth} ${rightCurveEnd},${curveDepth}
+  //   H360
+  //   Q371,28,371,41
+  //   V81
+  //   Q371,94,360,94
+  //   H14
+  //   Q0,94,0,81
+  //   Z
+  // `;
+  const curvedPath = "M 0 40 Q 0 27 15 27 H 129.7143 C 145.7143 28 157.7143 0 185.7143 0 C 213.7143 0 225.7143 28 241.7143 28 H 360 Q 371 28 371 41 V 81 Q 371 94 360 94 H 15 Q 0 94 0 81 Z";
   return (
     <Animated.View
       style={[
-        styles.tabBarContainer,
+        styles.tabBarOuter,
         {
           bottom: 20,
-          left: 20,
-          right: 20,
+          left: horizontalPadding,
+          right: horizontalPadding,
           height: TAB_BAR_HEIGHT,
-          borderRadius: 25,
-          backgroundColor: theme.colors.darkBlack + 'F0',
-          borderWidth: 1.5,
-          borderColor: theme.colors.neonGreen + '40',
-          shadowColor: theme.colors.neonGreen,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 20,
         },
         animatedStyle,
       ]}
     >
-      <View style={styles.tabBarContent}>
-        <View style={styles.tabBarSide}>
-          {leftRoutes.map((route, index) => renderTab(route, index, true))}
-        </View>
+      <BlurView
+        intensity={10}
+        tint="dark"
+        style={styles.blurContainer}
+      >
+        {/* Nền cong phía sau */}
+        <Svg
+          width={barWidth}
+          height={(barWidth / REF_WIDTH) * REF_HEIGHT}
+          viewBox={`0 0 ${REF_WIDTH} ${REF_HEIGHT}`}
+          style={styles.curvedBackground}
+        >
+          <Path
+            d={curvedPath}
+            fill={theme.colors.darkBlack + '60'}
+            stroke={theme.colors.neonGreen + '40'}
+            strokeWidth={1.5}
+          />
+        </Svg>
 
-        {/* Vùng giữa: nút plus nâng lên, nằm trong vòm */}
-        <View style={styles.centerButtonWrapper}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Tạo phòng"
-            onPress={handleCreateRoomPress}
-            activeOpacity={0.85}
-            style={[
-              styles.centerButton,
-              {
-                backgroundColor: theme.colors.neonGreen,
-                shadowColor: theme.colors.neonGreen,
-              },
-            ]}
-          >
-            <Ionicons name="add" size={28} color={theme.colors.background} />
-          </TouchableOpacity>
-        </View>
+        <View style={styles.tabBarContent}>
+          <View style={styles.tabBarSide}>
+            {leftRoutes.map((route, index) => renderTab(route, index, true))}
+          </View>
 
-        <View style={styles.tabBarSide}>
-          {rightRoutes.map((route, index) => renderTab(route, index, false))}
+          {/* Vùng giữa: nút plus nâng lên, nằm trong vòm */}
+          <View style={styles.centerButtonWrapper}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Tạo phòng"
+              onPress={handleCreateRoomPress}
+              activeOpacity={0.85}
+              style={[
+                styles.centerButton,
+                {
+                  backgroundColor: theme.colors.neonGreen,
+                  shadowColor: theme.colors.neonGreen,
+                  position: 'absolute',
+                  top: -20,
+                },
+              ]}
+            >
+              <Image source={require('@assets/icons/match-room-create.png')} style={{ width: 35, height: 35 }} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.tabBarSide}>
+            {rightRoutes.map((route, index) => renderTab(route, index, false))}
+          </View>
         </View>
-      </View>
+      </BlurView>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  tabBarContainer: {
+  tabBarOuter: {
     position: 'absolute',
     elevation: 0,
     overflow: 'visible',
+  },
+  blurContainer: {
+    // flex: 1,
+    // borderRadius: 24,
+    // overflow: 'hidden',
+    // // borderColor: 'rgba(255,255,255,0.16)',
+    // backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  curvedBackground: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
   },
   tabBarContent: {
     flexDirection: 'row',
     height: TAB_BAR_HEIGHT,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
   },
   tabBarSide: {
     flex: 1,
@@ -164,7 +221,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   centerButtonWrapper: {
-    justifyContent: 'center',
+    width: TAB_BAR_CENTER_BUTTON_SIZE,
+    height: TAB_BAR_CENTER_BUTTON_SIZE,
+    justifyContent: 'center', 
     alignItems: 'center',
   },
   centerButton: {

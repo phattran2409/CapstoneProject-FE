@@ -191,7 +191,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     setFilter(filters);
     setFilterVisible(false);
   }
-  console.log(new Date());
+  
   const handleCloseFilter = () => {
     setFilterVisible(false);
   }
