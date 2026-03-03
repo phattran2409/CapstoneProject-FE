@@ -8,6 +8,7 @@ import axios from 'axios';
 export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueResponse> => {
   try { 
     const response = await apiClient.get<PaginatedVenueResponse>(API_CONFIG.ENDPOINTS.VENUES.LIST, { params: filters });
+    console.log('filters', filters);
     // Interceptor returns response.data, so response is already the data
     return response as unknown as PaginatedVenueResponse;
   } catch (error) {    

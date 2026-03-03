@@ -530,32 +530,28 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       </ThemedView>
 
       {/* Countdown dưới header khi trận đang InProgress */}
-      {/* {displayRoom.status === 'InProgress' && (
-        // <MatchCountdown
-        //   matchDate={displayRoom.matchDate}
-        //   startTime={displayRoom.startTime}
-        //   endTime={displayRoom.endTime}
-        //   status={displayRoom.status}
-        //   variant="inline"
-        // />
-      )} */}
-
-      <MatchCountdown
-        matchDate={"2026-02-19T10:00:00"}
-        startTime={"22:00:00"}
-        endTime={"23:16:00"}
-        status={"InProgress"}
-        variant="inline"
-      />
-      {/* <MatchCountdown
-        matchDate={displayRoom.matchDate}
-        startTime={displayRoom.startTime}
-        endTime={displayRoom.endTime}
-        status={displayRoom.status}
-        variant="overlay"
-      /> */}
-
-      {/* Tab Navigation */}
+      {
+        displayRoom.status == 'InProgress' &&(
+        <MatchCountdown
+          matchDate={displayRoom.matchDate}
+          startTime={displayRoom.startTime}
+          endTime={displayRoom.endTime}
+          status={displayRoom.status}
+          variant="inline"
+        />
+        )
+      }
+      {
+        displayRoom.status == 'Locked' && (
+          <MatchCountdown
+            matchDate={displayRoom.matchDate}
+            startTime={displayRoom.startTime}
+            endTime={displayRoom.startTime}
+            status={displayRoom.status}
+            variant="overlay"
+          />
+        )
+      }
       <View 
         style={[
           styles.tabContainer,

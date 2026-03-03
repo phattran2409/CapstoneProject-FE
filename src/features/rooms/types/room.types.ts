@@ -13,7 +13,7 @@ export type MatchRoomStatus =
   | "Completed"
   | "Reviewing"
   | "Cancelled";
-export type MatchFormat = "FiveVsFive" | "SevenVsSeven" | string;
+export type MatchFormat = "FiveVsFive" | "SevenVsSeven" | "ElevenVsEleven";
 export type TeamAssignment = "A" | "B" | "Unassigned";
 
 /**
@@ -206,6 +206,7 @@ export interface MatchRoomFilters {
   pageSize?: number;
   availableOnly?: boolean;
   matchFormat?: string;
+  date?: string;
 }
 
 // ==================== Query/Filter Types ====================

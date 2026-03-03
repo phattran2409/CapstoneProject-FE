@@ -185,6 +185,12 @@ const vi = {
     allFormats: "Tất cả",
     perHour: "Giá thuê / giờ",
     distance: "km",
+    locationPermissionDenied: "Cần quyền vị trí",
+    locationPermissionHint: "Bật vị trí để lọc sân theo bán kính.",
+    filterApplied: "Đã áp dụng bán kính {{km}} km",
+    locationError: "Không thể lấy vị trí",
+    locationErrorHint: "Vui lòng bật GPS và mở lại.",
+    noResultsDescription: "Không tìm thấy sân gần đây. Vui lòng thử lại với tiêu chí tìm kiếm khác.",
   },
   fieldsModal: {
     title: "Danh sách sân",
@@ -238,6 +244,7 @@ const vi = {
     loadingText: "Đang đăng nhập...",
     noAccount: "Chưa có tài khoản?",
     registerNow: "Đăng ký ngay",
+    googleLogin: "Đăng nhập với Google",
   },
   register: {
     title: "Tạo tài khoản mới",
@@ -247,6 +254,7 @@ const vi = {
     confirmPasswordLabel: "Xác nhận mật khẩu",
     confirmPasswordPlaceholder: "Nhập lại mật khẩu của bạn",
     alreadyHaveAccount: "Đã có tài khoản?",
+    googleLogin: "Đăng ký với Google",
     errors: {
       allFieldsRequired: "Vui lòng điền đầy đủ thông tin",
       passwordMismatch: "Mật khẩu không khớp",
@@ -591,6 +599,13 @@ const vi = {
       post: "Không thể gửi báo cáo bài viết. Vui lòng thử lại.",
       user: "Không thể gửi báo cáo người dùng. Vui lòng thử lại.",
     },
+  },
+  filterRoomMatch: {
+    title: "Lọc phòng đấu",
+    matchDateLabel: "Ngày thi đấu",
+    matchFormatLabel: "Hình thức thi đấu",
+    resetButton: "Đặt lại",
+    applyButton: "Áp dụng",
   },
 };
 

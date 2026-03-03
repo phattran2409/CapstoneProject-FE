@@ -11,9 +11,10 @@ import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components'
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
-import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom } from '@/features/rooms';
+import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
 import { PrivateRoomPasswordModal } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
+import { FilterRoomMatch } from '../components/FilterRoomMatch';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -68,7 +69,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     roomName?: string;
   } | null>(null);
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
-
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [filter, setFilter] = useState<{
+    matchFormat?: MatchFormat;
+    date?: string;
+  }>({
+    matchFormat: undefined,
+    date: undefined,
+  });
   // Fetch match rooms from API
   const { 
     matchRooms, 
@@ -78,7 +86,12 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     hasMore,
     refresh,
     loadMore 
-  } = useMatchRooms();
+  } = useMatchRooms(
+    {
+      matchFormat: filter.matchFormat,
+      date: filter.date,
+    }
+  );
 
   // Convert API data to MatchItemData format
   const matches = useMemo(() => {
@@ -171,6 +184,17 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     setPasswordError(undefined);
   };
 
+  const handleFilter = (filters: {
+    matchFormat?: MatchFormat;
+    date?: string;
+  }) => {
+    setFilter(filters);
+    setFilterVisible(false);
+  }
+  
+  const handleCloseFilter = () => {
+    setFilterVisible(false);
+  }
   return (
     <ThemedSafeAreaView>
       {/* Header */}
@@ -195,7 +219,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => setFilterVisible(true)}>
             <Ionicons
               name="filter"
               size={24}
@@ -324,6 +348,9 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         isLoading={isJoining}
         errorMessage={passwordError}
       />
+
+      {/* Filter Room Match Modal */}
+      <FilterRoomMatch visible={filterVisible} onApply={handleFilter} onClose={handleCloseFilter} theme={theme} />
     </ThemedSafeAreaView>
   );
 };

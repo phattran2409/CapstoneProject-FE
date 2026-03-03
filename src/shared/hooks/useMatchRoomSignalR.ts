@@ -11,7 +11,7 @@ import { getAuthToken } from "@/shared/api/client";
 const MATCH_ROOM_HUB_URL = "https://api.kickify.site/hubs/matchroom";
 
 const MATCH_ROOM_HUB_METHODS = {
-  JoinRoomGroup: "JoinRoomGroup",
+  JoinRoomGroup: "JoinRoomGroupWithTeam",
   LeaveRoomGroup: "LeaveRoomGroup",
 } as const;
 

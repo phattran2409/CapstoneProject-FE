@@ -54,7 +54,14 @@
           "cameraPermission": "The app accesses your camera to let you take photos."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Ứng dụng cần vị trí của bạn để tìm sân bóng gần bạn theo bán kính.",
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần vị trí để hiển thị sân bóng trong bán kính bạn chọn."
+        }
+      ]
     ],
     "extra": {
       "eas": {
