@@ -4,6 +4,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSpring,
+} from 'react-native-reanimated';
 import {
   ThemedSafeAreaView,
   ThemedText,
@@ -27,12 +33,26 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
 
+  const scaleAnim = useSharedValue(1);
+
+  React.useEffect(() => {
+    scaleAnim.value = withRepeat(
+      withSpring(1.03, { damping: 15, stiffness: 50 }),
+      -1,
+      true
+    );
+  }, []);
+
+  const successIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleAnim.value }],
+  }));
+
   const handleBackToWallet = () => {
     navigation.navigate('Wallet' as any);
   };
 
   const handleBackHome = () => {
-    navigation.navigate('Home' as any);
+    navigation.navigate('MainTabs' as any);
   };
 
   return (
@@ -71,21 +91,27 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
       >
         {/* Success Icon */}
         <View style={styles.centerArea}>
-          <View
-            style={[
-              styles.successCircle,
-              {
-                backgroundColor: `${theme.colors.neonGreen}20`,
-                borderColor: theme.colors.neonGreen,
-              },
-            ]}
-          >
-            <Ionicons
-              name="checkmark"
-              size={48}
-              color={theme.colors.neonGreen}
-            />
-          </View>
+          <Animated.View style={[styles.successIconContainer, successIconStyle]}>
+            <View
+              style={[
+                styles.outerCircle,
+                { backgroundColor: theme.colors.neonGreen },
+              ]}
+            >
+              <View
+                style={[
+                  styles.innerCircle,
+                  { borderColor: theme.colors.neonGreen },
+                ]}
+              >
+                <Ionicons
+                  name="checkmark"
+                  size={56}
+                  color={theme.colors.neonGreen}
+                />
+              </View>
+            </View>
+          </Animated.View>
 
           <ThemedText
             size="l"
@@ -108,7 +134,7 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
               color: theme.colors.neonGreen,
             }}
           >
-            + 500,000 Coins
+            + 500,000 VND
           </ThemedText>
 
           <ThemedText
@@ -142,12 +168,8 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
               value: '#TXN-992831BC',
             },
             {
-              label: 'Thời gian',
-              value: '24/05/2024, 14:30',
-            },
-            {
               label: 'Phương thức',
-              value: 'Apple Pay',
+              value: 'VN Pay',
             },
             {
               label: 'Trạng thái',
@@ -219,15 +241,28 @@ const styles = StyleSheet.create({
   },
   centerArea: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
-  successCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
+  successIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 24,
+  },
+  outerCircle: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  innerCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000000',
   },
   detailsCard: {
     marginTop: 8,

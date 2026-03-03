@@ -246,7 +246,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             onPress={() => {
               const parent = navigation.getParent();
               if (parent) {
-                parent.navigate("EloBreakdown");
+                parent.navigate("PaymentSuccess");
               }
             }}
           >

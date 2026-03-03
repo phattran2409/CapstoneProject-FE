@@ -238,41 +238,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 color={theme.colors.textSecondary}
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.settingItem,
-                {
-                  backgroundColor: theme.colors.surface,
-                  paddingVertical: theme.spacing.m,
-                  paddingHorizontal: theme.spacing.m,
-                  borderRadius: theme.radius.m,
-                  marginBottom: theme.spacing.xs,
-                },
-              ]}
-            >
-              <Ionicons
-                name="share-social-outline"
-                size={24}
-                color={theme.colors.text}
-              />
-              <Text
-                style={[
-                  styles.settingText,
-                  {
-                    color: theme.colors.text,
-                    fontSize: theme.fontSizes.m,
-                    marginLeft: theme.spacing.m,
-                  },
-                ]}
-              >
-                {t("profile.linkSocialAccounts")}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
+           
           </View>
 
           {/* Notifications Section */}
@@ -553,45 +519,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 }}
                 thumbColor={theme.colors.white}
               />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.settingItem,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderBottomWidth: 1,
-                  borderBottomColor: theme.colors.border,
-                  paddingVertical: theme.spacing.m,
-                  paddingHorizontal: theme.spacing.m,
-                  borderRadius: theme.radius.m,
-                  marginBottom: theme.spacing.xs,
-                },
-              ]}
-            >
-              <Ionicons
-                name="shield-outline"
-                size={24}
-                color={theme.colors.text}
-              />
-              <Text
-                style={[
-                  styles.settingText,
-                  {
-                    color: theme.colors.text,
-                    fontSize: theme.fontSizes.m,
-                    marginLeft: theme.spacing.m,
-                  },
-                ]}
-              >
-                {t("profile.privacyPolicy")}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
+            </TouchableOpacity>           
             <TouchableOpacity
               style={[
                 styles.settingItem,

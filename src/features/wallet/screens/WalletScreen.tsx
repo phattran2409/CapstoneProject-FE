@@ -4,6 +4,7 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
   Modal,
   TextInput,
   Pressable,
@@ -45,6 +46,12 @@ interface WalletTransaction {
   icon: string;
   amount: string;
   type: "in" | "out";
+  category:
+    | "topup"
+    | "booking"
+    | "refund"
+    | "checkin"
+    | "withdraw";
   status: string;
   time: string;
 }
@@ -52,45 +59,64 @@ interface WalletTransaction {
 const MOCK_TRANSACTIONS: WalletTransaction[] = [
   {
     id: "1",
-    title: "Nạp qua MoMo",
+    title: "Nạp qua VNPay",
     description: "10:30, 20/10/2023",
-    icon: "add-circle",
-    amount: "+500 Coins",
+    icon: "wallet",
+    amount: "+500.000",
     type: "in",
+    category: "topup",
     status: "THÀNH CÔNG",
     time: "10:30, 20/10/2023",
   },
   {
     id: "2",
-    title: "Phòng đấu: Derby Sài Gòn",
+    title: "Đặt sân: Thống Nhất",
     description: "09:15, 20/10/2023",
     icon: "football",
-    amount: "-200 Coins",
+    amount: "-200.000",
     type: "out",
+    category: "booking",
     status: "THANH TOÁN",
     time: "09:15, 20/10/2023",
   },
   {
     id: "3",
-    title: "Thắng trận đấu #122",
+    title: "Phí check-in trận #122",
     description: "18:00, 19/10/2023",
-    icon: "trophy",
-    amount: "+50 Coins",
-    type: "in",
-    status: "THƯỞNG",
+    icon: "walk",
+    amount: "-20.000",
+    type: "out",
+    category: "checkin",
+    status: "PHÍ DỊCH VỤ",
     time: "18:00, 19/10/2023",
   },
   {
     id: "4",
-    title: "Đặt sân tập: Thống Nhất",
+    title: "Hoàn tiền đặt sân",
     description: "15:30, 19/10/2023",
-    icon: "calendar",
-    amount: "-100 Coins",
-    type: "out",
-    status: "ĐÃ HUỶ",
+    icon: "refresh",
+    amount: "+150.000",
+    type: "in",
+    category: "refund",
+    status: "HOÀN TRẢ",
     time: "15:30, 19/10/2023",
   },
+  {
+    id: "5",
+    title: "Rút tiền về MBBank",
+    description: "08:00, 18/10/2023",
+    icon: "arrow-up",
+    amount: "-300.000",
+    type: "out",
+    category: "withdraw",
+    status: "CHỜ XỬ LÝ",
+    time: "08:00, 18/10/2023",
+  },
 ];
+
+type TransactionFilterKey =
+  | "all"
+  | WalletTransaction["category"];
 
 const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -101,6 +127,11 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositError, setDepositError] = useState("");
+  const [selectedFilter, setSelectedFilter] =
+    useState<TransactionFilterKey>("all");
+  const [filterScrollWidth, setFilterScrollWidth] = useState(0);
+  const [filterContentWidth, setFilterContentWidth] = useState(0);
+  const [filterScrollX, setFilterScrollX] = useState(0);
 
   const handleOpenDepositModal = () => {
     setDepositAmount("");
@@ -156,6 +187,9 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             backgroundColor: theme.colors.surface,
             borderBottomWidth: 1,
             borderBottomColor: theme.colors.border,
+            borderRadius: theme.radius.l,
+            marginBottom: theme.spacing.s,
+            padding: theme.spacing.m,
           },
         ]}
       >
@@ -219,6 +253,20 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     );
   };
 
+  const filterOptions: Array<{ key: TransactionFilterKey; label: string }> = [
+    { key: "all", label: "Tất cả" },
+    { key: "booking", label: "Đặt sân" },
+    { key: "topup", label: "Nạp tiền" },
+    { key: "refund", label: "Hoàn tiền" },
+    { key: "checkin", label: "Check-in" },
+    { key: "withdraw", label: "Rút tiền" },
+  ];
+
+  const filteredTransactions =
+    selectedFilter === "all"
+      ? MOCK_TRANSACTIONS
+      : MOCK_TRANSACTIONS.filter((tx) => tx.category === selectedFilter);
+
   return (
     <ThemedSafeAreaView>
       {/* Header */}
@@ -229,20 +277,18 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             paddingHorizontal: theme.spacing.l,
             paddingVertical: theme.spacing.m,
             marginTop: theme.spacing.xl,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.colors.border,
           },
         ]}
       >
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
         <ThemedText variant="primary" size="xxl" weight="bold">
           {t("wallet.title", { defaultValue: "Ví tiền" })}
         </ThemedText>
         <TouchableOpacity>
-          <Ionicons
-            name="settings-outline"
-            size={24}
-            color={theme.colors.textSecondary}
-          />
         </TouchableOpacity>
       </ThemedView>
 
@@ -305,55 +351,13 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             />
             <Button
               title={t("wallet.withdraw", { defaultValue: "Rút tiền" })}
-              onPress={() => {}}
+              onPress={() => navigation.navigate("WalletWithdraw")}
               size="medium"
               variant="outline"
               style={{ flex: 1, marginLeft: theme.spacing.s }}
             />
           </View>
         </ThemedView>
-      </ThemedView>
-
-      {/* Quick Actions */}
-      <ThemedView
-        style={[
-          styles.quickActionsContainer,
-          {
-            paddingHorizontal: theme.spacing.l,
-            paddingTop: theme.spacing.m,
-          },
-        ]}
-      >
-        {[
-          { icon: "time-outline", label: "Lịch sử" },
-          { icon: "stats-chart-outline", label: "Thống kê" },
-          { icon: "gift-outline", label: "Quà tặng" },
-          { icon: "card-outline", label: "Thẻ ví" },
-        ].map((item) => (
-          <TouchableOpacity
-            key={item.label}
-            style={[
-              styles.quickActionItem,
-              { backgroundColor: theme.colors.surface },
-            ]}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={item.icon as any}
-              size={22}
-              color={theme.colors.neonGreen}
-            />
-            <ThemedText
-              size="xs"
-              style={{
-                marginTop: 8,
-                color: theme.colors.textSecondary,
-              }}
-            >
-              {item.label}
-            </ThemedText>
-          </TouchableOpacity>
-        ))}
       </ThemedView>
 
       {/* Recent Transactions */}
@@ -371,28 +375,83 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             defaultValue: "Giao dịch gần đây",
           })}
         </ThemedText>
-        <TouchableOpacity>
-          <ThemedText
-            size="s"
-            style={{ color: theme.colors.neonGreen }}
-            weight="semiBold"
-          >
-            {t("wallet.viewAll", { defaultValue: "Xem tất cả" })}
-          </ThemedText>
-        </TouchableOpacity>
       </ThemedView>
 
+      <View style={{ paddingHorizontal: theme.spacing.l, marginTop: 12 }}>
+        <View
+          style={{
+            position: "relative",
+          }}
+          onLayout={(e) => {
+            setFilterScrollWidth(e.nativeEvent.layout.width);
+          }}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingRight: theme.spacing.l }}
+            scrollEventThrottle={16}
+            onContentSizeChange={(w) => setFilterContentWidth(w)}
+            onScroll={(e) => {
+              setFilterScrollX(e.nativeEvent.contentOffset.x);
+            }}
+          >
+            {filterOptions.map((opt, idx) => {
+              const active = opt.key === selectedFilter;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  onPress={() => setSelectedFilter(opt.key)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.filterPill,
+                    {
+                      marginRight: idx === filterOptions.length - 1 ? 0 : 10,
+                      backgroundColor: active
+                        ? theme.colors.neonGreen
+                        : theme.colors.surface,
+                      borderColor: active
+                        ? "transparent"
+                        : theme.colors.border,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    size="s"
+                    weight="semiBold"
+                    style={{
+                      color: active ? "#000" : theme.colors.textSecondary,
+                    }}
+                  >
+                    {opt.label}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {filterContentWidth > filterScrollWidth + filterScrollX + 8 && (
+            <View pointerEvents="none" style={styles.filterScrollHint}>
+              <View style={[styles.filterScrollHintInner, { backgroundColor: theme.colors.mediumGray }]}>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.background} />
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
+
       <FlatList
-        data={MOCK_TRANSACTIONS}
+        data={filteredTransactions}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}
         contentContainerStyle={{
           paddingHorizontal: theme.spacing.l,
           paddingBottom: theme.spacing.xxl * 2,
+          paddingTop: 8,
         }}
         showsVerticalScrollIndicator={false}
       />
-
+      
       {/* Deposit Modal */}
       <Modal
         visible={showDepositModal}
@@ -528,6 +587,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  filterScrollHint: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    justifyContent: "center",
+    paddingRight: 4,
+  },
+  filterScrollHintInner: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filterPill: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   transactionItem: {
     flexDirection: "row",

@@ -31,7 +31,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useActiveRoomStore } from "@/features/rooms/store/activeRoomStore";
 import { RootStackParamList } from "./types";
 import { View, StyleSheet } from "react-native";
-import { WalletScreen, WalletTopUpScreen } from "@/features/wallet";
+import { WalletScreen, WalletWithdrawScreen } from "@/features/wallet";
 import { PaymentSuccessScreen } from "@/features/payment";
 import { SearchScreen } from "@/features/search";
 import TeamScreen from "@/features/rooms/screens/TeamScreen";
@@ -281,8 +281,8 @@ const StackNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
-              name="WalletTopUp"
-              component={WalletTopUpScreen}
+              name="WalletWithdraw"
+              component={WalletWithdrawScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",

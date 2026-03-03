@@ -23,3 +23,9 @@ export interface DepositResponse {
   amount: number;
   expiredAt: string;
 }
+
+export interface BankInfoRequest {
+  bankAccountNumber: string;
+  bankName: string;
+  accountHolderName: string;
+}

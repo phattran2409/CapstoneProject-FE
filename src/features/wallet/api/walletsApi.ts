@@ -5,6 +5,7 @@ import type {
   ApiResponse,
   DepositRequest,
   DepositResponse,
+  BankInfoRequest,
 } from "../types/wallet.types";
 
 export const walletsApi = {
@@ -65,5 +66,18 @@ export const walletsApi = {
 
     console.error("❌ Unexpected response structure:", response);
     throw new Error("Failed to create deposit - unexpected response format");
+  },
+
+  updateBankInfo: async (body: BankInfoRequest): Promise<WalletBalance> => {
+    const response = (await apiClient.put(
+      API_CONFIG.ENDPOINTS.WALLETS.BANK_INFO,
+      body,
+    )) as ApiResponse<WalletBalance>;
+
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to update bank information");
+    }
+
+    return response.data;
   },
 };
