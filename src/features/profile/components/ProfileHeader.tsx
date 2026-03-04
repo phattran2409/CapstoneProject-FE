@@ -73,10 +73,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       };
       // Upload avatar
       await updateAvatar(file);
-      toast.success(t("Cập nhật ảnh đại diện thành công!"));
+      toast.success(t("personalPage.editForm.toast.avatarUpdateSuccess"));
     } catch (error) {
       console.error("Error uploading avatar:", error);
-      toast.error(t("Không thể cập nhật ảnh đại diện. Vui lòng thử lại!"));
+      toast.error(t("personalPage.editForm.toast.avatarUpdateError"));
     }
   };
 
@@ -87,7 +87,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         await ImagePicker.requestCameraPermissionsAsync();
 
       if (!permissionResult.granted) {
-        toast.error(t("Bạn cần cấp quyền truy cập camera!"));
+        toast.error(t("profileHeader.cameraPermissionRequired"));
         return;
       }
 
@@ -103,7 +103,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       }
     } catch (error) {
       console.error("Error taking photo:", error);
-      toast.error(t("Không thể chụp ảnh. Vui lòng thử lại!"));
+      toast.error(t("profileHeader.takePhotoError"));
     }
   };
 
@@ -114,7 +114,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        toast.error(t("Bạn cần cấp quyền truy cập thư viện ảnh!"));
+        toast.error(t("profileHeader.libraryPermissionRequired"));
         return;
       }
 
@@ -131,7 +131,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      toast.error(t("Không thể chọn ảnh. Vui lòng thử lại!"));
+      toast.error(t("profileHeader.pickPhotoError"));
     }
   };
 
@@ -139,10 +139,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ["Hủy", "Chụp ảnh", "Chọn từ thư viện"],
+          options: [t("profileHeader.cancel"), t("profileHeader.takePhoto"), t("profileHeader.chooseFromLibrary")],
           cancelButtonIndex: 0,
-          title: "Chọn ảnh đại diện",
-          message: "Bạn muốn chọn ảnh từ đâu?",
+          title: t("profileHeader.chooseAvatarTitle"),
+          message: t("profileHeader.chooseAvatarMessage"),
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
@@ -153,23 +153,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         },
       );
     } else {
-      // Android
       Alert.alert(
-        "Chọn ảnh đại diện",
-        "Bạn muốn chọn ảnh từ đâu?",
+        t("profileHeader.chooseAvatarTitle"),
+        t("profileHeader.chooseAvatarMessage"),
         [
-          {
-            text: "Chụp ảnh",
-            onPress: handleTakePhoto,
-          },
-          {
-            text: "Chọn từ thư viện",
-            onPress: handlePickFromLibrary,
-          },
-          {
-            text: "Hủy",
-            style: "cancel",
-          },
+          { text: t("profileHeader.takePhoto"), onPress: handleTakePhoto },
+          { text: t("profileHeader.chooseFromLibrary"), onPress: handlePickFromLibrary },
+          { text: t("profileHeader.cancel"), style: "cancel" },
         ],
         { cancelable: true },
       );
@@ -340,7 +330,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <Text
                 style={[styles.achievementsTitle, { color: theme.colors.text }]}
               >
-                Thành tựu
+                {t("profileHeader.achievementsTitle")}
               </Text>
               <Ionicons
                 name="chevron-forward"

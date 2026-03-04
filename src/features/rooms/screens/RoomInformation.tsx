@@ -166,20 +166,20 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const showNotification = useCallback((message: string, type?: 'success' | 'info' | 'warning' | 'error') => {
     switch (type) {
       case 'success':
-        toast.success('Thành công', message);
+        toast.success(t('roomDetail.notifications.success'), message);
         break;
       case 'error':
-        toast.error('Lỗi', message);
+        toast.error(t('roomDetail.notifications.error'), message);
         break;
       case 'warning':
-        toast.warning('Cảnh báo', message);
+        toast.warning(t('roomDetail.notifications.warning'), message);
         break;
       case 'info':
       default:
-        toast.info('Thông báo', message);
+        toast.info(t('roomDetail.notifications.info'), message);
         break;
     }
-  }, [toast]);
+  }, [toast, t]);
 
   /**
    * Callback khi bị kick - điều hướng về trang trước
@@ -187,8 +187,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const handleKickedFromRoom = useCallback((payload: any) => {
     if (payload.kickedUserId === user?.userId) {
       showDanger(
-        'Bạn đã bị kick',
-        payload.reason || 'Bạn đã bị kick khỏi phòng bởi host',
+        t('roomDetail.kicked'),
+        payload.reason || t('roomDetail.kickedReason'),
         () => {
           if (navigation?.canGoBack()) {
             navigation.goBack();
@@ -201,15 +201,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         },
       );
     }
-  }, [user?.userId, navigation, nav, showDanger, nav]);
+  }, [user?.userId, navigation, nav, showDanger, t]);
 
   /**
    * Callback khi room bị xóa - điều hướng về trang trước
    */
   const handleRoomDeleted = useCallback(() => {
     showInfo(
-      'Phòng đã bị xóa',
-      'Phòng đã bị xóa bởi host hoặc đã hết người chơi.',
+      t('roomDetail.roomDeleted'),
+      t('roomDetail.roomDeletedReason'),
       () => {
         if (navigation?.canGoBack()) {
           navigation.goBack();
@@ -222,7 +222,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       },
       false,
     );
-  }, [navigation, nav, showInfo]);
+  }, [navigation, nav, showInfo, t]);
 
   /**
    * Callback khi host thay đổi
@@ -234,11 +234,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     // Nếu user hiện tại trở thành host
     if (newHostId === user?.userId) {
       showSuccess(
-        'Bạn đã trở thành Host!',
-        'Host cũ đã rời khỏi phòng. Bạn được chỉ định làm host mới.',
+        t('roomDetail.hostChanged'),
+        t('roomDetail.hostChangedDesc'),
       );
     }
-  }, [user?.userId, refetch, showSuccess]);
+  }, [user?.userId, refetch, showSuccess, t]);
 
   // ✅ Tạo SignalR handlers
   const signalRHandlers = useMatchRoomSignalRHandlers({
@@ -262,13 +262,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Handle open position selection modal
   const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
     if (!user) {
-      showInfo('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để tham gia phòng');
+      showInfo(t('roomDetail.loginRequired'), t('roomDetail.loginRequiredDesc'));
       return;
     }
 
     // User phải là participant (đã join vào Unassigned từ MatchesScreen)
     if (!currentUserParticipant) {
-      showInfo('Chưa tham gia', 'Bạn cần tham gia phòng trước khi chọn đội');
+      showInfo(t('roomDetail.joinFirst'), t('roomDetail.joinFirstDesc'));
       return;
     }
 
@@ -300,17 +300,16 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       {
         onSuccess: () => {
           toast.success(
-            'Chọn đội thành công!', 
-            `Bạn đã chọn Team ${pendingTeamAssignment} với vị trí ${position}`
+            t('roomDetail.chooseTeamSuccess'),
+            t('roomDetail.chooseTeamDesc', { team: pendingTeamAssignment, position }),
           );
           setSelectedTeam(pendingTeamAssignment);
           setShowPositionModal(false);
           setPendingTeamAssignment(null);
-          // SignalR sẽ tự động cập nhật UI, nhưng refetch để đảm bảo
           refetch();
         },
         onError: (error: any) => {
-          toast.error('Lỗi', error.message || 'Không thể chọn đội');
+          toast.error(t('roomDetail.notifications.error'), error.message || t('roomDetail.chooseTeamError'));
           setShowPositionModal(false);
           setPendingTeamAssignment(null);
         },
@@ -326,18 +325,12 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   const handleJoinMatch = () => {
     if (!currentUserParticipant) {
-      showInfo(
-        "Bạn chưa tham gia phòng",
-        "Bạn cần tham gia phòng trước khi vào màn đội hình",
-      );
+      showInfo(t('roomDetail.joinFirstRoom'), t('roomDetail.joinFirstRoomDesc'));
       return;
     }
 
     if (!hasSelectedTeam) {
-      showInfo(
-        "Chọn đội trước khi vào sân",
-        "Vui lòng chọn Team A hoặc Team B rồi mới vào màn đội hình.",
-      );
+      showInfo(t('roomDetail.selectTeamFirst'), t('roomDetail.selectTeamFirstDesc'));
       return;
     }
 
@@ -349,48 +342,48 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Handle kick player (host only)
   const handleKickPlayer = (userId: string, playerName: string) => {
     showDanger(
-      'Kick Player',
-      `Are you sure you want to kick ${playerName} from the room?`,
+      t('roomDetail.kickTitle'),
+      t('roomDetail.kickMessage', { name: playerName }),
       () => {
         kickPlayer(
           { roomId, playerId: userId },
           {
             onSuccess: () => {
-              showSuccess('Success', 'Player has been kicked from the room');
+              showSuccess(t('roomDetail.kickSuccess'), t('roomDetail.kickSuccessDesc'));
               refetch();
             },
             onError: (error: any) => {
-              showDanger('Error', error.message || 'Failed to kick player', () => {});
+              showDanger(t('roomDetail.notifications.error'), error.message || t('roomDetail.kickError'), () => {});
             },
           }
         );
       },
       undefined,
-      'Kick',
-      'Cancel',
+      t('roomDetail.kickButton'),
+      t('common.buttons.cancel'),
     );
   };
 
   // ✅ Handle cancel room (host only)
   const handleCancelRoom = () => {
     showDanger(
-      'Cancel Room',
-      'Are you sure you want to cancel this room? This action cannot be undone.',
+      t('roomDetail.cancelTitle'),
+      t('roomDetail.cancelMessage'),
       () => {
         cancelRoom(roomId, {
           onSuccess: () => {
-            showSuccess('Success', 'Room has been cancelled', () => {
+            showSuccess(t('roomDetail.cancelSuccess'), t('roomDetail.cancelSuccessDesc'), () => {
               navigation?.goBack();
             });
           },
           onError: (error: any) => {
-            showDanger('Error', error.message || 'Failed to cancel room', () => {});
+            showDanger(t('roomDetail.notifications.error'), error.message || t('roomDetail.cancelError'), () => {});
           },
         });
       },
       undefined,
-      'Yes, Cancel',
-      'No',
+      t('roomDetail.yesCancel'),
+      t('roomDetail.no'),
     );
   };
 
@@ -417,8 +410,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         });
       },
       undefined,
-      t('roomDetail.leaveRoomConfirm', 'Rời phòng'),
-      t('common.cancel', 'Hủy'),
+      t('roomDetail.leaveRoomConfirm'),
+      t('common.buttons.cancel'),
     );
   };
 
@@ -441,7 +434,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             onPress={() => refetch()}
             style={[styles.retryButton, { backgroundColor: theme.colors.neonGreen }]}
           >
-            <ThemedText weight="bold" style={{ color: '#000' }}>Try Again</ThemedText>
+            <ThemedText weight="bold" style={{ color: '#000' }}>{t('roomDetail.tryAgain')}</ThemedText>
           </TouchableOpacity>
         </ThemedView>
       </ThemedSafeAreaView>
@@ -453,7 +446,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     return (
       <ThemedSafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.notFoundContainer}>
-          <ThemedText>Room not found</ThemedText>
+          <ThemedText>{t('roomDetail.roomNotFound')}</ThemedText>
         </ThemedView>
       </ThemedSafeAreaView>
     );
@@ -573,7 +566,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             weight={activeTab === 'teams' ? 'bold' : 'medium'}
             style={{ color: activeTab === 'teams' ? theme.colors.neonGreen : theme.colors.textSecondary }}
           >
-            Teams
+            {t('roomDetail.teamsTab')}
           </ThemedText>
         </TouchableOpacity>
         
@@ -592,7 +585,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             weight={activeTab === 'host' ? 'bold' : 'medium'}
             style={{ color: activeTab === 'host' ? theme.colors.neonGreen : theme.colors.textSecondary }}
           >
-            Host Info
+            {t('roomDetail.hostInfoTab')}
           </ThemedText>
         </TouchableOpacity>
         
@@ -610,7 +603,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             weight={activeTab === 'venue' ? 'bold' : 'medium'}
             style={{ color: activeTab === 'venue' ? theme.colors.neonGreen : theme.colors.textSecondary }}
           >
-            Venue
+            {t('roomDetail.venueTab')}
           </ThemedText>
         </TouchableOpacity>
       </View>
@@ -644,14 +637,14 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             />
             <RoomInfoCard
               icon="cash"
-              label="Deposit / Person"
+              label={t('roomDetail.depositPerPerson')}
               value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(displayRoom.depositPerPerson)}
             />
             <RoomInfoCard
               icon="trophy"
-              label="Tổng tiền đã thu"
+              label={t('roomDetail.totalDepositCollected')}
               value={formatCurrency(depositCollected, 'VND') || '0'}
-              subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% quỹ trận đấu` : undefined}
+              subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% ${t('roomDetail.depositProgress')}` : undefined}
             />
           </View>
 

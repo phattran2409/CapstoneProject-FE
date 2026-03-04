@@ -172,7 +172,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           navigation.navigate('RoomInformation', pendingJoinParams.params);
         },
         onError: (error: any) => {
-          setPasswordError(error?.message ?? 'Mật khẩu không đúng. Vui lòng thử lại.');
+          setPasswordError(error?.message ?? t('matches.passwordInvalid'));
         },
       }
     );
@@ -196,7 +196,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     setFilterVisible(false);
   }
   return (
-    <ThemedSafeAreaView>
+    <ThemedSafeAreaView style={{ flex: 1 , position: 'relative'}}>
       {/* Header */}
       <ThemedView
         style={[
@@ -310,8 +310,10 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            marginHorizontal: theme.spacing.l,
-            marginBottom: theme.spacing.l,
+            position: 'absolute',
+            left: theme.spacing.l,
+            right: theme.spacing.l,
+            bottom: 80,
           },
         ]}
         onPress={() => {

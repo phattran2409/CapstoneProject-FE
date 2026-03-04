@@ -321,8 +321,8 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     return (
       <EmptyState
         icon="document-text-outline"
-        title="Chưa có bài viết nào"
-        description="Người dùng này chưa đăng bài viết nào"
+        title={t("personalPage.postsEmpty")}
+        description={t("personalPage.postsEmptyDesc")}
       />
     );
   };
