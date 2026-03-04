@@ -167,7 +167,6 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           windowSize={10}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         />
       )}
     </SafeAreaView>

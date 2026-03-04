@@ -45,7 +45,7 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({
   const avatarBorderColor = rankInfo.color;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{padding: 16}}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{padding: 7}}>
       <BlurView
         intensity={isDark ? 40 : 80}
         tint={isDark ? "dark" : "light"}
