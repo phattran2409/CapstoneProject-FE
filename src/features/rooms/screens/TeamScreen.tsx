@@ -171,12 +171,12 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
           payload.assignments.map((a) => ({ slotId: a.slotId, playerId: a.playerId })),
         );
         toast.info(
-          "Đội hình đã được cập nhật",
-          `Captain đã đổi đội hình thành ${payload.formationName}`,
+          t("teamScreen.formationUpdated"),
+          t("teamScreen.formationUpdatedDesc", { name: payload.formationName }),
         );
       }
     },
-    [teamKey, toast],
+    [teamKey, toast, t],
   );
 
   // Tạo SignalR handlers
@@ -228,8 +228,9 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
   /** Gán cầu thủ đang chọn vào slot (captain đã chọn player trước đó) */
   const handleAssignToSlot = (slotId: string) => {
     if (!selectedPlayerId || !isCaptain) {
-      toast.warning("Vui lòng chọn cầu thủ ở bên dưới",
-        "rồi bấm vào ô vị trí ở trên để gán", 
+      toast.warning(
+        t("teamScreen.selectPlayerFirst"),
+        t("teamScreen.selectPlayerFirstDesc"),
       );
       return;
     }
@@ -243,51 +244,44 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
   const handleSaveFormation = async () => {
     if (!isCaptain) {
-      toast.error("Chỉ captain mới được phép lưu đội hình");
+      toast.error(t("teamScreen.captainOnlySave"));
       return;
     }
 
     if (!formationConfig) {
-      toast.error("Không tìm thấy cấu hình đội hình hợp lệ");
+      toast.error(t("teamScreen.noFormationConfig"));
       return;
     }
 
-    // Validate assignments theo Formation API docs:
-    // - Đúng số slot
-    // - Không trùng slot / player
     const requiredSlotIds = formationConfig.slots.map((s) => s.id);
     const assignedSlotIds = assignments.map((a) => a.slotId);
     const assignedPlayerIds = assignments.map((a) => a.playerId);
 
-    // Đủ số lượng slot
     if (assignments.length !== requiredSlotIds.length) {
       toast.warning(
-        "Chưa gán đủ vị trí",
-        `Cần gán đủ ${requiredSlotIds.length} vị trí cho đội hình ${selectedFormation}`,
+        t("teamScreen.slotsRequired"),
+        t("teamScreen.slotsRequiredDesc", { count: requiredSlotIds.length, formation: selectedFormation }),
       );
       return;
     }
 
-    // Không trùng slot
     const uniqueAssignedSlots = new Set(assignedSlotIds);
     if (uniqueAssignedSlots.size !== assignedSlotIds.length) {
-      toast.error("Một vị trí trên sân đang được gán cho nhiều cầu thủ");
+      toast.error(t("teamScreen.duplicateSlot"));
       return;
     }
 
-    // Không trùng player
     const uniquePlayers = new Set(assignedPlayerIds);
     if (uniquePlayers.size !== assignedPlayerIds.length) {
-      toast.error("Một cầu thủ đang được gán vào nhiều vị trí");
+      toast.error(t("teamScreen.duplicatePlayer"));
       return;
     }
 
-    // Tất cả slotId đều hợp lệ với formation hiện tại
     const invalidSlots = assignedSlotIds.filter(
       (slotId) => !requiredSlotIds.includes(slotId),
     );
     if (invalidSlots.length > 0) {
-      toast.error("Có slotId không hợp lệ cho đội hình hiện tại");
+      toast.error(t("teamScreen.invalidSlot"));
       return;
     }
 
@@ -305,14 +299,12 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     };
     try {
       await roomsApi.updateFormation(roomId, payload);
-      toast.success(
-        "Lưu đội hình thành công",
-      );
+      toast.success(t("teamScreen.saveFormationSuccess"));
     } catch (error) {
       console.error("Failed to save formation:", error);
       toast.error(
-        "Lưu đội hình thất bại",
-        "Vui lòng thử lại hoặc kiểm tra lại kết nối",
+        t("teamScreen.saveFormationError"),
+        t("teamScreen.saveFormationErrorDesc"),
       );
     }
   };
@@ -321,7 +313,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     if (!isCaptain) return;
     const name = teamNameInput.trim();
     if (!name) {
-      toast.warning("Tên đội không được để trống");
+      toast.warning(t("teamScreen.teamNameRequired"));
       return;
     }
     try {
@@ -338,10 +330,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
             }
           : prev,
       );
-      toast.success("Đã cập nhật tên đội");
+      toast.success(t("teamScreen.teamNameUpdated"));
     } catch (error) {
       console.error("Failed to save team name:", error);
-      toast.error("Không thể cập nhật tên đội", "Vui lòng thử lại");
+      toast.error(t("teamScreen.teamNameError"), t("teamScreen.teamNameErrorDesc"));
     } finally {
       setIsSavingTeamName(false);
     }
@@ -442,7 +434,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                             backgroundColor: theme.colors.surface,
                           },
                         ]}
-                        placeholder="Nhập tên đội"
+                        placeholder={t("teamScreen.enterTeamName")}
                         placeholderTextColor={theme.colors.textSecondary}
                         value={teamNameInput}
                         onChangeText={setTeamNameInput}
@@ -461,7 +453,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                         disabled={isSavingTeamName}
                       >
                         <ThemedText size="s" weight="bold" style={{ color: "#000" }}>
-                          {isSavingTeamName ? "Đang lưu..." : "Lưu tên đội"}
+                          {isSavingTeamName ? t("teamScreen.savingTeamName") : t("teamScreen.saveTeamName")}
                         </ThemedText>
                       </TouchableOpacity>
                     </>
@@ -503,7 +495,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                   weight="bold"
                   style={{ color: theme.colors.neonGreen }}
                 >
-                  {displayRoom?.status === "Open" ? "Sắp diễn ra" : "" }
+                  {displayRoom?.status === "Open" ? t("roomDetail.statusUpcoming") : "" }
                 </ThemedText>
               </View>
             </ThemedView>
@@ -583,7 +575,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 size="s"
                 style={styles.myPositionLabel}
               >
-                Vị trí của bạn
+                {t("teamScreen.myPosition")}
               </ThemedText>
               <ThemedText
                 variant="primary"
@@ -618,7 +610,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 size="s"
                 style={styles.lineupLabel}
               >
-                Chọn đội hình:
+                {t("teamScreen.selectFormation")}
               </ThemedText>
               <View style={styles.dropdownWrapper}>
                 <TouchableOpacity
@@ -708,7 +700,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 size="s"
                 style={styles.sectionLabel}
               >
-                Vị trí trên sân – chọn cầu thủ bên dưới rồi bấm vào ô
+                {t("teamScreen.positionOnField")}
               </ThemedText>
               {(["GK", "DF", "MF", "FW"] as PositionLine[]).map((line) => {
                 const slots = formationConfig.slots.filter((s) => s.line === line);
@@ -772,7 +764,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                             weight={currentPlayer ? "semiBold" : "medium"}
                             variant={currentPlayer ? "primary" : "secondary"}
                           >
-                            {currentPlayer ? currentPlayer.name : "Bấm để gán"}
+                            {currentPlayer ? currentPlayer.name : t("teamScreen.tapToAssign")}
                           </ThemedText>
                         </TouchableOpacity>
                       );
@@ -791,11 +783,11 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 size="s"
                 style={styles.sectionLabel}
               >
-                Danh sách cầu thủ – bấm để chọn, sau đó bấm ô vị trí
+                {t("teamScreen.playerListHint")}
               </ThemedText>
               {selectedPlayerId && (
                 <ThemedText size="xs" variant="secondary" style={styles.hint}>
-                  Đã chọn 1 cầu thủ. Bấm vào ô vị trí ở trên để gán.
+                  {t("teamScreen.selectedPlayerHint")}
                 </ThemedText>
               )}
               <ScrollView
@@ -885,7 +877,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
 
           {isCaptain && (
             <View style={styles.saveButtonContainer}>
-              <Button title="Lưu đội hình" onPress={handleSaveFormation} />
+              <Button title={t("teamScreen.saveFormation")} onPress={handleSaveFormation} />
             </View>
           )}
 
@@ -903,11 +895,11 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                 weight="bold"
                 style={styles.paymentTitle}
               >
-                Check-in & Thanh  toán
+                {t("teamScreen.checkinPayment")}
               </ThemedText>
               <View style={styles.paymentRow}>
                 <ThemedText variant="secondary" size="s">
-                  Tiền sân mỗi người:
+                  {t("teamScreen.depositPerPersonLabel")}
                 </ThemedText>
                 <ThemedText variant="primary" size="l" weight="bold">
                   {(
@@ -958,10 +950,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
                     style={[styles.paymentButtonText, { color: "#000" }]}
                   >
                     {isProcessingPayment
-                      ? "Đang thanh toán..."
+                      ? t("teamScreen.paying")
                       : hasPaidDeposit
-                        ? "Đã thanh toán"
-                        : "Thanh toán"}
+                        ? t("teamScreen.paid")
+                        : t("teamScreen.payNow")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>

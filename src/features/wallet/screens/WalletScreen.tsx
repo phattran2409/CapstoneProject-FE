@@ -142,14 +142,12 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const handleDeposit = async () => {
     const amount = Number(depositAmount?.replace(/\D/g, "") || 0);
     if (!amount || amount < 1000) {
-      setDepositError("Vui lòng nhập số tiền tối thiểu 1.000 VND");
+      setDepositError(t("wallet.depositMinError"));
       return;
     }
     setDepositError("");
     try {
-      console.log("💰 Attempting deposit with amount:", amount);
       const result = await depositMutation.mutateAsync(amount);
-      console.log("✅ Deposit result:", result);
       setShowDepositModal(false);
       if (result?.paymentUrl) {
         const canOpen = await Linking.canOpenURL(result.paymentUrl);
@@ -157,22 +155,21 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
           await Linking.openURL(result.paymentUrl);
         } else {
           Alert.alert(
-            "Thông báo",
-            "Không thể mở link thanh toán. Vui lòng thử lại.",
+            t("wallet.depositTitle"),
+            t("wallet.paymentLinkError"),
           );
         }
       } else {
-        console.warn("⚠️ No payment URL in result:", result);
         Alert.alert(
-          "Thông báo",
-          "Không nhận được link thanh toán. Vui lòng thử lại.",
+          t("wallet.depositTitle"),
+          t("wallet.noPaymentUrl"),
         );
       }
     } catch (err: any) {
-      console.error("❌ Deposit error:", err);
-      const errorMessage = err?.message || "Có lỗi xảy ra. Vui lòng thử lại.";
+      console.error("Deposit error:", err);
+      const errorMessage = err?.message || t("wallet.depositError");
       setDepositError(errorMessage);
-      Alert.alert("Lỗi", errorMessage);
+      Alert.alert(t("common.error"), errorMessage);
     }
   };
 
@@ -476,7 +473,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             >
               <View style={styles.modalHeader}>
                 <ThemedText variant="primary" size="l" weight="bold">
-                  Nạp tiền vào ví
+                  {t("wallet.depositTitle")}
                 </ThemedText>
                 <TouchableOpacity onPress={() => setShowDepositModal(false)}>
                   <Ionicons
@@ -488,7 +485,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               </View>
 
               <ThemedText variant="secondary" size="s" style={{ marginTop: 8 }}>
-                Nhập số tiền cần nạp (VND)
+                {t("wallet.depositAmountLabel")}
               </ThemedText>
 
               <TextInput
@@ -501,7 +498,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
                     color: theme.colors.text,
                   },
                 ]}
-                placeholder="Ví dụ: 50000"
+                placeholder={t("wallet.depositPlaceholder")}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={depositAmount}
                 onChangeText={(text) => {
@@ -522,8 +519,8 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               <Button
                 title={
                   depositMutation.isPending
-                    ? "Đang xử lý..."
-                    : "Thanh toán VNPay"
+                    ? t("wallet.processing")
+                    : t("wallet.payVNPay")
                 }
                 onPress={handleDeposit}
                 disabled={depositMutation.isPending}
@@ -541,7 +538,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
                 onPress={() => setShowDepositModal(false)}
               >
                 <ThemedText variant="secondary" size="s">
-                  Hủy
+                  {t("wallet.cancel")}
                 </ThemedText>
               </TouchableOpacity>
             </Pressable>

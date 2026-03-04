@@ -82,14 +82,14 @@ const ActionButton: React.FC<ActionButtonProps> = ({
         try {
           await onDelete(contentId);
           toast.info(
-            t("Đã xóa bài viết", {
+            t("actionButton.deleteSuccess", {
               type: t(`actionButton.${contentType}`),
             }),
           );
         } catch (error) {
           console.error("Error deleting:", error);
           toast.error(
-            t("Xóa thất bại", {
+            t("actionButton.deleteFailed", {
               type: t(`actionButton.${contentType}`),
             }),
           );
