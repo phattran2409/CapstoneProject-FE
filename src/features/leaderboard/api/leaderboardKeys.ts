@@ -2,8 +2,9 @@
 
 export const leaderboardKeys = {
   all: ['leaderboard'] as const,
-  players: () => [...leaderboardKeys.all, 'players'] as const,
-  playerList: () =>
-    [...leaderboardKeys.players(), 'list'] as const,
+  leaderboard: () => [...leaderboardKeys.all, 'leaderboard'] as const,
+  list: (page?: number, pageSize?: number) =>
+    [...leaderboardKeys.leaderboard(), page, pageSize] as const,
+  myRank: () => [...leaderboardKeys.all, 'my-rank'] as const,
 };
 

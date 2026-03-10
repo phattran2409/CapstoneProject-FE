@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -37,7 +37,8 @@ import { TabParamList } from "@/app/navigation/types";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useDebounce } from "@/shared/hooks";
-import { EloLeaderboardSection, usePaginatedPlayers } from "@/features/leaderboard";
+import { EloLeaderboardSection } from "@/features/leaderboard";
+import { useLeaderboard } from "@/features/leaderboard/hooks/useLeaderboard";
 import { useAuthStore } from "@/features/auth";
 import { authApi } from "@/features/auth/api";
 import { getFcmToken } from "@/shared/firebase/messaging";
@@ -58,7 +59,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuthStore();
   const hasSyncedFcmRef = useRef(false);
 
-  const { users } = usePaginatedPlayers({ pageSize: 5 });
+  const leaderboardQuery = useLeaderboard();
+  const topUsers = useMemo(
+    () => (leaderboardQuery.data?.data?.leaderboard ?? []).slice(0, 5),
+    [leaderboardQuery.data],
+  );
 
   // Đăng ký / đồng bộ FCM token sau khi user đã đăng nhập và vào Home
   useEffect(() => {
@@ -189,7 +194,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       </ThemedView>
 
       {/* ELO Leaderboard Section */}
-      <EloLeaderboardSection users={users} />
+      <EloLeaderboardSection users={topUsers} loading={leaderboardQuery.isLoading} error={leaderboardQuery.error} />
     </>
   );
 

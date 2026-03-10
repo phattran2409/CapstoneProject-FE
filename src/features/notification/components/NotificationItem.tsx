@@ -3,18 +3,18 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Notification, NotificationType } from '../types/notification.types';
+import { BaseNotification, NotificationType } from '../types/notification.types';
 import { ThemedText, ThemedView } from '@/shared/components/themed';
 
 interface NotificationItemProps {
-  notification: Notification;
+  notification: BaseNotification;
   onPress?: () => void;
   onMarkAsRead?: () => void;
 }
 
 const getNotificationIcon = (type: NotificationType, action?: string): string => {
   switch (type) {
-    case 'match':
+    case 'MatchRoom':
       switch (action) {
         case 'invited':
           return 'mail-outline';
@@ -27,7 +27,7 @@ const getNotificationIcon = (type: NotificationType, action?: string): string =>
         default:
           return 'football-outline';
       }
-    case 'friend':
+    case 'Friendship':
       switch (action) {
         case 'request':
           return 'person-add-outline';
@@ -38,7 +38,7 @@ const getNotificationIcon = (type: NotificationType, action?: string): string =>
         default:
           return 'people-outline';
       }
-    case 'post':
+    case 'Post':
       switch (action) {
         case 'liked':
           return 'heart-outline';
@@ -49,8 +49,8 @@ const getNotificationIcon = (type: NotificationType, action?: string): string =>
         default:
           return 'document-text-outline';
       }
-    case 'system':
-      return 'notifications-outline';
+    case 'Announcement':
+      return 'information-circle-outline';
     default:
       return 'notifications-outline';
   }
@@ -58,13 +58,13 @@ const getNotificationIcon = (type: NotificationType, action?: string): string =>
 
 const getNotificationColor = (type: NotificationType, theme: any): string => {
   switch (type) {
-    case 'match':
+    case 'MatchRoom':
       return theme.colors.neonGreen;
-    case 'friend':
+    case 'Friendship':
       return '#4A90E2';
-    case 'post':
+    case 'Post':
       return '#FF6B6B';
-    case 'system':
+    case 'Announcement':
       return theme.colors.textSecondary;
     default:
       return theme.colors.textSecondary;
@@ -79,8 +79,8 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  const iconName = getNotificationIcon(notification.type, (notification as any).action);
-  const iconColor = getNotificationColor(notification.type, theme);
+  const iconName = getNotificationIcon(notification.notificationType, (notification as any).action);
+  const iconColor = getNotificationColor(notification.notificationType, theme);
 
   return (
     <TouchableOpacity
@@ -130,7 +130,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             {notification.message}
           </ThemedText>
           <ThemedText variant="secondary" size="xs" style={styles.timestamp}>
-            {notification.timestamp}
+            {notification.createdAt}
           </ThemedText>
         </View>
 

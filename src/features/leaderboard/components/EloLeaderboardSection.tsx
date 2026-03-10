@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -12,14 +12,16 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "@/shared/theme";
 import { ThemedText, ThemedView } from "@/shared/components/themed";
-import { Players } from "../types/leaderboard.types";
+import { Leaderboard } from "../types/leaderboard.types";
 import { getEmailUsername } from "@/shared/utils/formatters";
 
 interface EloLeaderboardSectionProps {
-  users: Players[];
+  users: Leaderboard[];
+  loading?: boolean;
+  error?: unknown;
 }
 
-export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ users }) => {
+export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ users, loading, error }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
@@ -37,6 +39,52 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
     }
   };
 
+  const data = useMemo(() => users ?? [], [users]);
+
+  if (loading && !data.length) {
+    return (
+      <ThemedView
+        style={[
+          styles.leaderboardSection,
+          {
+            paddingVertical: theme.spacing.l,
+            borderBottomWidth: 1,
+            borderBottomColor: "#2a2a2a",
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.leaderboardHeader,
+            {
+              paddingHorizontal: theme.spacing.l,
+              marginBottom: theme.spacing.m,
+            },
+          ]}
+        >
+          <View style={styles.leaderboardTitle}>
+            <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
+            <ThemedText
+              style={{ color: theme.colors.neonGreen, marginLeft: 8 }}
+              variant="primary"
+              size="xl"
+              weight="bold"
+            >
+              {t("newsFeed.leaderboard")}
+            </ThemedText>
+          </View>
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (!!error && !data.length) {
+    return null;
+  }
+
+  if (!data.length) {
+    return null;
+  }
 
   return (
     <ThemedView
@@ -80,10 +128,10 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20 }}
-        data={users}
+        data={data}
         keyExtractor={(player) => player.userId}
         renderItem={({ item: player, index }) => {
-          const rankColor = getRankColor(index + 1);
+          const rankColor = getRankColor(player.rank);
           return (
             <TouchableOpacity
               style={[
@@ -120,7 +168,7 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
                 ]}
               >
                 <Text style={[styles.rankText, { color: rankColor }]}>
-                  #{index + 1}
+                  #{player.rank}
                 </Text>
               </View>
 
@@ -165,9 +213,30 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
                 <Text
                   style={[styles.eloValue, { color: theme.colors.neonGreen }]}
                 >
-                  {player.playerProfile?.currentElo}
+                  {player.currentElo}
                 </Text>
-
+                {!!player.eloChange && (
+                  <View style={styles.trendContainer}>
+                    <Ionicons
+                      name={player.eloChange > 0 ? "trending-up" : "trending-down"}
+                      size={14}
+                      color={player.eloChange > 0 ? theme.colors.success : theme.colors.error}
+                    />
+                    <Text
+                      style={[
+                        styles.trendText,
+                        {
+                          color:
+                            player.eloChange > 0
+                              ? theme.colors.success
+                              : theme.colors.error,
+                        },
+                      ]}
+                    >
+                      {player.eloChange > 0 ? `+${player.eloChange}` : player.eloChange}
+                    </Text>
+                  </View>
+                )}
            
               </View>
 
@@ -187,32 +256,7 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
                       { color: theme.colors.softWhite },
                     ]}
                   >
-                    {player.playerProfile?.totalMatches}
-                  </Text>
-                </View>
-                <View
-                  style={[styles.statDivider, { backgroundColor: "#2a2a2a" }]}
-                />
-                <View style={styles.statItem}>
-                  <Text
-                    style={[
-                      styles.statLabel,
-                      { color: theme.colors.textSecondary },
-                    ]}
-                  >
-                    {t('leaderboard.stats.winRate')}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.statValue,
-                      { color: theme.colors.softWhite },
-                    ]}
-                  >
-                    {(
-                      ((player.playerProfile?.wins ?? 0) /
-                        (player.playerProfile?.totalMatches || 1)) *
-                      100
-                    ).toFixed(2)}%
+                    {player.totalMatches}
                   </Text>
                 </View>
               </View>
