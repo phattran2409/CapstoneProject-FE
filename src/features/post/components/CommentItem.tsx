@@ -210,7 +210,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           )}
 
           {/* Replies List */}
-          {showReplies && <RepliesList commentId={comment.commentId} />}
+          {showReplies && (
+            <RepliesList commentId={comment.commentId} postId={postId} />
+          )}
         </View>
 
         {/* Action Button for edit/delete */}

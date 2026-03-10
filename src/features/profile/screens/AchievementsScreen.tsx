@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -15,6 +15,10 @@ import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { AchievementItem, Achievement } from "../components/AchievementItem";
 import { BlurView } from "expo-blur";
+import { useAchievements } from "../hooks/useProfile";
+import { AchievementItem as AchievementItemType } from "../types/profile.types";
+import { getAchievementTranslation } from "../constants/achievementTranslations";
+import { useAppStore } from "@/store/appStore";
 
 type AchievementsScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -23,118 +27,58 @@ type AchievementsScreenProps = NativeStackScreenProps<
 
 type FilterType = "all" | "unlocked" | "locked";
 
-// Mock data - Replace with API call later
-const MOCK_ACHIEVEMENTS: Achievement[] = [
-  {
-    id: "1",
-    title: "Người mới bắt đầu",
-    description: "Hoàn thành trận đấu đầu tiên",
-    icon: "football",
-    isUnlocked: true,
-    unlockedAt: "2024-01-15T10:30:00Z",
-    rarity: "common",
-  },
-  {
-    id: "2",
-    title: "Chiến thắng đầu tiên",
-    description: "Giành chiến thắng trong trận đấu đầu tiên",
-    icon: "trophy",
-    isUnlocked: true,
-    unlockedAt: "2024-01-20T14:20:00Z",
-    rarity: "rare",
-  },
-  {
-    id: "3",
-    title: "Chuỗi thắng",
-    description: "Thắng 5 trận liên tiếp",
-    icon: "flame",
-    isUnlocked: true,
-    unlockedAt: "2024-02-01T18:45:00Z",
-    rarity: "epic",
-  },
-  {
-    id: "4",
-    title: "Người chơi đáng tin cậy",
-    description: "Đạt điểm uy tín 80+",
-    icon: "shield-checkmark",
-    isUnlocked: true,
-    unlockedAt: "2024-02-05T09:15:00Z",
-    rarity: "epic",
-  },
-  {
-    id: "5",
-    title: "Huyền thoại",
-    description: "Đạt ELO 2000+",
-    icon: "star",
-    isUnlocked: false,
-    progress: 65,
-    rarity: "legendary",
-  },
-  {
-    id: "6",
-    title: "Người bạn tốt",
-    description: "Có 50 bạn bè",
-    icon: "people",
-    isUnlocked: false,
-    progress: 42,
-    rarity: "rare",
-  },
-  {
-    id: "7",
-    title: "Tác giả nội dung",
-    description: "Đăng 100 bài viết",
-    icon: "create",
-    isUnlocked: false,
-    progress: 28,
-    rarity: "rare",
-  },
-  {
-    id: "8",
-    title: "Vô địch",
-    description: "Thắng 100 trận đấu",
-    icon: "medal",
-    isUnlocked: false,
-    progress: 73,
-    rarity: "epic",
-  },
-  {
-    id: "9",
-    title: "Người tổ chức",
-    description: "Tạo 20 phòng đấu",
-    icon: "calendar",
-    isUnlocked: false,
-    progress: 15,
-    rarity: "common",
-  },
-  {
-    id: "10",
-    title: "Siêu sao",
-    description: "Nhận 1000 lượt thích",
-    icon: "heart",
-    isUnlocked: false,
-    progress: 55,
-    rarity: "legendary",
-  },
-];
+// Map API AchievementItem type → AchievementItem component's Achievement interface
+// Uses local translation map to display Vietnamese name/description
+const mapToAchievement = (
+  item: AchievementItemType,
+  language: string,
+): Achievement => {
+  const { name, description } = getAchievementTranslation(
+    item.achievementId,
+    language,
+    item.name,
+    item.description,
+  );
+  return {
+    id: item.achievementId,
+    title: name,
+    description,
+    icon: "trophy" as keyof typeof Ionicons.glyphMap,
+    isUnlocked: item.isUnlocked,
+    unlockedAt: item.earnedAt ?? undefined,
+  };
+};
 
 const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const language = useAppStore((state) => state.language);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
+  const { data: rawData, isLoading, isError } = useAchievements();
+
+  // Map API data to AchievementItem format
+  const achievements: Achievement[] = (rawData?.achievements ?? []).map(
+    (item) => mapToAchievement(item, language),
+  );
+
   // Filter achievements
-  const filteredAchievements = MOCK_ACHIEVEMENTS.filter((achievement) => {
+  const filteredAchievements = achievements.filter((achievement) => {
     if (activeFilter === "unlocked") return achievement.isUnlocked;
     if (activeFilter === "locked") return !achievement.isUnlocked;
     return true;
   });
 
-  // Calculate stats
-  const totalAchievements = MOCK_ACHIEVEMENTS.length;
-  const unlockedCount = MOCK_ACHIEVEMENTS.filter((a) => a.isUnlocked).length;
-  const completionRate = Math.round((unlockedCount / totalAchievements) * 100);
+  // Use stats directly from API response
+  const totalAchievements = rawData?.totalAchievements ?? achievements.length;
+  const unlockedCount =
+    rawData?.unlockedCount ?? achievements.filter((a) => a.isUnlocked).length;
+  const completionRate =
+    totalAchievements > 0
+      ? Math.round((unlockedCount / totalAchievements) * 100)
+      : 0;
 
   const handleAchievementPress = (achievement: Achievement) => {
     // TODO: Show achievement detail modal
@@ -183,6 +127,72 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
     );
   };
 
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={[styles.header, { borderBottomColor: theme.colors.border }]}
+        >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            {t("achievements.title")}
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.neonGreen} />
+          <Text
+            style={[styles.loadingText, { color: theme.colors.textSecondary }]}
+          >
+            {t("achievements.loading")}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={[styles.header, { borderBottomColor: theme.colors.border }]}
+        >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            {t("achievements.title")}
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.centered}>
+          <Ionicons
+            name="alert-circle-outline"
+            size={48}
+            color={theme.colors.error}
+          />
+          <Text
+            style={[styles.loadingText, { color: theme.colors.textSecondary }]}
+          >
+            {t("achievements.error")}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -196,7 +206,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Thành tựu
+          {t("achievements.title")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -225,7 +235,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
                   { color: theme.colors.textSecondary },
                 ]}
               >
-                Đã mở khóa
+                {t("achievements.stats.unlocked")}
               </Text>
             </View>
             <View
@@ -244,7 +254,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
                   { color: theme.colors.textSecondary },
                 ]}
               >
-                Tổng số
+                {t("achievements.stats.total")}
               </Text>
             </View>
             <View
@@ -263,7 +273,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
                   { color: theme.colors.textSecondary },
                 ]}
               >
-                Hoàn thành
+                {t("achievements.stats.completion")}
               </Text>
             </View>
           </View>
@@ -291,17 +301,25 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
 
         {/* Filters */}
         <View style={styles.filtersContainer}>
-          {renderFilterButton("all", "Tất cả", "grid")}
-          {renderFilterButton("unlocked", "Đã mở", "checkmark-circle")}
-          {renderFilterButton("locked", "Bị khóa", "lock-closed")}
+          {renderFilterButton("all", t("achievements.filter.all"), "grid")}
+          {renderFilterButton(
+            "unlocked",
+            t("achievements.filter.unlocked"),
+            "checkmark-circle",
+          )}
+          {renderFilterButton(
+            "locked",
+            t("achievements.filter.locked"),
+            "lock-closed",
+          )}
         </View>
 
         {/* Achievements List */}
         <View style={styles.achievementsContainer}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            {activeFilter === "all" && "Tất cả thành tựu"}
-            {activeFilter === "unlocked" && "Thành tựu đã mở khóa"}
-            {activeFilter === "locked" && "Thành tựu bị khóa"}
+            {activeFilter === "all" && t("achievements.section.all")}
+            {activeFilter === "unlocked" && t("achievements.section.unlocked")}
+            {activeFilter === "locked" && t("achievements.section.locked")}
           </Text>
           <Text
             style={[
@@ -309,7 +327,9 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
               { color: theme.colors.textSecondary },
             ]}
           >
-            {filteredAchievements.length} thành tựu
+            {t("achievements.section.count", {
+              count: filteredAchievements.length,
+            })}
           </Text>
 
           {filteredAchievements.map((achievement) => (
@@ -429,6 +449,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     marginBottom: 16,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 8,
   },
 });
 

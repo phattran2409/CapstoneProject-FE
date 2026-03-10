@@ -19,6 +19,7 @@ import { RouteProp } from "@react-navigation/native";
 import { TrustScoreCard } from "../components/TrustScoreCard";
 import { ReportModal } from "@/shared/components";
 import { useToast } from "@/shared/toast";
+import { InviteFriendsModal } from "@/features/rooms/components/InviteFriendsModal";
 
 type ProfileDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -110,6 +111,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
   const toast = useToast();
   const [showReportModal, setShowReportModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
+  const [shareProfileVisible, setShareProfileVisible] = useState(false);
 
   // Get player data from route params
   const player = route.params.player;
@@ -120,6 +122,9 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
   const wins = playerProfile?.wins || 0;
   const winRate =
     totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+
+  const profileShareUrl = `kickify://user/${player.userId}`;
+  const shareProfileMessage = `Xem hồ sơ cầu thủ ${player.fullName} trên Kickify.\n\nELO: ${playerProfile?.currentElo ?? 0} • Trận: ${totalMatches} • Tỉ lệ thắng: ${winRate}%\n\n${profileShareUrl}`;
 
   // Format date of birth
   const formatDate = (dateString: string | null) => {
@@ -414,7 +419,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
               },
             ]}
             onPress={() => {
-              /* TODO: Share profile */
+              setShareProfileVisible(true);
             }}
           >
             <Ionicons
@@ -454,6 +459,15 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <InviteFriendsModal
+        visible={shareProfileVisible}
+        shareMessage={shareProfileMessage}
+        onClose={() => setShareProfileVisible(false)}
+        title={t("profileDetail.shareProfile", {
+          defaultValue: "Chia sẻ hồ sơ",
+        })}
+      />
 
       {/* Report Modal */}
       <ReportModal

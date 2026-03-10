@@ -340,7 +340,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <Text
                 style={[styles.achievementsTitle, { color: theme.colors.text }]}
               >
-                Thành tựu
+                {t("personalPage.achievements")}
               </Text>
               <Ionicons
                 name="chevron-forward"

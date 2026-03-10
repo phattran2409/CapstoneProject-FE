@@ -63,20 +63,20 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
       disabled={!onPress}
     >
       <BlurView
-        intensity={isLocked ? 20 : 40}
+        intensity={isLocked ? 15 : 40}
         tint="dark"
         style={[
           styles.container,
           {
             borderRadius: theme.radius.m,
-            opacity: isLocked ? 0.6 : 1,
+            opacity: isLocked ? 0.5 : 1,
           },
         ]}
       >
         <LinearGradient
           colors={
             isLocked
-              ? ["rgba(255,255,255,0.05)", "transparent"]
+              ? ["rgba(255,255,255,0.03)", "transparent"]
               : [`${rarityColor}20`, "transparent"]
           }
           start={{ x: 0, y: 0 }}
@@ -89,23 +89,33 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
               styles.iconContainer,
               {
                 backgroundColor: isLocked
-                  ? `${theme.colors.border}30`
+                  ? `${theme.colors.border}20`
                   : `${rarityColor}30`,
               },
             ]}
           >
             <Ionicons
-              name={isLocked ? "lock-closed" : achievement.icon}
+              name={achievement.icon}
               size={32}
               color={isLocked ? theme.colors.textSecondary : rarityColor}
             />
-            {!isLocked && achievement.rarity && (
-              <View
-                style={[styles.rarityBadge, { backgroundColor: rarityColor }]}
-              >
-                <Ionicons name="star" size={10} color="#FFFFFF" />
-              </View>
-            )}
+            {/* Lock badge for locked, check badge for unlocked */}
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: isLocked
+                    ? "rgba(80,80,80,0.9)"
+                    : theme.colors.success,
+                },
+              ]}
+            >
+              <Ionicons
+                name={isLocked ? "lock-closed" : "checkmark"}
+                size={9}
+                color="#FFFFFF"
+              />
+            </View>
           </View>
 
           {/* Content Section */}
@@ -121,7 +131,7 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
               ]}
               numberOfLines={1}
             >
-              {isLocked ? "???" : achievement.title}
+              {achievement.title}
             </Text>
             <Text
               style={[
@@ -130,38 +140,8 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
               ]}
               numberOfLines={2}
             >
-              {isLocked ? "Thành tựu bị khóa" : achievement.description}
+              {achievement.description}
             </Text>
-
-            {/* Progress bar for locked achievements */}
-            {isLocked && achievement.progress !== undefined && (
-              <View style={styles.progressContainer}>
-                <View
-                  style={[
-                    styles.progressBar,
-                    { backgroundColor: `${theme.colors.border}40` },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: `${achievement.progress}%`,
-                        backgroundColor: theme.colors.neonGreen,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.progressText,
-                    { color: theme.colors.textSecondary },
-                  ]}
-                >
-                  {achievement.progress}%
-                </Text>
-              </View>
-            )}
 
             {/* Unlock date for unlocked achievements */}
             {!isLocked && achievement.unlockedAt && (
@@ -206,16 +186,16 @@ const styles = StyleSheet.create({
     marginRight: 16,
     position: "relative",
   },
-  rarityBadge: {
+  statusBadge: {
     position: "absolute",
     top: 0,
     right: 0,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#1A1A1A",
   },
   content: {
@@ -231,26 +211,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     lineHeight: 18,
     marginBottom: 8,
-  },
-  progressContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  progressBar: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  progressText: {
-    fontSize: 11,
-    fontWeight: "600",
-    minWidth: 35,
   },
   unlockInfo: {
     flexDirection: "row",

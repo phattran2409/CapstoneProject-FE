@@ -29,7 +29,25 @@ export interface Players {
   isEmailVerified: boolean;
   isActive: boolean;
   createdAt: string;
-  playerProfile: null;
+  preferredPositions: string;
+  shirtNumber: number;
+  preferredFoot: string;
+  playerProfile: PlayerProfile | null;
+}
+
+export interface PlayerProfile {
+  profileId: string;
+  currentElo: number;
+  trustScore: number;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  mvpCount: number;
+  winStreak: number;
+  maxWinStreak: number;
+  afkCount: number;
+  reportCount: number;
 }
 
 export interface PlayersResponse {

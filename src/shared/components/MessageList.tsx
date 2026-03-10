@@ -102,15 +102,23 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
 
     const renderMessage: ListRenderItem<Message> = useCallback(
       ({ item }) => {
-        // Detect room invite deep link in message text
+        // Detect deep links in message text
         const roomLinkMatch = item.text.match(/(kickify:\/\/room\/\S+)/);
         const roomLink = roomLinkMatch?.[1];
 
+        const postLinkMatch = item.text.match(/(kickify:\/\/post\/\S+)/);
+        const postLink = postLinkMatch?.[1];
+
+        const userLinkMatch = item.text.match(/(kickify:\/\/user\/\S+)/);
+        const userLink = userLinkMatch?.[1];
+
+        const handleDeepLink = (url: string) => {
+          Linking.openURL(url).catch(() => {});
+        };
+
         const handleJoinRoom = () => {
           if (roomLink) {
-            Linking.openURL(roomLink).catch(() => {
-              // Silent fail; optionally could show a toast if app has one here
-            });
+            handleDeepLink(roomLink);
           }
         };
 
@@ -188,12 +196,78 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                       style={{
                         fontSize: theme.fontSizes.s,
                         fontWeight: "600",
-                        color: item.isOwn
-                          ? theme.colors.neonGreen
-                          : "#000",
+                        color: item.isOwn ? theme.colors.neonGreen : "#000",
                       }}
                     >
                       Tham gia phòng
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {postLink && (
+                  <TouchableOpacity
+                    onPress={() => handleDeepLink(postLink)}
+                    style={{
+                      marginTop: theme.spacing.s,
+                      backgroundColor: item.isOwn
+                        ? theme.colors.black
+                        : theme.colors.neonGreen,
+                      borderRadius: theme.radius.s,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      alignSelf: "flex-start",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons
+                      name="newspaper-outline"
+                      size={14}
+                      color={item.isOwn ? theme.colors.neonGreen : "#000"}
+                    />
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.s,
+                        fontWeight: "600",
+                        color: item.isOwn ? theme.colors.neonGreen : "#000",
+                      }}
+                    >
+                      Xem bài viết
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {userLink && (
+                  <TouchableOpacity
+                    onPress={() => handleDeepLink(userLink)}
+                    style={{
+                      marginTop: theme.spacing.s,
+                      backgroundColor: item.isOwn
+                        ? theme.colors.black
+                        : theme.colors.neonGreen,
+                      borderRadius: theme.radius.s,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      alignSelf: "flex-start",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons
+                      name="person-outline"
+                      size={14}
+                      color={item.isOwn ? theme.colors.neonGreen : "#000"}
+                    />
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.s,
+                        fontWeight: "600",
+                        color: item.isOwn ? theme.colors.neonGreen : "#000",
+                      }}
+                    >
+                      Xem hồ sơ
                     </Text>
                   </TouchableOpacity>
                 )}

@@ -50,6 +50,7 @@ const vi = {
       invalid: "Mã OTP phải có 6 chữ số",
     },
     profile: {
+      personalPage: "Trang cá nhân",
       name: {
         required: "Họ tên là bắt buộc",
         tooShort: "Họ tên phải có ít nhất 2 ký tự",
@@ -82,6 +83,7 @@ const vi = {
     },
   },
   newsFeed: {
+    whatdoyouthink: "Bạn đang nghĩ gì?",
     title: "Bảng tin",
     view: "Xem tất cả",
     noPosts: "Không có bài viết nào",
@@ -128,6 +130,7 @@ const vi = {
     title: "Bảng xếp hạng ELO",
     searchPlaceholder: "Tìm kiếm người chơi...",
     noResults: "Không tìm thấy người chơi",
+    empty: "Chưa có người chơi nào",
     tabs: {
       overall: "Tổng thể",
       weekly: "Tuần",
@@ -190,7 +193,8 @@ const vi = {
     filterApplied: "Đã áp dụng bán kính {{km}} km",
     locationError: "Không thể lấy vị trí",
     locationErrorHint: "Vui lòng bật GPS và mở lại.",
-    noResultsDescription: "Không tìm thấy sân gần đây. Vui lòng thử lại với tiêu chí tìm kiếm khác.",
+    noResultsDescription:
+      "Không tìm thấy sân gần đây. Vui lòng thử lại với tiêu chí tìm kiếm khác.",
   },
   fieldsModal: {
     title: "Danh sách sân",
@@ -276,6 +280,7 @@ const vi = {
     },
   },
   profile: {
+    personalPage: "Trang cá nhân",  
     title: "Hồ sơ & Cài đặt",
     nameLabel: "Họ tên",
     emailLabel: "Email",
@@ -292,6 +297,7 @@ const vi = {
     notifications: "Thông báo",
     matchInvitations: "Thông báo",
     matchNotification: "Thông báo trận đấu",
+    friendshipNotification: "Thông báo lời mời kết bạn",
     postNotification: "Thông báo bài viết",
     newsUpdates: "Tin tức & cập nhật",
     application: "Ứng dụng",
@@ -327,6 +333,7 @@ const vi = {
     },
   },
   personalPage: {
+    achievements: "Thành tựu",
     title: "Trang cá nhân",
     editProfile: "Chỉnh sửa trang cá nhân",
     addFriend: "Thêm bạn bè",
@@ -554,6 +561,21 @@ const vi = {
       allPlayersRequired:
         "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
     },
+    result: {
+      headerTitle: "Xác nhận Kết quả",
+      title: "Ai là người chiến thắng?",
+      subtitle:
+        "Chọn kết quả cuối cùng của trận đấu để cập nhật bảng xếp hạng.",
+      winner: "WINNER",
+      teamA: "FC SÀI GÒN",
+      teamB: "FC HÀ NỘI",
+      draw: "Trận đấu Hòa",
+      venueLabel: "SÂN VẬN ĐỘNG",
+      venueName: "Sân bóng Đại học Y, Hà Nội",
+      continue: "TIẾP TỤC",
+      footer:
+        "Sau khi nhấn, yêu cầu sẽ được gửi tới đội trưởng đội phương để xác nhận kết quả.",
+    },
   },
   reportModal: {
     title: {
@@ -606,6 +628,106 @@ const vi = {
     matchFormatLabel: "Hình thức thi đấu",
     resetButton: "Đặt lại",
     applyButton: "Áp dụng",
+  },
+  achievements: {
+    title: "Thành tựu",
+    stats: {
+      unlocked: "Đã mở khóa",
+      total: "Tổng số",
+      completion: "Hoàn thành",
+    },
+    filter: {
+      all: "Tất cả",
+      unlocked: "Đã mở",
+      locked: "Bị khóa",
+    },
+    section: {
+      all: "Tất cả thành tựu",
+      unlocked: "Thành tựu đã mở khóa",
+      locked: "Thành tựu bị khóa",
+      count: "{{count}} thành tựu",
+    },
+    loading: "Đang tải thành tựu...",
+    error: "Không thể tải thành tựu. Vui lòng thử lại.",
+    empty: "Chưa có thành tựu nào",
+  },
+  wallet: {
+    title: "Ví tiền",
+    balanceLabel: "Tổng số dư hiện có",
+    deposit: "Nạp thêm",
+    withdraw: "Rút tiền",
+    recentTransactions: "Giao dịch gần đây",
+    withdrawTitle: "Rút tiền về ngân hàng",
+    withdrawDescription:
+      "Vui lòng nhập chính xác thông tin tài khoản ngân hàng để gửi yêu cầu rút tiền.",
+    bankAccountNumberLabel: "Số tài khoản ngân hàng",
+    bankAccountNumberPlaceholder: "Ví dụ: 0123456789",
+    bankNameLabel: "Tên ngân hàng",
+    bankNamePlaceholder: "Ví dụ: MB Bank",
+    accountHolderNameLabel: "Họ và tên chủ tài khoản",
+    accountHolderNamePlaceholder: "Ví dụ: NGUYỄN VĂN A",
+    withdrawSubmitting: "Đang gửi yêu cầu...",
+    withdrawSubmit: "Gửi yêu cầu rút tiền",
+    depositMinError: "Vui lòng nhập số tiền tối thiểu 1.000 VND",
+    paymentLinkError: "Không thể mở link thanh toán. Vui lòng thử lại.",
+    noPaymentLinkError: "Không nhận được link thanh toán. Vui lòng thử lại.",
+    genericError: "Có lỗi xảy ra. Vui lòng thử lại.",
+    depositTitle: "Nạp tiền vào ví",
+    depositAmountLabel: "Nhập số tiền cần nạp (VND)",
+    depositAmountPlaceholder: "Ví dụ: 50000",
+    processing: "Đang xử lý...",
+    payViaVNPay: "Thanh toán VNPay",
+    filters: {
+      all: "Tất cả",
+      booking: "Đặt sân",
+      topup: "Nạp tiền",
+      refund: "Hoàn tiền",
+      checkin: "Check-in",
+      withdraw: "Rút tiền",
+    },
+  },
+  eloBreakdown: {
+    title: "CHI TIẾT THAY ĐỔI ELO",
+    rankUp: "THĂNG HẠNG MỚI",
+    rankDown: "GIẢM HẠNG",
+    summaryWin:
+      "Tuyệt vời! Bạn vừa giành chiến thắng trước đối thủ có xếp hạng cao hơn.",
+    summaryLose:
+      "Bạn đã để thua trước đối thủ. Đừng nản, hãy tiếp tục cố gắng ở trận tiếp theo.",
+    lastMatch: "TRẬN GẦN NHẤT",
+    detailTitle: "PHÂN TÍCH CHI TIẾT",
+    matchResult: {
+      title: "Kết quả trận đấu",
+      desc: "Chiến thắng 3-1 thuyết phục",
+    },
+    teammateRating: {
+      title: "Đánh giá đồng đội",
+      desc: "Được bình chọn là MVP của trận",
+    },
+    winRate: {
+      title: "Tỷ lệ thắng",
+      desc: "Thắng đối thủ có bậc Rank cao hơn",
+    },
+    feedbackContribution: {
+      title: "Đóng góp đánh giá",
+      desc: "Hoàn thành đầy đủ đánh giá sau trận đấu",
+    },
+    reputation: {
+      title: "Uy tín",
+      desc: "Không có vi phạm, tinh thần Fair-play",
+    },
+    continue: "TIẾP TỤC",
+  },
+  payment: {
+    title: "Thanh toán",
+    successTitle: "GIAO DỊCH THÀNH CÔNG!",
+    successDescription: "Số dư đã được cập nhật vào ví của bạn",
+    completed: "Hoàn tất",
+    backToWallet: "Quay lại Ví",
+    backHome: "Về Trang chủ",
+    transactionId: "Mã giao dịch",
+    paymentMethod: "Phương thức",
+    status: "Trạng thái",
   },
 };
 

@@ -1,55 +1,41 @@
-export interface LeaderboardPlayer {
-  id: string;
-  rank: number;
-  previousRank?: number;
+export interface Players {
   userId: string;
-  name: string;
-  username: string;
-  avatar?: string;
-  elo: number;
-  eloChange: number;
-  trend: 'up' | 'down' | 'stable';
-  matchesPlayed: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  goals: number;
-  assists: number;
-  cleanSheets: number;
-  recentForm: ('W' | 'L' | 'D')[]; // Last 5 matches
+  email: string;
+  fullName: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  role: number;
+  isEmailVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+  preferredPositions: string;
+  shirtNumber: number;
+  preferredFoot: string;
+  playerProfile: PlayerProfile | null;
 }
 
-export interface LeaderboardFilters {
-  timeframe?: 'weekly' | 'monthly' | 'allTime';
-  format?: '5vs5' | '7vs7' | '11vs11';
-  region?: string;
-  limit?: number;
-}
-
-export interface TeamLeaderboard {
-  id: string;
-  rank: number;
-  teamName: string;
-  avatar?: string;
-  elo: number;
-  matchesPlayed: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  goalsFor: number;
-  goalsAgainst: number;
-  goalDifference: number;
-  points: number;
-}
-
-export interface LeaderboardStats {
-  totalPlayers: number;
-  averageElo: number;
-  highestElo: number;
-  lowestElo: number;
+export interface PlayerProfile {
+  profileId: string;
+  currentElo: number;
+  trustScore: number;
   totalMatches: number;
-  updatedAt: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  mvpCount: number;
+  winStreak: number;
+  maxWinStreak: number;
+  afkCount: number;
+  reportCount: number;
 }
 
+export interface PlayersResponse {
+  isSuccess: boolean;
+  data: {
+    users: Players[];
+    totalPages: number;
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}

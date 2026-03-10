@@ -148,7 +148,9 @@ export function usePagination<T>({
   }, [isFetching, isLoadingMore, currentPage, totalPages]);
 
   // Determine loading states
-  const loading = isLoading && isInitialLoad.current;
+  // accumulatedData.length === 0 giữ loading=true trong frame giữa khi isLoading
+  // vừa thành false nhưng useEffect chưa chạy để set data → tránh flash EmptyState
+  const loading = (isLoading || accumulatedData.length === 0) && isInitialLoad.current;
   const refreshing = isRefreshing && isFetching;
   const loadingMore = isLoadingMore;
 

@@ -37,7 +37,7 @@ import { TabParamList } from "@/app/navigation/types";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useDebounce } from "@/shared/hooks";
-import { EloLeaderboardSection } from "@/features/leaderboard";
+import { EloLeaderboardSection, usePaginatedPlayers } from "@/features/leaderboard";
 import { useAuthStore } from "@/features/auth";
 import { authApi } from "@/features/auth/api";
 import { getFcmToken } from "@/shared/firebase/messaging";
@@ -57,6 +57,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const { user } = useAuthStore();
   const hasSyncedFcmRef = useRef(false);
+
+  const { users } = usePaginatedPlayers({ pageSize: 5 });
 
   // Đăng ký / đồng bộ FCM token sau khi user đã đăng nhập và vào Home
   useEffect(() => {
@@ -178,7 +180,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <ThemedText variant="secondary" size="m">
-              {t("newsFeed.whatsOnMind", {
+              {t("newsFeed.whatdoyouthink", {
                 defaultValue: "Bạn đang nghĩ gì?",
               })}
             </ThemedText>
@@ -187,7 +189,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       </ThemedView>
 
       {/* ELO Leaderboard Section */}
-      <EloLeaderboardSection />
+      <EloLeaderboardSection users={users} />
     </>
   );
 

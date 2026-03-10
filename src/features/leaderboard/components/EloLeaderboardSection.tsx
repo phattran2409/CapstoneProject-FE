@@ -12,85 +12,14 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "@/shared/theme";
 import { ThemedText, ThemedView } from "@/shared/components/themed";
+import { Players } from "../types/leaderboard.types";
+import { getEmailUsername } from "@/shared/utils/formatters";
 
-interface ELOPlayer {
-  id: string;
-  rank: number;
-  name: string;
-  username: string;
-  avatar: any;
-  elo: number;
-  matchesPlayed: number;
-  winRate: number;
-  trend: "up" | "down" | "stable";
-  eloChange: number;
+interface EloLeaderboardSectionProps {
+  users: Players[];
 }
 
-// Mock ELO Leaderboard data
-const topPlayers: ELOPlayer[] = [
-  {
-    id: "1",
-    rank: 1,
-    name: "Nguyễn Văn A",
-    username: "nguyenvana",
-    avatar: require("../../../../assets/icon.png"),
-    elo: 2450,
-    matchesPlayed: 128,
-    winRate: 78.5,
-    trend: "up",
-    eloChange: 45,
-  },
-  {
-    id: "2",
-    rank: 2,
-    name: "Trần Minh B",
-    username: "tranminhb",
-    avatar: require("../../../../assets/icon.png"),
-    elo: 2380,
-    matchesPlayed: 115,
-    winRate: 74.2,
-    trend: "up",
-    eloChange: 28,
-  },
-  {
-    id: "3",
-    rank: 3,
-    name: "Lê Hoàng C",
-    username: "lehoangc",
-    avatar: require("../../../../assets/icon.png"),
-    elo: 2310,
-    matchesPlayed: 102,
-    winRate: 71.8,
-    trend: "down",
-    eloChange: -15,
-  },
-  {
-    id: "4",
-    rank: 4,
-    name: "Phạm Đức D",
-    username: "phamducd",
-    avatar: require("../../../../assets/icon.png"),
-    elo: 2285,
-    matchesPlayed: 95,
-    winRate: 69.5,
-    trend: "stable",
-    eloChange: 0,
-  },
-  {
-    id: "5",
-    rank: 5,
-    name: "Võ Thành E",
-    username: "vothanhe",
-    avatar: require("../../../../assets/icon.png"),
-    elo: 2240,
-    matchesPlayed: 88,
-    winRate: 67.3,
-    trend: "up",
-    eloChange: 12,
-  },
-];
-
-export const EloLeaderboardSection: React.FC = () => {
+export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ users }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
@@ -108,27 +37,6 @@ export const EloLeaderboardSection: React.FC = () => {
     }
   };
 
-  const getTrendIcon = (trend: "up" | "down" | "stable") => {
-    switch (trend) {
-      case "up":
-        return "trending-up";
-      case "down":
-        return "trending-down";
-      case "stable":
-        return "remove";
-    }
-  };
-
-  const getTrendColor = (trend: "up" | "down" | "stable") => {
-    switch (trend) {
-      case "up":
-        return "#22c55e";
-      case "down":
-        return "#ef4444";
-      case "stable":
-        return "#6b7280";
-    }
-  };
 
   return (
     <ThemedView
@@ -172,10 +80,10 @@ export const EloLeaderboardSection: React.FC = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20 }}
-        data={topPlayers}
-        keyExtractor={(player) => player.id}
-        renderItem={({ item: player }) => {
-          const rankColor = getRankColor(player.rank);
+        data={users}
+        keyExtractor={(player) => player.userId}
+        renderItem={({ item: player, index }) => {
+          const rankColor = getRankColor(index + 1);
           return (
             <TouchableOpacity
               style={[
@@ -195,9 +103,9 @@ export const EloLeaderboardSection: React.FC = () => {
                 // Assuming PersonalPage takes userId
                 const parent = navigation.getParent();
                 if (parent) {
-                  parent.navigate("PersonalPage", { userId: player.id });
+                  parent.navigate("PersonalPage", { userId: player.userId });
                 } else {
-                  navigation.navigate("PersonalPage", { userId: player.id });
+                  navigation.navigate("PersonalPage", { userId: player.userId });
                 }
               }}
             >
@@ -212,12 +120,12 @@ export const EloLeaderboardSection: React.FC = () => {
                 ]}
               >
                 <Text style={[styles.rankText, { color: rankColor }]}>
-                  #{player.rank}
+                  #{index + 1}
                 </Text>
               </View>
 
               <Image
-                source={player.avatar}
+                source={player.avatarUrl ? { uri: player.avatarUrl } : require('../../../assets/images/default_avatar.png')}
                 style={styles.playerAvatar}
                 resizeMode="cover"
               />
@@ -225,7 +133,7 @@ export const EloLeaderboardSection: React.FC = () => {
               <Text
                 style={[styles.playerName, { color: theme.colors.softWhite }]}
               >
-                {player.name}
+                {player.fullName}
               </Text>
               <Text
                 style={[
@@ -233,9 +141,8 @@ export const EloLeaderboardSection: React.FC = () => {
                   { color: theme.colors.textSecondary },
                 ]}
               >
-                @{player.username}
+                  @{getEmailUsername(player.email)}
               </Text>
-
               <View
                 style={[
                   styles.eloContainer,
@@ -253,30 +160,15 @@ export const EloLeaderboardSection: React.FC = () => {
                     { color: theme.colors.textSecondary },
                   ]}
                 >
-                  ELO Rating
+                  {t('leaderboard.stats.eloRating')}
                 </Text>
                 <Text
                   style={[styles.eloValue, { color: theme.colors.neonGreen }]}
                 >
-                  {player.elo}
+                  {player.playerProfile?.currentElo}
                 </Text>
 
-                <View style={styles.trendContainer}>
-                  <Ionicons
-                    name={getTrendIcon(player.trend)}
-                    size={14}
-                    color={getTrendColor(player.trend)}
-                  />
-                  <Text
-                    style={[
-                      styles.trendText,
-                      { color: getTrendColor(player.trend) },
-                    ]}
-                  >
-                    {player.eloChange > 0 ? "+" : ""}
-                    {player.eloChange}
-                  </Text>
-                </View>
+           
               </View>
 
               <View style={styles.statsContainer}>
@@ -287,7 +179,7 @@ export const EloLeaderboardSection: React.FC = () => {
                       { color: theme.colors.textSecondary },
                     ]}
                   >
-                    Matches
+                    {t('leaderboard.stats.matches')}
                   </Text>
                   <Text
                     style={[
@@ -295,7 +187,7 @@ export const EloLeaderboardSection: React.FC = () => {
                       { color: theme.colors.softWhite },
                     ]}
                   >
-                    {player.matchesPlayed}
+                    {player.playerProfile?.totalMatches}
                   </Text>
                 </View>
                 <View
@@ -308,7 +200,7 @@ export const EloLeaderboardSection: React.FC = () => {
                       { color: theme.colors.textSecondary },
                     ]}
                   >
-                    Win Rate
+                    {t('leaderboard.stats.winRate')}
                   </Text>
                   <Text
                     style={[
@@ -316,7 +208,11 @@ export const EloLeaderboardSection: React.FC = () => {
                       { color: theme.colors.softWhite },
                     ]}
                   >
-                    {player.winRate}%
+                    {(
+                      ((player.playerProfile?.wins ?? 0) /
+                        (player.playerProfile?.totalMatches || 1)) *
+                      100
+                    ).toFixed(2)}%
                   </Text>
                 </View>
               </View>

@@ -360,7 +360,9 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                     <CommentItem
                       postId={postId}
                       comment={item}
-                      onLike={() => toggleCommentLike(item.commentId)}
+                      onLike={() =>
+                        toggleCommentLike({ commentId: item.commentId, postId })
+                      }
                       onEdit={isOwnComment ? handleEditComment : undefined}
                       onDelete={isOwnComment ? handleDeleteComment : undefined}
                     />

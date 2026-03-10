@@ -246,6 +246,16 @@ export const roomsApi = {
     return data;
   },
 
+  //Vote Result
+  voteResult: async (
+    roomId: string,
+    vote: string,
+  ): Promise<any> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.VOTE_RESULT.replace(":id", roomId);
+    const data = await apiClient.post(url, { vote });
+    return data;
+  },
+
   /**
    * Get match room detail by ID
    * Used to refresh room state after SignalR events

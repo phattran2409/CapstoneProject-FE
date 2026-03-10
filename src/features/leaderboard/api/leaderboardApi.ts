@@ -1,59 +1,46 @@
 import { apiClient } from '@/shared/api/client';
 import {
-  LeaderboardPlayer,
-  TeamLeaderboard,
-  LeaderboardFilters,
-  LeaderboardStats,
+  Players,
+  PlayersResponse,
 } from '../types/leaderboard.types';
 
+export interface GetLeaderboardParams {
+  page?: number;
+  pageSize?: number;
+  role?: string;
+  sortBy?: string;
+  isActive?: boolean;
+  sortOrder?: 'asc' | 'desc';
+}
+
 // Get player leaderboard
-export const getPlayerLeaderboard = async (
-  filters?: LeaderboardFilters
-): Promise<LeaderboardPlayer[]> => {
-  const params = new URLSearchParams();
-  
-  if (filters?.timeframe) params.append('timeframe', filters.timeframe);
-  if (filters?.format) params.append('format', filters.format);
-  if (filters?.region) params.append('region', filters.region);
-  if (filters?.limit) params.append('_limit', filters.limit.toString());
-  
-  params.append('_sort', 'elo');
-  params.append('_order', 'desc');
+export const getLeaderboardPlayers = async ({
+  page = 1,
+  pageSize = 10,
+  role = 'Player',
+  sortBy = 'currentElo',
+  sortOrder = 'desc',
+  isActive = true,
+}: GetLeaderboardParams = {}): Promise<{
+  users: Players[];
+  totalPages: number;
+  totalCount: number;
+}> => {
+  try {
+    const url = `/users?page=${page}&pageSize=${pageSize}&role=${role}&sortBy=${sortBy}&sortOrder=${sortOrder}&isActive=${isActive}`;
 
-  const response = await apiClient.get<LeaderboardPlayer[]>(
-    `/leaderboard/players?${params.toString()}`
-  );
-  return response.data;
-};
-
-// Get team leaderboard
-export const getTeamLeaderboard = async (
-  filters?: LeaderboardFilters
-): Promise<TeamLeaderboard[]> => {
-  const params = new URLSearchParams();
-  
-  if (filters?.timeframe) params.append('timeframe', filters.timeframe);
-  if (filters?.format) params.append('format', filters.format);
-  if (filters?.limit) params.append('_limit', filters.limit.toString());
-  
-  params.append('_sort', 'points');
-  params.append('_order', 'desc');
-
-  const response = await apiClient.get<TeamLeaderboard[]>(
-    `/leaderboard/teams?${params.toString()}`
-  );
-  return response.data;
-};
-
-// Get leaderboard stats
-export const getLeaderboardStats = async (): Promise<LeaderboardStats> => {
-  const response = await apiClient.get<LeaderboardStats>('/leaderboard/stats');
-  return response.data;
-};
-
-// Get my rank
-export const getMyRank = async (): Promise<LeaderboardPlayer> => {
-  const response = await apiClient.get<LeaderboardPlayer>('/leaderboard/me');
-  return response.data;
+    const response = (await apiClient.get(url)) as PlayersResponse;
+    if (response.isSuccess && response.data) {
+      return {
+        users: response.data.users,
+        totalPages: response.data.totalPages,
+        totalCount: response.data.totalCount,
+      };
+    }
+    throw new Error("Failed to fetch users");
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    throw error;
+  }
 };
 

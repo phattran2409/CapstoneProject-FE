@@ -3,6 +3,7 @@ import {
   User,
   UpdateProfileData,
   UserProfileResponse,
+  AchievementsData,
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
 
@@ -20,6 +21,19 @@ export const getUserProfile = async (userId: string): Promise<User> => {
     return response.data;
   } catch (error) {
     console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
+export const getAchievements = async (): Promise<AchievementsData> => {
+  try {
+    const response = await apiClient.get<AchievementsData>(`/achievements/me`);
+    if (!response.data) {
+      throw new Error("Invalid response: User achievements data is missing");
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user achievements:", error);
     throw error;
   }
 };
@@ -89,3 +103,39 @@ export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
   const response = await apiClient.get(`/users/${id}/match-history`);
   return (response as { data?: unknown[] })?.data ?? [];
 };
+
+//Update notification settings
+export const updateNotificationSettings = async (
+  matchRoom: boolean,
+  friendship: boolean,
+  post: boolean,
+): Promise<ApiResponse> => {
+  try {
+    const response = await apiClient.put(`/notification-preferences`, {
+      matchRoom,
+      friendship,
+      post,
+    });
+    console.log("response :", response);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating notification settings:", error);
+    throw error;
+  }
+};
+
+export interface NotificationPreferences {
+  matchRoom: boolean;
+  friendship: boolean;
+  post: boolean;
+}
+
+export const getNotificationSettings =
+  async (): Promise<NotificationPreferences> => {
+    const response = await apiClient.get<NotificationPreferences>(
+      `/notification-preferences`,
+    );
+    if (!response.data) throw new Error("No notification preferences data");
+    console.log("response :", response.data);
+    return response.data;
+  };

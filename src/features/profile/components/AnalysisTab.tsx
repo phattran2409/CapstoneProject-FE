@@ -84,6 +84,25 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
           },
         ]}
       >
+        {/* //Radar chart Biểu đồ Hồ sơ Thi đấu
+
+Radar chart đóng vai trò minh bạch hóa các yếu tố ảnh hưởng đến xếp hạng, giúp người chơi cải thiện hành vi hoặc người khác có thể xem và đánh giá.
+
+Form (phong Độ) = Average(Result - Expected) trong 10 trận gần nhất
+WinRate: tỉ lệ thắng 10 trận gần nhất
+communityScore: trung bình (Feedback/Sentiment)
+TrustScore (max: 100)
+ContributionRate = số lần đánh giá / số trận tham gia
+
+ví dụ trả về 
+{
+  "form": 0.35,
+  "winRate": 0.75,
+  "communityScore": 0.81,
+  "trust": 87,
+  "contribution": 0.6
+} */}
+
         <RadarChart
           data={{
             form: radarData.Perf / 50 - 1, // Convert 0-100 to -1..1
@@ -95,7 +114,6 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
           }}
         />
       </View>
-
 
       {/* AI Assessment Section */}
       <View style={styles.assessmentSection}>

@@ -50,6 +50,7 @@ const en = {
       invalid: "OTP code must be 6 digits",
     },
     profile: {
+      personalPage: "Personal Page",
       name: {
         required: "Name is required",
         tooShort: "Name must be at least 2 characters",
@@ -82,6 +83,7 @@ const en = {
     },
   },
   newsFeed: {
+    whatdoyouthink: "What do you think?",
     title: "News Feed",
     view: "View All",
     noPosts: "No posts available",
@@ -118,6 +120,7 @@ const en = {
   },
   matches: {
     title: "Matches",
+    noMatches: "No matches available",
   },
   tabs: {
     home: "Home",
@@ -131,6 +134,7 @@ const en = {
     title: "ELO Leaderboard",
     searchPlaceholder: "Search players...",
     noResults: "No players found",
+    empty: "No players yet",
     tabs: {
       overall: "Overall",
       weekly: "Weekly",
@@ -193,7 +197,8 @@ const en = {
     filterApplied: "Filter applied: {{km}} km",
     locationError: "Failed to get location",
     locationErrorHint: "Try turning on GPS and opening again.",
-    noResultsDescription: "No venues found nearby. Please try again with different search criteria.",
+    noResultsDescription:
+      "No venues found nearby. Please try again with different search criteria.",
   },
   fieldsModal: {
     title: "Fields",
@@ -248,7 +253,6 @@ const en = {
     noAccount: "Don't have an account?",
     registerNow: "Register now",
     googleLogin: "Sign in with Google",
-
   },
   register: {
     title: "Create new account",
@@ -280,6 +284,7 @@ const en = {
     },
   },
   profile: {
+    personalPage: "Personal Page",
     title: "Profile & Settings",
     nameLabel: "Name",
     emailLabel: "Email",
@@ -296,6 +301,7 @@ const en = {
     notifications: "Notifications",
     matchInvitations: "Notifications",
     matchNotification: "Match Notification",
+    friendshipNotification: "Friendship Notification",
     postNotification: "Post Notification",
     newsUpdates: "News & updates",
     application: "Application",
@@ -331,6 +337,7 @@ const en = {
     },
   },
   personalPage: {
+    achievements: "Achievements",
     title: "Personal Page",
     editProfile: "Edit Personal Page",
     addFriend: "Add Friend",
@@ -557,6 +564,21 @@ const en = {
       ratingRequiredMessage: "Please select a star rating before submitting.",
       allPlayersRequired: "Please rate all players before completing.",
     },
+    result: {
+      headerTitle: "Confirm Result",
+      title: "Who is the winner?",
+      subtitle:
+        "Choose the final result of the match to update the leaderboard.",
+      winner: "WINNER",
+      teamA: "SAI GON FC",
+      teamB: "HA NOI FC",
+      draw: "Match Draw",
+      venueLabel: "STADIUM",
+      venueName: "Hanoi Medical University Stadium",
+      continue: "CONTINUE",
+      footer:
+        "After pressing, the request will be sent to the opposing captain to confirm the result.",
+    },
   },
   reportModal: {
     title: {
@@ -609,6 +631,105 @@ const en = {
     matchFormatLabel: "Match format",
     resetButton: "Reset",
     applyButton: "Apply",
+  },
+  achievements: {
+    title: "Achievements",
+    stats: {
+      unlocked: "Unlocked",
+      total: "Total",
+      completion: "Completion",
+    },
+    filter: {
+      all: "All",
+      unlocked: "Unlocked",
+      locked: "Locked",
+    },
+    section: {
+      all: "All Achievements",
+      unlocked: "Unlocked Achievements",
+      locked: "Locked Achievements",
+      count: "{{count}} achievements",
+    },
+    loading: "Loading achievements...",
+    error: "Failed to load achievements. Please try again.",
+    empty: "No achievements yet",
+  },
+  wallet: {
+    title: "Wallet",
+    balanceLabel: "Current Balance",
+    deposit: "Deposit",
+    withdraw: "Withdraw",
+    recentTransactions: "Recent Transactions",
+    withdrawTitle: "Withdraw to Bank",
+    withdrawDescription:
+      "Please enter your bank account information accurately to submit a withdrawal request.",
+    bankAccountNumberLabel: "Bank Account Number",
+    bankAccountNumberPlaceholder: "Example: 0123456789",
+    bankNameLabel: "Bank Name",
+    bankNamePlaceholder: "Example: MB Bank",
+    accountHolderNameLabel: "Account Holder Name",
+    accountHolderNamePlaceholder: "Example: NGUYEN VAN A",
+    withdrawSubmitting: "Submitting...",
+    withdrawSubmit: "Submit Request",
+    depositMinError: "Please enter a minimum amount of 1,000 VND",
+    paymentLinkError: "Cannot open payment link. Please try again.",
+    noPaymentLinkError: "No payment link received. Please try again.",
+    genericError: "An error occurred. Please try again.",
+    depositTitle: "Deposit to Wallet",
+    depositAmountLabel: "Enter deposit amount (VND)",
+    depositAmountPlaceholder: "Example: 50000",
+    processing: "Processing...",
+    payViaVNPay: "Pay via VNPay",
+    filters: {
+      all: "All",
+      booking: "Booking",
+      topup: "Top-up",
+      refund: "Refund",
+      checkin: "Check-in",
+      withdraw: "Withdraw",
+    },
+  },
+  eloBreakdown: {
+    title: "ELO CHANGE DETAILS",
+    rankUp: "NEW RANK PROMOTION",
+    rankDown: "RANK DEMOTION",
+    summaryWin: "Great! You just won against a higher ranked opponent.",
+    summaryLose:
+      "You lost to your opponent. Don't be discouraged, keep trying in the next match.",
+    lastMatch: "LAST MATCH",
+    detailTitle: "DETAILED ANALYSIS",
+    matchResult: {
+      title: "Match Result",
+      desc: "Convincing 3-1 victory",
+    },
+    teammateRating: {
+      title: "Teammate Rating",
+      desc: "Voted Match MVP",
+    },
+    winRate: {
+      title: "Win Rate",
+      desc: "Won against higher Rank opponent",
+    },
+    feedbackContribution: {
+      title: "Feedback Contribution",
+      desc: "Completed full post-match evaluation",
+    },
+    reputation: {
+      title: "Reputation",
+      desc: "No violations, Fair-play spirit",
+    },
+    continue: "CONTINUE",
+  },
+  payment: {
+    title: "Payment",
+    successTitle: "TRANSACTION SUCCESSFUL!",
+    successDescription: "Balance has been updated to your wallet",
+    completed: "Completed",
+    backToWallet: "Back to Wallet",
+    backHome: "Back to Home",
+    transactionId: "Transaction ID",
+    paymentMethod: "Payment Method",
+    status: "Status",
   },
 };
 

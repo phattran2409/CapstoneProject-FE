@@ -1,46 +1,49 @@
-import { useQuery } from '@tanstack/react-query';
+
 import { leaderboardKeys } from '../api/leaderboardKeys';
-import {
-  getPlayerLeaderboard,
-  getTeamLeaderboard,
-  getLeaderboardStats,
-  getMyRank,
-} from '../api/leaderboardApi';
-import { LeaderboardFilters } from '../types/leaderboard.types';
+import { getLeaderboardPlayers } from '../api/leaderboardApi';
+import { Players } from '../types/leaderboard.types';
+import { usePagination } from '@/shared/hooks/usePagination';
 
-// Get player leaderboard
-export const usePlayerLeaderboard = (filters?: LeaderboardFilters) => {
-  return useQuery({
-    queryKey: leaderboardKeys.playerList(filters),
-    queryFn: () => getPlayerLeaderboard(filters),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-};
+interface UsePaginatedLeaderboardOptions {
+  pageSize?: number;
+  enabled?: boolean;
+}
 
-// Get team leaderboard
-export const useTeamLeaderboard = (filters?: LeaderboardFilters) => {
-  return useQuery({
-    queryKey: leaderboardKeys.teamList(filters),
-    queryFn: () => getTeamLeaderboard(filters),
+export const usePaginatedPlayers = ({
+  pageSize = 10,
+  enabled = true,
+}: UsePaginatedLeaderboardOptions = {}) => {
+  const pagination = usePagination<Players>({
+    queryKey: [...leaderboardKeys.playerList()],
+    fetchFunction: async (page, size) => {
+      const result = await getLeaderboardPlayers({
+        page,
+        pageSize: size,
+        sortBy: 'currentElo',
+      });
+      return {
+        data: result.users,
+        totalPages: result.totalPages,
+        totalCount: result.totalCount,
+      };
+    },
+    pageSize,
     staleTime: 2 * 60 * 1000,
+    enabled,
+    onError: (error) => {
+      console.error("Error fetching leaderboard players:", error);
+    },
   });
-};
 
-// Get leaderboard stats
-export const useLeaderboardStats = () => {
-  return useQuery({
-    queryKey: leaderboardKeys.stats(),
-    queryFn: getLeaderboardStats,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  return {
+    users: pagination.data,
+    loading: pagination.loading,
+    refreshing: pagination.refreshing,
+    loadingMore: pagination.loadingMore,
+    error: pagination.error,
+    hasMore: pagination.hasMore,
+    refresh: pagination.refresh,
+    loadMore: pagination.loadMore,
+    setUsers: pagination.setData,
+  };
 };
-
-// Get my rank
-export const useMyRank = () => {
-  return useQuery({
-    queryKey: leaderboardKeys.myRank(),
-    queryFn: getMyRank,
-    staleTime: 2 * 60 * 1000,
-  });
-};
-

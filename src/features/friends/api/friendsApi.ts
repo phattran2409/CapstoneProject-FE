@@ -92,8 +92,11 @@ export const getPlayers = async (
 
     const response = (await apiClient.get(url)) as PlayersResponse;
     if (response.isSuccess && response.data) {
+      const filteredUsers = response.data.users.filter(
+        (u) => u.isEmailVerified && u.isActive,
+      );
       return {
-        users: response.data.users,
+        users: filteredUsers,
         totalPages: response.data.totalPages,
         totalCount: response.data.totalCount,
       };

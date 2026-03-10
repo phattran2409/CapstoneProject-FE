@@ -13,6 +13,9 @@ interface ShareRoomProps {
     shareMessage: string;
     visible: boolean;
     handleClose: () => void;
+    title?: string;
+    subtitle?: string;
+    shareButtonLabel?: string;
 }
 type Friend = {
     id: string;
@@ -47,7 +50,15 @@ const Friends : Friend[] =  [
     },
 ]
 
-const ShareRoom: React.FC<ShareRoomProps> = ({ visible, shareUrl, shareMessage, handleClose }) => {
+const ShareRoom: React.FC<ShareRoomProps> = ({
+    visible,
+    shareUrl,
+    shareMessage,
+    handleClose,
+    title,
+    subtitle,
+    shareButtonLabel,
+}) => {
     const theme = useTheme();
     
     const { show } = useToast();
@@ -87,14 +98,16 @@ const ShareRoom: React.FC<ShareRoomProps> = ({ visible, shareUrl, shareMessage, 
                 />
                 <ThemedView style={[styles.shareRoomContainer, { backgroundColor: theme.colors.card }]}>
                     <View style={styles.shareRoomHeader}>
-                        <ThemedText size="xl" weight="bold">Chia sẻ phòng</ThemedText>
+                        <ThemedText size="xl" weight="bold">
+                            {title ?? 'Chia sẻ phòng'}
+                        </ThemedText>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <ThemedIcon name="close" size={24} variant="secondary" />
                         </TouchableOpacity>
                     </View>
                     
                     <ThemedText size="m" variant="secondary" style={styles.shareRoomSubtitle}>
-                        Bạn bè của bạn có thể tham gia cuộc đấu này
+                        {subtitle ?? 'Bạn bè của bạn có thể tham gia cuộc đấu này'}
                     </ThemedText>
                     
                     <ScrollView 
@@ -121,7 +134,7 @@ const ShareRoom: React.FC<ShareRoomProps> = ({ visible, shareUrl, shareMessage, 
                     >
                         <Ionicons name="share-outline" size={24} color={theme.colors.text} />
                         <ThemedText size="m" weight="medium" style={{color: theme.colors.primary}}>
-                            Share Link
+                            {shareButtonLabel ?? 'Share Link'}
                         </ThemedText>
                     </TouchableOpacity>
                 </ThemedView>
