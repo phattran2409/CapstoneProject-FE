@@ -20,6 +20,7 @@ import { TrustScoreCard } from "../components/TrustScoreCard";
 import { ReportModal } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import { InviteFriendsModal } from "@/features/rooms/components/InviteFriendsModal";
+import { useMyRank } from "@/features/leaderboard";
 
 type ProfileDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -31,6 +32,7 @@ interface ProfileDetailScreenProps {
   route: RouteProp<RootStackParamList, "ProfileDetail">;
 }
 
+
 interface InfoRowProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -40,6 +42,8 @@ interface InfoRowProps {
 
 const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value, iconColor }) => {
   const { theme } = useTheme();
+
+
 
   return (
     <View style={[styles.infoRow, { borderBottomColor: theme.colors.border }]}>
@@ -157,7 +161,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
         ? "Chân phải"
         : foot;
   };
-
+  const myRank = useMyRank();
   const handleReportSubmit = async (reason: string, customReason?: string) => {
     setIsReporting(true);
     try {
@@ -235,7 +239,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
             />
             <StatCard
               icon="podium"
-              value="N/A"
+              value={myRank?.data?.rank || "N/A"}
               label={t("profileDetail.rank")}
               color="#FF6B6B"
             />

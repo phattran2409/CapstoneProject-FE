@@ -98,6 +98,24 @@ export const togglePostLike = async (
   }
 };
 
+export const reportContent = async (
+  contentId: string,
+  contentType: string,
+  reason: string,
+  description: string,
+): Promise<ApiResponse> => {
+  try {
+    const res = await apiClient.post(`/content-reports/${contentType}/${contentId}`, {
+      reason: reason,
+      description: description,
+    });
+    return res as unknown as ApiResponse;
+  } catch (error) {
+    console.error("Error reporting content:", error);
+    throw error;
+  }
+};
+
 // Create Post
 export const createPost = async (
   content: string,

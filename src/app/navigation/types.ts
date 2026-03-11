@@ -51,6 +51,7 @@ export type RootStackParamList = {
   FeedbackIntro: undefined;
   FeedbackMatchResult: { roomId: string };
   FeedbackRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
+  FeedbackFieldRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
   FeedbackComplete: undefined;
 };
 

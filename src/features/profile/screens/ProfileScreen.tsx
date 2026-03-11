@@ -231,6 +231,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   marginBottom: theme.spacing.xs,
                 },
               ]}
+              onPress={() =>
+                navigation.navigate("ChangePassword", {
+                  email: user?.email || "",
+                })
+              }
             >
               <Ionicons
                 name="lock-closed-outline"

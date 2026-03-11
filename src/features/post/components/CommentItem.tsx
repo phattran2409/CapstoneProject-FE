@@ -22,6 +22,7 @@ interface CommentItemProps {
   onLike: (commentId: string) => void;
   onEdit?: (commentId: string, newContent: string) => void | Promise<void>;
   onDelete?: (commentId: string) => void | Promise<void>;
+  onReport?: (commentId: string, reason: string, customReason?: string) => void | Promise<void>;
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
@@ -30,6 +31,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onLike,
   onEdit,
   onDelete,
+  onReport,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -215,14 +217,15 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           )}
         </View>
 
-        {/* Action Button for edit/delete */}
-        {onEdit && onDelete && (
+        {/* Action Button for edit/delete/report */}
+        {(onEdit || onDelete || onReport) && (
           <ActionButton
             contentType="comment"
             contentId={comment.commentId}
             currentContent={comment.content}
             onEdit={onEdit}
             onDelete={onDelete}
+            onReport={onReport}
           />
         )}
       </View>

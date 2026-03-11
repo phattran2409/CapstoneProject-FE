@@ -24,11 +24,12 @@ export const getLeaderboardPlayers = async (): Promise<LeaderboardResponse> => {
   }
 };
 
-export const getMyRank = async (): Promise<{ isSuccess: boolean, data: { rank: number } }> => {
+export const getMyRank = async () => {
   try {
     const url = `/playerprofiles/my-rank`;
     const response = (await apiClient.get(url)) ;
-    return response.data as { isSuccess: boolean, data: { rank: number } };
+    console.log("response my rank :", response.data);
+    return response.data;
   } catch (error) {
     console.error("Error fetching my rank:", error);
     throw error;

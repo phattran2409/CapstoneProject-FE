@@ -44,37 +44,37 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
   if (loading && !data.length) {
     return (
       <ThemedView
+      style={[
+        styles.leaderboardSection,
+        {
+          paddingVertical: theme.spacing.l,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border,
+        },
+      ]}
+    >
+      <View
         style={[
-          styles.leaderboardSection,
+          styles.leaderboardHeader,
           {
-            paddingVertical: theme.spacing.l,
-            borderBottomWidth: 1,
-            borderBottomColor: "#2a2a2a",
+            paddingHorizontal: theme.spacing.l,
+            marginBottom: theme.spacing.m,
           },
         ]}
       >
-        <View
-          style={[
-            styles.leaderboardHeader,
-            {
-              paddingHorizontal: theme.spacing.l,
-              marginBottom: theme.spacing.m,
-            },
-          ]}
-        >
-          <View style={styles.leaderboardTitle}>
-            <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
-            <ThemedText
-              style={{ color: theme.colors.neonGreen, marginLeft: 8 }}
-              variant="primary"
-              size="xl"
-              weight="bold"
-            >
-              {t("newsFeed.leaderboard")}
-            </ThemedText>
-          </View>
+        <View style={styles.leaderboardTitle}>
+          <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
+          <ThemedText
+            style={{ color: theme.colors.neonGreen, marginLeft: 8 }}
+            variant="primary"
+            size="xl"
+            weight="bold"
+          >
+            {t("newsFeed.leaderboard")}
+          </ThemedText>
         </View>
-      </ThemedView>
+      </View>
+    </ThemedView>
     );
   }
 
@@ -93,7 +93,7 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
         {
           paddingVertical: theme.spacing.l,
           borderBottomWidth: 1,
-          borderBottomColor: "#2a2a2a",
+          borderBottomColor: theme.colors.border,
         },
       ]}
     >
@@ -137,12 +137,12 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
               style={[
                 styles.playerCard,
                 {
-                  backgroundColor: "#1a1a1a",
+                  backgroundColor: theme.colors.card,
                   borderRadius: theme.radius.l,
                   padding: theme.spacing.m,
                   marginRight: theme.spacing.m,
                   borderWidth: 1,
-                  borderColor: "#2a2a2a",
+                  borderColor: theme.colors.border,
                   width: 180,
                 },
               ]}
@@ -179,7 +179,7 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
               />
 
               <Text
-                style={[styles.playerName, { color: theme.colors.softWhite }]}
+                style={[styles.playerName, { color: theme.colors.text }]}
               >
                 {player.fullName}
               </Text>
@@ -195,7 +195,7 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
                 style={[
                   styles.eloContainer,
                   {
-                    backgroundColor: "#0a0a0a",
+                    backgroundColor: theme.colors.background,
                     borderRadius: theme.radius.m,
                     padding: 12,
                     marginBottom: 8,
@@ -253,7 +253,7 @@ export const EloLeaderboardSection: React.FC<EloLeaderboardSectionProps> = ({ us
                   <Text
                     style={[
                       styles.statValue,
-                      { color: theme.colors.softWhite },
+                      { color: theme.colors.text },
                     ]}
                   >
                     {player.totalMatches}

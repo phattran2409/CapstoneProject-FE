@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BaseNotification, NotificationType } from '../types/notification.types';
 import { ThemedText, ThemedView } from '@/shared/components/themed';
+import { getRelativeTime } from '@/shared/utils/dateUtils';
 
 interface NotificationItemProps {
   notification: BaseNotification;
@@ -74,13 +74,12 @@ const getNotificationColor = (type: NotificationType, theme: any): string => {
 export const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
   onPress,
-  onMarkAsRead,
 }) => {
-  const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { theme, isDark } = useTheme();
 
   const iconName = getNotificationIcon(notification.notificationType, (notification as any).action);
   const iconColor = getNotificationColor(notification.notificationType, theme);
+  const cardBackgroundColor = isDark ? 'rgba(255, 255, 255, 0.06)' : theme.colors.softWhite;
 
   return (
     <TouchableOpacity
@@ -89,16 +88,14 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: notification.isRead 
-            ? theme.colors.surface 
-            : theme.colors.surface,
+          backgroundColor: notification.isRead ? theme.colors.darkBlack : cardBackgroundColor,
           borderLeftWidth: notification.isRead ? 0 : 3,
           borderLeftColor: iconColor,
           opacity: notification.isRead ? 0.6 : 1,
         },
       ]}
     >
-      <ThemedView style={styles.content}>
+      <ThemedView variant="transparent" style={styles.content}>
         {/* Icon */}
         <View
           style={[
@@ -130,7 +127,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             {notification.message}
           </ThemedText>
           <ThemedText variant="secondary" size="xs" style={styles.timestamp}>
-            {notification.createdAt}
+          {getRelativeTime(notification.createdAt)}
           </ThemedText>
         </View>
 
@@ -142,6 +139,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
               {
                 backgroundColor: theme.colors.neonGreen,
               },
+              
             ]}
           />
         )}

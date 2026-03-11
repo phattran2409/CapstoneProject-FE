@@ -529,7 +529,7 @@ const vi = {
     intro: {
       teamA: "ĐỘI A",
       teamB: "ĐỘI B",
-      title: "Giúp hệ thống cân bằng trận đấu",
+      title: "Giúp hệ thống cân bằng trận đấu của bạn",
       description:
         "Đánh giá đồng đội một cách công tâm để giúp chúng tôi tổ chức những trận đấu cân sức và hấp dẫn hơn cho bạn.",
       startButton: "Bắt đầu đánh giá",
@@ -542,11 +542,28 @@ const vi = {
       swipeRight: "VUỐT PHẢI",
       tip: "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
     },
+    field: {
+      title: "Đánh giá Sân bóng",
+      subtitle: "Chọn số sao và nhận xét nhanh",
+      ratingLabel: "Bạn hài lòng với mặt sân chứ?",
+      commentLabel: "Nhận xét nhanh về chất lượng sân",
+      commentPlaceholder:
+        "Ví dụ: Mặt cỏ đẹp, ánh sáng tốt, phòng thay đồ sạch sẽ...",
+      submit: "Hoàn thành đánh giá",
+    },
     report: {
       title: "Báo cáo người chơi",
       description:
         "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người chơi này.",
       submit: "Gửi báo cáo",
+      button: "Báo cáo người chơi này",
+      descriptionLabel: "Mô tả chi tiết",
+      descriptionPlaceholder:
+        "Nhập mô tả chi tiết về hành vi vi phạm...",
+      validation: {
+        typeRequired: "Vui lòng chọn lý do báo cáo.",
+        descriptionRequired: "Vui lòng nhập mô tả chi tiết.",
+      },
     },
     complete: {
       title: "Cảm ơn bạn đã đánh giá!",
@@ -598,9 +615,8 @@ const vi = {
       user: {
         inappropriate_behavior: "Hành vi không phù hợp",
         harassment: "Quấy rối hoặc bắt nạt",
-        spam: "Spam hoặc quảng cáo",
-        fake_account: "Tài khoản giả mạo",
-        scam: "Lừa đảo",
+        toxic_behavior: "Hành vi độc hại",
+        AFK: "Không tham gia trận đấu",
         other: "Lý do khác",
       },
     },

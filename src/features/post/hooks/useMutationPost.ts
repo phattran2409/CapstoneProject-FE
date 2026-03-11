@@ -4,6 +4,7 @@ import {
   togglePostLike,
   updatePost,
   deletePost,
+  reportContent,
 } from "../api/postApi";
 import { Post, PostLikeResponse } from "../types/post.types";
 import { postKeys } from "../api";
@@ -177,5 +178,17 @@ export const useDeletePost = () => {
     onError: (error) => {
       console.error("Error deleting post:", error);
     },
+  });
+};
+
+export const useReportContent = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse, Error, { contentId: string; contentType: string; reason: string; description: string }>({
+    mutationFn: ({ contentId, contentType, reason, description }) =>
+      reportContent(contentId, contentType, reason, description),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+    },
+    onError: (error) => console.error("Error reporting content:", error),
   });
 };

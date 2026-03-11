@@ -601,9 +601,8 @@ const en = {
       user: {
         inappropriate_behavior: "Inappropriate behavior",
         harassment: "Harassment or bullying",
-        spam: "Spam or advertising",
-        fake_account: "Fake account",
-        scam: "Scam",
+        toxic_behavior: "Toxic behavior",
+        AFK: "Not Participating in the match",
         other: "Other reason",
       },
     },

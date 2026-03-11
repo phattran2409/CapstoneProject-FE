@@ -42,7 +42,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
     return items.slice(0, 20);
   }, [leaderboardQuery.data]);
 
-  const myRank = myRankQuery.data?.data?.rank;
+  const myRank = myRankQuery.data?.rank;
   const isMyRankOutsideTop = typeof myRank === 'number' && myRank > 20;
 
   const getRankColor = useCallback((rank: number) => {

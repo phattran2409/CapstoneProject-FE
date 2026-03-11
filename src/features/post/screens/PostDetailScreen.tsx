@@ -33,6 +33,7 @@ import {
   useUpdateComment,
   useDeleteComment,
   useToggleCommentLike,
+  useReportContent,
 } from "../hooks";
 import { CommentItem, PostDetailImages } from "../components";
 import { PostMedia, MediaItem, Comment } from "../types/post.types";
@@ -83,6 +84,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const { mutateAsync: updateComment } = useUpdateComment();
   const { mutateAsync: deleteComment } = useDeleteComment();
   const { mutate: toggleCommentLike } = useToggleCommentLike();
+  const { mutateAsync: reportContent, isPending: isReportingComment } = useReportContent();
 
   const [commentContent, setCommentContent] = useState("");
 
@@ -140,6 +142,19 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   ) => {
     // TODO: Implement report API
     console.log("Report post:", postId, reason, customReason);
+  };
+
+  const handleReportComment = async (
+    commentId: string,
+    reason: string,
+    customReason?: string,
+  ) => {
+    await reportContent({
+      contentId: commentId,
+      contentType: "comment",
+      reason,
+      description: customReason ?? reason,
+    });
   };
 
   const handleEditComment = async (commentId: string, newContent: string) => {
@@ -365,6 +380,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                       }
                       onEdit={isOwnComment ? handleEditComment : undefined}
                       onDelete={isOwnComment ? handleDeleteComment : undefined}
+                      onReport={!isOwnComment ? handleReportComment : undefined}
                     />
                   );
                 }}

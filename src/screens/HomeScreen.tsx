@@ -282,7 +282,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             icon="notifications-outline"
             onPress={() => navigation.navigate("Notifications" as any)}
             size="medium"
-            notificationCount={5}
+            // notificationCount={5}
           />
         </View>
       </ThemedView>

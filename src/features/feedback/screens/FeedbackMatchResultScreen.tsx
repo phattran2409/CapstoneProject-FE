@@ -109,7 +109,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
         style={styles.gradient}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
           <TouchableOpacity
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -348,35 +348,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
             </View>
           </TouchableOpacity>
 
-          {/* Venue Info */}
-          <View
-            style={[
-              styles.venueCard,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <View style={styles.venueHeader}>
-              <Ionicons
-                name="location"
-                size={16}
-                color={theme.colors.primary}
-              />
-              <Text
-                style={[
-                  styles.venueLabel,
-                  { color: theme.colors.textSecondary },
-                ]}
-              >
-                {t("feedback.result.venueLabel", "SÂN VẬN ĐỘNG")}
-              </Text>
-            </View>
-            <Text style={[styles.venueName, { color: theme.colors.text }]}>
-              {t(
-                "feedback.result.venueName",
-                "Sân bóng Đại học Y, Hà Nội",
-              )}
-            </Text>
-          </View>
+    
 
           {/* Continue Button */}
           <TouchableOpacity
@@ -435,6 +407,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    borderBottomWidth: 1,
   },
   backButton: {
     width: 40,
@@ -443,8 +416,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
   },
   headerRightPlaceholder: {
     width: 40,
@@ -547,26 +520,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  venueCard: {
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 32,
-  },
-  venueHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
-  },
-  venueLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1,
-  },
-  venueName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+
   continueButton: {
     marginTop: "auto",
     borderRadius: 24,
