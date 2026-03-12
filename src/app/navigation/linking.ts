@@ -25,6 +25,13 @@ export const linking: LinkingOptions<RootStackParamList> = {
           roomId: (roomId: string) => roomId,
         },
       },
+      PaymentSuccess: {
+        path: 'payment/success?txnRef=:txnRef&amount=:amount',
+        parse: {
+          txnRef: (txnRef: string) => txnRef,
+          amount: (amount: string) => amount,
+        },
+      },
       // Other screens
       Leaderboard: 'leaderboard',
       CreateRoom: 'create-room',
@@ -52,6 +59,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Login: 'login',
       Register: 'register',
       OTPVerification: 'verify-otp',
+      Wallet: 'wallet',
     },
   },
 };

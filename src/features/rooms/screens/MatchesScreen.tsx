@@ -15,6 +15,8 @@ import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, Ma
 import { PrivateRoomPasswordModal } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
 import { FilterRoomMatch } from '../components/FilterRoomMatch';
+import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
+import { OptionFilter } from '@/features/venues';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -77,15 +79,13 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     matchFormat: undefined,
     date: undefined,
   });
+  const [optionFilterVisible, setOptionFilterVisible] = useState(false);
+  const { latitude, longitude, radiusKm,locationLoading, handleApplyRadiusFilter } = useLocationRadiusFilter({t: t as (key: string, defaultValue?: string | object) => string});
   // Fetch match rooms from API
-  const { 
-    matchRooms, 
-    loading, 
-    refreshing, 
-    loadingMore,
-    hasMore,
-    refresh,
-    loadMore 
+  // 1) Recommended matches – không dùng vị trí
+  const {
+    matchRooms: recommendedRooms,
+    loading: loadingRecommended,
   } = useMatchRooms(
     {
       matchFormat: filter.matchFormat,
@@ -93,23 +93,50 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     }
   );
 
-  // Convert API data to MatchItemData format
-  const matches = useMemo(() => {
-    return matchRooms.map(convertMatchRoomToMatchItemData);
-  }, [matchRooms]);
+  // 2) Nearby matches – có dùng vị trí (latitude, longitude, radiusKm)
+  const { 
+    matchRooms: nearbyRooms, 
+    loading: loadingNearby, 
+    refreshing, 
+    loadingMore: loadingMoreNearby,
+    hasMore,
+    refresh,
+    loadMore,
+  } = useMatchRooms(
+    {
+      matchFormat: filter.matchFormat,
+      date: filter.date,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
+      radiusKm: radiusKm ?? undefined,
+    }
+  );
 
-  // Split matches for display (first 2 as featured, rest as list)
-  const featuredMatches = useMemo(() => matches.slice(0, matches.length ), [matches]);
-  const listMatches = useMemo(() => matches.slice(0,matches.length), [matches]);
+  const isLoading = loadingRecommended || loadingNearby;
+
+  // Convert API data to MatchItemData format
+  const featuredMatches = useMemo(() => {
+    return recommendedRooms.map(convertMatchRoomToMatchItemData);
+  }, [recommendedRooms]);
+
+  const listMatches = useMemo(() => {
+    return nearbyRooms.map(convertMatchRoomToMatchItemData);
+  }, [nearbyRooms]);
+
+  const allMatches = useMemo(
+    () => [...featuredMatches, ...listMatches],
+    [featuredMatches, listMatches]
+  );
   
+  const isEmptyMatches = !isLoading && featuredMatches.length === 0 && listMatches.length === 0;
   
   const handleMatchPress = useCallback((matchId: string) => {
-    const match = matches.find(m => m.id === matchId);
+    const match = allMatches.find(m => m.id === matchId);
     if (match) {
       setSelectedMatch(match);
       setModalVisible(true);
     }
-  }, [matches]);
+  }, [allMatches]);
 
   // Handle scroll to bottom for pagination
   const handleScroll = useCallback((event: any) => {
@@ -119,17 +146,17 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     const paddingToBottom = 50;
     const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
     
-    if (isCloseToBottom && hasMore && !loadingMore) {
+    if (isCloseToBottom && hasMore && !loadingMoreNearby) {
       loadMore();
     }
-  }, [scrollHandler, hasMore, loadingMore, loadMore]);
+  }, [scrollHandler, hasMore, loadingMoreNearby, loadMore]);
 
   // ✅ Hook để join room (tự động thêm vào Unassigned)
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
 
   const handleViewDetail = (matchId: string) => {
-    const match = matches.find((m) => m.id === matchId);
-    const room = matchRooms.find((r) => r.roomId === matchId);
+    const match = allMatches.find((m) => m.id === matchId);
+    const room = [...recommendedRooms, ...nearbyRooms].find((r) => r.roomId === matchId);
     const venuePhotos = room?.venuePhotos;
     const params = { roomId: matchId, ...(venuePhotos?.length ? { venuePhotos } : {}) };
 
@@ -183,6 +210,9 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     setPendingJoinParams(null);
     setPasswordError(undefined);
   };
+  const handleCloseOptionFilter = () => {
+    setOptionFilterVisible(false);
+  }
 
   const handleFilter = (filters: {
     matchFormat?: MatchFormat;
@@ -232,103 +262,144 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       {/* Active Room Banner - Chỉ hiển thị khi có active room */}
       <ActiveRoomBannerV2 />
 
-      <ScrollView 
-        style={styles.flex1}
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        nestedScrollEnabled={true}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refresh}
-            colors={[theme.colors.neonGreen]}
-            tintColor={theme.colors.neonGreen}
-          />
-        }
-      >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.neonGreen} />
-          </View>
-        ) : (
-          <>
-            {/* Featured Matches Section */}
-            {featuredMatches.length > 0 && (
-              <MatchList
-                matches={featuredMatches}
-                title={t("home.RecommendMatches")}
-                variant="horizontal"
-                itemVariant="card"
-                onMatchPress={handleMatchPress}
-                showStatus={true}
-              />
-            )}
-
-            {/* All Matches Section */}
-            {listMatches.length > 0 && (
-              <MatchList
-                matches={listMatches}
-                title={t("home.recentMatches", "Trận đấu gần đây")}
-                variant="vertical"
-                itemVariant="list"
-                onMatchPress={handleMatchPress}
-                showStatus={true}
-                containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
-              />
-            )}
-
-            {/* Loading more indicator */}
-            {loadingMore && (
-              <View style={styles.loadingMoreContainer}>
-                <ActivityIndicator size="small" color={theme.colors.neonGreen} />
-              </View>
-            )}
-
-            {/* Empty state */}
-            {matches.length === 0 && !loading && (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="football-outline" size={64} color={theme.colors.textSecondary} />
-                <ThemedText variant="secondary" size="m" style={{ marginTop: theme.spacing.m }}>
-                  {t("matches.noMatches", "Chưa có trận đấu nào")}
-                </ThemedText>
-              </View>
-            )}
-          </>
-        )}
-      </ScrollView>
-
-      {/* Floating Create Button */}
-      <TouchableOpacity
-        style={[
-          styles.createButton,
-          {
-            backgroundColor: theme.colors.neonGreen,
-            shadowColor: theme.colors.neonGreen,
-            borderRadius: theme.radius.l,
-            paddingVertical: theme.spacing.m,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'absolute',
-            left: theme.spacing.l,
-            right: theme.spacing.l,
-            bottom: 80,
-          },
-        ]}
-        onPress={() => {
-          navigation.navigate("CreateRoom");
-        }}
-      >
-        <Ionicons name="add" size={24} color={theme.colors.background} />
-        <ThemedText
-          size="l"
-          weight="bold"
-          style={{ marginLeft: 8, color: theme.colors.background }}
+      <View style={styles.flex1}>
+        <ScrollView 
+          style={styles.flex1}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          nestedScrollEnabled={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              colors={[theme.colors.neonGreen]}
+              tintColor={theme.colors.neonGreen}
+            />
+          }
         >
-          {t("home.createNewRoom", "Tạo phòng mới")}
-        </ThemedText>
-      </TouchableOpacity>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.neonGreen} />
+            </View>
+          ) : (
+            <>
+              {/* Featured Matches Section (không dùng vị trí) */}
+              {featuredMatches.length > 0 && (
+                <MatchList
+                  matches={featuredMatches}
+                  title={t("home.RecommendMatches")}
+                  variant="horizontal"
+                  itemVariant="card"
+                  onMatchPress={handleMatchPress}
+                  showStatus={true}
+                />
+              )}
+
+              {/* All Matches Section (lọc theo vị trí) */}
+              {listMatches.length > 0 && (
+                <>
+                  <View style={[styles.ContainerRecentMatches, { paddingHorizontal: theme.spacing.l, paddingVertical: theme.spacing.m }]}>
+                    <ThemedText size="xl" weight="bold" style={{ color: theme.colors.neonGreen }}>
+                      {t("home.recentMatches", "Trận đấu gần đây")}
+                    </ThemedText>
+                    <TouchableOpacity style={styles.iconButton} onPress={() => setOptionFilterVisible(true)}>
+                      <Ionicons name="filter" size={24} color={theme.colors.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+                  <MatchList
+                    matches={listMatches}
+                    variant="vertical"
+                    itemVariant="list"
+                    onMatchPress={handleMatchPress}
+                    showStatus={true}
+                    containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
+                  />
+                </>
+              )}
+
+              {/* Loading more indicator */}
+              {loadingMoreNearby && (
+                <View style={styles.loadingMoreContainer}>
+                  <ActivityIndicator size="small" color={theme.colors.neonGreen} />
+                </View>
+              )}
+
+              {/* Empty state + Create button on top when empty */}
+              {isEmptyMatches && (
+                <>
+                  <View style={{ paddingHorizontal: theme.spacing.l, marginTop: theme.spacing.l }}>
+                    <TouchableOpacity
+                      style={[
+                        styles.createButton,
+                        {
+                          backgroundColor: theme.colors.neonGreen,
+                          shadowColor: theme.colors.neonGreen,
+                          borderRadius: theme.radius.l,
+                          paddingVertical: theme.spacing.m,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        },
+                      ]}
+                      onPress={() => {
+                        navigation.navigate("CreateRoom");
+                      }}
+                    >
+                      <Ionicons name="add" size={24} color={theme.colors.background} />
+                      <ThemedText
+                        size="l"
+                        weight="bold"
+                        style={{ marginLeft: 8, color: theme.colors.background }}
+                      >
+                        {t("home.createNewRoom", "Tạo phòng mới")}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.emptyContainer}>
+                    <Ionicons name="football-outline" size={64} color={theme.colors.textSecondary} />
+                    <ThemedText variant="secondary" size="m" style={{ marginTop: theme.spacing.m }}>
+                      {t("matches.noMatches", "Chưa có trận đấu nào")}
+                    </ThemedText>
+                  </View>
+                </>
+              )}
+            </>
+          )}
+        </ScrollView>
+      </View>
+
+      {/* Footer Create Button (không overlay ScrollView) */}
+      {!isEmptyMatches && (
+        <View style={[styles.createButtonFooter, { paddingHorizontal: theme.spacing.l, paddingBottom: theme.spacing.l }]}>
+          <TouchableOpacity
+            style={[
+              styles.createButton,
+              {
+                backgroundColor: theme.colors.neonGreen,
+                shadowColor: theme.colors.neonGreen,
+                borderRadius: theme.radius.l,
+                paddingVertical: theme.spacing.m,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+            ]}
+            onPress={() => {
+              navigation.navigate("CreateRoom");
+            }}
+          >
+            <Ionicons name="add" size={24} color={theme.colors.background} />
+            <ThemedText
+              size="l"
+              weight="bold"
+              style={{ marginLeft: 8, color: theme.colors.background }}
+            >
+              {t("home.createNewRoom", "Tạo phòng mới")}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Match Detail Modal */}
       <MatchDetailModal
@@ -353,6 +424,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
       {/* Filter Room Match Modal */}
       <FilterRoomMatch visible={filterVisible} onApply={handleFilter} onClose={handleCloseFilter} theme={theme} />
+      <OptionFilter visible={optionFilterVisible} initialRadiusKm={radiusKm} onApply={handleApplyRadiusFilter} onClose={handleCloseOptionFilter} />
     </ThemedSafeAreaView>
   );
 };
@@ -386,6 +458,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  createButtonFooter: {
+    paddingTop: 12,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -401,6 +476,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 100,
+  },
+  ContainerRecentMatches: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });
 

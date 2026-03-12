@@ -678,6 +678,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               venuePhotosToShow={venuePhotosToShow}
               selectedImageIndex={selectedImageIndex}
               onImageIndexChange={setSelectedImageIndex}
+              t={t as (key: string, defaultValue?: string | object) => string}
             />
           )}
         </View>
