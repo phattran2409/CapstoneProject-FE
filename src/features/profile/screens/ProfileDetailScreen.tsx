@@ -17,7 +17,6 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { RouteProp } from "@react-navigation/native";
 import { TrustScoreCard } from "../components/TrustScoreCard";
-import { ReportModal } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import { InviteFriendsModal } from "@/features/rooms/components/InviteFriendsModal";
 import { useMyRank } from "@/features/leaderboard";
@@ -110,11 +109,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
   route,
 }) => {
   const { theme } = useTheme();
-  const { user } = useAuthStore();
   const { t } = useTranslation();
-  const toast = useToast();
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [isReporting, setIsReporting] = useState(false);
   const [shareProfileVisible, setShareProfileVisible] = useState(false);
 
   // Get player data from route params
@@ -162,26 +157,6 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
         : foot;
   };
   const myRank = useMyRank();
-  const handleReportSubmit = async (reason: string, customReason?: string) => {
-    setIsReporting(true);
-    try {
-      // TODO: Implement actual report API call
-      console.log("Reporting user:", {
-
-      });
-      
-      // Simulate API call
-      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
-      
-      setShowReportModal(false);
-      toast.info(t("reportModal.success.user"));
-    } catch (error) {
-      console.error("Error reporting user:", error);
-      toast.error(t("reportModal.error.user"));
-    } finally {
-      setIsReporting(false);
-    }
-  };
 
   return (
     <SafeAreaView
@@ -439,26 +414,6 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
               })}
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              {
-                backgroundColor: `${theme.colors.error}15`,
-                borderColor: theme.colors.error,
-              },
-            ]}
-            onPress={() => setShowReportModal(true)}
-          >
-            <Ionicons name="warning" size={20} color={theme.colors.error} />
-            <Text
-              style={[styles.actionButtonText, { color: theme.colors.error }]}
-            >
-              {t("profileDetail.reportIssue", {
-                defaultValue: "Báo cáo vấn đề",
-              })}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
@@ -473,14 +428,6 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
         })}
       />
 
-      {/* Report Modal */}
-      <ReportModal
-        visible={showReportModal}
-        type="user"
-        onClose={() => setShowReportModal(false)}
-        onSubmit={handleReportSubmit}
-        isLoading={isReporting}
-      />
     </SafeAreaView>
   );
 };

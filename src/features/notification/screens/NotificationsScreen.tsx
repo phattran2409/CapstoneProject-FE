@@ -9,7 +9,7 @@ import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList } from '@/app/navigation/types';
 import { BaseNotification, NotificationType } from '../types/notification.types';
 import { NotificationItem } from '../components';
-import { usePaginatedNotifications } from '../hooks';
+import { usePaginatedNotifications, useMarkAsRead, useMarkAllAsRead } from '../hooks';
 import { NotifyEventType } from '@tanstack/react-query';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { LoadingMoreIndicator } from '@/shared/components/LoadingMoreIndicator';
@@ -34,14 +34,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     type: selectedType === 'all' ? undefined : selectedType,
   });
 
-  // const { mutate: markAsRead } = useMarkNotificationAsRead();
-    // const handleNotificationPress = (notification: BaseNotification) => {
-  //   if (!notification.isRead) {
-  //     markAsRead(notification.notificationId);
-  //   }
-  // };
+  const { mutate: markAsRead } = useMarkAsRead();
+  const { mutate: markAllAsRead } = useMarkAllAsRead();
 
-
+  const handleNotificationPress = (notification: BaseNotification) => {
+    if (!notification.isRead) {
+      markAsRead(notification.notificationId);
+    }
+  };
 
   const notificationTypes: Array<{ key: NotificationType | 'all'; label: string }> = [
     { key: 'all', label: t('notifications.types.all', { defaultValue: 'Tất cả' }) },
@@ -90,7 +90,12 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
           <ThemedText size="xl" weight="bold" variant="primary">
           {t('notifications.title', { defaultValue: 'Thông báo' })}     
         </ThemedText>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity
+          onPress={() => markAllAsRead()}
+          disabled={!notifications || notifications.length === 0}
+        >
+          <Ionicons name="checkmark-circle" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
       </ThemedView>
 
       {/* Filter Tabs */}
@@ -154,7 +159,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
           <View style={{ paddingHorizontal: theme.spacing.l }}>
             <NotificationItem
               notification={item}
-              onPress={() => {}}
+              onPress={() => handleNotificationPress(item)}
             />
           </View>
         )}

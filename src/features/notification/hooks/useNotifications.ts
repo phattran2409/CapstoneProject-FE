@@ -1,6 +1,8 @@
-import { notificationKeys, getNotifications } from '../api';
+import { notificationKeys, getNotifications, markAsRead, markAllAsRead } from '../api';
 import { usePagination } from '@/shared/hooks/usePagination';
 import { BaseNotification } from '../types/notification.types';
+import { useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/shared/api';
 
 interface UsePaginatedNotificationsOptions {
   pageSize?: number,
@@ -45,4 +47,24 @@ export const usePaginatedNotifications = ({
 };
 
 
+export const useMarkAsRead = () => {
+  return useMutation({
+    mutationFn: (notificationId: string) => markAsRead(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: notificationKeys.list(),
+      });
+    },
+  });
+};
 
+export const useMarkAllAsRead = () => {
+  return useMutation({
+    mutationFn: () => markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: notificationKeys.list(),
+      });
+    },
+  });
+};

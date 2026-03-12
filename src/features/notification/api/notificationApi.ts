@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/client';
 import { BaseNotification } from '../types/notification.types';
+import { ApiResponse } from '@/shared/api';
 
 export const getNotifications = async (
   page: number = 1,
@@ -34,6 +35,26 @@ export const getNotifications = async (
     throw new Error("Failed to fetch notifications");
   } catch (error) {
     console.error("Error fetching notifications:", error);
+    throw error;
+  }
+};
+
+export const markAsRead = async (notificationId: string): Promise<ApiResponse> => {
+  try {
+    const response = await apiClient.patch(`/notifications/${notificationId}/read`);
+    return response.data;
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    throw error;
+  }
+};
+
+export const markAllAsRead = async (): Promise<ApiResponse> => {
+  try {
+    const response = await apiClient.patch(`/notifications/read-all`);
+    return response.data;
+  } catch (error) {
+    console.error("Error marking all notifications as read:", error);
     throw error;
   }
 };
