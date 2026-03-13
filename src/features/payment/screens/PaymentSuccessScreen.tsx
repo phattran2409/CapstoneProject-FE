@@ -1,9 +1,10 @@
-import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useTheme } from "@/shared/theme";
-import { useTranslation } from "react-i18next";
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTheme } from '@/shared/theme';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -23,17 +24,27 @@ type PaymentSuccessScreenNavigationProp = NativeStackNavigationProp<
   "PaymentSuccess"
 >;
 
+type PaymentSuccessScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'PaymentSuccess'
+>;
+
 interface PaymentSuccessScreenProps {
   navigation: PaymentSuccessScreenNavigationProp;
+  route: PaymentSuccessScreenRouteProp;
 }
 
 const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
   navigation,
+  route,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
   const scaleAnim = useSharedValue(1);
+  
+  const txnRef = route.params.txnRef;
+  const amount = route.params.amount;
 
   React.useEffect(() => {
     scaleAnim.value = withRepeat(
@@ -132,7 +143,7 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
               color: theme.colors.neonGreen,
             }}
           >
-            + 500,000 VND
+            + {amount} VND
           </ThemedText>
 
           <ThemedText
@@ -162,10 +173,8 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
         >
           {[
             {
-              label: t("payment.transactionId", {
-                defaultValue: "Mã giao dịch",
-              }),
-              value: "#TXN-992831BC",
+              label: 'Mã giao dịch',
+              value: txnRef,
             },
             {
               label: t("payment.paymentMethod", {

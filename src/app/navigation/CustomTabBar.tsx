@@ -127,7 +127,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
       style={[
         styles.tabBarOuter,
         {
-          bottom: 20,
+          bottom: 0,
           left: horizontalPadding,
           right: horizontalPadding,
           height: TAB_BAR_HEIGHT,

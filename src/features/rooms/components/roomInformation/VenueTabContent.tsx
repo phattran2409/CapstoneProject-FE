@@ -16,6 +16,7 @@ interface VenueTabContentProps {
   venuePhotosToShow: VenuePhoto[];
   selectedImageIndex: number;
   onImageIndexChange: (index: number) => void;
+  t: (key: string, defaultValue?: string | object) => string;
 }
 
 const formatMatchFormat = (format: string) => {
@@ -29,6 +30,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
   venuePhotosToShow,
   selectedImageIndex,
   onImageIndexChange,
+  t,
 }) => {
   const { theme } = useTheme();
 

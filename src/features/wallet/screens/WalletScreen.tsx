@@ -144,9 +144,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     }
     setDepositError("");
     try {
-      console.log("💰 Attempting deposit with amount:", amount);
       const result = await depositMutation.mutateAsync(amount);
-      console.log("✅ Deposit result:", result);
       setShowDepositModal(false);
       if (result?.paymentUrl) {
         const canOpen = await Linking.canOpenURL(result.paymentUrl);
@@ -154,30 +152,21 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
           await Linking.openURL(result.paymentUrl);
         } else {
           Alert.alert(
-            t("common.error", { defaultValue: "Lỗi" }),
-            t("wallet.paymentLinkError", {
-              defaultValue: "Không thể mở link thanh toán. Vui lòng thử lại.",
-            }),
+            t("wallet.depositTitle"),
+            t("wallet.paymentLinkError"),
           );
         }
       } else {
-        console.warn("⚠️ No payment URL in result:", result);
         Alert.alert(
-          t("common.error", { defaultValue: "Lỗi" }),
-          t("wallet.noPaymentLinkError", {
-            defaultValue: "Không nhận được link thanh toán. Vui lòng thử lại.",
-          }),
+          t("wallet.depositTitle"),
+          t("wallet.noPaymentUrl"),
         );
       }
     } catch (err: any) {
-      console.error("❌ Deposit error:", err);
-      const errorMessage =
-        err?.message ||
-        t("wallet.genericError", {
-          defaultValue: "Có lỗi xảy ra. Vui lòng thử lại.",
-        });
+      console.error("Deposit error:", err);
+      const errorMessage = err?.message || t("wallet.depositError");
       setDepositError(errorMessage);
-      Alert.alert(t("common.error", { defaultValue: "Lỗi" }), errorMessage);
+      Alert.alert(t("common.error"), errorMessage);
     }
   };
 
@@ -500,9 +489,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             >
               <View style={styles.modalHeader}>
                 <ThemedText variant="primary" size="l" weight="bold">
-                  {t("wallet.depositTitle", {
-                    defaultValue: "Nạp tiền vào ví",
-                  })}
+                  {t("wallet.depositTitle")}
                 </ThemedText>
                 <TouchableOpacity onPress={() => setShowDepositModal(false)}>
                   <Ionicons
@@ -514,9 +501,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               </View>
 
               <ThemedText variant="secondary" size="s" style={{ marginTop: 8 }}>
-                {t("wallet.depositAmountLabel", {
-                  defaultValue: "Nhập số tiền cần nạp (VND)",
-                })}
+                {t("wallet.depositAmountLabel")}
               </ThemedText>
 
               <TextInput
@@ -529,9 +514,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
                     color: theme.colors.text,
                   },
                 ]}
-                placeholder={t("wallet.depositAmountPlaceholder", {
-                  defaultValue: "Ví dụ: 50000",
-                })}
+                placeholder={t("wallet.depositPlaceholder")}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={depositAmount}
                 onChangeText={(text) => {
@@ -552,10 +535,8 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               <Button
                 title={
                   depositMutation.isPending
-                    ? t("wallet.processing", { defaultValue: "Đang xử lý..." })
-                    : t("wallet.payViaVNPay", {
-                        defaultValue: "Thanh toán VNPay",
-                      })
+                    ? t("wallet.processing")
+                    : t("wallet.payVNPay")
                 }
                 onPress={handleDeposit}
                 disabled={depositMutation.isPending}
@@ -573,7 +554,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
                 onPress={() => setShowDepositModal(false)}
               >
                 <ThemedText variant="secondary" size="s">
-                  {t("common.buttons.cancel", { defaultValue: "Hủy" })}
+                  {t("wallet.cancel")}
                 </ThemedText>
               </TouchableOpacity>
             </Pressable>

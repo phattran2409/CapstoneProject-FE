@@ -88,8 +88,8 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
       {
         onSuccess: () => {
           toast.success(
-            t('otp.success.title', 'Xác thực thành công!'),
-            t('otp.success.message', 'Vui lòng đăng nhập để tiếp tục')
+            t('otp.success.title'),
+            t('otp.success.message'),
           );
           navigation.reset({
             index: 0,
@@ -99,8 +99,8 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
         onError: (error: any) => {
           console.log(error);
           toast.error(
-            t('otp.errors.invalidTitle', 'Mã OTP không hợp lệ'),
-            error.message || t('otp.errors.invalidMessage', 'Vui lòng thử lại')
+            t('otp.errors.invalidTitle'),
+            error.message || t('otp.errors.invalidMessage'),
           );
           setOtp(['', '', '', '', '', '']);
           inputRefs.current[0]?.focus();
@@ -118,12 +118,12 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
         onSuccess: () => {
           setResendTimer(60);
           toast.success(
-            t('otp.resent.title', 'Đã gửi lại mã'),
-            t('otp.resent.message', 'Vui lòng kiểm tra email của bạn')
+            t('otp.resentTitle'),
+            t('otp.resentMessage'),
           );
         },
         onError: (error: any) => {
-          toast.error(t('otp.errors.resend'), error.message || 'Failed to resend OTP');
+          toast.error(t('otp.errors.resend'), error.message || t('otp.errors.resend'));
         },
       }
     );

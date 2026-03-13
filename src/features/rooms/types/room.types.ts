@@ -205,6 +205,9 @@ export interface MatchRoomFilters {
   page?: number;
   pageSize?: number;
   availableOnly?: boolean;
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
   matchFormat?: string;
   date?: string;
 }

@@ -33,6 +33,9 @@ export const roomsApi = {
       pageSize: filters?.pageSize || 10,
       ...(filters?.availableOnly && { availableOnly: filters.availableOnly }),
       ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
+      ...(filters?.latitude && { latitude: filters.latitude }),
+      ...(filters?.longitude && { longitude: filters.longitude }),
+      ...(filters?.radiusKm && { radiusKm: filters.radiusKm }),
       ...(filters?.date && { date: filters.date }),
     };
     console.log(params);

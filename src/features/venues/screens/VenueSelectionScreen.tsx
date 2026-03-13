@@ -13,6 +13,7 @@ import { FieldsModal, OptionFilter } from '../components';
 import { EmptyState, LoadingMoreIndicator } from '@/shared/components';
 import { useDebounce } from '@/shared/hooks';
 import Toast from 'react-native-toast-message';
+import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
 
 /** Filter theo fieldType của API: FiveVsFive, SevenVsSeven, ElevenVsEleven */
 type FieldTypeFilter = '' | 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
@@ -35,18 +36,18 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   );
   const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
   const [selectedVenueForFields, setSelectedVenueForFields] = useState<Venue | null>(null);
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [radiusKm, setRadiusKm] = useState<number | null>(null);
+  // const [latitude, setLatitude] = useState<number | null>(null);
+  // const [longitude, setLongitude] = useState<number | null>(null);
+  // const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [optionFilterVisible, setOptionFilterVisible] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
+  // const [locationLoading, setLocationLoading] = useState(false);
   useEffect(() => {
     const format = route?.params?.matchFormat as FieldTypeFilter | undefined;
     if (format && ['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'].includes(format)) {
       setSelectedFilter(format);
     }
   }, [route?.params?.matchFormat]);
-
+  const { latitude, longitude, radiusKm,locationLoading, handleApplyRadiusFilter } = useLocationRadiusFilter({t: t as (key: string, defaultValue?: string | object) => string});
   // ✅ Fetch venues from API (sportType gửi fieldType: FiveVsFive, SevenVsSeven, ElevenVsEleven)
   const { 
     venues,
@@ -93,58 +94,55 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   const handleOpenOptionFilter = () => setOptionFilterVisible(true);
   const handleCloseOptionFilter = () => setOptionFilterVisible(false);
 
-  const handleApplyRadiusFilter = useCallback(async (radiusKmValue: number) => {
-    setLocationLoading(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log('Status', status);
-      if (status !== 'granted') {
-        Toast.show({
-          type: 'info',
-          text1: t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
-          text2: t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc sân theo bán kính.'),
-        });
-        setRadiusKm(radiusKmValue);
-        setLatitude(null);
-        setLongitude(null);
-        setOptionFilterVisible(false);
-        setLocationLoading(false);
-        return;
-      }
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      console.log('Location', location);
-      setLatitude(location.coords.latitude);
-      setLongitude(location.coords.longitude);
-      setRadiusKm(radiusKmValue);
-      setOptionFilterVisible(false);
-      Toast.show({
-        type: 'success',
-        text1: t('venueSelection.filterApplied', { km: radiusKmValue }),
-      });
-    } catch (err) {
-      Toast.show({
-        type: 'error',
-        text1: t('venueSelection.locationError'),
-        text2: t('venueSelection.locationErrorHint'),
-      });
-      setRadiusKm(radiusKmValue);
-      setOptionFilterVisible(false);
-    } finally {
-      setLocationLoading(false);
-    }
-  }, [t]);
+  // const handleApplyRadiusFilter = useCallback(async (radiusKmValue: number) => {
+  //   setLocationLoading(true);
+  //   try {
+  //     const { status } = await Location.requestForegroundPermissionsAsync();
+  //     console.log('Status', status);
+  //     if (status !== 'granted') {
+  //       Toast.show({
+  //         type: 'info',
+  //         text1: t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
+  //         text2: t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc sân theo bán kính.'),
+  //       });
+  //       setRadiusKm(radiusKmValue);
+  //       setLatitude(null);
+  //       setLongitude(null);
+  //       setOptionFilterVisible(false);
+  //       setLocationLoading(false);
+  //       return;
+  //     }
+  //     const location = await Location.getCurrentPositionAsync({
+  //       accuracy: Location.Accuracy.Balanced,
+  //     });
+  //     console.log('Location', location);
+  //     setLatitude(location.coords.latitude);
+  //     setLongitude(location.coords.longitude);
+  //     setRadiusKm(radiusKmValue);
+  //     setOptionFilterVisible(false);
+  //     Toast.show({
+  //       type: 'success',
+  //       text1: t('venueSelection.filterApplied', { km: radiusKmValue }),
+  //     });
+  //   } catch (err) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: t('venueSelection.locationError'),
+  //       text2: t('venueSelection.locationErrorHint'),
+  //     });
+  //     setRadiusKm(radiusKmValue);
+  //     setOptionFilterVisible(false);
+  //   } finally {
+  //     setLocationLoading(false);
+  //   }
+  // }, [t]);
 
-  const handleClearRadiusFilter = useCallback(() => {
-    setLatitude(null);
-    setLongitude(null);
-    setRadiusKm(null);
-  }, []);
+  // const handleClearRadiusFilter = useCallback(() => {
+  //   setLatitude(null);
+  //   setLongitude(null);
+  //   setRadiusKm(null);
+  // }, []);
 
-  // console.log('Latitude', latitude);  
-  // console.log('Longitude', longitude);
-  // console.log('Radius km', radiusKm);
 
   // Render Venue Item
   const renderVenueItem = useCallback(({ item: venue }: { item: Venue }) => {

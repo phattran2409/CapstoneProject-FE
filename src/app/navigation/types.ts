@@ -34,7 +34,7 @@ export type RootStackParamList = {
   Notifications: undefined;
   PostDetail: { postId: string };
   CreatePost: undefined;
-  PaymentSuccess: undefined;
+  PaymentSuccess: { txnRef: string; amount: string };
   Wallet: undefined;
   WalletWithdraw: undefined;
   ChangePassword: {
