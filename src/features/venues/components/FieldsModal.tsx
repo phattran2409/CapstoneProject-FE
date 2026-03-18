@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Venue, Field, TimeSlot, FieldAvailability } from '../types/venue.types';
 import { getFieldAvailability } from '../api/venuesApi';
-import { getMinSelectableDate, getMaxSelectableDate, formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
+import { getMaxSelectableDate, formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -361,7 +361,11 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
               mode="date"
               display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={handleDateChange}
-              minimumDate={getMinSelectableDate()}
+              minimumDate={(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return today;
+              })()}
               maximumDate={getMaxSelectableDate()}
             />
           )}

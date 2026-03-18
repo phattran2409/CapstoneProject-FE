@@ -147,15 +147,21 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       },
       {
         onSuccess: async (newRoom) => {
-          showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
-            if (newRoom?.roomId) {
-              await setActiveRoom(newRoom.roomId);
-              // Replace để không quay lại màn tạo phòng
-              navigation?.replace('RoomInformation', { roomId: newRoom.roomId });
-            } else {
-              navigation?.goBack();
-            }
-          });
+          // autoClose: false để user bấm OK mới đóng → onConfirm chạy → replace (nếu autoClose: true
+          // alert tự đóng sau 3s và không gọi onConfirm, nên replace không chạy, Back từ Room vẫn về CreateRoom)
+          showSuccess(
+            t('common.success'),
+            t('createRoom.successMessage'),
+            async () => {
+              if (newRoom?.roomId) {
+                await setActiveRoom(newRoom.roomId);
+                navigation?.replace('RoomInformation', { roomId: newRoom.roomId });
+              } else {
+                navigation?.goBack();
+              }
+            },
+            false
+          );
         },
         onError: (error: any) => {
           setIsLoading(false);
