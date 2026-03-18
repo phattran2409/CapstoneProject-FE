@@ -328,6 +328,12 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
               {/* Empty state + Create button on top when empty */}
               {isEmptyMatches && (
                 <>
+                  <View style={styles.emptyContainer}>
+                    <Ionicons name="football-outline" size={100} color={theme.colors.textSecondary} />
+                    <ThemedText variant="secondary" size="xl" style={{ marginTop: theme.spacing.m }}>
+                      {t("matches.noMatches", "Chưa có trận đấu nào")}
+                    </ThemedText>
+                  </View>
                   <View style={{ paddingHorizontal: theme.spacing.l, marginTop: theme.spacing.l }}>
                     <TouchableOpacity
                       style={[
@@ -346,7 +352,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                         navigation.navigate("CreateRoom");
                       }}
                     >
-                      <Ionicons name="add" size={24} color={theme.colors.background} />
+                      <Ionicons name="add-circle-sharp" size={50} color={theme.colors.background} />
                       <ThemedText
                         size="l"
                         weight="bold"
@@ -355,12 +361,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                         {t("home.createNewRoom", "Tạo phòng mới")}
                       </ThemedText>
                     </TouchableOpacity>
-                  </View>
-                  <View style={styles.emptyContainer}>
-                    <Ionicons name="football-outline" size={64} color={theme.colors.textSecondary} />
-                    <ThemedText variant="secondary" size="m" style={{ marginTop: theme.spacing.m }}>
-                      {t("matches.noMatches", "Chưa có trận đấu nào")}
-                    </ThemedText>
                   </View>
                 </>
               )}
