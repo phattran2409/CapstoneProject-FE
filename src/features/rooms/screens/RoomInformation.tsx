@@ -37,6 +37,7 @@ import {
   type PlayerPosition,
   InviteFriendsModal,
 } from '../components';
+import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusActionBar';
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
@@ -415,6 +416,14 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     );
   };
 
+  const handleNavigateToFeedbackIntro = () => {
+    navigation?.navigate('FeedbackIntro');
+  };
+
+  const handleNavigateToEloBreakdown = () => {
+    navigation?.navigate('EloBreakdown');
+  };
+
   // ✅ Loading state
   if (isLoading) {
     return (
@@ -721,8 +730,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             datetime: formatDate(displayRoom.matchDate, 'short'),
             venueName: displayRoom.field.venue.venueName,
           }}
-          handleCancelRoom={handleCancelRoom}
-          isCancelling={isCancelling}
         />
       )}
     
@@ -735,52 +742,20 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         isLoading={isUpdatingParticipant}
       />
 
-      {/* Join Button - Only show on Teams tab */}
-      {activeTab === 'teams' && (
-      <View 
-        style={[
-          styles.joinButtonContainer,
-          { 
-            borderTopColor: theme.colors.border,
-            backgroundColor: theme.colors.background,
-          }
-        ]}
-      >
-        <TouchableOpacity
-          style={[
-            styles.joinButton,
-            {
-              backgroundColor: canJoinMatch ? theme.colors.neonGreen : theme.colors.border,
-              shadowColor: canJoinMatch ? theme.colors.neonGreen : 'transparent',
-            }
-          ]}
-          onPress={handleJoinMatch}
-          disabled={!canJoinMatch || isUpdatingParticipant}
-        >
-          <ThemedText 
-            size="l" 
-            weight="bold" 
-            style={[
-              styles.joinButtonText,
-              { color: canJoinMatch ? '#000' : theme.colors.textSecondary }
-            ]}
-          >
-            {isUpdatingParticipant 
-              ? t('roomDetail.teamJoinButton.joining')
-              : !currentUserParticipant
-                ? t('roomDetail.teamJoinButton.joinFirst')
-                : hasSelectedTeam
-                  ? t('roomDetail.teamJoinButton.join')
-                  : t('roomDetail.teamJoinButton.joinFirst')
-            }
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
-      )}
+      <RoomStatusActionBar
+        status={displayRoom.status}
+        activeTab={activeTab}
+        canJoinMatch={canJoinMatch}
+        isUpdatingParticipant={isUpdatingParticipant}
+        currentUserParticipant={currentUserParticipant}
+        hasSelectedTeam={hasSelectedTeam}
+        onJoinMatch={handleJoinMatch}
+        onNavigateToFeedbackIntro={handleNavigateToFeedbackIntro}
+        onNavigateToEloBreakdown={handleNavigateToEloBreakdown}
+      />
     </ThemedSafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   safeArea: {
     paddingVertical: 40,
