@@ -487,11 +487,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           >
             <ThemedIcon name="arrow-back" size={24} variant="secondary" />
           </TouchableOpacity>
-          <ThemedText size="xl" weight="bold">
-            {t('roomDetail.title')}
-          </ThemedText>
+          <View style={{  flex: displayRoom.status !== 'Open' ? 1 : 0 }}>
+            <ThemedText size="xl" weight="bold" style={{ textAlign: displayRoom.status !== 'Open' ? 'center' : 'left' }}>
+              {t('roomDetail.title')}
+            </ThemedText>
+          </View>
         </View>
-        
+        {displayRoom.status === 'Open' && (
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => {
@@ -528,7 +530,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           )}
+          
         </View>
+        )} 
       </ThemedView>
 
       {/* Countdown dưới header khi trận đang InProgress */}

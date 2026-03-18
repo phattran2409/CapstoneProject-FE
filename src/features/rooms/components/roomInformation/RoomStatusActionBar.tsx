@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed';
@@ -7,7 +7,6 @@ import {
   type MatchRoomStatus,
   type MatchRoomParticipant,
 } from '@/features/rooms';
-import { styles } from '@/features/rooms/screens/RoomInformation';
 
 interface RoomStatusActionBarProps {
   status: MatchRoomStatus;
@@ -40,7 +39,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
   }
 
   const containerStyle = [
-    styles.joinButtonContainer,
+    actionStyles.joinButtonContainer,
     {
       borderTopColor: theme.colors.border,
       backgroundColor: theme.colors.background,
@@ -52,7 +51,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
       <View style={containerStyle}>
         <TouchableOpacity
           style={[
-            styles.joinButton,
+            actionStyles.joinButton,
             {
               backgroundColor: theme.colors.neonGreen,
               shadowColor: theme.colors.neonGreen,
@@ -63,7 +62,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
           <ThemedText
             size="l"
             weight="bold"
-            style={[styles.joinButtonText, { color: '#000' }]}
+            style={[actionStyles.joinButtonText, { color: '#000' }]}
           >
             {t('roomDetail.statusActions.reviewing', 'Đánh giá trận đấu')}
           </ThemedText>
@@ -77,7 +76,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
       <View style={containerStyle}>
         <TouchableOpacity
           style={[
-            styles.joinButton,
+            actionStyles.joinButton,
             {
               backgroundColor: theme.colors.neonGreen,
               shadowColor: theme.colors.neonGreen,
@@ -88,7 +87,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
           <ThemedText
             size="l"
             weight="bold"
-            style={[styles.joinButtonText, { color: '#000' }]}
+            style={[actionStyles.joinButtonText, { color: '#000' }]}
           >
             {t('roomDetail.statusActions.completed', 'Xem thay đổi Elo')}
           </ThemedText>
@@ -102,7 +101,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
       <View style={containerStyle}>
         <TouchableOpacity
           style={[
-            styles.joinButton,
+            actionStyles.joinButton,
             {
               backgroundColor: theme.colors.border,
               shadowColor: 'transparent',
@@ -114,7 +113,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
             size="l"
             weight="bold"
             style={[
-              styles.joinButtonText,
+              actionStyles.joinButtonText,
               { color: theme.colors.textSecondary },
             ]}
           >
@@ -129,7 +128,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
     <View style={containerStyle}>
       <TouchableOpacity
         style={[
-          styles.joinButton,
+          actionStyles.joinButton,
           {
             backgroundColor: canJoinMatch
               ? theme.colors.neonGreen
@@ -144,7 +143,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
           size="l"
           weight="bold"
           style={[
-            styles.joinButtonText,
+            actionStyles.joinButtonText,
             { color: canJoinMatch ? '#000' : theme.colors.textSecondary },
           ]}
         >
@@ -160,6 +159,26 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
     </View>
   );
 };
+
+const actionStyles = StyleSheet.create({
+  joinButtonContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderTopWidth: 1,
+  },
+  joinButton: {
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginTop: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  joinButtonText: {
+    textAlign: 'center',
+  },
+});
 
 export { RoomStatusActionBar };
 
