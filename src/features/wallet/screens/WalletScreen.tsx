@@ -46,12 +46,7 @@ interface WalletTransaction {
   icon: string;
   amount: string;
   type: "in" | "out";
-  category:
-    | "topup"
-    | "booking"
-    | "refund"
-    | "checkin"
-    | "withdraw";
+  category: "topup" | "booking" | "refund" | "checkin" | "withdraw";
   status: string;
   time: string;
 }
@@ -114,9 +109,7 @@ const MOCK_TRANSACTIONS: WalletTransaction[] = [
   },
 ];
 
-type TransactionFilterKey =
-  | "all"
-  | WalletTransaction["category"];
+type TransactionFilterKey = "all" | WalletTransaction["category"];
 
 const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -142,7 +135,11 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const handleDeposit = async () => {
     const amount = Number(depositAmount?.replace(/\D/g, "") || 0);
     if (!amount || amount < 1000) {
-      setDepositError(t("wallet.depositMinError"));
+      setDepositError(
+        t("wallet.depositMinError", {
+          defaultValue: "Vui lòng nhập số tiền tối thiểu 1.000 VND",
+        }),
+      );
       return;
     }
     setDepositError("");
@@ -251,12 +248,27 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   };
 
   const filterOptions: Array<{ key: TransactionFilterKey; label: string }> = [
-    { key: "all", label: "Tất cả" },
-    { key: "booking", label: "Đặt sân" },
-    { key: "topup", label: "Nạp tiền" },
-    { key: "refund", label: "Hoàn tiền" },
-    { key: "checkin", label: "Check-in" },
-    { key: "withdraw", label: "Rút tiền" },
+    { key: "all", label: t("wallet.filters.all", { defaultValue: "Tất cả" }) },
+    {
+      key: "booking",
+      label: t("wallet.filters.booking", { defaultValue: "Đặt sân" }),
+    },
+    {
+      key: "topup",
+      label: t("wallet.filters.topup", { defaultValue: "Nạp tiền" }),
+    },
+    {
+      key: "refund",
+      label: t("wallet.filters.refund", { defaultValue: "Hoàn tiền" }),
+    },
+    {
+      key: "checkin",
+      label: t("wallet.filters.checkin", { defaultValue: "Check-in" }),
+    },
+    {
+      key: "withdraw",
+      label: t("wallet.filters.withdraw", { defaultValue: "Rút tiền" }),
+    },
   ];
 
   const filteredTransactions =
@@ -277,16 +289,13 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
           },
         ]}
       >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <ThemedText variant="primary" size="xxl" weight="bold">
           {t("wallet.title", { defaultValue: "Ví tiền" })}
         </ThemedText>
-        <TouchableOpacity>
-        </TouchableOpacity>
+        <TouchableOpacity></TouchableOpacity>
       </ThemedView>
 
       {/* Balance Card */}
@@ -407,9 +416,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
                       backgroundColor: active
                         ? theme.colors.neonGreen
                         : theme.colors.surface,
-                      borderColor: active
-                        ? "transparent"
-                        : theme.colors.border,
+                      borderColor: active ? "transparent" : theme.colors.border,
                     },
                   ]}
                 >
@@ -429,8 +436,17 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
 
           {filterContentWidth > filterScrollWidth + filterScrollX + 8 && (
             <View pointerEvents="none" style={styles.filterScrollHint}>
-              <View style={[styles.filterScrollHintInner, { backgroundColor: theme.colors.mediumGray }]}>
-                <Ionicons name="chevron-forward" size={18} color={theme.colors.background} />
+              <View
+                style={[
+                  styles.filterScrollHintInner,
+                  { backgroundColor: theme.colors.mediumGray },
+                ]}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={theme.colors.background}
+                />
               </View>
             </View>
           )}
@@ -448,7 +464,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
         }}
         showsVerticalScrollIndicator={false}
       />
-      
+
       {/* Deposit Modal */}
       <Modal
         visible={showDepositModal}

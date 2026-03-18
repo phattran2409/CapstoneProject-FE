@@ -330,7 +330,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <Text
                 style={[styles.achievementsTitle, { color: theme.colors.text }]}
               >
-                {t("profileHeader.achievementsTitle")}
+                {t("personalPage.achievements")}
               </Text>
               <Ionicons
                 name="chevron-forward"

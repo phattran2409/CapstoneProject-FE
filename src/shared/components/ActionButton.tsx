@@ -108,7 +108,6 @@ const ActionButton: React.FC<ActionButtonProps> = ({
 
   const handleReportSubmit = async (reason: string, customReason?: string) => {
     if (!onReport) return;
-
     setIsReporting(true);
     try {
       await onReport(contentId, reason, customReason);

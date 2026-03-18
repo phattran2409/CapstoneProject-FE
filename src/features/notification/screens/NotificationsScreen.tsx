@@ -7,9 +7,14 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList } from '@/app/navigation/types';
-import { Notification, NotificationType } from '../types/notification.types';
+import { BaseNotification, NotificationType } from '../types/notification.types';
 import { NotificationItem } from '../components';
-import { useNotifications, useMarkNotificationAsRead } from '../hooks';
+import { usePaginatedNotifications, useMarkAsRead, useMarkAllAsRead } from '../hooks';
+import { NotifyEventType } from '@tanstack/react-query';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { LoadingMoreIndicator } from '@/shared/components/LoadingMoreIndicator';
+import { ListSkeleton } from '@/shared/components/ListSkeleton';
+import { ErrorState } from '@/shared/components/ErrorState';
 
 type NotificationsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Notifications'>;
 
@@ -24,53 +29,43 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   const [selectedType, setSelectedType] = useState<NotificationType | 'all'>('all');
 
   // Fetch notifications based on selected type
-  const { data: notifications = [], isLoading, refetch } = useNotifications(
-    selectedType === 'all' ? undefined : { type: selectedType }
-  );
-  
-  const { mutate: markAsRead } = useMarkNotificationAsRead();
+  const { notifications, loading, refreshing, loadingMore, error, hasMore, refresh, loadMore, setNotifications } = usePaginatedNotifications({
+    pageSize: 20,
+    type: selectedType === 'all' ? undefined : selectedType,
+  });
 
-  const handleNotificationPress = (notification: Notification) => {
-    // Mark as read when clicked
+  const { mutate: markAsRead } = useMarkAsRead();
+  const { mutate: markAllAsRead } = useMarkAllAsRead();
+
+  const handleNotificationPress = (notification: BaseNotification) => {
     if (!notification.isRead) {
-      markAsRead(notification.id, {
-        onSuccess: () => {
-          refetch();
-        },
-      });
+      markAsRead(notification.notificationId);
     }
   };
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <View
-        style={[
-          styles.emptyIconContainer,
-          { backgroundColor: `${theme.colors.neonGreen}15` },
-        ]}
-      >
-        <Ionicons
-          name="notifications-outline"
-          size={48}
-          color={theme.colors.neonGreen}
-        />
-      </View>
-      <ThemedText variant="primary" size="l" weight="bold" style={styles.emptyTitle}>
-        {t('notifications.empty', { defaultValue: 'Không có thông báo' })}
-      </ThemedText>
-      <ThemedText variant="secondary" size="s" style={styles.emptySubtitle}>
-        {t('notifications.emptyDescription', { defaultValue: 'Bạn sẽ nhận được thông báo ở đây khi có hoạt động mới' })}
-      </ThemedText>
-    </View>
-  );
-
   const notificationTypes: Array<{ key: NotificationType | 'all'; label: string }> = [
     { key: 'all', label: t('notifications.types.all', { defaultValue: 'Tất cả' }) },
-    { key: 'match', label: t('notifications.types.match', { defaultValue: 'Trận đấu' }) },
-    { key: 'friend', label: t('notifications.types.friend', { defaultValue: 'Bạn bè' }) },
-    { key: 'post', label: t('notifications.types.post', { defaultValue: 'Bài viết' }) },
-    { key: 'system', label: t('notifications.types.system', { defaultValue: 'Hệ thống' }) },
+    { key: 'MatchRoom', label: t('notifications.types.MatchRoom', { defaultValue: 'Trận đấu' }) },
+    { key: 'Friendship', label: t('notifications.types.Friendship', { defaultValue: 'Bạn bè' }) },
+    { key: 'Post', label: t('notifications.types.Post', { defaultValue: 'Bài viết' }) },
+    { key: 'Announcement', label: t('notifications.types.Announcement', { defaultValue: 'Hệ thống' }) },
   ];
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <EmptyState
+        icon="notifications-outline"
+        title={t("notifications.empty", { defaultValue: 'Không có thông báo' })}
+        description={t("notifications.emptyDescription", { defaultValue: 'Bạn sẽ nhận được thông báo ở đây khi có hoạt động mới' })}
+      />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <LoadingMoreIndicator />;
+  };
 
   return (
     <ThemedSafeAreaView>
@@ -95,7 +90,12 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
           <ThemedText size="xl" weight="bold" variant="primary">
           {t('notifications.title', { defaultValue: 'Thông báo' })}     
         </ThemedText>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity
+          onPress={() => markAllAsRead()}
+          disabled={!notifications || notifications.length === 0}
+        >
+          <Ionicons name="checkmark-circle" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
       </ThemedView>
 
       {/* Filter Tabs */}
@@ -148,10 +148,13 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
         </ThemedScrollView>
       </ThemedView>
 
+      {loading && <ListSkeleton />}
+      {error && <ErrorState error={error} onRetry={refresh} />}
       {/* Notifications List */}
+      {!loading && !error && (
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.notificationId}
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: theme.spacing.l }}>
             <NotificationItem
@@ -167,9 +170,18 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={renderEmptyState}
+        ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
         ItemSeparatorComponent={() => <View style={{ height: 4 }} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        refreshing={refreshing}
+        onRefresh={refresh}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
       />
+      )}
     </ThemedSafeAreaView>
   );
 };

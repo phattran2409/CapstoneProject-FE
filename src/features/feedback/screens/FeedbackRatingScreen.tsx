@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
   TextInput,
   ScrollView,
 } from "react-native";
@@ -16,7 +15,6 @@ import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useToast } from "@/shared/toast";
-import { ReportModal } from "@/shared/components";
 import SwipeableRatingCard, { Player } from "../components/SwipeableRatingCard";
 import Animated, {
   useSharedValue,
@@ -73,6 +71,11 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   const [comments, setComments] = useState<Record<string, string>>({});
   const [showReportModal, setShowReportModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<string | null>(
+    null,
+  );
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportError, setReportError] = useState<string | null>(null);
 
   const progressAnim = useSharedValue(0);
   const nextCardAnim = useSharedValue(0);
@@ -109,19 +112,19 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   });
 
   // Shift card container up for last player to cover progress bar
-  const isLastPlayer = currentIndex === MOCK_PLAYERS.length - 1;
-  const cardContainerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateY: withSpring(isLastPlayer ? -40 : 0, {
-            damping: 20,
-            stiffness: 100,
-          }),
-        },
-      ],
-    };
-  });
+  // const isLastPlayer = currentIndex === MOCK_PLAYERS.length - 1;
+  // const cardContainerStyle = useAnimatedStyle(() => {
+  //   return {
+  //     transform: [
+  //       {
+  //         translateY: withSpring(isLastPlayer ? -40 : 0, {
+  //           damping: 20,
+  //           stiffness: 100,
+  //         }),
+  //       },
+  //     ],
+  //   };
+  // });
 
   const currentPlayer = MOCK_PLAYERS[currentIndex];
 
@@ -153,15 +156,18 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     }));
 
     // Submit all ratings cùng với kết quả trận đấu
-    console.log("Submitting feedback:", {
+    console.log("Submitting teammate feedback:", {
       roomId,
       matchResult,
       ratings: allRatings,
     });
 
-    // Navigate to completion screen
-    navigation.replace("FeedbackComplete");
-  }, [ratings, comments, navigation]);
+    // Navigate to field rating screen
+    navigation.replace("FeedbackFieldRating", {
+      roomId,
+      matchResult,
+    });
+  }, [ratings, comments, navigation, roomId, matchResult]);
 
   const handleSwipeRight = useCallback(() => {
     // Validate rating before submitting
@@ -192,29 +198,38 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     if (currentIndex < MOCK_PLAYERS.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      // If last player and skipped, go to complete
-      navigation.replace("FeedbackComplete");
+      // If last player and skipped, still go to field rating
+      navigation.replace("FeedbackFieldRating", {
+        roomId,
+        matchResult,
+      });
     }
-  }, [currentIndex, navigation]);
+  }, [currentIndex, navigation, roomId, matchResult]);
 
   const handleReport = () => {
     setShowReportModal(true);
   };
 
-  const handleReportSubmit = async (reason: string, customReason?: string) => {
+  const handleReportSubmit = async (
+    reportType: string,
+    description: string,
+  ) => {
     setIsReporting(true);
     try {
       // TODO: Implement actual report API call
       console.log("Reporting player:", {
         playerId: currentPlayer.id,
-        reason,
-        customReason,
+        reportType,
+        description,
       });
       
       // Simulate API call
       await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
       
       setShowReportModal(false);
+      setSelectedReportType(null);
+      setReportDescription("");
+      setReportError(null);
       toast.info(t("reportModal.success.user"));
     } catch (error) {
       console.error("Error reporting player:", error);
@@ -243,7 +258,13 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         <TouchableOpacity
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={handleBack}
         >
+          {/* <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.colors.textSecondary}
+          /> */}
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
@@ -264,11 +285,11 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
           style={styles.helpButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons
+          {/* <Ionicons
             name="help-circle-outline"
             size={24}
             color={theme.colors.textSecondary}
-          />
+          /> */}
         </TouchableOpacity>
       </View>
 
@@ -301,7 +322,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       </View>
 
       {/* Rating Card Container with Stack Effect */}
-      <Animated.View style={[styles.cardContainer, cardContainerStyle]}>
+      <Animated.View style={[styles.cardContainer]}>
         {/* Next Card (behind current) - for smooth transition */}
         {currentIndex < MOCK_PLAYERS.length - 1 && (
           <Animated.View style={[styles.nextCardContainer, nextCardStyle]}>
@@ -337,9 +358,13 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         />
       </Animated.View>
 
-      {/* Swipe Indicators */}
+      {/* Swipe Indicators as Buttons */}
       <View style={styles.swipeIndicators}>
-        <View style={styles.swipeIndicator}>
+        <TouchableOpacity
+          style={styles.swipeIndicator}
+          activeOpacity={0.8}
+          onPress={handleSwipeLeft}
+        >
           <View
             style={[
               styles.swipeIcon,
@@ -353,9 +378,13 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
           >
             {t("feedback.rating.swipeLeft", "VUỐT TRÁI")}
           </Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.swipeIndicator}>
+        <TouchableOpacity
+          style={styles.swipeIndicator}
+          activeOpacity={0.8}
+          onPress={handleSwipeRight}
+        >
           <View
             style={[
               styles.swipeIcon,
@@ -367,7 +396,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
           <Text style={[styles.swipeLabel, { color: theme.colors.primary }]}>
             {t("feedback.rating.swipeRight", "VUỐT PHẢI")}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Tip */}
@@ -377,56 +406,197 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
           "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
         )}
       </Text>
+
+      {/* Custom Report Overlay for player */}
+      {showReportModal && (
+        <View style={styles.modalOverlay} pointerEvents="auto">
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {t("feedback.report.title", "Báo cáo người chơi")}
+            </Text>
+            <Text
+              style={[
+                styles.modalDescription,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
+              {t(
+                "feedback.report.description",
+                "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người chơi này.",
+              )}
+            </Text>
+
+            <ScrollView style={styles.reportReasons}>
+              {["inappropriate_behavior", "harassment", "toxic_behavior", "AFK", "other"].map(
+                (type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.reasonItem,
+                      {
+                        borderColor:
+                          selectedReportType === type
+                            ? theme.colors.primary
+                            : theme.colors.border,
+                        backgroundColor:
+                          selectedReportType === type
+                            ? `${theme.colors.primary}20`
+                            : theme.colors.background,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedReportType(type);
+                      setReportError(null);
+                    }}
+                    disabled={isReporting}
+                  >
+                    <Text
+                      style={[
+                        styles.reasonText,
+                        {
+                          color:
+                            selectedReportType === type
+                              ? theme.colors.text
+                              : theme.colors.textSecondary,
+                        },
+                      ]}
+                    >
+                      {t(`reportModal.reasons.user.${type}`)}
+                    </Text>
+                    {selectedReportType === type && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                ),
+              )}
+            </ScrollView>
+
+            <Text
+              style={[styles.modalDescription, { color: theme.colors.text }]}
+            >
+              {t("feedback.report.descriptionLabel", "Mô tả chi tiết")}
+            </Text>
+            <TextInput
+              style={[
+                styles.modalDescription,
+                {
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  padding: 12,
+                  borderColor: reportError
+                    ? theme.colors.error
+                    : theme.colors.border,
+                  color: theme.colors.text,
+                  minHeight: 80,
+                  textAlignVertical: "top",
+                },
+              ]}
+              placeholder={t(
+                "feedback.report.descriptionPlaceholder",
+                "Nhập mô tả chi tiết về hành vi vi phạm...",
+              )}
+              placeholderTextColor={theme.colors.textTertiary}
+              value={reportDescription}
+              onChangeText={(text) => {
+                setReportDescription(text);
+                setReportError(null);
+              }}
+              editable={!isReporting}
+              multiline
+              maxLength={500}
+            />
+
+            {reportError && (
+              <Text style={{ color: theme.colors.error, marginTop: 8 }}>
+                {reportError}
+              </Text>
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.cancelButton,
+                  { borderColor: theme.colors.border },
+                ]}
+                onPress={() => {
+                  if (!isReporting) {
+                    setShowReportModal(false);
+                    setSelectedReportType(null);
+                    setReportDescription("");
+                    setReportError(null);
+                  }
+                }}
+                disabled={isReporting}
+              >
+                <Text
+                  style={[
+                    styles.modalButtonText,
+                    { color: theme.colors.text },
+                  ]}
+                >
+                  {t("common.buttons.cancel", "Hủy")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.submitButton,
+                  { backgroundColor: theme.colors.error },
+                ]}
+                onPress={async () => {
+                  if (!selectedReportType) {
+                    setReportError(
+                      t(
+                        "feedback.report.validation.typeRequired",
+                        "Vui lòng chọn lý do báo cáo.",
+                      ),
+                    );
+                    return;
+                  }
+                  if (!reportDescription.trim()) {
+                    setReportError(
+                      t(
+                        "feedback.report.validation.descriptionRequired",
+                        "Vui lòng nhập mô tả chi tiết.",
+                      ),
+                    );
+                    return;
+                  }
+
+                  await handleReportSubmit(
+                    selectedReportType,
+                    reportDescription.trim(),
+                  );
+                }}
+                disabled={isReporting}
+              >
+                <Text
+                  style={[
+                    styles.modalButtonText,
+                    { color: "#fff" },
+                  ]}
+                >
+                  {isReporting
+                    ? t("feedback.report.submitting", "Đang gửi...")
+                    : t("feedback.report.submit", "Gửi báo cáo")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
-  );
-};
-
-// Report Modal - Render outside SafeAreaView to ensure it's always on top
-const FeedbackRatingScreenWithModal: React.FC<FeedbackRatingScreenProps> = (
-  props,
-) => {
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [isReporting, setIsReporting] = useState(false);
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-  const toast = useToast();
-  const { route } = props;
-  const currentPlayer = MOCK_PLAYERS[0]; // This will be handled by the main component
-
-  const handleReportSubmit = async (reason: string, customReason?: string) => {
-    setIsReporting(true);
-    try {
-      // TODO: Implement actual report API call
-      console.log("Reporting player:", {
-        playerId: currentPlayer.id,
-        reason,
-        customReason,
-      });
-
-      // Simulate API call
-      await new Promise<void>((resolve) => setTimeout(() => resolve(), 1000));
-
-      setShowReportModal(false);
-      toast.info(t("reportModal.success.user"));
-    } catch (error) {
-      console.error("Error reporting player:", error);
-      toast.error(t("reportModal.error.user"));
-    } finally {
-      setIsReporting(false);
-    }
-  };
-
-  return (
-    <>
-      <FeedbackRatingScreen {...props} />
-      <ReportModal
-        visible={showReportModal}
-        type="user"
-        onClose={() => setShowReportModal(false)}
-        onSubmit={handleReportSubmit}
-        isLoading={isReporting}
-      />
-    </>
   );
 };
 
@@ -540,11 +710,16 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   modalOverlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    zIndex: 100,
   },
   modalContent: {
     width: "100%",

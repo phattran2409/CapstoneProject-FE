@@ -42,6 +42,7 @@ import {
   EloBreakdownScreen,
 } from "@/screens";
 import FeedbackMatchResultScreen from "@/features/feedback/screens/FeedbackMatchResultScreen";
+import FeedbackFieldRatingScreen from "@/features/feedback/screens/FeedbackFieldRatingScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -331,6 +332,14 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen
               name="FeedbackRating"
               component={FeedbackRatingScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackFieldRating"
+              component={FeedbackFieldRatingScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",

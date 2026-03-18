@@ -144,7 +144,7 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
             )}
           </Text>
 
-          {/* Stats or Additional Info */}
+          {/* Stats or Additional Info
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Ionicons
@@ -159,7 +159,7 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
                 {t("feedback.complete.playersRated", "Người chơi đã đánh giá")}
               </Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Finish Button */}
           <Animated.View style={buttonStyle}>
@@ -179,12 +179,12 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
               >
                 {t("feedback.complete.finishButton", "Hoàn thành")}
               </Text>
-              <Ionicons
+              {/* <Ionicons
                 name="checkmark-circle"
                 size={20}
                 color={theme.colors.background}
                 style={styles.finishButtonIcon}
-              />
+              /> */}
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>

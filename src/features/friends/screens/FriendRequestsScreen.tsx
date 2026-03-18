@@ -92,7 +92,9 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({
     return (
       <EmptyState
         icon="document-text-outline"
-        title="Chưa có lời mời kết bạn"
+        title={t("friends.noFriendRequests", {
+          defaultValue: "Chưa có lời mời kết bạn",
+        })}
       />
     );
   };

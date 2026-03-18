@@ -66,7 +66,11 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
   };
 
   return {
-    id: room.roomId,
+    id: String(
+      room?.roomId ??
+        room?.id ??
+        `${room?.roomName ?? "room"}-${room?.matchDate ?? "date"}-${room?.startTime ?? "start"}`,
+    ),
     title:
       room.roomName ||
       room.field?.fieldName ||
@@ -171,7 +175,16 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
   // Memoize converted matches
   const listMatches = useMemo(() => {
-    return matches.map(convertMyRoomToMatchItemData);
+    const seen = new Set<string>();
+    return matches
+      .filter((room) => {
+        const id = String(room?.roomId ?? "");
+        if (!id) return true;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .map(convertMyRoomToMatchItemData);
   }, [matches]);
 
   // Handle scroll for pagination

@@ -42,3 +42,8 @@ export const truncate = (text: string, maxLength: number = 50): string => {
   return text.substring(0, maxLength) + '...';
 };
 
+// Get username from email (part before @)
+export const getEmailUsername = (email: string): string => {
+  return email.split('@')[0];
+};
+

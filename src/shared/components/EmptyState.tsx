@@ -38,7 +38,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <ThemedText
           variant="secondary"
           size="m"
-          style={{ marginTop: theme.spacing.s, textAlign: "center" }}
+          style={{ marginTop: theme.spacing.s, textAlign: "center", paddingLeft: 32, paddingRight: 32 }}
         >
           {description}
         </ThemedText>
