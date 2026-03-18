@@ -38,7 +38,7 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       case 'Completed':
         return <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />;
       case 'Cancelled':
-        return <Ionicons name="sad-outline" size={24} color="#ef4444" />;
+        return <Ionicons name="close-circle-outline" size={24} color="#ef4444" />;
       case 'Reviewing':
         return <Ionicons name="git-compare-outline" size={24} color="#6b7280" />;
       case 'InProgress':
