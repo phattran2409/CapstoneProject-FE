@@ -25,6 +25,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFeedbackSessionStore, type MatchResult } from "../store/feedbackSessionStore";
 import { useVoteMatchResult } from "../hooks/useFeedback";
 import { useToast } from "@/shared/toast";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 const { width } = Dimensions.get("window");
 
@@ -85,16 +86,20 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
       });
       await setMatchResult(selectedResult);
       navigation.navigate("FeedbackRating");
-    } catch {
-      toast.error(
-        t("feedback.result.voteErrorTitle", "Không gửi được kết quả"),
+    } catch (error: any) {
+      const detail =
+        getTranslatedError(error?.message) ||
         t(
           "feedback.result.voteErrorMessage",
           "Vui lòng kiểm tra kết nối và thử lại.",
-        ),
+        );
+      toast.error(
+        t("feedback.result.voteErrorTitle", "Không gửi được kết quả"),
+        detail,
       );
     }
   };
+
 
   const isTeamASelected = selectedResult === "TeamAWin";
   const isTeamBSelected = selectedResult === "TeamBWin";

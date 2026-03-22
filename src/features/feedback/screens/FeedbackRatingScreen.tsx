@@ -29,6 +29,7 @@ import {
   type MatchFeedbackBatchItem,
 } from "../types/feedback.types";
 import { useAuthStore } from "@/features/auth";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type FeedbackRatingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -215,9 +216,10 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       });
       await setStep("fieldRating");
       replaceWithFieldRating();
-    } catch {
+    } catch (error: any) {
       toast.error(
         t("feedback.rating.submitErrorTitle", "Gửi đánh giá thất bại"),
+        getTranslatedError(error?.message) ||
         t(
           "feedback.rating.submitErrorMessage",
           "Vui lòng thử lại sau.",
@@ -336,9 +338,11 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       setReportDescription("");
       setReportError(null);
       toast.info(t("reportModal.success.user"));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error reporting player:", error);
-      toast.error(t("reportModal.error.user"));
+      toast.error(
+        getTranslatedError(error?.message) || t("reportModal.error.user"),
+      );
     } finally {
       setIsReporting(false);
     }

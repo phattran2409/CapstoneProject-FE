@@ -48,6 +48,7 @@ import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
 import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
 import { getImageSource } from "@/shared/utils/imageSource";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type PersonalPageScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -257,9 +258,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           toast.success(t("personalPage.editForm.toast.updateSuccess"));
           setShowEditForm(false);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Error updating profile:", error);
-          toast.error(t("personalPage.editForm.toast.updateError"));
+          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
         },
       },
     );
@@ -287,8 +288,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         console.log("Friend request sent successfully");
         refetchStatus();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Failed to send friend request:", error);
+        toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
       },
     });
   };
@@ -299,8 +301,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         console.log("Friend removed successfully");
         refetchStatus();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Failed to remove friend:", error);
+        toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
       },
     });
   };
@@ -313,8 +316,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           console.log("Friend request accepted");
           refetchStatus();
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Failed to accept friend request:", error);
+          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
         },
       },
     );

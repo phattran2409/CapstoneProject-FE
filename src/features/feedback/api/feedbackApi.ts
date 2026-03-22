@@ -21,6 +21,7 @@ export const submitMatchFeedbacksBatch = async (
 ) => {
   try {
     const response = await apiClient.post(`/match-feedbacks`, body);
+    console.log('response', response);
     return response;
   } catch (error) {
     console.error("Error submitting match feedbacks batch:", error);
@@ -35,12 +36,13 @@ export const reportPlayer = async (
   matchId: string,
 ) => {
   try {
-    const response = await apiClient.post(`/match-feedbacks/${matchId}/report`, {
+    const response = await apiClient.post(`/player-reports`, {
       reportedUserId,
       reportType,
       description,
       matchId,
     });
+    console.log('response', response);
     return response;
   } catch (error) {
     console.error("Error reporting player:", error);

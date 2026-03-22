@@ -21,6 +21,7 @@ import { Button } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedIcon } from "@/shared/components/themed";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 import {
   registerSchema,
   type RegisterFormData,
@@ -88,7 +89,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         onError: (error: any) => {
           toast.error(
             t("register.errors.failed", "Đăng ký thất bại"),
-            error.message || t("register.errors.tryAgain", "Vui lòng thử lại.")
+            getTranslatedError(error?.message) || t("register.errors.tryAgain", "Vui lòng thử lại.")
           );
         },
       }

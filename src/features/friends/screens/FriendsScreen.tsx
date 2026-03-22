@@ -28,7 +28,8 @@ import {
   LoadingMoreIndicator,
   AnimatedSearchBar,
 } from "@/shared/components";
-import { usePaginatedFriends } from "../hooks";
+import { usePaginatedFriends, usePaginatedFriendRequests } from "../hooks";
+import { useHasUnreadChats } from "@/features/chat/hooks";
 import { useDebounce } from "@/shared/hooks";
 
 type FriendsScreenProps = BottomTabScreenProps<TabParamList, "Friends">;
@@ -68,6 +69,13 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
     loadMore,
     setFriends,
   } = usePaginatedFriends({ pageSize: 10, searchTerm: debouncedSearchQuery });
+
+  // Kiểm tra có lời mời kết bạn không
+  const { friendRequests } = usePaginatedFriendRequests({ pageSize: 1 });
+  const hasFriendRequests = friendRequests.length > 0;
+
+  // Kiểm tra có tin nhắn chưa đọc không
+  const hasUnreadChats = useHasUnreadChats();
 
   const renderEmpty = () => {
     if (loading) return null;
@@ -116,11 +124,13 @@ const FriendsScreen: React.FC<FriendsScreenProps> = ({ navigation }) => {
             icon="person-add-outline"
             onPress={handleFriendRequestsPress}
             size="medium"
+            showDot={hasFriendRequests}
           />
           <IconButton
             icon="chatbubbles-outline"
             onPress={handleChatListPress}
             size="medium"
+            showDot={hasUnreadChats}
           />
         </View>
       </ThemedView>

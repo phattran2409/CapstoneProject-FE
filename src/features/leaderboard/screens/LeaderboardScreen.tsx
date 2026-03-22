@@ -11,6 +11,7 @@ import { useUserProfile } from '@/features/profile/hooks';
 import { EmptyState, ErrorState, ListSkeleton, RankBadge } from '@/shared/components';
 import { Leaderboard } from '../types/leaderboard.types';
 import { getEmailUsername } from '@/shared/utils/formatters';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 
 type RootStackParamList = {
   Home: undefined;
@@ -253,7 +254,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
         <ErrorState
           error={
             leaderboardQuery.error instanceof Error
-              ? leaderboardQuery.error.message
+              ? getTranslatedError(leaderboardQuery.error.message)
               : String(leaderboardQuery.error)
           }
           onRetry={leaderboardQuery.refetch}

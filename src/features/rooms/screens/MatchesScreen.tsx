@@ -17,6 +17,8 @@ import type { VenuePhoto } from '@/features/venues/types/venue.types';
 import { FilterRoomMatch } from '../components/FilterRoomMatch';
 import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
 import { OptionFilter } from '@/features/venues';
+import { useToast } from '@/shared/toast';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -35,7 +37,7 @@ const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
     'SevenVsSeven': '7vs7',
     'ElevenVsEleven': '11vs11',
   };
-  
+ 
   // Format date
   const matchDate = new Date(room.matchDate);
   const formattedDate = matchDate.toLocaleDateString('vi-VN', {
@@ -153,7 +155,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
   // ✅ Hook để join room (tự động thêm vào Unassigned)
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
-
+ const toast = useToast();
   const handleViewDetail = (matchId: string) => {
     const match = allMatches.find((m) => m.id === matchId);
     const room = [...recommendedRooms, ...nearbyRooms].find((r) => r.roomId === matchId);
@@ -180,6 +182,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           navigation.navigate('RoomInformation', params);
         },
         onError: (error: any) => {
+          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
           console.log('Join room error (may already be participant):', error?.message);
           navigation.navigate('RoomInformation', params);
         },
@@ -199,7 +202,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           navigation.navigate('RoomInformation', pendingJoinParams.params);
         },
         onError: (error: any) => {
-          setPasswordError(error?.message ?? t('matches.passwordInvalid'));
+          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
+          setPasswordError(getTranslatedError(error?.message) || t('matches.passwordInvalid'));
         },
       }
     );

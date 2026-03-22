@@ -43,6 +43,7 @@ import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 import { useFeedbackSessionStore } from '@/features/feedback';
 import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -316,7 +317,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           refetch();
         },
         onError: (error: any) => {
-          toast.error(t('roomDetail.notifications.error'), error.message || t('roomDetail.chooseTeamError'));
+          toast.error(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.chooseTeamError'));
           setShowPositionModal(false);
           setPendingTeamAssignment(null);
         },
@@ -360,7 +361,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               refetch();
             },
             onError: (error: any) => {
-              showDanger(t('roomDetail.notifications.error'), error.message || t('roomDetail.kickError'), () => {});
+              showDanger(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.kickError'), () => {});
             },
           }
         );
@@ -384,7 +385,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             });
           },
           onError: (error: any) => {
-            showDanger(t('roomDetail.notifications.error'), error.message || t('roomDetail.cancelError'), () => {});
+            showDanger(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.cancelError'), () => {});
           },
         });
       },
@@ -411,7 +412,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           onError: (error: any) => {
             toast.error(
               t('common.error', 'Lỗi'),
-              error.message || t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
+              getTranslatedError(error?.message) || t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
             );
           },
         });
@@ -469,8 +470,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       teammates,
     });
 
-    navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
-    //  navigation?.replace('FeedbackRating');
+    // navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
+     navigation?.replace('FeedbackMatchResult');
   };
 
   const handleNavigateToEloBreakdown = () => {

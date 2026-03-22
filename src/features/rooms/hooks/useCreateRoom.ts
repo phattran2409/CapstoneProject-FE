@@ -34,9 +34,10 @@ export const useCreateRoom = () => {
     mutationFn: (request: CreateRoomRequest) => roomsApi.createRoom(request),
     
     onSuccess: () => {
-      // Invalidate all room lists
-      queryClient.invalidateQueries({ 
-        queryKey: roomsKeys.lists() 
+      // Invalidate all match room queries (prefix match để bao phủ mọi filter + pagination)
+      queryClient.invalidateQueries({
+        queryKey: roomsKeys.matchRooms(),
+        exact: false,
       });
     },
   });

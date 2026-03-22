@@ -22,6 +22,7 @@ import { useFeedbackSessionStore } from "../store/feedbackSessionStore";
 import { useFeedbackVenue } from "../hooks/useFeedback";
 import { useVenueDetail } from "@/features/venues";
 import { openMapsSearch } from "@/shared/utils/maps";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HERO_HEIGHT = 220;
@@ -137,9 +138,10 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
       });
       await setFieldRating(rating, comment);
       navigation.replace("FeedbackComplete");
-    } catch {
+    } catch (error: any) {
       toast.error(
         t("feedback.field.submitErrorTitle", "Gửi đánh giá thất bại"),
+        getTranslatedError(error?.message) ||
         t(
           "feedback.field.submitErrorMessage",
           "Vui lòng thử lại sau.",
