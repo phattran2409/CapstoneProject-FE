@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
@@ -22,6 +22,9 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFeedbackSessionStore, type MatchResult } from "../store/feedbackSessionStore";
+import { useVoteMatchResult } from "../hooks/useFeedback";
+import { useToast } from "@/shared/toast";
 
 const { width } = Dimensions.get("window");
 
@@ -30,32 +33,23 @@ type FeedbackMatchResultScreenNavigationProp = NativeStackNavigationProp<
   "FeedbackMatchResult"
 >;
 
-type FeedbackMatchResultScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "FeedbackMatchResult"
->;
-
 interface FeedbackMatchResultScreenProps {
   navigation: FeedbackMatchResultScreenNavigationProp;
-  route: FeedbackMatchResultScreenRouteProp;
 }
-
-type MatchResult = "A" | "B" | "DRAW";
 
 const CARD_WIDTH = (width - 64) / 2; // 2 cards + margins
 
 const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
   navigation,
-  route,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [selectedResult, setSelectedResult] = useState<MatchResult | null>(
-    null,
-  );
+  const [selectedResult, setSelectedResult] = useState<MatchResult | null>(null);
 
-  // roomId có thể được truyền từ màn trước, nếu chưa có thì để rỗng
-  const roomId = route.params?.roomId ?? "";
+  const session = useFeedbackSessionStore((s) => s.session);
+  const setMatchResult = useFeedbackSessionStore((s) => s.setMatchResult);
+  const voteMatchResultMutation = useVoteMatchResult();
+  const toast = useToast();
 
   // Animations
   const glowOpacity = useSharedValue(0.5);
@@ -82,18 +76,29 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
     navigation.goBack();
   };
 
-  const handleContinue = () => {
-    if (!selectedResult) return;
-
-    navigation.navigate("FeedbackRating", {
-      roomId,
-      matchResult: selectedResult,
-    });
+  const handleContinue = async () => {
+    if (!selectedResult || !session) return;
+    try {
+      await voteMatchResultMutation.mutateAsync({
+        roomId: session.roomId,
+        vote: selectedResult,
+      });
+      await setMatchResult(selectedResult);
+      navigation.navigate("FeedbackRating");
+    } catch {
+      toast.error(
+        t("feedback.result.voteErrorTitle", "Không gửi được kết quả"),
+        t(
+          "feedback.result.voteErrorMessage",
+          "Vui lòng kiểm tra kết nối và thử lại.",
+        ),
+      );
+    }
   };
 
-  const isTeamASelected = selectedResult === "A";
-  const isTeamBSelected = selectedResult === "B";
-  const isDrawSelected = selectedResult === "DRAW";
+  const isTeamASelected = selectedResult === "TeamAWin";
+  const isTeamBSelected = selectedResult === "TeamBWin";
+  const isDrawSelected = selectedResult === "Draw";
 
   return (
     <SafeAreaView
@@ -148,7 +153,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 styles.teamCardWrapper,
                 isTeamASelected && styles.teamCardWrapperSelected,
               ]}
-              onPress={() => setSelectedResult("A")}
+              onPress={() => setSelectedResult("TeamAWin")}
             >
               {isTeamASelected && (
                 <>
@@ -216,7 +221,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                     },
                   ]}
                 >
-                  {t("feedback.result.teamA", "FC SÀI GÒN")}
+                  {session?.teamAName ?? t("feedback.result.teamA", "Đội A")}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -228,7 +233,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 styles.teamCardWrapper,
                 isTeamBSelected && styles.teamCardWrapperSelected,
               ]}
-              onPress={() => setSelectedResult("B")}
+              onPress={() => setSelectedResult("TeamBWin")}
             >
               {isTeamBSelected && (
                 <>
@@ -296,7 +301,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                     },
                   ]}
                 >
-                  {t("feedback.result.teamB", "FC HÀ NỘI")}
+                  {session?.teamBName ?? t("feedback.result.teamB", "Đội B")}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -314,7 +319,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 backgroundColor: theme.colors.surface,
               },
             ]}
-            onPress={() => setSelectedResult("DRAW")}
+            onPress={() => setSelectedResult("Draw")}
           >
             <View style={styles.drawLeft}>
               <Ionicons
@@ -362,17 +367,21 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 opacity: selectedResult ? 1 : 0.6,
               },
             ]}
-            disabled={!selectedResult}
+            disabled={!selectedResult || voteMatchResultMutation.isPending}
             onPress={handleContinue}
           >
-            <Text
-              style={[
-                styles.continueButtonText,
-                { color: theme.colors.background },
-              ]}
-            >
-              {t("feedback.result.continue", "TIẾP TỤC")}
-            </Text>
+            {voteMatchResultMutation.isPending ? (
+              <ActivityIndicator color={theme.colors.background} />
+            ) : (
+              <Text
+                style={[
+                  styles.continueButtonText,
+                  { color: theme.colors.background },
+                ]}
+              >
+                {t("feedback.result.continue", "TIẾP TỤC")}
+              </Text>
+            )}
           </TouchableOpacity>
 
           {/* Footer Note */}

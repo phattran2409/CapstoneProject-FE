@@ -41,6 +41,8 @@ import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusAct
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
+import { useFeedbackSessionStore } from '@/features/feedback';
+import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -98,7 +100,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   }, [room]);
   
   // ✅ Use roomData for display (có real-time updates) hoặc fallback về room từ query
-  const displayRoom = roomData || room;
+  const displayRoom = useMemo(() => {
+    const base = roomData || room;
+    if (!base) return null;
+    return applyRoomFeedbackTestOverrides(base);
+  }, [roomData, room]);
 
   // ✅ Venue photos: ưu tiên từ API detail, fallback từ params (khi navigate từ MatchesScreen)
   const venuePhotosToShow = useMemo(
@@ -416,8 +422,55 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     );
   };
 
-  const handleNavigateToFeedbackIntro = () => {
-    navigation?.navigate('FeedbackIntro');
+  const { startSession } = useFeedbackSessionStore();
+
+  const handleNavigateToFeedbackIntro = async () => {
+    if (!displayRoom || !user?.userId) return;
+
+    const allParticipants = [
+      ...displayRoom.participants.teamA,
+      ...displayRoom.participants.teamB,
+    ];
+    const me = allParticipants.find((p) => p.userId === user.userId);
+    const myTeam = me?.teamAssignment === 'A' || me?.teamAssignment === 'B'
+      ? me.teamAssignment
+      : 'A';
+
+    // Đồng đội cùng đội, không bao gồm bản thân
+    const teamPool =
+      myTeam === 'A' ? displayRoom.participants.teamA : displayRoom.participants.teamB;
+    const teammates = teamPool
+      .filter((p) => p.userId !== user.userId)
+      .map((p) => ({
+        userId: p.userId,
+        fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
+        position: p.position,
+        teamAssignment: p.teamAssignment as 'A' | 'B',
+      }));
+
+    await startSession({
+      roomId: displayRoom.roomId,
+      teamAName: displayRoom.teamNames?.A ?? 'Đội A',
+      teamBName: displayRoom.teamNames?.B ?? 'Đội B',
+      venue: {
+        venueId: displayRoom.field.venue.venueId,
+        fieldId: displayRoom.fieldId,
+        fieldName: displayRoom.field.fieldName,
+        venueName: displayRoom.field.venue.venueName,
+        address: displayRoom.field.venue.address,
+        photoUrls: (venuePhotosToShow ?? [])
+          .map((p) => p.photoUrl)
+          .filter(Boolean),
+      },
+      matchDate: displayRoom.matchDate,
+      startTime: displayRoom.startTime,
+      myTeam,
+      teammates,
+    });
+
+    navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
+    //  navigation?.replace('FeedbackRating');
   };
 
   const handleNavigateToEloBreakdown = () => {
@@ -647,6 +700,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               subValue={displayRoom.field.venue.address}
               valueSize="m"
               valueWeight="medium"
+              mapLink={true}
+              mapLatitude={displayRoom.field.venue.latitude}
+              mapLongitude={displayRoom.field.venue.longitude}
             />
             <RoomInfoCard
               icon="cash"
@@ -659,6 +715,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               value={formatCurrency(depositCollected, 'VND') || '0'}
               subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% ${t('roomDetail.depositProgress')}` : undefined}
             />
+            
           </View>
 
           {/* Team Lineup Section */}
@@ -747,6 +804,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       />
 
       <RoomStatusActionBar
+        hasLeftFeedback={displayRoom.hasLeftFeedback}
         status={displayRoom.status}
         activeTab={activeTab}
         canJoinMatch={canJoinMatch}

@@ -1,38 +1,81 @@
-import { useMutation } from "@tanstack/react-query";
-import { MatchFeedbackPayload } from "../types/feedback.types";
-import { feedbackPlayer, reportPlayer, voteMatchResult } from "../api";
-export const useFeedback = (matchId: string, revieweeId: string, feedbacks: MatchFeedbackPayload[]) => {
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { FeedbackVenueVariables, SubmitMatchFeedbacksRequest } from "../types/feedback.types";
+import { submitMatchFeedbacksBatch, reportPlayer, voteMatchResult, feedbackVenue } from "../api";
+import { roomsKeys } from "@/features/rooms/api/roomsKeys";
+import { venuesKeys } from "@/features/venues/api/venuesKeys";
+
+// ==================== Batch submit teammate feedbacks ====================
+
+/**
+ * Gửi một request: matchId + reviewerId + mảng feedbacks (mỗi phần tử một reviewee).
+ */
+export const useSubmitMatchFeedbacksBatch = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
-        mutationFn: () => feedbackPlayer(matchId, revieweeId, feedbacks),
-        onSuccess: () => {
-            console.log("Feedback given successfully");
-        },
-        onError: (error) => {
-            console.error("Error giving feedback to player:", error);
-        },
-    });
+    mutationFn: (body: SubmitMatchFeedbacksRequest) =>
+      submitMatchFeedbacksBatch(body),
+    onSuccess: (_data, body) => {
+      queryClient.invalidateQueries({ queryKey: roomsKeys.detail(body.matchId) });
+    },
+  });
 };
 
-export const useReportPlayer = (reportedUserId: string, reportType: string, description: string, matchId: string) => {
-    return useMutation({
-        mutationFn: () => reportPlayer(reportedUserId, reportType, description, matchId),
-        onSuccess: () => {
-            console.log("Player reported successfully");
-        },
-        onError: (error) => {
-            console.error("Error reporting player:", error);
-        },
-    });
+/**
+ * Đánh giá venue/sân: POST `/venues/reviews` với venueId.
+ */
+export const useFeedbackVenue = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (vars: FeedbackVenueVariables) =>
+      feedbackVenue(vars.venueId, vars.rating, vars.comment),
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({
+        queryKey: venuesKeys.detail(vars.venueId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: venuesKeys.reviews(vars.venueId),
+      });
+    },
+  });
+};
+// ==================== Report player ====================
+
+export interface ReportPlayerVariables {
+  reportedUserId: string;
+  reportType: string;
+  description: string;
+  matchId: string;
+}
+
+export const useReportPlayer = () => {
+  return useMutation({
+    mutationFn: (vars: ReportPlayerVariables) =>
+      reportPlayer(
+        vars.reportedUserId,
+        vars.reportType,
+        vars.description,
+        vars.matchId,
+      ),
+  });
 };
 
-export const useVoteMatchResult = (matchId: string, teamAssignment: string) => {
-    return useMutation({
-        mutationFn: () => voteMatchResult(matchId, teamAssignment),
-        onSuccess: () => {
-            console.log("Match result voted successfully");
-        },
-        onError: (error) => {
-            console.error("Error voting for match result:", error);
-        },
-    });
+// ==================== Vote match result ====================
+
+export interface VoteMatchResultVariables {
+  roomId: string;
+  vote: string;
+}
+
+export const useVoteMatchResult = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (vars: VoteMatchResultVariables) =>
+      voteMatchResult(vars.roomId, vars.vote),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: roomsKeys.detail(vars.roomId) });
+    },
+  });
 };

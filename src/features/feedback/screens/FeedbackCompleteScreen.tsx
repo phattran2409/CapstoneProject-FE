@@ -21,6 +21,9 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useQueryClient } from "@tanstack/react-query";
+import { useFeedbackSessionStore } from "../store/feedbackSessionStore";
+import { roomsKeys } from "@/features/rooms/api/roomsKeys";
 
 const { width } = Dimensions.get("window");
 
@@ -38,6 +41,8 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const clearSession = useFeedbackSessionStore((s) => s.clearSession);
 
   // Animation values
   const scaleAnim = useSharedValue(0);
@@ -46,6 +51,13 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
   const buttonScale = useSharedValue(0);
 
   useEffect(() => {
+    const roomId = useFeedbackSessionStore.getState().session?.roomId;
+    if (roomId) {
+      void queryClient.invalidateQueries({ queryKey: roomsKeys.detail(roomId) });
+      void queryClient.invalidateQueries({ queryKey: roomsKeys.matchRooms() });
+    }
+    void clearSession();
+
     // Staggered animations
     scaleAnim.value = withSpring(1, { damping: 10, stiffness: 100 });
     
@@ -64,7 +76,7 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
     setTimeout(() => {
       buttonScale.value = withSpring(1, { damping: 8, stiffness: 100 });
     }, 600);
-  }, []);
+  }, [clearSession, queryClient]);
 
   const containerStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scaleAnim.value }],
