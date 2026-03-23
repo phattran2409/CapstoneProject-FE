@@ -25,7 +25,8 @@ import {
 } from "@/shared/components/themed";
 import Button from "@/shared/components/Button";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { useWalletBalance, useWalletDeposit } from "../hooks";
+import { useWalletBalance, useWalletDeposit, useGetBankInfo, useWithdrawal } from "../hooks";
+import BankInfoCard from "../components/BankInfoCard";
 import { RootStackParamList } from "@/app/navigation/types";
 import { Transaction, TransactionQuery, TransactionType } from "../types/wallet.types";
 import { useWalletTransaction } from "../hooks/useWalletTransaction";
@@ -48,10 +49,16 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const { data: wallet, isLoading: balanceLoading } = useWalletBalance();
   const depositMutation = useWalletDeposit();
+  const { data: bankInfo, isLoading: bankInfoLoading } = useGetBankInfo();
+  const withdrawMutation = useWithdrawal();
 
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositError, setDepositError] = useState("");
+
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawError, setWithdrawError] = useState("");
   const [filterScrollWidth, setFilterScrollWidth] = useState(0);
   const [filterContentWidth, setFilterContentWidth] = useState(0);
   const [filterScrollX, setFilterScrollX] = useState(0);
@@ -76,6 +83,42 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     setDepositAmount("");
     setDepositError("");
     setShowDepositModal(true);
+  };
+
+  const handleOpenWithdrawModal = () => {
+    setWithdrawAmount("");
+    setWithdrawError("");
+    setShowWithdrawModal(true);
+  };
+
+  const handleWithdraw = async () => {
+    const amount = Number(withdrawAmount?.replace(/\D/g, "") || 0);
+    if (!amount || amount < 10000) {
+      setWithdrawError(
+        t("wallet.withdrawMinError", {
+          defaultValue: "Vui lòng nhập số tiền tối thiểu 10.000 VND",
+        }),
+      );
+      return;
+    }
+    setWithdrawError("");
+    try {
+      await withdrawMutation.mutateAsync({ amount });
+      setShowWithdrawModal(false);
+      Alert.alert(
+        t("common.success"),
+        t("wallet.withdrawSuccess", {
+          defaultValue: "Yêu cầu rút tiền đã được gửi thành công",
+        }),
+      );
+    } catch (err: any) {
+      const errorMessage =
+        err?.message ||
+        t("wallet.withdrawError", {
+          defaultValue: "Không thể gửi yêu cầu rút tiền. Vui lòng thử lại.",
+        });
+      setWithdrawError(errorMessage);
+    }
   };
 
   const handleDeposit = async () => {
@@ -217,9 +260,9 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       value: "CheckinFee",
     },
     {
-      key: "Withdraw",
+      key: "Withdrawal",
       label: t("wallet.filters.withdraw", { defaultValue: "Rút tiền" }),
-      value: "Withdraw",
+      value: "Withdrawal",
     },
   ];
 
@@ -305,7 +348,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             />
             <Button
               title={t("wallet.withdraw", { defaultValue: "Rút tiền" })}
-              onPress={() => navigation.navigate("WalletWithdraw")}
+              onPress={handleOpenWithdrawModal}
               size="medium"
               variant="outline"
               style={{ flex: 1, marginLeft: theme.spacing.s }}
@@ -538,6 +581,190 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
           </KeyboardAvoidingView>
         </Pressable>
       </Modal>
+      {/* Withdraw Modal */}
+      <Modal
+        visible={showWithdrawModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWithdrawModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowWithdrawModal(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalKeyboardView}
+          >
+            <Pressable
+              style={[
+                styles.modalContent,
+                { backgroundColor: theme.colors.surface },
+              ]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <ThemedText variant="primary" size="l" weight="bold">
+                  {t("wallet.withdrawTitle", {
+                    defaultValue: "Rút tiền về ngân hàng",
+                  })}
+                </ThemedText>
+                <TouchableOpacity onPress={() => setShowWithdrawModal(false)}>
+                  <Ionicons
+                    name="close"
+                    size={24}
+                    color={theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Bank Info Section */}
+              {bankInfoLoading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.neonGreen}
+                  style={{ marginTop: 16 }}
+                />
+              ) : bankInfo?.hasBankInfo ? (
+                <View style={{ marginTop: 16 }}>
+                  <BankInfoCard
+                    bankInfo={bankInfo}
+                    onEdit={() => {
+                      setShowWithdrawModal(false);
+                      navigation.navigate("WalletWithdraw");
+                    }}
+                  />
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.noBankInfoBox,
+                    { borderColor: theme.colors.border },
+                  ]}
+                >
+                  <Ionicons
+                    name="card-outline"
+                    size={36}
+                    color={theme.colors.textSecondary}
+                    style={{ marginBottom: 8 }}
+                  />
+                  <ThemedText
+                    variant="primary"
+                    size="m"
+                    weight="semiBold"
+                    style={{ textAlign: "center" }}
+                  >
+                    {t("wallet.noBankInfo", {
+                      defaultValue: "Chưa có thông tin ngân hàng",
+                    })}
+                  </ThemedText>
+                  <ThemedText
+                    variant="secondary"
+                    size="s"
+                    style={{ textAlign: "center", marginTop: 4 }}
+                  >
+                    {t("wallet.noBankInfoDesc", {
+                      defaultValue:
+                        "Vui lòng thêm thông tin ngân hàng trước khi rút tiền",
+                    })}
+                  </ThemedText>
+                  <Button
+                    title={t("wallet.addBankInfo", {
+                      defaultValue: "Thêm thông tin ngân hàng",
+                    })}
+                    onPress={() => {
+                      setShowWithdrawModal(false);
+                      navigation.navigate("WalletWithdraw");
+                    }}
+                    size="medium"
+                    style={{
+                      marginTop: 16,
+                      backgroundColor: theme.colors.neonGreen,
+                    }}
+                    textStyle={{ color: "#000" }}
+                  />
+                </View>
+              )}
+
+              {/* Amount Input — only shown when bank info exists */}
+              {bankInfo?.hasBankInfo && (
+                <>
+                  <ThemedText
+                    variant="secondary"
+                    size="s"
+                    style={{ marginTop: 16 }}
+                  >
+                    {t("wallet.withdrawAmountLabel", {
+                      defaultValue: "Số tiền muốn rút (VND)",
+                    })}
+                  </ThemedText>
+
+                  <TextInput
+                    style={[
+                      styles.depositInput,
+                      {
+                        borderColor: withdrawError
+                          ? theme.colors.error
+                          : theme.colors.border,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    placeholder={t("wallet.withdrawAmountPlaceholder", {
+                      defaultValue: "Ví dụ: 50000",
+                    })}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={withdrawAmount}
+                    onChangeText={(text) => {
+                      setWithdrawAmount(text.replace(/\D/g, ""));
+                      if (withdrawError) setWithdrawError("");
+                    }}
+                    keyboardType="number-pad"
+                  />
+                  {withdrawError ? (
+                    <ThemedText
+                      size="xs"
+                      style={{ color: theme.colors.error, marginTop: 4 }}
+                    >
+                      {withdrawError}
+                    </ThemedText>
+                  ) : null}
+
+                  <Button
+                    title={
+                      withdrawMutation.isPending
+                        ? t("wallet.withdrawSubmitting", {
+                            defaultValue: "Đang gửi...",
+                          })
+                        : t("wallet.withdrawConfirm", {
+                            defaultValue: "Xác nhận rút tiền",
+                          })
+                    }
+                    onPress={handleWithdraw}
+                    disabled={withdrawMutation.isPending}
+                    size="medium"
+                    style={{
+                      ...styles.modalButton,
+                      backgroundColor: theme.colors.neonGreen,
+                      opacity: withdrawMutation.isPending ? 0.7 : 1,
+                    }}
+                    textStyle={{ color: "#000" }}
+                  />
+                </>
+              )}
+
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowWithdrawModal(false)}
+              >
+                <ThemedText variant="secondary" size="s">
+                  {t("wallet.cancel")}
+                </ThemedText>
+              </TouchableOpacity>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
     </ThemedSafeAreaView>
   );
 };
@@ -654,6 +881,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginTop: 12,
     paddingVertical: 8,
+  },
+  noBankInfoBox: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+    borderStyle: "dashed",
+    padding: 20,
+    alignItems: "center",
   },
 });
 

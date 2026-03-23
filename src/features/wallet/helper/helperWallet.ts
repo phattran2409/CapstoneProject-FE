@@ -15,7 +15,7 @@ export const helperTransactionCategory = (
             return t("wallet.refund");
         case "CheckinFee":
             return t("wallet.checkinFee");
-        case "Withdraw":
+        case "Withdrawal":
             return t("wallet.withdraw");
     }
 }
@@ -33,7 +33,7 @@ export const helperTransactionTypeIcons = (
             return { icon: "refresh-circle-outline", color: theme.colors.neonGreen, bg: `${theme.colors.neonGreen}20` };
         case "CheckinFee":
             return { icon: "enter-outline", color: theme.colors.error, bg: `${theme.colors.error}20` };
-        case "Withdraw":
+        case "Withdrawal":
             return { icon: "arrow-up-circle-outline", color: theme.colors.error, bg: `${theme.colors.error}20` };
         default:
             return { icon: "cash-outline", color: theme.colors.textSecondary, bg: `${theme.colors.textSecondary}20` };

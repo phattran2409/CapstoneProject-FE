@@ -61,6 +61,9 @@ export const API_CONFIG = {
       BANK_INFO: "/wallets/bank-info",
       TRANSACTIONS: "/wallets/transactions",
     },
+    WITHDRAWALS: {
+      CREATE: "/withdrawals",
+    },
   },
 } as const;
 

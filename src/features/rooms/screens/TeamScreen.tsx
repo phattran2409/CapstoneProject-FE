@@ -35,6 +35,7 @@ import { roomsApi } from "@/features/rooms/api/roomsApi";
 import { useToast } from "@/shared/toast";
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, type FormationUpdatedPayload } from "@/shared/hooks";
 import { formatDate } from "@/shared/utils/formatters";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 type TeamScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Team"
@@ -300,12 +301,9 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     try {
       await roomsApi.updateFormation(roomId, payload);
       toast.success(t("teamScreen.saveFormationSuccess"));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save formation:", error);
-      toast.error(
-        t("teamScreen.saveFormationError"),
-        t("teamScreen.saveFormationErrorDesc"),
-      );
+      toast.error(getTranslatedError(error?.message) || t("teamScreen.saveFormationError"));
     }
   };
 
@@ -331,9 +329,9 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
           : prev,
       );
       toast.success(t("teamScreen.teamNameUpdated"));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save team name:", error);
-      toast.error(t("teamScreen.teamNameError"), t("teamScreen.teamNameErrorDesc"));
+      toast.error(getTranslatedError(error?.message) || t("teamScreen.teamNameError"));
     } finally {
       setIsSavingTeamName(false);
     }
@@ -346,8 +344,9 @@ const TeamScreen: React.FC<TeamScreenProps> = ({
     try {
       setIsProcessingPayment(true);
       await roomsApi.processPayment(roomId);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to process payment:", error);
+      toast.error(getTranslatedError(error?.message) || t("teamScreen.processPaymentError"));
     } finally {
       setIsProcessingPayment(false);
     }

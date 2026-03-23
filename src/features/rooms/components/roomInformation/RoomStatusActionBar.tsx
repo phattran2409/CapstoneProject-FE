@@ -9,6 +9,7 @@ import {
 } from '@/features/rooms';
 
 interface RoomStatusActionBarProps {
+  hasLeftFeedback?: boolean;
   status: MatchRoomStatus;
   activeTab: 'teams' | 'host' | 'venue';
   canJoinMatch: boolean;
@@ -21,6 +22,7 @@ interface RoomStatusActionBarProps {
 }
 
 const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
+  hasLeftFeedback,
   status,
   activeTab,
   canJoinMatch,
@@ -65,6 +67,20 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
             style={[actionStyles.joinButtonText, { color: '#000' }]}
           >
             {t('roomDetail.statusActions.reviewing', 'Đánh giá trận đấu')}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+  if (hasLeftFeedback) {
+    return (
+      <View style={containerStyle}>
+        <TouchableOpacity
+          style={[actionStyles.joinButton, { backgroundColor: theme.colors.border, shadowColor: 'transparent' }]}
+          disabled
+        >
+          <ThemedText size="l" weight="bold" style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}>
+            {t('roomDetail.statusActions.hasLeftFeedback', 'Bạn đã đánh giá trận đấu')}
           </ThemedText>
         </TouchableOpacity>
       </View>

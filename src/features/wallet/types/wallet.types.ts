@@ -30,6 +30,22 @@ export interface BankInfoRequest {
   accountHolderName: string;
 }
 
+export interface BankInfo {
+  walletId: string;
+  bankAccountNumber: string;
+  bankName: string;
+  accountHolderName: string;
+  hasBankInfo: boolean;
+}
+
+export interface WithdrawalRequest {
+  amount: number;
+}
+
+export interface WithdrawalResponse {
+  message?: string;
+}
+
 export interface Transaction {
   transactionId: string;
   transactionType: TransactionType;
@@ -40,7 +56,7 @@ export interface Transaction {
   description : string;
   createdAt : string;
 } 
-export type TransactionType = "BookingPayment" | "BookingIncome" | "Deposit" | "CheckinFee" | "Withdraw" | "Refund" | "Other" | "All";
+export type TransactionType = "BookingPayment" | "BookingIncome" | "Deposit" | "CheckinFee" | "Withdrawal" | "Refund" | "Other" | "All";
 export interface TransactionQuery {
   page : number;
   pageSize : number;

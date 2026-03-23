@@ -30,7 +30,7 @@
       "@shared/*": ["src/shared/*"]
     }
   },
-  "include": ["src/**/*", "App.tsx"],
+  "include": ["src/**/*", "App.tsx", "src/features/wallet/screens/WalletScreen.tsx"],
   "exclude": ["node_modules"]
 }
 

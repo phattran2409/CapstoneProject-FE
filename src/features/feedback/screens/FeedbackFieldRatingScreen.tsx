@@ -1,19 +1,32 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  ScrollView,
+  Image,
+  Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
+import { RouteProp, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useToast } from "@/shared/toast";
+import { useFeedbackSessionStore } from "../store/feedbackSessionStore";
+import { useFeedbackVenue } from "../hooks/useFeedback";
+import { useVenueDetail } from "@/features/venues";
+import { openMapsSearch } from "@/shared/utils/maps";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const HERO_HEIGHT = 220;
+const THUMB_SIZE = 72;
 
 type FeedbackFieldRatingNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,16 +51,63 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
   const { t } = useTranslation();
   const toast = useToast();
 
-  const { roomId, matchResult } = route.params;
+  const session = useFeedbackSessionStore((s) => s.session);
+  const setFieldRating = useFeedbackSessionStore((s) => s.setFieldRating);
 
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const routeVenueId = route.params?.venueId;
+  const venueId = routeVenueId ?? session?.venue?.venueId ?? "";
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
+  const { data: venueDetail, isLoading: isVenueLoading } =
+    useVenueDetail(venueId);
+  const feedbackVenueMutation = useFeedbackVenue();
 
-  const handleSubmit = useCallback(() => {
+  const [rating, setRating] = useState(() => session?.fieldRating ?? 0);
+  const [comment, setComment] = useState(() => session?.fieldComment ?? "");
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  const displayVenueName = useMemo(
+    () =>
+      venueDetail?.venueName ??
+      session?.venue?.venueName ??
+      t("feedback.result.venueName", "Sân bóng"),
+    [venueDetail?.venueName, session?.venue?.venueName, t],
+  );
+
+  const displayAddress = useMemo(
+    () => venueDetail?.address ?? session?.venue?.address ?? "",
+    [venueDetail?.address, session?.venue?.address],
+  );
+
+  const displayFieldName = session?.venue?.fieldName;
+
+  const photoUrls = useMemo(() => {
+    const fromApi =
+      venueDetail?.photos
+        ?.slice()
+        .sort((a, b) => (a.isPrimary === b.isPrimary ? 0 : a.isPrimary ? -1 : 1))
+        .map((p) => p.photoUrl)
+        .filter(Boolean) ?? [];
+    if (fromApi.length > 0) return fromApi;
+    return session?.venue?.photoUrls?.filter(Boolean) ?? [];
+  }, [venueDetail?.photos, session?.venue?.photoUrls]);
+
+  const lat = venueDetail?.latitude;
+  const lng = venueDetail?.longitude;
+
+  const openMaps = useCallback(() => {
+    openMapsSearch({
+      latitude: lat,
+      longitude: lng,
+      placeName: displayVenueName,
+      address: displayAddress,
+    });
+  }, [lat, lng, displayVenueName, displayAddress]);
+
+  // const handleBack = () => {
+  //   navigation.goBack();
+  // };
+
+  const handleSubmit = useCallback(async () => {
     if (rating === 0) {
       toast.error(
         t("feedback.validation.ratingRequired", "Đánh giá bắt buộc"),
@@ -59,59 +119,82 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
       return;
     }
 
-    console.log("Submitting field feedback:", {
-      roomId,
-      matchResult,
-      rating,
-      comment,
-    });
+    if (!venueId) {
+      toast.error(
+        t("feedback.field.missingVenueTitle", "Thiếu venue"),
+        t(
+          "feedback.field.missingVenueMessage",
+          "Không xác định được sân để gửi đánh giá.",
+        ),
+      );
+      return;
+    }
 
-    navigation.replace("FeedbackComplete");
-  }, [rating, comment, roomId, matchResult, navigation, t, toast]);
+    try {
+      await feedbackVenueMutation.mutateAsync({
+        venueId,
+        rating,
+        comment,
+      });
+      await setFieldRating(rating, comment);
+      navigation.replace("FeedbackComplete");
+    } catch (error: any) {
+      toast.error(
+        t("feedback.field.submitErrorTitle", "Gửi đánh giá thất bại"),
+        getTranslatedError(error?.message) ||
+        t(
+          "feedback.field.submitErrorMessage",
+          "Vui lòng thử lại sau.",
+        ),
+      );
+    }
+  }, [
+    rating,
+    comment,
+    venueId,
+    feedbackVenueMutation,
+    setFieldRating,
+    navigation,
+    t,
+    toast,
+  ]);
 
-  const renderStars = () => {
-    return (
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => setRating(star)}
-            activeOpacity={0.7}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-            style={styles.starButton}
-          >
-            <Ionicons
-              name={star <= rating ? "star" : "star-outline"}
-              size={32}
-              color={
-                star <= rating
-                  ? theme.colors.primary
-                  : theme.colors.textTertiary
-              }
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
+  const renderStars = () => (
+    <View style={styles.starsContainer}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <TouchableOpacity
+          key={star}
+          onPress={() => setRating(star)}
+          activeOpacity={0.7}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          style={styles.starButton}
+        >
+          <Ionicons
+            name={star <= rating ? "star" : "star-outline"}
+            size={32}
+            color={
+              star <= rating
+                ? theme.colors.primary
+                : theme.colors.textTertiary
+            }
+          />
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const heroUri = photoUrls[heroIndex] ?? photoUrls[0];
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
     >
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          onPress={handleBack}
         >
-          <Ionicons
-            // name="chevron-back"
-            // size={24}
-            // color={theme.colors.textSecondary}
-          />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
@@ -131,37 +214,145 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
         <View style={styles.headerRightPlaceholder} />
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-              {/* Venue Info */}
-              <View
-            style={[
-              styles.venueCard,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <View style={styles.venueHeader}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Ảnh sân */}
+        <View
+          style={[
+            styles.heroWrap,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          {isVenueLoading && photoUrls.length === 0 ? (
+            <View style={styles.heroLoading}>
+              <ActivityIndicator color={theme.colors.primary} />
+            </View>
+          ) : heroUri ? (
+            <Image
+              source={{ uri: heroUri }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={[
+                styles.heroPlaceholder,
+                { backgroundColor: theme.colors.surface },
+              ]}
+            >
               <Ionicons
-                name="location"
-                size={16}
-                color={theme.colors.primary}
+                name="image-outline"
+                size={48}
+                color={theme.colors.textTertiary}
               />
               <Text
                 style={[
-                  styles.venueLabel,
+                  styles.heroPlaceholderText,
                   { color: theme.colors.textSecondary },
                 ]}
               >
-                {t("feedback.result.venueLabel", "SÂN VẬN ĐỘNG")}
+                {t("feedback.field.noPhotos", "Chưa có ảnh sân")}
               </Text>
             </View>
-            <Text style={[styles.venueName, { color: theme.colors.text }]}>
-              {t(
-                "feedback.result.venueName",
-                "Sân bóng Đại học Y, Hà Nội",
-              )}
+          )}
+
+          {photoUrls.length > 1 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.thumbRow}
+              contentContainerStyle={styles.thumbRowContent}
+            >
+              {photoUrls.map((uri, i) => (
+                <TouchableOpacity
+                  key={`${uri}-${i}`}
+                  onPress={() => setHeroIndex(i)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.thumbWrap,
+                    i === heroIndex && {
+                      borderColor: theme.colors.primary,
+                      borderWidth: 2,
+                    },
+                  ]}
+                >
+                  <Image
+                    source={{ uri }}
+                    style={styles.thumbImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* Tên + địa chỉ + bản đồ */}
+        <View
+          style={[
+            styles.infoCard,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <View style={styles.venueHeader}>
+            <Ionicons
+              name="location"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <Text
+              style={[
+                styles.venueLabel,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
+              {t("feedback.result.venueLabel", "SÂN VẬN ĐỘNG")}
             </Text>
           </View>
+
+          <Text style={[styles.venueTitle, { color: theme.colors.text }]}>
+            {displayFieldName
+              ? `${displayFieldName} · ${displayVenueName}`
+              : displayVenueName}
+          </Text>
+
+          {!!displayAddress && (
+            <Text
+              style={[
+                styles.addressText,
+                { color: theme.colors.textSecondary },
+              ]}
+              numberOfLines={3}
+            >
+              {displayAddress}
+            </Text>
+          )}
+
+          <TouchableOpacity
+            style={[
+              styles.mapButton,
+              { borderColor: theme.colors.primary },
+            ]}
+            onPress={openMaps}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="map-outline"
+              size={20}
+              color={theme.colors.primary}
+            />
+            <Text
+              style={[styles.mapButtonText, { color: theme.colors.primary }]}
+            >
+              {t("feedback.field.openMap", "Xem vị trí trên bản đồ")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <Text style={[styles.label, { color: theme.colors.text }]}>
           {t("feedback.field.ratingLabel", "Bạn hài lòng với mặt sân chứ?")}
         </Text>
@@ -206,23 +397,29 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
           ]}
           activeOpacity={0.8}
           onPress={handleSubmit}
-          disabled={rating === 0}
+          disabled={rating === 0 || feedbackVenueMutation.isPending}
         >
-          <Text
-            style={[
-              styles.submitButtonText,
-              { color: theme.colors.background },
-            ]}
-          >
-            {t("feedback.field.submit", "HOÀN THÀNH ĐÁNH GIÁ")}
-          </Text>
-          <Ionicons
-            name="checkmark-circle"
-            size={20}
-            color={theme.colors.background}
-          />
+          {feedbackVenueMutation.isPending ? (
+            <ActivityIndicator color={theme.colors.background} />
+          ) : (
+            <>
+              <Text
+                style={[
+                  styles.submitButtonText,
+                  { color: theme.colors.background },
+                ]}
+              >
+                {t("feedback.field.submit", "HOÀN THÀNH ĐÁNH GIÁ")}
+              </Text>
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color={theme.colors.background}
+              />
+            </>
+          )}
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -261,29 +458,118 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  content: {
+  scroll: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingLeft: 24,
-    paddingRight: 24,
-    paddingTop: 24,
+  },
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  heroWrap: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  heroImage: {
+    width: SCREEN_WIDTH - 32,
+    height: HERO_HEIGHT,
+  },
+  heroLoading: {
+    width: SCREEN_WIDTH - 32,
+    height: HERO_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroPlaceholder: {
+    width: SCREEN_WIDTH - 32,
+    height: HERO_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  heroPlaceholderText: {
+    fontSize: 14,
+  },
+  thumbRow: {
+    maxHeight: THUMB_SIZE + 16,
+  },
+  thumbRowContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  thumbWrap: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: 10,
+    overflow: "hidden",
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  thumbImage: {
+    width: "100%",
+    height: "100%",
+  },
+  infoCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 18,
+    padding: 16,
+  },
+  venueHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
+  venueLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1,
+  },
+  venueTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  addressText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  mapButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 12,
+    marginTop: 8,
+    paddingHorizontal: 24,
   },
   starsContainer: {
     flexDirection: "row",
     justifyContent: "center",
     gap: 8,
     marginBottom: 24,
+    paddingHorizontal: 24,
   },
   starButton: {
     padding: 4,
   },
   commentInput: {
-    width: "100%",
+    marginHorizontal: 24,
     minHeight: 100,
     borderRadius: 12,
     padding: 12,
@@ -293,6 +579,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   submitButton: {
+    marginHorizontal: 24,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -305,27 +592,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  venueCard: {
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 32,
-  },
-  venueHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
-  },
-  venueLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1,
-  },
-  venueName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
 });
 
 export default FeedbackFieldRatingScreen;
-

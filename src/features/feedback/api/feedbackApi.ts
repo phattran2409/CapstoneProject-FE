@@ -1,7 +1,5 @@
 import { apiClient } from "@/shared/api";
-import { MatchFeedbackPayload } from "../types/feedback.types";
-
-
+import type { SubmitMatchFeedbacksRequest } from "../types/feedback.types";
 
 export const voteMatchResult = async (roomId: string, teamAssignment: string) => {
     try {
@@ -15,20 +13,18 @@ export const voteMatchResult = async (roomId: string, teamAssignment: string) =>
 
 
 
-export const feedbackPlayer = async (
-  matchId: string,
-  revieweeId: string,
-  feedbacks: MatchFeedbackPayload[],
+/**
+ * Gửi toàn bộ đánh giá đồng đội một lần (batch).
+ */
+export const submitMatchFeedbacksBatch = async (
+  body: SubmitMatchFeedbacksRequest,
 ) => {
   try {
-    const response = await apiClient.post(`/match-feedbacks`, {
-      matchId,
-      revieweeId,
-      feedbacks,
-    });
+    const response = await apiClient.post(`/match-feedbacks`, body);
+    console.log('response', response);
     return response;
   } catch (error) {
-    console.error("Error giving feedback to player:", error);
+    console.error("Error submitting match feedbacks batch:", error);
     throw error;
   }
 };
@@ -40,15 +36,34 @@ export const reportPlayer = async (
   matchId: string,
 ) => {
   try {
-    const response = await apiClient.post(`/match-feedbacks/${matchId}/report`, {
+    const response = await apiClient.post(`/player-reports`, {
       reportedUserId,
       reportType,
       description,
       matchId,
     });
+    console.log('response', response);
     return response;
   } catch (error) {
     console.error("Error reporting player:", error);
+    throw error;
+  }
+};
+
+export const feedbackVenue = async (
+  venueId: string,
+  rating: number,
+  comment: string,
+) => {
+try {
+  const response = await apiClient.post(`/venues/reviews`, {
+    venueId,
+    rating,
+    comment,
+  });
+    return response;
+  } catch (error) {
+    console.error("Error feedback venue:", error);
     throw error;
   }
 };

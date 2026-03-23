@@ -42,6 +42,8 @@ import { useLeaderboard } from "@/features/leaderboard/hooks/useLeaderboard";
 import { useAuthStore } from "@/features/auth";
 import { authApi } from "@/features/auth/api";
 import { getFcmToken } from "@/shared/firebase/messaging";
+import { usePaginatedNotifications } from "@/features/notification/hooks";
+import { useToast } from "@/shared/toast";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, "Home">,
@@ -58,7 +60,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const { user } = useAuthStore();
   const hasSyncedFcmRef = useRef(false);
-
+  const toast = useToast();
   const leaderboardQuery = useLeaderboard();
   const topUsers = useMemo(
     () => (leaderboardQuery.data?.data?.leaderboard ?? []).slice(0, 5),
@@ -76,7 +78,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         await authApi.updateFcmToken(token);
         hasSyncedFcmRef.current = true;
         console.log("✅ FCM token registered from HomeScreen");
-      } catch (error) {
+      } catch (error: any) {
+        toast.error(error?.message || t("personalPage.editForm.toast.updateError"));
         console.error("❌ Failed to register FCM token from HomeScreen:", error);
       }
     };
@@ -97,6 +100,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   } = usePaginatedPosts({ pageSize: 10 });
 
   const { mutate: toggleLike } = useTogglePostLike();
+
+  // Kiểm tra có thông báo chưa đọc không
+  const { notifications: allNotifications } = usePaginatedNotifications({ pageSize: 20 });
+  const hasUnreadNotification = allNotifications.some((n) => !n.isRead);
 
   const handleLike = (postId: string) => {
     toggleLike(postId);
@@ -232,37 +239,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             {t("newsFeed.title")}
           </ThemedText>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              const parent = navigation.getParent();
-              if (parent) {
-                parent.navigate("FeedbackIntro");
-              }
-            }}
-          >
-            <Ionicons
-              name="star-outline"
-              size={24}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              const parent = navigation.getParent();
-              if (parent) {
-                parent.navigate("PaymentSuccess");
-              }
-            }}
-          >
-            <Ionicons
-              name="stats-chart-outline"
-              size={24}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
+        <View style={styles.headerRight}>        
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => navigation.navigate("Search" as any)}
@@ -282,7 +259,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             icon="notifications-outline"
             onPress={() => navigation.navigate("Notifications" as any)}
             size="medium"
-            // notificationCount={5}
+            showDot={hasUnreadNotification}
           />
         </View>
       </ThemedView>

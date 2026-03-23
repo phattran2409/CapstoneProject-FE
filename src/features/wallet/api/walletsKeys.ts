@@ -5,4 +5,5 @@ export const walletsKeys = {
   balance: () => [...walletsKeys.all, 'balance'] as const,
   transactions: () => [...walletsKeys.all, 'transactions'] as const,
   transactionsQuery: (query: TransactionQuery) => [...walletsKeys.transactions(), query] as const,
+  bankInfo: () => [...walletsKeys.all, 'bankInfo'] as const,
 };

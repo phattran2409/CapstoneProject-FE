@@ -6,6 +6,8 @@ import type {
   DepositRequest,
   DepositResponse,
   BankInfoRequest,
+  BankInfo,
+  WithdrawalRequest,
   TransactionsResponse,
   TransactionQuery,
 } from "../types/wallet.types";
@@ -92,5 +94,28 @@ export const walletsApi = {
     }
 
     return response.data;
+  },
+
+  getBankInfo: async (): Promise<BankInfo> => {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.WALLETS.BANK_INFO,
+    )) as ApiResponse<BankInfo>;
+
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to get bank information");
+    }
+
+    return response.data;
+  },
+
+  createWithdrawal: async (body: WithdrawalRequest): Promise<void> => {
+    const response = (await apiClient.post(
+      API_CONFIG.ENDPOINTS.WITHDRAWALS.CREATE,
+      body,
+    )) as ApiResponse<unknown>;
+
+    if (!response?.isSuccess) {
+      throw new Error("Failed to create withdrawal");
+    }
   },
 };

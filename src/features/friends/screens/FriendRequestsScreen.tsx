@@ -15,6 +15,7 @@ import { RootStackParamList } from "@/app/navigation/types";
 import { FriendRequestCard } from "../components";
 import { ThemedText } from "@/shared/components/themed/ThemedText";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
+import { useToast } from "@/shared/toast";
 import {
   AnimatedSearchBar,
   EmptyState,
@@ -27,6 +28,7 @@ import {
   useRespondToFriendRequest,
 } from "../hooks";
 import { useDebounce } from "@/shared/hooks";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type FriendRequestsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -43,7 +45,7 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
-
+  const toast = useToast();
   const {
     friendRequests,
     loading,
@@ -66,8 +68,9 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({
         onSuccess: () => {
           console.log("Friend request accepted!");
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Failed to accept:", error);
+          toast.error(getTranslatedError(error?.message) || t("friends.acceptError"));
         },
       },
     );
@@ -80,8 +83,9 @@ const FriendRequestsScreen: React.FC<FriendRequestsScreenProps> = ({
         onSuccess: () => {
           console.log("Friend request rejected!");
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Failed to reject:", error);
+          toast.error(getTranslatedError(error?.message) || t("friends.rejectError"));
         },
       },
     );

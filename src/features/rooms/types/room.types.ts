@@ -33,6 +33,9 @@ export interface MatchRoomVenue {
   venueName: string;
   address: string;
   contactPhone: string | null;
+  /** Khi BE trả về — dùng mở Maps native */
+  latitude?: number;
+  longitude?: number;
 }
 
 /**
@@ -140,6 +143,7 @@ export interface MatchRoomFullInfo {
     B?: string | null;
   };
   createdAt: string;
+  hasLeftFeedback?: boolean;
 }
 
 export interface MyRoom {

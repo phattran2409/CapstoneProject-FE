@@ -48,10 +48,10 @@ export type RootStackParamList = {
         isWin?: boolean;
       }
     | undefined;
-  FeedbackIntro: undefined;
-  FeedbackMatchResult: { roomId: string };
-  FeedbackRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
-  FeedbackFieldRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
+  FeedbackIntro: { roomId: string };
+  FeedbackMatchResult: undefined;
+  FeedbackRating: undefined;
+  FeedbackFieldRating: { venueId?: string };
   FeedbackComplete: undefined;
 };
 

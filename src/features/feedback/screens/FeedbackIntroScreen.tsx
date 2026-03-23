@@ -21,6 +21,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFeedbackSessionStore } from "../store/feedbackSessionStore";
 
 const { width } = Dimensions.get("window");
 
@@ -38,6 +39,8 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const session = useFeedbackSessionStore((s) => s.session);
+  const setStep = useFeedbackSessionStore((s) => s.setStep);
 
   // Animation values
   const scaleAnim = useSharedValue(1);
@@ -79,8 +82,9 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
     transform: [{ scale: teamScale.value }],
   }));
 
-  const handleStart = () => {
-    navigation.navigate("FeedbackMatchResult", { roomId: "" });
+  const handleStart = async () => {
+    await setStep("matchResult");
+    navigation.navigate("FeedbackMatchResult");
   };
 
   const handleClose = () => {
@@ -137,7 +141,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
                 />
               </View>
               <Text style={[styles.teamLabel, { color: theme.colors.text }]}>
-                {t("feedback.intro.teamA", "ĐỘI A")}
+                {session?.teamAName ?? t("feedback.intro.teamA", "ĐỘI A")}
               </Text>
             </Animated.View>
 
@@ -159,7 +163,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
                 />
               </View>
               <Text style={[styles.teamLabel, { color: theme.colors.text }]}>
-                {t("feedback.intro.teamB", "ĐỘI B")}
+                {session?.teamBName ?? t("feedback.intro.teamB", "ĐỘI B")}
               </Text>
             </Animated.View>
           </View>

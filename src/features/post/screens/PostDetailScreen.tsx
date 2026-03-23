@@ -43,6 +43,8 @@ import {
   PostActions,
 } from "@/shared/components";
 import { useAuthStore } from "@/features/auth";
+import { useToast } from "@/shared/toast";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type PostDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -85,7 +87,7 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const { mutateAsync: deleteComment } = useDeleteComment();
   const { mutate: toggleCommentLike } = useToggleCommentLike();
   const { mutateAsync: reportContent, isPending: isReportingComment } = useReportContent();
-
+  const toast = useToast();
   const [commentContent, setCommentContent] = useState("");
 
   // Transform PostMedia[] to MediaItem[] for display
@@ -120,8 +122,14 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
         setCommentContent("");
         Keyboard.dismiss();
         refresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error creating comment:", error);
+        toast.error(
+          getTranslatedError(error?.message) ||
+          t("post.create.errorMessage", {
+            defaultValue: "Không thể tạo bài viết. Vui lòng thử lại.",
+          }),
+        );
       }
     }
   };
