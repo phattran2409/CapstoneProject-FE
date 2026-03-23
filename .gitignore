@@ -54,3 +54,6 @@ yarn-error.*
 
 # JSON Server backup
 db.json.bak
+
+#folder docs
+docs/

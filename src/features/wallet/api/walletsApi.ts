@@ -6,6 +6,8 @@ import type {
   DepositRequest,
   DepositResponse,
   BankInfoRequest,
+  TransactionsResponse,
+  TransactionQuery,
 } from "../types/wallet.types";
 
 export const walletsApi = {
@@ -15,6 +17,17 @@ export const walletsApi = {
     )) as ApiResponse<WalletBalance>;
     if (!response?.isSuccess || !response.data) {
       throw new Error("Failed to get wallet balance");
+    }
+    return response.data;
+  },
+  
+  getTransactions: async (query: TransactionQuery): Promise<TransactionsResponse> => {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.WALLETS.TRANSACTIONS,
+      { params: query },
+    )) as ApiResponse<TransactionsResponse>;
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to get wallet transactions");
     }
     return response.data;
   },

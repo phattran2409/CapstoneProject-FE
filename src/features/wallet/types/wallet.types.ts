@@ -29,3 +29,30 @@ export interface BankInfoRequest {
   bankName: string;
   accountHolderName: string;
 }
+
+export interface Transaction {
+  transactionId: string;
+  transactionType: TransactionType;
+  amount: number;
+  balanceAfter: number;
+  transactionCode : string;
+  referenceId : string;
+  description : string;
+  createdAt : string;
+} 
+export type TransactionType = "BookingPayment" | "BookingIncome" | "Deposit" | "CheckinFee" | "Withdraw" | "Refund" | "Other" | "All";
+export interface TransactionQuery {
+  page : number;
+  pageSize : number;
+  transactionType? : TransactionType;
+}
+
+export interface TransactionsResponse {
+    walletId: string;
+    walletType: string;
+    transactions: Transaction[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}

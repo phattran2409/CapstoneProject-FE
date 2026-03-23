@@ -24,8 +24,13 @@ import {
   ThemedView,
 } from "@/shared/components/themed";
 import Button from "@/shared/components/Button";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { useWalletBalance, useWalletDeposit } from "../hooks";
 import { RootStackParamList } from "@/app/navigation/types";
+import { Transaction, TransactionQuery, TransactionType } from "../types/wallet.types";
+import { useWalletTransaction } from "../hooks/useWalletTransaction";
+import { formatDate, formatDateDDMMYYYY, formatDateTime } from "@/shared/utils";
+import { helperTransactionCategory, helperTransactionTypeIcons } from "../helper/helperWallet";
 
 const formatBalance = (value: number) =>
   value.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
@@ -34,82 +39,9 @@ type WalletScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Wallet"
 >;
-
 interface WalletScreenProps {
   navigation: WalletScreenNavigationProp;
 }
-
-interface WalletTransaction {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  amount: string;
-  type: "in" | "out";
-  category: "topup" | "booking" | "refund" | "checkin" | "withdraw";
-  status: string;
-  time: string;
-}
-
-const MOCK_TRANSACTIONS: WalletTransaction[] = [
-  {
-    id: "1",
-    title: "Nạp qua VNPay",
-    description: "10:30, 20/10/2023",
-    icon: "wallet",
-    amount: "+500.000",
-    type: "in",
-    category: "topup",
-    status: "THÀNH CÔNG",
-    time: "10:30, 20/10/2023",
-  },
-  {
-    id: "2",
-    title: "Đặt sân: Thống Nhất",
-    description: "09:15, 20/10/2023",
-    icon: "football",
-    amount: "-200.000",
-    type: "out",
-    category: "booking",
-    status: "THANH TOÁN",
-    time: "09:15, 20/10/2023",
-  },
-  {
-    id: "3",
-    title: "Phí check-in trận #122",
-    description: "18:00, 19/10/2023",
-    icon: "walk",
-    amount: "-20.000",
-    type: "out",
-    category: "checkin",
-    status: "PHÍ DỊCH VỤ",
-    time: "18:00, 19/10/2023",
-  },
-  {
-    id: "4",
-    title: "Hoàn tiền đặt sân",
-    description: "15:30, 19/10/2023",
-    icon: "refresh",
-    amount: "+150.000",
-    type: "in",
-    category: "refund",
-    status: "HOÀN TRẢ",
-    time: "15:30, 19/10/2023",
-  },
-  {
-    id: "5",
-    title: "Rút tiền về MBBank",
-    description: "08:00, 18/10/2023",
-    icon: "arrow-up",
-    amount: "-300.000",
-    type: "out",
-    category: "withdraw",
-    status: "CHỜ XỬ LÝ",
-    time: "08:00, 18/10/2023",
-  },
-];
-
-type TransactionFilterKey = "all" | WalletTransaction["category"];
 
 const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -120,11 +52,25 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositError, setDepositError] = useState("");
-  const [selectedFilter, setSelectedFilter] =
-    useState<TransactionFilterKey>("all");
   const [filterScrollWidth, setFilterScrollWidth] = useState(0);
   const [filterContentWidth, setFilterContentWidth] = useState(0);
   const [filterScrollX, setFilterScrollX] = useState(0);
+  const [transactionQuery, setTransactionQuery] = useState<TransactionQuery>({
+    page: 1,
+    pageSize: 10,
+    transactionType: undefined,
+  });
+
+  const handleFilterSelect = (type: TransactionType) => {
+    setTransactionQuery({
+      page: 1,
+      pageSize: 10,
+      transactionType: type === "All" ? undefined : type,
+    });
+  };
+
+  const activeFilter: TransactionType = transactionQuery.transactionType ?? "All";
+  const {transactions, loading, refreshing, loadingMore, error, hasMore, page, refresh, loadMore} = useWalletTransaction(transactionQuery);
 
   const handleOpenDepositModal = () => {
     setDepositAmount("");
@@ -170,9 +116,10 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     }
   };
 
-  const renderTransactionItem = ({ item }: { item: WalletTransaction }) => {
-    const isIncome = item.type === "in";
-
+  const renderTransactionItem = ({ item }: { item: Transaction }) => {
+    const isIncome = item.transactionType === "BookingIncome" || item.transactionType === "Deposit" || item.transactionType === "Refund";
+    const { icon: iconName, color: iconColor, bg: iconBg } = helperTransactionTypeIcons(item.transactionType,theme);
+    const category = helperTransactionCategory(item.transactionType, t);
     return (
       <ThemedView
         style={[
@@ -191,14 +138,14 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
           style={[
             styles.transactionIcon,
             {
-              backgroundColor: `${theme.colors.neonGreen}20`,
+              backgroundColor: iconBg,
             },
           ]}
         >
           <Ionicons
-            name={item.icon as any}
+            name={iconName as any}
             size={22}
-            color={theme.colors.neonGreen}
+            color={iconColor}
           />
         </View>
 
@@ -209,7 +156,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             weight="semiBold"
             numberOfLines={1}
           >
-            {item.title}
+            {item.description}
           </ThemedText>
           <ThemedText
             variant="secondary"
@@ -217,7 +164,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             style={{ marginTop: 2 }}
             numberOfLines={1}
           >
-            {item.time}
+            {formatDateTime(item.createdAt)}
           </ThemedText>
         </View>
 
@@ -240,41 +187,42 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               textTransform: "uppercase",
             }}
           >
-            {item.status}
+            {category}
           </ThemedText>
         </View>
       </ThemedView>
     );
   };
 
-  const filterOptions: Array<{ key: TransactionFilterKey; label: string }> = [
-    { key: "all", label: t("wallet.filters.all", { defaultValue: "Tất cả" }) },
+  const filterOptions: Array<{ key: TransactionType; label: string , value: TransactionType }> = [
+    { key: "All", label: t("wallet.filters.all", { defaultValue: "Tất cả" })  , value: "All" },
     {
-      key: "booking",
+      key: "BookingPayment",
       label: t("wallet.filters.booking", { defaultValue: "Đặt sân" }),
+      value: "BookingPayment",
     },
     {
-      key: "topup",
+      key: "Deposit",
       label: t("wallet.filters.topup", { defaultValue: "Nạp tiền" }),
+      value: "Deposit",
     },
     {
-      key: "refund",
+      key: "Refund",
       label: t("wallet.filters.refund", { defaultValue: "Hoàn tiền" }),
+      value: "Refund",
     },
     {
-      key: "checkin",
+      key: "CheckinFee",
       label: t("wallet.filters.checkin", { defaultValue: "Check-in" }),
+      value: "CheckinFee",
     },
     {
-      key: "withdraw",
+      key: "Withdraw",
       label: t("wallet.filters.withdraw", { defaultValue: "Rút tiền" }),
+      value: "Withdraw",
     },
   ];
 
-  const filteredTransactions =
-    selectedFilter === "all"
-      ? MOCK_TRANSACTIONS
-      : MOCK_TRANSACTIONS.filter((tx) => tx.category === selectedFilter);
 
   return (
     <ThemedSafeAreaView>
@@ -403,11 +351,11 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             }}
           >
             {filterOptions.map((opt, idx) => {
-              const active = opt.key === selectedFilter;
+              const active = opt.key === activeFilter;
               return (
                 <TouchableOpacity
                   key={opt.key}
-                  onPress={() => setSelectedFilter(opt.key)}
+                  onPress={() => handleFilterSelect(opt.value)}
                   activeOpacity={0.85}
                   style={[
                     styles.filterPill,
@@ -454,15 +402,44 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       </View>
 
       <FlatList
-        data={filteredTransactions}
-        keyExtractor={(item) => item.id}
+        data={transactions}
+        keyExtractor={(item) => item.transactionId}
         renderItem={renderTransactionItem}
         contentContainerStyle={{
           paddingHorizontal: theme.spacing.l,
           paddingBottom: theme.spacing.xxl * 2,
           paddingTop: 8,
+          flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={refresh}
+        onEndReached={hasMore ? loadMore : undefined}
+        onEndReachedThreshold={0.3}
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator
+              size="large"
+              color={theme.colors.neonGreen}
+              style={{ marginTop: 48 }}
+            />
+          ) : (
+            <EmptyState
+              icon="receipt-outline"
+              title={t("wallet.emptyTransactions", { defaultValue: "Chưa có giao dịch nào" })}
+              description={t("wallet.emptyTransactionsDesc", { defaultValue: "Các giao dịch của bạn sẽ hiển thị ở đây" })}
+            />
+          )
+        }
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator
+              size="small"
+              color={theme.colors.neonGreen}
+              style={{ marginVertical: theme.spacing.m }}
+            />
+          ) : null
+        }
       />
 
       {/* Deposit Modal */}
