@@ -72,3 +72,28 @@ export interface TransactionsResponse {
     pageSize: number;
     totalPages: number;
 }
+
+export interface withdrawals { 
+  withdrawalId: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  processDate: string;
+  adminNote: string;
+  bankAccountNumber: string;
+  bankName: string;
+  accountHolderName: string;
+}
+
+export interface WithdrawalQuery {
+  status? : string;
+  page : number;
+  pageSize : number;
+}
+export interface withdrawalsResponse {
+  withdrawals: withdrawals[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

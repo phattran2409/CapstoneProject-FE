@@ -10,6 +10,8 @@ import type {
   WithdrawalRequest,
   TransactionsResponse,
   TransactionQuery,
+  withdrawalsResponse,
+  WithdrawalQuery,
 } from "../types/wallet.types";
 
 export const walletsApi = {
@@ -117,5 +119,15 @@ export const walletsApi = {
     if (!response?.isSuccess) {
       throw new Error("Failed to create withdrawal");
     }
+  },
+  getWithdrawals: async (query: WithdrawalQuery): Promise<withdrawalsResponse> => {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.WITHDRAWALS.GET_MY,
+      { params: query },
+    )) as ApiResponse<withdrawalsResponse>;
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to get withdrawals");
+    }
+    return response.data;
   },
 };

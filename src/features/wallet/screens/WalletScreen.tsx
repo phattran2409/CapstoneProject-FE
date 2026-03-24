@@ -27,9 +27,11 @@ import Button from "@/shared/components/Button";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { useWalletBalance, useWalletDeposit, useGetBankInfo, useWithdrawal } from "../hooks";
 import BankInfoCard from "../components/BankInfoCard";
+import WithdrawItem from "../components/WithdrawItem";
 import { RootStackParamList } from "@/app/navigation/types";
-import { Transaction, TransactionQuery, TransactionType } from "../types/wallet.types";
+import { Transaction, TransactionQuery, TransactionType, withdrawals as WithdrawalItemType } from "../types/wallet.types";
 import { useWalletTransaction } from "../hooks/useWalletTransaction";
+import { useGetMyWithdrawals } from "../hooks/useWithdrawal";
 import { formatDate, formatDateDDMMYYYY, formatDateTime } from "@/shared/utils";
 import { helperTransactionCategory, helperTransactionTypeIcons } from "../helper/helperWallet";
 
@@ -62,13 +64,17 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const [filterScrollWidth, setFilterScrollWidth] = useState(0);
   const [filterContentWidth, setFilterContentWidth] = useState(0);
   const [filterScrollX, setFilterScrollX] = useState(0);
+  const [withdrawStatus, setWithdrawStatus] = useState<string | undefined>(undefined);
   const [transactionQuery, setTransactionQuery] = useState<TransactionQuery>({
     page: 1,
     pageSize: 10,
     transactionType: undefined,
   });
-
+  
   const handleFilterSelect = (type: TransactionType) => {
+    if (type !== "Withdrawal") {
+      setWithdrawStatus(undefined);
+    }
     setTransactionQuery({
       page: 1,
       pageSize: 10,
@@ -78,6 +84,23 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
 
   const activeFilter: TransactionType = transactionQuery.transactionType ?? "All";
   const {transactions, loading, refreshing, loadingMore, error, hasMore, page, refresh, loadMore} = useWalletTransaction(transactionQuery);
+  const isWithdrawalMode = activeFilter === "Withdrawal";
+  const {
+    withdrawals,
+    loading: loadingWithdrawals,
+    refreshing: refreshingWithdrawals,
+    loadingMore: loadingMoreWithdrawals,
+    hasMore: hasMoreWithdrawals,
+    refresh: refreshWithdrawals,
+    loadMore: loadMoreWithdrawals,
+  } = useGetMyWithdrawals(
+    {
+      page: 1,
+      pageSize: 10,
+      status: withdrawStatus,
+    },
+    isWithdrawalMode,
+  );
 
   const handleOpenDepositModal = () => {
     setDepositAmount("");
@@ -220,7 +243,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               textAlign: "right",
             }}
           >
-            {item.amount}
+            {formatBalance(item.amount)} VND
           </ThemedText>
           <ThemedText
             size="xs"
@@ -236,6 +259,9 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       </ThemedView>
     );
   };
+  const renderWithdrawalItem = ({ item }: { item: WithdrawalItemType }) => (
+    <WithdrawItem withdrawal={item} />
+  );
 
   const filterOptions: Array<{ key: TransactionType; label: string , value: TransactionType }> = [
     { key: "All", label: t("wallet.filters.all", { defaultValue: "Tất cả" })  , value: "All" },
@@ -264,6 +290,14 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       label: t("wallet.filters.withdraw", { defaultValue: "Rút tiền" }),
       value: "Withdrawal",
     },
+  ];
+  const withdrawalStatusTabs: Array<{ key: string; label: string; value?: string }> = [
+    { key: "all", label: t("wallet.withdrawStatus.all", { defaultValue: "Tất cả" }), value: undefined },
+    { key: "pending", label: "Pending", value: "Pending" },
+    { key: "processing", label: "Processing", value: "Processing" },
+    { key: "completed", label: "Completed", value: "Completed" },
+    { key: "rejected", label: "Rejected", value: "Rejected" },
+    { key: "cancelled", label: "Cancelled", value: "Cancelled" },
   ];
 
 
@@ -444,46 +478,126 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      <FlatList
-        data={transactions}
-        keyExtractor={(item) => item.transactionId}
-        renderItem={renderTransactionItem}
-        contentContainerStyle={{
-          paddingHorizontal: theme.spacing.l,
-          paddingBottom: theme.spacing.xxl * 2,
-          paddingTop: 8,
-          flexGrow: 1,
-        }}
-        showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={refresh}
-        onEndReached={hasMore ? loadMore : undefined}
-        onEndReachedThreshold={0.3}
-        ListEmptyComponent={
-          loading ? (
-            <ActivityIndicator
-              size="large"
-              color={theme.colors.neonGreen}
-              style={{ marginTop: 48 }}
-            />
-          ) : (
-            <EmptyState
-              icon="receipt-outline"
-              title={t("wallet.emptyTransactions", { defaultValue: "Chưa có giao dịch nào" })}
-              description={t("wallet.emptyTransactionsDesc", { defaultValue: "Các giao dịch của bạn sẽ hiển thị ở đây" })}
-            />
-          )
-        }
-        ListFooterComponent={
-          loadingMore ? (
-            <ActivityIndicator
-              size="small"
-              color={theme.colors.neonGreen}
-              style={{ marginVertical: theme.spacing.m }}
-            />
-          ) : null
-        }
-      />
+      {isWithdrawalMode && (
+        <View style={{ paddingHorizontal: theme.spacing.l, marginTop: 10 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingRight: theme.spacing.l }}
+          >
+            {withdrawalStatusTabs.map((tab, idx) => {
+              const isActive = tab.value === withdrawStatus || (!tab.value && !withdrawStatus);
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  onPress={() => setWithdrawStatus(tab.value)}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.filterPill,
+                    {
+                      marginRight: idx === withdrawalStatusTabs.length - 1 ? 0 : 10,
+                      backgroundColor: isActive ? theme.colors.neonGreen : theme.colors.surface,
+                      borderColor: isActive ? "transparent" : theme.colors.border,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    size="s"
+                    weight="semiBold"
+                    style={{ color: isActive ? "#000" : theme.colors.textSecondary }}
+                  >
+                    {tab.label}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
+      {isWithdrawalMode ? (
+        <FlatList
+          data={withdrawals}
+          keyExtractor={(item: WithdrawalItemType) => item.withdrawalId}
+          renderItem={renderWithdrawalItem}
+          contentContainerStyle={{
+            paddingHorizontal: theme.spacing.l,
+            paddingBottom: theme.spacing.xxl * 2,
+            paddingTop: 8,
+            flexGrow: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshingWithdrawals}
+          onRefresh={refreshWithdrawals}
+          onEndReached={hasMoreWithdrawals ? loadMoreWithdrawals : undefined}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            loadingWithdrawals ? (
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.neonGreen}
+                style={{ marginTop: 48 }}
+              />
+            ) : (
+              <EmptyState
+                icon="receipt-outline"
+                title={t("wallet.emptyWithdrawals", { defaultValue: "Chưa có yêu cầu rút tiền nào" })}
+                description={t("wallet.emptyWithdrawalsDesc", { defaultValue: "Các yêu cầu rút tiền của bạn sẽ hiển thị ở đây" })}
+              />
+            )
+          }
+          ListFooterComponent={
+            loadingMoreWithdrawals ? (
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.neonGreen}
+                style={{ marginVertical: theme.spacing.m }}
+              />
+            ) : null
+          }
+        />
+      ) : (
+        <FlatList
+          data={transactions}
+          keyExtractor={(item: Transaction) => item.transactionId}
+          renderItem={renderTransactionItem}
+          contentContainerStyle={{
+            paddingHorizontal: theme.spacing.l,
+            paddingBottom: theme.spacing.xxl * 2,
+            paddingTop: 8,
+            flexGrow: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={refresh}
+          onEndReached={hasMore ? loadMore : undefined}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            loading ? (
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.neonGreen}
+                style={{ marginTop: 48 }}
+              />
+            ) : (
+              <EmptyState
+                icon="receipt-outline"
+                title={t("wallet.emptyTransactions", { defaultValue: "Chưa có giao dịch nào" })}
+                description={t("wallet.emptyTransactionsDesc", { defaultValue: "Các giao dịch của bạn sẽ hiển thị ở đây" })}
+              />
+            )
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.neonGreen}
+                style={{ marginVertical: theme.spacing.m }}
+              />
+            ) : null
+          }
+        />
+      )}
 
       {/* Deposit Modal */}
       <Modal

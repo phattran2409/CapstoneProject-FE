@@ -63,6 +63,7 @@ export const API_CONFIG = {
     },
     WITHDRAWALS: {
       CREATE: "/withdrawals",
+      GET_MY: "/withdrawals/my",
     },
   },
 } as const;
