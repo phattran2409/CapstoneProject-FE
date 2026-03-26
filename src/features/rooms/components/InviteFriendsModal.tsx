@@ -19,12 +19,14 @@ interface InviteFriendsModalProps {
   visible: boolean;
   shareMessage: string;
   onClose: () => void;
+  title?: string;
 }
 
 const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
   visible,
   shareMessage,
   onClose,
+  title,
 }) => {
   const { theme } = useTheme();
   const { user } = useAuthStore();
@@ -85,7 +87,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
             ]}
           >
             <ThemedText size="xl" weight="bold">
-              Mời bạn bè vào phòng
+              {title ?? 'Mời bạn bè vào phòng'}
             </ThemedText>
             <TouchableOpacity onPress={onClose} style={styles.inviteClose}>
               <Ionicons name="close" size={24} color={theme.colors.text} />
@@ -118,7 +120,11 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
                     ]}
                   >
                     <Image
-                      source={{ uri: friend.avatarUrl || undefined }}
+                      source={
+                        friend.avatarUrl
+                          ? { uri: friend.avatarUrl }
+                          : require("../../../assets/images/default_avatar.png")
+                      }
                       style={styles.inviteAvatar}
                     />
                     <ThemedText

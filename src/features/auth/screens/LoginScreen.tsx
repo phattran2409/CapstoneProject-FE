@@ -27,6 +27,7 @@ import { ScrollView } from "react-native";
 import { RootStackParamList } from "@/app/navigation/types";
 import { authApi } from "@/features/auth/api";
 import { getFcmToken } from "@/shared/firebase/messaging";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -104,7 +105,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
           toast.error(
             t("login.errors.failed", "Đăng nhập thất bại"),
-            error?.message ||
+            getTranslatedError(error?.message) ||
               t("login.errors.invalidCredentials", "Thông tin đăng nhập không hợp lệ")
           );
         },
@@ -126,7 +127,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       onError: (error: any) => {
         toast.error(
           t("login.errors.googleFailed", "Đăng nhập Google thất bại"),
-          error.message ||
+          getTranslatedError(error?.message) ||
             t(
               "login.errors.googleTryAgain",
               "Không thể đăng nhập bằng Google. Vui lòng thử lại."
@@ -176,7 +177,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         onError: (error: any) => {
           toast.error(
             t("login.forgot.error", "Lỗi"),
-            error.message || t("login.forgot.errorMessage", "Không thể gửi email. Vui lòng thử lại.")
+            getTranslatedError(error?.message) || t("login.forgot.errorMessage", "Không thể gửi email. Vui lòng thử lại.")
           );
         },
       }

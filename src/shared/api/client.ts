@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 import { API_CONFIG } from '../constants/api';
 import { storage } from '../utils/storage';
 import type { ApiError } from './types';
+import { useFeedbackSessionStore } from '@/features/feedback/store/feedbackSessionStore';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
@@ -110,6 +111,7 @@ export const getRefreshToken = async (): Promise<string | null> => {
 export const clearAllTokens = async () => {
   await setAuthToken(null);
   await setRefreshToken(null);
+  await useFeedbackSessionStore.getState().clearSession();
 };
 
 // Create a separate axios instance for refresh token calls to avoid interceptor loops
@@ -203,7 +205,10 @@ const initializeTokens = async () => {
   await getAuthToken();
   await getRefreshToken();
 };
-initializeTokens();
+
+if (process.env.NODE_ENV !== 'test') {
+  initializeTokens();
+}
 
 // Request interceptor
 apiClient.interceptors.request.use(

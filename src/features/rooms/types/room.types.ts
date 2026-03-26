@@ -33,6 +33,9 @@ export interface MatchRoomVenue {
   venueName: string;
   address: string;
   contactPhone: string | null;
+  /** Khi BE trả về — dùng mở Maps native */
+  latitude?: number;
+  longitude?: number;
 }
 
 /**
@@ -59,6 +62,7 @@ export interface MatchRoomParticipant {
   position: string;
   depositPaid: boolean;
   joinDate: string;
+  hasLeftFeedback?: boolean;
 }
 
 /** Alias for participant in room/team context */
@@ -140,6 +144,7 @@ export interface MatchRoomFullInfo {
     B?: string | null;
   };
   createdAt: string;
+  hasLeftFeedback?: boolean;
 }
 
 export interface MyRoom {
@@ -205,6 +210,9 @@ export interface MatchRoomFilters {
   page?: number;
   pageSize?: number;
   availableOnly?: boolean;
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
   matchFormat?: string;
   date?: string;
 }

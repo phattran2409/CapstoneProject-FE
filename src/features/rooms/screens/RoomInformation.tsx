@@ -37,9 +37,13 @@ import {
   type PlayerPosition,
   InviteFriendsModal,
 } from '../components';
+import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusActionBar';
 import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
+import { useFeedbackSessionStore } from '@/features/feedback';
+import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -97,7 +101,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   }, [room]);
   
   // ✅ Use roomData for display (có real-time updates) hoặc fallback về room từ query
-  const displayRoom = roomData || room;
+  const displayRoom = useMemo(() => {
+    const base = roomData || room;
+    if (!base) return null;
+    return applyRoomFeedbackTestOverrides(base);
+  }, [roomData, room]);
 
   // ✅ Venue photos: ưu tiên từ API detail, fallback từ params (khi navigate từ MatchesScreen)
   const venuePhotosToShow = useMemo(
@@ -309,7 +317,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           refetch();
         },
         onError: (error: any) => {
-          toast.error(t('roomDetail.notifications.error'), error.message || t('roomDetail.chooseTeamError'));
+          toast.error(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.chooseTeamError'));
           setShowPositionModal(false);
           setPendingTeamAssignment(null);
         },
@@ -353,7 +361,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               refetch();
             },
             onError: (error: any) => {
-              showDanger(t('roomDetail.notifications.error'), error.message || t('roomDetail.kickError'), () => {});
+              showDanger(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.kickError'), () => {});
             },
           }
         );
@@ -377,7 +385,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             });
           },
           onError: (error: any) => {
-            showDanger(t('roomDetail.notifications.error'), error.message || t('roomDetail.cancelError'), () => {});
+            showDanger(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.cancelError'), () => {});
           },
         });
       },
@@ -404,7 +412,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           onError: (error: any) => {
             toast.error(
               t('common.error', 'Lỗi'),
-              error.message || t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
+              getTranslatedError(error?.message) || t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
             );
           },
         });
@@ -413,6 +421,82 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       t('roomDetail.leaveRoomConfirm'),
       t('common.buttons.cancel'),
     );
+  };
+
+  const { startSession, session: feedbackSession } = useFeedbackSessionStore();
+
+  const handleNavigateToFeedbackIntro = async () => {
+    if (!displayRoom || !user?.userId) return;
+
+    if (feedbackSession?.roomId === displayRoom.roomId) {
+      switch (feedbackSession.currentStep) {
+        case 'intro':
+          navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
+          return;
+        case 'matchResult':
+          navigation?.navigate('FeedbackMatchResult');
+          return;
+        case 'playerRating':
+          navigation?.navigate('FeedbackRating');
+          return;
+        case 'fieldRating':
+          navigation?.navigate('FeedbackFieldRating', {
+            venueId: feedbackSession.venue?.venueId ?? displayRoom.field.venue.venueId,
+          });
+          return;
+        case 'complete':
+          navigation?.navigate('FeedbackComplete');
+          return;
+      }
+    }
+
+    const allParticipants = [
+      ...displayRoom.participants.teamA,
+      ...displayRoom.participants.teamB,
+      ...displayRoom.participants.unassigned,
+    ];
+    const me = allParticipants.find((p) => p.userId === user.userId);
+    const myTeam = me?.teamAssignment === 'A' || me?.teamAssignment === 'B'
+      ? me.teamAssignment
+      : 'A';
+
+    // Đồng đội cùng đội, không bao gồm bản thân
+    const teamPool =
+      myTeam === 'A' ? displayRoom.participants.teamA : displayRoom.participants.teamB;
+    const teammates = teamPool
+      .filter((p) => p.userId !== user.userId)
+      .map((p) => ({
+        userId: p.userId,
+        fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
+        position: p.position,
+        teamAssignment: p.teamAssignment as 'A' | 'B',
+      }));
+
+    await startSession({
+      roomId: displayRoom.roomId,
+      teamAName: displayRoom.teamNames?.A ?? 'Đội A',
+      teamBName: displayRoom.teamNames?.B ?? 'Đội B',
+      venue: {
+        venueId: displayRoom.field.venue.venueId,
+        fieldId: displayRoom.fieldId,
+        fieldName: displayRoom.field.fieldName,
+        venueName: displayRoom.field.venue.venueName,
+        address: displayRoom.field.venue.address,
+        photoUrls: (venuePhotosToShow ?? [])
+          .map((p) => p.photoUrl)
+          .filter(Boolean),
+      },
+      matchDate: displayRoom.matchDate,
+      startTime: displayRoom.startTime,
+      myTeam,
+      teammates,
+    });
+    navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });  
+  };
+
+  const handleNavigateToEloBreakdown = () => {
+    navigation?.navigate('EloBreakdown');
   };
 
   // ✅ Loading state
@@ -478,11 +562,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           >
             <ThemedIcon name="arrow-back" size={24} variant="secondary" />
           </TouchableOpacity>
-          <ThemedText size="xl" weight="bold">
-            {t('roomDetail.title')}
-          </ThemedText>
+          <View style={{  flex: displayRoom.status !== 'Open' ? 1 : 0 }}>
+            <ThemedText size="xl" weight="bold" style={{ textAlign: displayRoom.status !== 'Open' ? 'center' : 'left' }}>
+              {t('roomDetail.title')}
+            </ThemedText>
+          </View>
         </View>
-        
+        {displayRoom.status === 'Open' && (
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => {
@@ -519,7 +605,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           )}
+          
         </View>
+        )} 
       </ThemedView>
 
       {/* Countdown dưới header khi trận đang InProgress */}
@@ -634,6 +722,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               subValue={displayRoom.field.venue.address}
               valueSize="m"
               valueWeight="medium"
+              mapLink={true}
+              mapLatitude={displayRoom.field.venue.latitude}
+              mapLongitude={displayRoom.field.venue.longitude}
             />
             <RoomInfoCard
               icon="cash"
@@ -646,6 +737,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               value={formatCurrency(depositCollected, 'VND') || '0'}
               subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% ${t('roomDetail.depositProgress')}` : undefined}
             />
+            
           </View>
 
           {/* Team Lineup Section */}
@@ -678,6 +770,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               venuePhotosToShow={venuePhotosToShow}
               selectedImageIndex={selectedImageIndex}
               onImageIndexChange={setSelectedImageIndex}
+              t={t as (key: string, defaultValue?: string | object) => string}
             />
           )}
         </View>
@@ -720,8 +813,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             datetime: formatDate(displayRoom.matchDate, 'short'),
             venueName: displayRoom.field.venue.venueName,
           }}
-          handleCancelRoom={handleCancelRoom}
-          isCancelling={isCancelling}
         />
       )}
     
@@ -734,52 +825,21 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         isLoading={isUpdatingParticipant}
       />
 
-      {/* Join Button - Only show on Teams tab */}
-      {activeTab === 'teams' && (
-      <View 
-        style={[
-          styles.joinButtonContainer,
-          { 
-            borderTopColor: theme.colors.border,
-            backgroundColor: theme.colors.background,
-          }
-        ]}
-      >
-        <TouchableOpacity
-          style={[
-            styles.joinButton,
-            {
-              backgroundColor: canJoinMatch ? theme.colors.neonGreen : theme.colors.border,
-              shadowColor: canJoinMatch ? theme.colors.neonGreen : 'transparent',
-            }
-          ]}
-          onPress={handleJoinMatch}
-          disabled={!canJoinMatch || isUpdatingParticipant}
-        >
-          <ThemedText 
-            size="l" 
-            weight="bold" 
-            style={[
-              styles.joinButtonText,
-              { color: canJoinMatch ? '#000' : theme.colors.textSecondary }
-            ]}
-          >
-            {isUpdatingParticipant 
-              ? t('roomDetail.teamJoinButton.joining')
-              : !currentUserParticipant
-                ? t('roomDetail.teamJoinButton.joinFirst')
-                : hasSelectedTeam
-                  ? t('roomDetail.teamJoinButton.join')
-                  : t('roomDetail.teamJoinButton.joinFirst')
-            }
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
-      )}
+      <RoomStatusActionBar
+        hasLeftFeedback={currentUserParticipant?.hasLeftFeedback === true}
+        status={displayRoom.status}
+        activeTab={activeTab}
+        canJoinMatch={canJoinMatch}
+        isUpdatingParticipant={isUpdatingParticipant}
+        currentUserParticipant={currentUserParticipant}
+        hasSelectedTeam={hasSelectedTeam}
+        onJoinMatch={handleJoinMatch}
+        onNavigateToFeedbackIntro={handleNavigateToFeedbackIntro}
+        onNavigateToEloBreakdown={handleNavigateToEloBreakdown}
+      />
     </ThemedSafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   safeArea: {
     paddingVertical: 40,

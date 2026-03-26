@@ -149,15 +149,9 @@ export type FootballInfoFormData = z.infer<typeof footballInfoSchema>;
 
 export const POSITIONS = [
   { id: "GK", label: "GK" },
-  { id: "CB", label: "CB" },
-  { id: "LB", label: "LB" },
-  { id: "RB", label: "RB" },
-  { id: "CDM", label: "CDM" },
-  { id: "CM", label: "CM" },
-  { id: "CAM", label: "CAM" },
-  { id: "LW", label: "LW" },
-  { id: "RW", label: "RW" },
-  { id: "ST", label: "ST" },
+  { id: "FW", label: "FW" },
+  { id: "DF", label: "DF" },
+  { id: "CF", label: "CF" },
 ] as const;
 
 export const GENDERS = [

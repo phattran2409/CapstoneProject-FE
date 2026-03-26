@@ -108,7 +108,6 @@ const ActionButton: React.FC<ActionButtonProps> = ({
 
   const handleReportSubmit = async (reason: string, customReason?: string) => {
     if (!onReport) return;
-
     setIsReporting(true);
     try {
       await onReport(contentId, reason, customReason);
@@ -145,9 +144,9 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       await onEdit(contentId, editedContent.trim());
       setShowEditModal(false);
       setValidationError(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error editing:", error);
-      setValidationError(t("actionButton.validation.failed"));
+      setValidationError(error?.message || t("actionButton.validation.failed"));
     } finally {
       setIsSubmitting(false);
     }

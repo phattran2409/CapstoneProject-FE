@@ -24,17 +24,9 @@ interface HostMenuModalProps {
   };
   visible: boolean;
   handleShowMenuModal: () => void;
-  handleCancelRoom: () => void;
-  isCancelling: boolean;
 }
 
-const HostMenuModal: React.FC<HostMenuModalProps> = ({
-  room,
-  visible,
-  handleShowMenuModal,
-  handleCancelRoom,
-  isCancelling,
-}) => {
+const HostMenuModal: React.FC<HostMenuModalProps> = ({ room, visible, handleShowMenuModal }) => {
   const { theme } = useTheme();
   const { user } = useAuthStore();
   const [shareRoomVisible, setShareRoomVisible] = useState(false);
@@ -126,22 +118,6 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
               <Ionicons name="lock-closed-outline" size={24} color={primaryColor} />
               <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.text }]}>
                 Chuyển thành phòng riêng tư
-              </ThemedText>
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: theme.colors.border }]} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                handleShowMenuModal();
-                handleCancelRoom();
-              }}
-              disabled={isCancelling}
-            >
-              <Ionicons name="trash-outline" size={24} color={theme.colors.error} />
-              <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.error }]}>
-                {isCancelling ? 'Đang hủy...' : 'Hủy phòng'}
               </ThemedText>
             </TouchableOpacity>
 

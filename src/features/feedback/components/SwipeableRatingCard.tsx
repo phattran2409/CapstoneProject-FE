@@ -21,6 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useTranslation } from "react-i18next";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -62,6 +63,7 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
   onComplete,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -276,7 +278,7 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
                 </View>
               )}
             </View>
-            {player.jerseyNumber && (
+            {/* {player.jerseyNumber && (
               <View
                 style={[
                   styles.jerseyNumber,
@@ -292,7 +294,7 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
                   {player.jerseyNumber}
                 </Text>
               </View>
-            )}
+            )} */}
           </View>
 
           {/* Player Name */}
@@ -335,43 +337,6 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
             maxLength={200}
           />
 
-          {/* Complete Button - Only show for last player */}
-          {isLastPlayer && onComplete && (
-            <TouchableOpacity
-              style={[
-                styles.completeButton,
-                {
-                  backgroundColor:
-                    rating > 0
-                      ? theme.colors.primary
-                      : theme.colors.textTertiary,
-                  opacity: rating > 0 ? 1 : 0.5,
-                },
-              ]}
-              onPress={() => {
-                if (rating > 0) {
-                  onComplete();
-                }
-              }}
-              activeOpacity={0.7}
-              disabled={rating === 0}
-            >
-              <Text
-                style={[
-                  styles.completeButtonText,
-                  { color: theme.colors.background },
-                ]}
-              >
-                HOÀN THÀNH ĐÁNH GIÁ
-              </Text>
-              <Ionicons
-                name="checkmark-circle"
-                size={20}
-                color={theme.colors.background}
-              />
-            </TouchableOpacity>
-          )}
-
           {/* Report Button */}
           {onReport && (
             <TouchableOpacity
@@ -387,7 +352,10 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
               <Text
                 style={[styles.reportButtonText, { color: theme.colors.error }]}
               >
-                Báo cáo người chơi này
+                {t(
+                  "feedback.report.button",
+                  "Báo cáo người chơi này",
+                )}
               </Text>
             </TouchableOpacity>
           )}

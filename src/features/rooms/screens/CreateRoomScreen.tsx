@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -20,6 +21,7 @@ import { useAlert } from '@/shared/hooks/useAlert';
 import { Controller, useForm } from 'react-hook-form';
 import { RoomFormData, roomSchema } from '../validation/roomSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -147,19 +149,35 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       },
       {
         onSuccess: async (newRoom) => {
-          showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
-            if (newRoom?.roomId) {
-              await setActiveRoom(newRoom.roomId);
-              // Replace để không quay lại màn tạo phòng
-              navigation?.replace('RoomInformation', { roomId: newRoom.roomId });
-            } else {
-              navigation?.goBack();
-            }
-          });
+          // autoClose: false để user bấm OK mới đóng → onConfirm chạy → replace (nếu autoClose: true
+          // alert tự đóng sau 3s và không gọi onConfirm, nên replace không chạy, Back từ Room vẫn về CreateRoom)
+          showSuccess(
+            t('common.success'),
+            t('createRoom.successMessage'),
+            async () => {
+              if (newRoom?.roomId) {
+                await setActiveRoom(newRoom.roomId);
+                // Reset stack: đảm bảo Back từ RoomInformation luôn về MatchesScreen
+                // bất kể trước đó VenueSelection hay bao nhiêu screen còn trong stack
+                navigation?.dispatch(
+                  CommonActions.reset({
+                    index: 1,
+                    routes: [
+                      { name: 'MainTabs', params: { screen: 'Matches' } },
+                      { name: 'RoomInformation', params: { roomId: newRoom.roomId } },
+                    ],
+                  })
+                );
+              } else {
+                navigation?.goBack();
+              }
+            },
+            false
+          );
         },
         onError: (error: any) => {
           setIsLoading(false);
-          showDanger(t('common.error'), error.message || t('createRoom.errorMessage'), () => {});
+          showDanger(t('common.error'), getTranslatedError(error?.message) || t('createRoom.errorMessage'), () => {});
         },
       }
     );

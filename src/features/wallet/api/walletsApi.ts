@@ -6,6 +6,12 @@ import type {
   DepositRequest,
   DepositResponse,
   BankInfoRequest,
+  BankInfo,
+  WithdrawalRequest,
+  TransactionsResponse,
+  TransactionQuery,
+  withdrawalsResponse,
+  WithdrawalQuery,
 } from "../types/wallet.types";
 
 export const walletsApi = {
@@ -15,6 +21,17 @@ export const walletsApi = {
     )) as ApiResponse<WalletBalance>;
     if (!response?.isSuccess || !response.data) {
       throw new Error("Failed to get wallet balance");
+    }
+    return response.data;
+  },
+  
+  getTransactions: async (query: TransactionQuery): Promise<TransactionsResponse> => {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.WALLETS.TRANSACTIONS,
+      { params: query },
+    )) as ApiResponse<TransactionsResponse>;
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to get wallet transactions");
     }
     return response.data;
   },
@@ -78,6 +95,39 @@ export const walletsApi = {
       throw new Error("Failed to update bank information");
     }
 
+    return response.data;
+  },
+
+  getBankInfo: async (): Promise<BankInfo> => {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.WALLETS.BANK_INFO,
+    )) as ApiResponse<BankInfo>;
+
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to get bank information");
+    }
+
+    return response.data;
+  },
+
+  createWithdrawal: async (body: WithdrawalRequest): Promise<void> => {
+    const response = (await apiClient.post(
+      API_CONFIG.ENDPOINTS.WITHDRAWALS.CREATE,
+      body,
+    )) as ApiResponse<unknown>;
+
+    if (!response?.isSuccess) {
+      throw new Error("Failed to create withdrawal");
+    }
+  },
+  getWithdrawals: async (query: WithdrawalQuery): Promise<withdrawalsResponse> => {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.WITHDRAWALS.GET_MY,
+      { params: query },
+    )) as ApiResponse<withdrawalsResponse>;
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Failed to get withdrawals");
+    }
     return response.data;
   },
 };

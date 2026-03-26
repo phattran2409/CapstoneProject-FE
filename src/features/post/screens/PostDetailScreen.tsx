@@ -33,6 +33,7 @@ import {
   useUpdateComment,
   useDeleteComment,
   useToggleCommentLike,
+  useReportContent,
 } from "../hooks";
 import { CommentItem, PostDetailImages } from "../components";
 import { PostMedia, MediaItem, Comment } from "../types/post.types";
@@ -42,6 +43,8 @@ import {
   PostActions,
 } from "@/shared/components";
 import { useAuthStore } from "@/features/auth";
+import { useToast } from "@/shared/toast";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type PostDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -83,7 +86,8 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const { mutateAsync: updateComment } = useUpdateComment();
   const { mutateAsync: deleteComment } = useDeleteComment();
   const { mutate: toggleCommentLike } = useToggleCommentLike();
-
+  const { mutateAsync: reportContent, isPending: isReportingComment } = useReportContent();
+  const toast = useToast();
   const [commentContent, setCommentContent] = useState("");
 
   // Transform PostMedia[] to MediaItem[] for display
@@ -118,8 +122,14 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
         setCommentContent("");
         Keyboard.dismiss();
         refresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error creating comment:", error);
+        toast.error(
+          getTranslatedError(error?.message) ||
+          t("post.create.errorMessage", {
+            defaultValue: "Không thể tạo bài viết. Vui lòng thử lại.",
+          }),
+        );
       }
     }
   };
@@ -140,6 +150,19 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   ) => {
     // TODO: Implement report API
     console.log("Report post:", postId, reason, customReason);
+  };
+
+  const handleReportComment = async (
+    commentId: string,
+    reason: string,
+    customReason?: string,
+  ) => {
+    await reportContent({
+      contentId: commentId,
+      contentType: "comment",
+      reason,
+      description: customReason ?? reason,
+    });
   };
 
   const handleEditComment = async (commentId: string, newContent: string) => {
@@ -360,9 +383,12 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                     <CommentItem
                       postId={postId}
                       comment={item}
-                      onLike={() => toggleCommentLike(item.commentId)}
+                      onLike={() =>
+                        toggleCommentLike({ commentId: item.commentId, postId })
+                      }
                       onEdit={isOwnComment ? handleEditComment : undefined}
                       onDelete={isOwnComment ? handleDeleteComment : undefined}
+                      onReport={!isOwnComment ? handleReportComment : undefined}
                     />
                   );
                 }}

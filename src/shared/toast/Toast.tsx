@@ -21,6 +21,8 @@ export const AppToast: React.FC = () => {
   const successToast = ({ text1, text2, ...props }: any) => (
     <BaseToast
       {...props}
+      text1NumberOfLines={3}
+      text2NumberOfLines={12}
       style={{
         borderLeftColor: theme.colors.success,
         backgroundColor: theme.colors.surface,
@@ -61,6 +63,8 @@ export const AppToast: React.FC = () => {
   const errorToast = ({ text1, text2, ...props }: any) => (
     <ErrorToast
       {...props}
+      text1NumberOfLines={3}
+      text2NumberOfLines={12}
       style={{
         borderLeftColor: theme.colors.error,
         backgroundColor: "#FF5252",
@@ -103,6 +107,8 @@ export const AppToast: React.FC = () => {
   const infoToast = ({ text1, text2, ...props }: any) => (
     <BaseToast
       {...props}
+      text1NumberOfLines={3}
+      text2NumberOfLines={12}
       style={{
         borderLeftColor: theme.colors.info,
         backgroundColor: theme.colors.surface,
@@ -143,6 +149,8 @@ export const AppToast: React.FC = () => {
   const warningToast = ({ text1, text2, ...props }: any) => (
     <BaseToast
       {...props}
+      text1NumberOfLines={3}
+      text2NumberOfLines={12}
       style={{
         borderLeftColor: theme.colors.warning,
         backgroundColor: theme.colors.surface,

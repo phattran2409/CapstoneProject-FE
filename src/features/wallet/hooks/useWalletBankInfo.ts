@@ -10,6 +10,7 @@ export const useWalletBankInfo = () => {
     mutationFn: (payload: BankInfoRequest) => walletsApi.updateBankInfo(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: walletsKeys.balance() });
+      queryClient.invalidateQueries({ queryKey: walletsKeys.bankInfo() });
     },
   });
 };

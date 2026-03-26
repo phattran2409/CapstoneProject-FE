@@ -4,6 +4,9 @@ import {
   getUserProfile,
   updateMyProfile,
   updateAvatar,
+  getAchievements,
+  updateNotificationSettings,
+  getNotificationSettings,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -14,6 +17,14 @@ export const useUserProfile = (userId: string) => {
     queryKey: profileKeys.detail(userId),
     queryFn: () => getUserProfile(userId),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useAchievements = () => {
+  return useQuery({
+    queryKey: profileKeys.achievements(),
+    queryFn: () => getAchievements(),
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -34,6 +45,37 @@ export const useUpdateProfile = () => {
       queryClient.setQueryData(profileKeys.me(), updatedProfile);
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
+  });
+};
+
+// Update notification settings
+export const useUpdateNotificationSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      matchRoom,
+      friendship,
+      post,
+    }: {
+      matchRoom: boolean;
+      friendship: boolean;
+      post: boolean;
+    }) => updateNotificationSettings(matchRoom, friendship, post),
+    onSuccess: (response) => {
+      queryClient.setQueryData(
+        profileKeys.notificationPreferences(),
+        response.data,
+      );
+    },
+  });
+};
+
+export const useNotificationSettings = () => {
+  return useQuery({
+    queryKey: profileKeys.notificationPreferences(),
+    queryFn: getNotificationSettings,
+    staleTime: 5 * 60 * 1000,
   });
 };
 

@@ -1,106 +1,87 @@
-# ⚡ React Native Neon Football App
+# Kickify (Capstone SP26SE007) — Mobile App (React Native + Expo)
 
-A modern, TypeScript-based React Native application built with Expo, featuring a dynamic neon green theme inspired by football aesthetics.
+Kickify là **ứng dụng mobile** thuộc đề tài Capstone: **AI‑Driven Football Team Formation and Player Evaluation System** (SP26SE007).
 
-## 🎨 Theme Colors
+- **Repo này**: Frontend Mobile (Expo React Native, TypeScript)
 
-- **Neon Green**: `#97FB57` - Primary action color, vibrant and energetic
-- **Dark Black**: `#121212` - Deep background for dark mode
-- **Medium Gray**: `#909090` - Secondary text and UI elements
-- **Soft White**: `#F6F2F2` - Light background and text
+## Mục tiêu & phạm vi (tóm tắt)
 
-## ✨ Features
+Ứng dụng hỗ trợ người chơi/host tổ chức các trận bóng theo mô hình “room”, kết nối bạn bè, chat realtime, theo dõi Elo và thực hiện các luồng đánh giá sau trận.
 
-- 🌗 **Dark/Light Mode**: Seamless theme switching with persistent preferences
-- 📱 **Modern UI Components**: Button, Card, Modal with neon theme
-- 🎯 **TypeScript**: Full type safety throughout the application
-- 🧭 **React Navigation**: Stack and Tab navigation setup
-- 💾 **State Management**: Zustand for lightweight, efficient state management
-- 🔐 **Authentication Flow**: Login screen with auth state management
-- 🎨 **Theme System**: Complete theming solution with colors, spacing, fonts
-- 🌐 **Bilingual (EN ↔ VI)**: i18next + Expo Localization with in-app language toggle
-- 📝 **Structured Logging**: `react-native-logs` provides leveled, colored logs
-- 📦 **Clean Architecture**: Well-organized folder structure
+Các module chính trong app (theo `src/features/`):
+- **Auth**: Đăng ký/đăng nhập (Email/Password + Google), OTP, đổi mật khẩu
+- **Rooms**: Tạo phòng, xem thông tin phòng, lineup/formation, invite bạn bè, check‑in, trạng thái room
+- **Chat**: Chat danh sách/1-1/room chat
+- **Feedback**: Rating sau trận, rating sân, kết quả match & hoàn tất feedback
+- **Venues**: Chọn sân, chi tiết sân (dành cho luồng đặt sân/hiển thị sân gần bạn)
+- **Wallet/Payment**: Ví, rút tiền, màn hình payment success
+- **Post/Social**: Tạo post, xem chi tiết post, comment/reply/like
+- **Notifications**: Nhận & xem thông báo
+- **Leaderboard/Breakdown**: BXH Elo, breakdown Elo
 
-## 📁 Project Structure
+## Tech stack
+
+- **React Native 0.76** + **Expo 52**
+- **TypeScript**
+- **React Navigation**
+- **@tanstack/react-query** (server state)
+- **Zustand** (client state: auth/app/active-room)
+- **Firebase** (Auth/App) + **Google Sign-In**
+- **SignalR** (realtime)
+- **i18next + expo-localization** (EN/VI)
+
+## Project structure (thực tế trong repo)
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── Button.tsx
-│   ├── Card.tsx
-│   ├── Modal.tsx
-│   └── index.ts
-├── screens/            # Main app screens
-│   ├── HomeScreen.tsx
-│   ├── LoginScreen.tsx
-│   ├── ProfileScreen.tsx
-│   └── index.ts
-├── navigation/         # Navigation setup
-│   ├── StackNavigator.tsx
-│   ├── TabNavigator.tsx
-│   ├── types.ts
-│   └── index.ts
-├── theme/             # Theme system
-│   ├── types.ts
-│   ├── lightTheme.ts
-│   ├── darkTheme.ts
-│   ├── ThemeContext.tsx
-│   └── index.ts
-├── store/             # State management (Zustand)
-│   ├── authStore.ts
-│   ├── appStore.ts
-│   └── index.ts
-├── services/          # API services
-│   ├── api.ts
-│   ├── authService.ts
-│   └── index.ts
-├── hooks/             # Custom React hooks
-│   ├── useAuth.ts
-│   ├── useApi.ts
-│   └── index.ts
-├── utils/             # Utility functions
-│   ├── validation.ts
-│   ├── formatters.ts
-│   ├── storage.ts
-│   └── index.ts
-├── constants/         # App constants
-│   ├── api.ts
-│   └── index.ts
-└── assets/            # Images and fonts
-    ├── images/
-    └── fonts/
+├── app/                # App shell (navigation, providers)
+├── assets/             # Ảnh/icons/fonts theo app
+├── features/           # Feature modules (auth, rooms, chat, feedback, ...)
+├── screens/            # Screen entrypoints (tổng hợp & route-level)
+├── shared/             # shared api/components/constants/theme/utils/i18n/...
+└── store/              # global stores (Zustand) dùng chung toàn app
 ```
 
-## 🚀 Getting Started
+## Prerequisites
 
-### Prerequisites
+- Node.js **18+** (khuyến nghị)
+- npm
+- Expo CLI (được cài qua `npx expo ...` là đủ trong hầu hết trường hợp)
 
-- Node.js (v14 or higher)
-- npm or yarn
-- Expo CLI
+## Setup & Run (Development)
 
-### Installation
+1) Cài dependencies
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd CAPSTONE_PROJECT
-```
-
-2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development server:
+2) Tạo file môi trường `.env`
+
+Repo dùng **Expo public env** (prefix `EXPO_PUBLIC_...`). Tối thiểu cần:
+
 ```bash
-npm start
+EXPO_PUBLIC_FIREBASE_API_KEY=...
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=...
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+EXPO_PUBLIC_FIREBASE_APP_ID=...
+EXPO_PUBLIC_GOOGLE_CLIENT_ID=...
 ```
 
-4. Run on your device or emulator:
+> Lưu ý: Không commit `.env` lên git. Dù `EXPO_PUBLIC_*` là biến “public” trong Expo, vẫn nên quản lý cấu hình theo môi trường và tránh đưa credentials lên repo.
+
+3) Start Metro
+
 ```bash
-# Android
+npm run start
+```
+
+4) Chạy app
+
+```bash
+# Android (dev client / native run)
 npm run android
 
 # iOS (macOS only)
@@ -110,199 +91,56 @@ npm run ios
 npm run web
 ```
 
-## 🎯 Key Components
+Gợi ý:
+- Nếu Metro bị lỗi cache/cổng: `npm run start:clear` hoặc `npm run reset:metro`
+- Nếu kẹt port: `npm run kill:8081` / `npm run kill:3000`
 
-### Theme System
+## Firebase native config (Android/iOS)
 
-The app features a comprehensive theme system with:
-- **Colors**: Primary, secondary, background, text, status colors
-- **Spacing**: Consistent spacing scale (xs, s, m, l, xl, xxl)
-- **Border Radius**: Predefined radius values
-- **Typography**: Font sizes and weights
+Expo config (`app.json`) đang trỏ tới:
+- `google-services.json` (Android)
+- `GoogleService-Info.plist` (iOS)
 
-Usage:
-```typescript
-import { useTheme } from './src/theme';
+Đảm bảo các file này đúng theo Firebase project của bạn trước khi build native.
 
-const MyComponent = () => {
-  const { theme, toggleTheme, isDark } = useTheme();
-  
-  return (
-    <View style={{ backgroundColor: theme.colors.background }}>
-      <Text style={{ color: theme.colors.text }}>Hello!</Text>
-    </View>
-  );
-};
-```
+## Tests
 
-### Components
-
-#### Button
-```typescript
-<Button
-  title="Click Me"
-  onPress={handlePress}
-  variant="primary" // primary | secondary | outline
-  size="medium"     // small | medium | large
-  loading={false}
-/>
-```
-
-#### Card
-```typescript
-<Card style={{ marginBottom: 16 }}>
-  <Text>Card content</Text>
-</Card>
-```
-
-#### Modal
-```typescript
-<Modal
-  visible={isVisible}
-  onClose={() => setVisible(false)}
-  title="Modal Title"
->
-  <Text>Modal content</Text>
-</Modal>
-```
-
-## 🔧 State Management
-
-### Auth Store (Zustand)
-```typescript
-import { useAuthStore } from './src/store/authStore';
-
-const { user, isAuthenticated, login, logout } = useAuthStore();
-```
-
-### App Store
-```typescript
-import { useAppStore } from './src/store/appStore';
-
-const { theme, language, setTheme, setLanguage } = useAppStore();
-```
-
-## 🌐 Internationalization (EN ↔ VI)
-
-- Built with `i18next`, `react-i18next`, and `expo-localization`
-- Auto-detects the device language on first launch
-- Toggle languages directly on the **Profile** screen
-- Translation resources live in `src/i18n/locales`
-- Add a new language by extending `resources` inside `src/i18n/index.ts`
-- Use translations anywhere in the app:
-
-```typescript
-import { useTranslation } from 'react-i18next';
-
-const { t } = useTranslation();
-
-return <Text>{t('home.title')}</Text>;
-```
-
-## 🌐 API Integration
-
-The app includes a configured Axios instance with interceptors:
-
-```typescript
-import { api } from './src/services';
-
-// Make API calls
-const response = await api.get('/endpoint');
-```
-
-## 📝 Structured Logging
-
-- Powered by [`react-native-logs`](https://github.com/onubo/react-native-logs)
-- Located in `src/utils/logger.ts`
-- Uses color-coded severities (debug/info/warn/error) and respects `__DEV__`
-- Import once and log from anywhere:
-
-```typescript
-import log from './src/utils/logger';
-
-log.debug('screen.mount', { screen: 'Home' });
-log.info('auth.login.success', { email });
-log.error('api.fetch.failed', error);
-```
-
-## 🎨 Design Philosophy
-
-This app follows a **sports-themed, energetic design** with:
-- Bold neon green accents for primary actions
-- High contrast for readability
-- Smooth transitions between dark and light modes
-- Modern, minimalist UI components
-- Athletic, dynamic feel
-
-## 📱 Screens
-
-1. **Login Screen**: Clean authentication interface
-2. **Home Screen**: Main dashboard with cards and navigation
-3. **Profile Screen**: User profile with theme toggle and settings
-
-## 🛠️ Tech Stack
-
-- **React Native**: Cross-platform mobile framework
-- **Expo**: Development platform and tools
-- **TypeScript**: Type-safe development
-- **React Navigation**: Navigation library
-- **Zustand**: State management
-- **Axios**: HTTP client
-- **AsyncStorage**: Local data persistence
-
-## 🔐 Authentication Flow
-
-The app includes a basic authentication flow:
-1. User lands on Login screen
-2. After login, navigates to main tabs
-3. Auth state persists with AsyncStorage
-4. Logout returns to Login screen
-
-## 📝 TypeScript Configuration
-
-The project uses strict TypeScript settings with path aliases:
-- `@/*` → `src/*`
-- `@components/*` → `src/components/*`
-- `@screens/*` → `src/screens/*`
-- `@theme/*` → `src/theme/*`
-- And more...
-
-## 🎯 Best Practices
-
-- **Component Structure**: Functional components with TypeScript interfaces
-- **Styling**: Theme-based styling with useTheme hook
-- **State**: Centralized state management with Zustand
-- **Navigation**: Type-safe navigation with TypeScript
-- **Code Organization**: Feature-based folder structure
-
-## 🚧 Future Enhancements
-
-- [ ] Add custom fonts (Inter/Roboto)
-- [ ] Implement Firebase integration
-- [ ] Add more screens and features
-- [ ] Implement real API integration
-- [ ] Add animations and transitions
-- [ ] Add unit and integration tests
-
-## Run Docker
-- **Build image** : docker compose build
-- **vào Container** : docker compose run android-builder
-- **Build Android (bên trong container)** : 
 ```bash
-  npm install
-  expo prebuild
-  cd android
-  ./gradlew assembleRelease
+npm test
 ```
 
-## 📄 License
+## Build (EAS)
 
-MIT License
+Repo có `eas.json` với các profile `development`, `preview`, `production`.
 
-## 👥 Contributing
+```bash
+npx eas-cli build -p android --profile development
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
----
+## Build Android bằng Docker (tuỳ chọn)
 
-Built with ⚡ and 💚 by the development team.
+Repo có sẵn Docker image để build Android trong môi trường Linux sạch.
+
+```bash
+docker compose build
+docker compose run android-builder
+```
+
+Bên trong container:
+
+```bash
+npm install
+npx expo prebuild --platform android
+cd android
+./gradlew assembleRelease
+```
+
+## Notes về state management
+
+- **React Query**: dùng cho server state (fetch/cache/invalidations)
+- **Zustand**:
+  - `src/features/auth/store/authStore.ts` (persist AsyncStorage)
+  - `src/features/rooms/store/activeRoomStore.ts` (persist active room id)
+  - `src/store/appStore.ts` (theme/language/loading)
+
 

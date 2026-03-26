@@ -33,6 +33,9 @@ export const roomsApi = {
       pageSize: filters?.pageSize || 10,
       ...(filters?.availableOnly && { availableOnly: filters.availableOnly }),
       ...(filters?.matchFormat && { matchFormat: filters.matchFormat }),
+      ...(filters?.latitude && { latitude: filters.latitude }),
+      ...(filters?.longitude && { longitude: filters.longitude }),
+      ...(filters?.radiusKm && { radiusKm: filters.radiusKm }),
       ...(filters?.date && { date: filters.date }),
     };
     console.log(params);
@@ -243,6 +246,16 @@ export const roomsApi = {
   ): Promise<any> => {
     const url = API_CONFIG.ENDPOINTS.ROOMS.TEAM_NAME.replace(":id", roomId);
     const data = await apiClient.patch(url, payload);
+    return data;
+  },
+
+  //Vote Result
+  voteResult: async (
+    roomId: string,
+    vote: string,
+  ): Promise<any> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.VOTE_RESULT.replace(":id", roomId);
+    const data = await apiClient.post(url, { vote });
     return data;
   },
 

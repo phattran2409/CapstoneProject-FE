@@ -17,6 +17,7 @@ import { useTheme } from '@/shared/theme';
 import { RootStackParamList } from '@/app/navigation/types';
 import { useToast } from "@/shared/toast";
 import { useResendOTP } from '../hooks/useOTP';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 
 type OTPVerificationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -100,7 +101,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
           console.log(error);
           toast.error(
             t('otp.errors.invalidTitle'),
-            error.message || t('otp.errors.invalidMessage'),
+            getTranslatedError(error?.message) || t('otp.errors.invalidMessage'),
           );
           setOtp(['', '', '', '', '', '']);
           inputRefs.current[0]?.focus();
@@ -123,7 +124,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
           );
         },
         onError: (error: any) => {
-          toast.error(t('otp.errors.resend'), error.message || t('otp.errors.resend'));
+          toast.error(t('otp.errors.resend'), getTranslatedError(error?.message) || t('otp.errors.resend'));
         },
       }
     );

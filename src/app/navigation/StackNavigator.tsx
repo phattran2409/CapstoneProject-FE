@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { navigationRef } from "./navigationRef";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   LoginScreen,
@@ -29,6 +30,7 @@ import { CreatePostScreen } from "@/features/post/screens";
 import TabNavigator from "./TabNavigator";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useActiveRoomStore } from "@/features/rooms/store/activeRoomStore";
+import { useFeedbackSessionStore } from "@/features/feedback";
 import { RootStackParamList } from "./types";
 import { View, StyleSheet } from "react-native";
 import { WalletScreen, WalletWithdrawScreen } from "@/features/wallet";
@@ -42,14 +44,19 @@ import {
   EloBreakdownScreen,
 } from "@/screens";
 import FeedbackMatchResultScreen from "@/features/feedback/screens/FeedbackMatchResultScreen";
+import FeedbackFieldRatingScreen from "@/features/feedback/screens/FeedbackFieldRatingScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const StackNavigator: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const loadActiveRoom = useActiveRoomStore((state) => state.loadActiveRoom);
+  const loadFeedbackSession = useFeedbackSessionStore((s) => s.loadSession);
+  const feedbackSession = useFeedbackSessionStore((s) => s.session);
+  const feedbackSessionLoaded = useFeedbackSessionStore((s) => s.isLoaded);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const hasResumedFeedback = useRef(false);
 
   useEffect(() => {
     const checkInitialState = async () => {
@@ -64,12 +71,45 @@ const StackNavigator: React.FC = () => {
     checkInitialState();
   }, []);
 
-  // Restore active room from storage when user is logged in → ActiveRoomBannerV2 can show again
+  // Restore active room from storage when user is logged in
   useEffect(() => {
     if (isAuthenticated) {
       loadActiveRoom();
+      loadFeedbackSession();
+    } else {
+      hasResumedFeedback.current = false;
     }
-  }, [isAuthenticated, loadActiveRoom]);
+  }, [isAuthenticated, loadActiveRoom, loadFeedbackSession]);
+
+  // Resume feedback session khi app khởi động lại giữa chừng
+  useEffect(() => {
+    if (
+      !isAuthenticated ||
+      !feedbackSessionLoaded ||
+      !feedbackSession ||
+      hasResumedFeedback.current ||
+      isLoading
+    ) return;
+
+    hasResumedFeedback.current = true;
+
+    if (!navigationRef.isReady()) return;
+
+    const { currentStep, roomId } = feedbackSession;
+    if (currentStep === "intro") {
+      navigationRef.navigate("FeedbackIntro", { roomId });
+    } else if (currentStep === "matchResult") {
+      navigationRef.navigate("FeedbackMatchResult");
+    } else if (currentStep === "playerRating") {
+      navigationRef.navigate("FeedbackRating");
+    } else if (currentStep === "fieldRating") {
+      const venueId = feedbackSession.venue?.venueId;
+      navigationRef.navigate(
+        "FeedbackFieldRating",
+        venueId ? { venueId } : {},
+      );
+    }
+  }, [isAuthenticated, feedbackSessionLoaded, feedbackSession, isLoading]);
 
   if (isLoading) {
     return <SplashScreen />;
@@ -318,6 +358,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_bottom",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -326,6 +367,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -334,6 +376,16 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackFieldRating"
+              component={FeedbackFieldRatingScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -342,6 +394,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "fade",
+                gestureEnabled: false,
               }}
             />
           </>

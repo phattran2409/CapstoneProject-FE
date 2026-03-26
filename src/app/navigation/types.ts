@@ -34,7 +34,7 @@ export type RootStackParamList = {
   Notifications: undefined;
   PostDetail: { postId: string };
   CreatePost: undefined;
-  PaymentSuccess: undefined;
+  PaymentSuccess: { txnRef: string; amount: string };
   Wallet: undefined;
   WalletWithdraw: undefined;
   ChangePassword: {
@@ -48,9 +48,10 @@ export type RootStackParamList = {
         isWin?: boolean;
       }
     | undefined;
-  FeedbackIntro: undefined;
-  FeedbackMatchResult: { roomId: string };
-  FeedbackRating: { roomId: string; matchResult: "A" | "B" | "DRAW" };
+  FeedbackIntro: { roomId: string };
+  FeedbackMatchResult: undefined;
+  FeedbackRating: undefined;
+  FeedbackFieldRating: { venueId?: string };
   FeedbackComplete: undefined;
 };
 
