@@ -65,6 +65,8 @@ export interface FeedbackSession {
   /** Đánh giá sân */
   fieldRating: number;
   fieldComment: string;
+  /** Đồng đội đã báo cáo — không gửi đánh giá sao cho các user này */
+  reportedUserIds?: string[];
 }
 
 // ==================== Store Interface ====================
@@ -75,7 +77,7 @@ interface FeedbackSessionState {
 
   /** Khởi động phiên mới – gọi khi bắt đầu feedback flow */
   startSession: (session: Omit<FeedbackSession,
-    'currentStep' | 'matchResult' | 'playerRatings' | 'currentPlayerIndex' | 'fieldRating' | 'fieldComment'
+    'currentStep' | 'matchResult' | 'playerRatings' | 'currentPlayerIndex' | 'fieldRating' | 'fieldComment' | 'reportedUserIds'
   >) => Promise<void>;
 
   /** Cập nhật bước hiện tại */
@@ -89,6 +91,9 @@ interface FeedbackSessionState {
 
   /** Chuyển sang cầu thủ tiếp theo */
   advancePlayer: () => Promise<void>;
+
+  /** Sau report: xóa rating (nếu có) + thêm vào reportedUserIds (không đổi index) */
+  markPlayerReported: (userId: string) => Promise<void>;
 
   /** Lưu rating sân */
   setFieldRating: (rating: number, comment: string) => Promise<void>;
@@ -125,6 +130,7 @@ export const useFeedbackSessionStore = create<FeedbackSessionState>((set, get) =
       currentPlayerIndex: 0,
       fieldRating: 0,
       fieldComment: '',
+      reportedUserIds: [],
     };
     set({ session });
     await persist(session);
@@ -170,6 +176,23 @@ export const useFeedbackSessionStore = create<FeedbackSessionState>((set, get) =
       ...session,
       currentPlayerIndex: nextIndex,
       currentStep: step,
+    };
+    set({ session: updated });
+    await persist(updated);
+  },
+
+  markPlayerReported: async (userId) => {
+    const { session } = get();
+    if (!session) return;
+    const { [userId]: _removed, ...restRatings } = session.playerRatings;
+    const prevReported = session.reportedUserIds ?? [];
+    const reportedUserIds = prevReported.includes(userId)
+      ? prevReported
+      : [...prevReported, userId];
+    const updated: FeedbackSession = {
+      ...session,
+      playerRatings: restRatings,
+      reportedUserIds,
     };
     set({ session: updated });
     await persist(updated);

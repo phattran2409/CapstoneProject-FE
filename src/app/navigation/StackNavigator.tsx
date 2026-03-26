@@ -76,6 +76,8 @@ const StackNavigator: React.FC = () => {
     if (isAuthenticated) {
       loadActiveRoom();
       loadFeedbackSession();
+    } else {
+      hasResumedFeedback.current = false;
     }
   }, [isAuthenticated, loadActiveRoom, loadFeedbackSession]);
 
@@ -356,6 +358,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_bottom",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -364,6 +367,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -372,6 +376,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -380,6 +385,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_right",
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -388,6 +394,7 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "fade",
+                gestureEnabled: false,
               }}
             />
           </>

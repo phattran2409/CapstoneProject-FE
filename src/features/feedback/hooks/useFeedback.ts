@@ -16,7 +16,11 @@ export const useSubmitMatchFeedbacksBatch = () => {
     mutationFn: (body: SubmitMatchFeedbacksRequest) =>
       submitMatchFeedbacksBatch(body),
     onSuccess: (_data, body) => {
-      queryClient.invalidateQueries({ queryKey: roomsKeys.detail(body.matchId) });
+      void queryClient.invalidateQueries({
+        queryKey: roomsKeys.detail(body.matchId),
+      });
+      void queryClient.invalidateQueries({ queryKey: roomsKeys.matchRooms() });
+      void queryClient.invalidateQueries({ queryKey: roomsKeys.myRooms() });
     },
   });
 };
@@ -37,6 +41,13 @@ export const useFeedbackVenue = () => {
       void queryClient.invalidateQueries({
         queryKey: venuesKeys.reviews(vars.venueId),
       });
+      if (vars.roomId) {
+        void queryClient.invalidateQueries({
+          queryKey: roomsKeys.detail(vars.roomId),
+        });
+        void queryClient.invalidateQueries({ queryKey: roomsKeys.matchRooms() });
+        void queryClient.invalidateQueries({ queryKey: roomsKeys.myRooms() });
+      }
     },
   });
 };
@@ -75,7 +86,11 @@ export const useVoteMatchResult = () => {
     mutationFn: (vars: VoteMatchResultVariables) =>
       voteMatchResult(vars.roomId, vars.vote),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: roomsKeys.detail(vars.roomId) });
+      void queryClient.invalidateQueries({
+        queryKey: roomsKeys.detail(vars.roomId),
+      });
+      void queryClient.invalidateQueries({ queryKey: roomsKeys.matchRooms() });
+      void queryClient.invalidateQueries({ queryKey: roomsKeys.myRooms() });
     },
   });
 };

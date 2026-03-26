@@ -23,7 +23,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { useFeedbackSessionStore } from "../store/feedbackSessionStore";
-import { useSubmitMatchFeedbacksBatch, useReportPlayer } from "../hooks/useFeedback";
+import { useSubmitMatchFeedbacksBatch, useReportPlayer } from "../hooks";
 import {
   DEFAULT_PLAYER_FEEDBACK_ID,
   type MatchFeedbackBatchItem,
@@ -50,6 +50,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   const session = useFeedbackSessionStore((s) => s.session);
   const savePlayerRating = useFeedbackSessionStore((s) => s.savePlayerRating);
   const advancePlayer = useFeedbackSessionStore((s) => s.advancePlayer);
+  const markPlayerReported = useFeedbackSessionStore((s) => s.markPlayerReported);
   const setStep = useFeedbackSessionStore((s) => s.setStep);
   const user = useAuthStore((s) => s.user);
   const submitBatchMutation = useSubmitMatchFeedbacksBatch();
@@ -182,7 +183,8 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
    * Nếu không ai được chấm → chỉ chuyển màn (không gọi API).
    */
   const submitBatchAndGoToField = useCallback(async () => {
-    if (!session || !user?.userId) {
+    const liveSession = useFeedbackSessionStore.getState().session;
+    if (!liveSession || !user?.userId) {
       toast.error(
         t("feedback.rating.sessionErrorTitle", "Thiếu thông tin"),
         t(
@@ -193,7 +195,9 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       return;
     }
 
+    const reportedIds = new Set(liveSession.reportedUserIds ?? []);
     const feedbacks: MatchFeedbackBatchItem[] = players
+      .filter((p) => !reportedIds.has(p.id))
       .map((p) => ({
         feedbackId: DEFAULT_PLAYER_FEEDBACK_ID,
         revieweeId: p.id,
@@ -210,7 +214,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
 
     try {
       await submitBatchMutation.mutateAsync({
-        matchId: session.roomId,
+        matchId: liveSession.roomId,
         reviewerId: user.userId,
         feedbacks,
       });
@@ -227,7 +231,6 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       );
     }
   }, [
-    session,
     user?.userId,
     players,
     comments,
@@ -333,11 +336,31 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         matchId: session.roomId,
       });
 
+      await markPlayerReported(currentPlayer.id);
+      setRatings((prev) => {
+        const next = { ...prev };
+        delete next[currentPlayer.id];
+        return next;
+      });
+      setComments((prev) => {
+        const next = { ...prev };
+        delete next[currentPlayer.id];
+        return next;
+      });
+
       setShowReportModal(false);
       setSelectedReportType(null);
       setReportDescription("");
       setReportError(null);
       toast.info(t("reportModal.success.user"));
+
+      const isLastTeammate = currentIndex === players.length - 1;
+      if (isLastTeammate) {
+        await submitBatchAndGoToField();
+      } else {
+        await advancePlayer();
+        setCurrentIndex((prev) => prev + 1);
+      }
     } catch (error: any) {
       console.error("Error reporting player:", error);
       toast.error(
@@ -350,11 +373,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
 
 
   const handleBack = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    } else {
-      navigation.goBack();
-    }
+    // Flow feedback chỉ tiến tới, không pop stack / không quay lại màn trước
   };
 
   return (

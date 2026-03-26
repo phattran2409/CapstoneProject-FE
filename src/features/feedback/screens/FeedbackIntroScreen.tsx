@@ -84,7 +84,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
 
   const handleStart = async () => {
     await setStep("matchResult");
-    navigation.navigate("FeedbackMatchResult");
+    navigation.replace("FeedbackMatchResult");
   };
 
   const handleClose = () => {

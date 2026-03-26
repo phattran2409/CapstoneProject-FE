@@ -105,7 +105,7 @@ const FeedbackCompleteScreen: React.FC<FeedbackCompleteScreenProps> = ({
 
   const handleFinish = () => {
    
-    navigation.navigate("MainTabs");
+    navigation.replace("MainTabs");
   };
 
   return (

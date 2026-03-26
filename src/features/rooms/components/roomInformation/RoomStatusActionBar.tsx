@@ -49,6 +49,20 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
   ];
 
   if (status === 'Reviewing') {
+    if (hasLeftFeedback) {
+      return (
+        <View style={containerStyle}>
+          <TouchableOpacity
+            style={[actionStyles.joinButton, { backgroundColor: theme.colors.border, shadowColor: 'transparent' }]}
+            disabled
+          >
+            <ThemedText size="l" weight="bold" style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}>
+              {t('roomDetail.statusActions.hasLeftFeedback', 'Bạn đã đánh giá trận đấu')}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     return (
       <View style={containerStyle}>
         <TouchableOpacity

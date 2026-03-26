@@ -13,6 +13,8 @@ export interface FeedbackVenueVariables {
   venueId: string;
   rating: number;
   comment: string;
+  /** Để invalidate chi tiết phòng sau khi BE cập nhật hasLeftFeedback */
+  roomId?: string;
 }
 
 /**

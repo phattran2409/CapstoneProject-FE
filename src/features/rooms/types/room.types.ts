@@ -62,6 +62,7 @@ export interface MatchRoomParticipant {
   position: string;
   depositPaid: boolean;
   joinDate: string;
+  hasLeftFeedback?: boolean;
 }
 
 /** Alias for participant in room/team context */

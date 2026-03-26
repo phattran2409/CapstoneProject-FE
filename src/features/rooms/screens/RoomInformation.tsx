@@ -423,14 +423,37 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     );
   };
 
-  const { startSession } = useFeedbackSessionStore();
+  const { startSession, session: feedbackSession } = useFeedbackSessionStore();
 
   const handleNavigateToFeedbackIntro = async () => {
     if (!displayRoom || !user?.userId) return;
 
+    if (feedbackSession?.roomId === displayRoom.roomId) {
+      switch (feedbackSession.currentStep) {
+        case 'intro':
+          navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
+          return;
+        case 'matchResult':
+          navigation?.navigate('FeedbackMatchResult');
+          return;
+        case 'playerRating':
+          navigation?.navigate('FeedbackRating');
+          return;
+        case 'fieldRating':
+          navigation?.navigate('FeedbackFieldRating', {
+            venueId: feedbackSession.venue?.venueId ?? displayRoom.field.venue.venueId,
+          });
+          return;
+        case 'complete':
+          navigation?.navigate('FeedbackComplete');
+          return;
+      }
+    }
+
     const allParticipants = [
       ...displayRoom.participants.teamA,
       ...displayRoom.participants.teamB,
+      ...displayRoom.participants.unassigned,
     ];
     const me = allParticipants.find((p) => p.userId === user.userId);
     const myTeam = me?.teamAssignment === 'A' || me?.teamAssignment === 'B'
@@ -469,9 +492,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       myTeam,
       teammates,
     });
-
-    // navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
-     navigation?.replace('FeedbackMatchResult');
+    navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });  
   };
 
   const handleNavigateToEloBreakdown = () => {
@@ -805,7 +826,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       />
 
       <RoomStatusActionBar
-        hasLeftFeedback={displayRoom.hasLeftFeedback}
+        hasLeftFeedback={currentUserParticipant?.hasLeftFeedback === true}
         status={displayRoom.status}
         activeTab={activeTab}
         canJoinMatch={canJoinMatch}

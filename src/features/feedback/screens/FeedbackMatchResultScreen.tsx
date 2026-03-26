@@ -73,10 +73,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
     transform: [{ scale: winnerScale.value }],
   }));
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
   const handleContinue = async () => {
     if (!selectedResult || !session) return;
     try {
@@ -85,7 +81,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
         vote: selectedResult,
       });
       await setMatchResult(selectedResult);
-      navigation.navigate("FeedbackRating");
+      navigation.replace("FeedbackRating");
     } catch (error: any) {
       const detail =
         getTranslatedError(error?.message) ||

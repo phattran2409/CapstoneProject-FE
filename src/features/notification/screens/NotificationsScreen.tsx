@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Linking } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
@@ -38,8 +38,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   const { mutate: markAllAsRead } = useMarkAllAsRead();
 
   const handleNotificationPress = (notification: BaseNotification) => {
+    // Mark as read nếu chưa đọc
     if (!notification.isRead) {
       markAsRead(notification.notificationId);
+    }
+
+    // Navigate qua deepLink nếu có
+    if (notification.deepLink) {
+      Linking.openURL(notification.deepLink).catch(() => {});
     }
   };
 

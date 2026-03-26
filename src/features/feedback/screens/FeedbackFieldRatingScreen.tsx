@@ -103,9 +103,10 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
     });
   }, [lat, lng, displayVenueName, displayAddress]);
 
-  // const handleBack = () => {
-  //   navigation.goBack();
-  // };
+  const handleBack = async () => {
+    await useFeedbackSessionStore.getState().clearSession();
+    navigation.replace("MainTabs");
+  };
 
   const handleSubmit = useCallback(async () => {
     if (rating === 0) {
@@ -135,6 +136,7 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
         venueId,
         rating,
         comment,
+        roomId: session?.roomId,
       });
       await setFieldRating(rating, comment);
       navigation.replace("FeedbackComplete");
@@ -192,9 +194,11 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
     >
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
+          onPress={() => handleBack()}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
+          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
