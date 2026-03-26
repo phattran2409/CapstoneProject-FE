@@ -205,7 +205,10 @@ const initializeTokens = async () => {
   await getAuthToken();
   await getRefreshToken();
 };
-initializeTokens();
+
+if (process.env.NODE_ENV !== 'test') {
+  initializeTokens();
+}
 
 // Request interceptor
 apiClient.interceptors.request.use(
