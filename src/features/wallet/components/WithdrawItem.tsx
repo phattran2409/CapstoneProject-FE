@@ -4,6 +4,7 @@ import { ThemedText, ThemedView } from "@/shared/components/themed";
 import { useTheme } from "@/shared/theme";
 import { formatDateTime } from "@/shared/utils";
 import { withdrawals } from "../types/wallet.types";
+import { formatCurrency } from "@/shared/utils/formatters";
 
 interface WithdrawItemProps {
   withdrawal: withdrawals;
@@ -33,7 +34,7 @@ const WithdrawItem: React.FC<WithdrawItemProps> = ({ withdrawal }) => {
     >
       <View style={styles.row}>
         <ThemedText variant="primary" size="m" weight="bold">
-          {withdrawal.amount.toLocaleString("vi-VN")} VND
+          {formatCurrency(withdrawal.amount)}
         </ThemedText>
         <View
           style={[

@@ -131,7 +131,7 @@ const Alert: React.FC<AlertProps> = ({
                 <View style={styles.iconContainer}>
                   <Ionicons
                     name={iconConfig.name}
-                    size={26}
+                    size={40}
                     color={iconConfig.color}
                   />
                 </View>

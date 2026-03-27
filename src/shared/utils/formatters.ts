@@ -1,9 +1,6 @@
 // Format currency
-export const formatCurrency = (amount: number, currency: string): string => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
 };
 
 type DateFormatType = 'short' | 'long' | 'time';

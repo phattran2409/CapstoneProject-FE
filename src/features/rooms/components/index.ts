@@ -1,4 +1,5 @@
 export { HostMenuModal } from './HostMenuModal';
+export { EditRoomInfoModal } from './EditRoomInfoModal';
 export { PlayerCard } from './PlayerCard';
 export { ParticipantCard } from './ParticipantCard';
 export { EmptySlotCard } from './EmptySlotCard';

@@ -26,7 +26,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
         },
       },
       PaymentSuccess: {
-        path: 'payment/success?txnRef=:txnRef&amount=:amount',
+        path: 'payment/success',
         parse: {
           txnRef: (txnRef: string) => txnRef,
           amount: (amount: string) => amount,
