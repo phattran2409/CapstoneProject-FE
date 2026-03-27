@@ -91,6 +91,17 @@ export const roomsApi = {
   },
 
   /**
+   * Update room info (roomName, description, rules)
+   * PATCH /match-rooms/:id/info
+   */
+  updateRoomInfo: async (
+    roomId: string,
+    body: { roomName: string; description?: string; rules?: string },
+  ): Promise<void> => {
+    await apiClient.patch(`/match-rooms/${roomId}/info`, body);
+  },
+
+  /**
    * Update room privacy (visibility + password for Private)
    * PATCH /match-rooms/:id/privacy
    */
