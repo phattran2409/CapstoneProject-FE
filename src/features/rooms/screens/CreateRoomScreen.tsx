@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -24,6 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { roomsApi } from '../api/roomsApi';
 import { matchFormatToUi } from '../utils/matchRoomCreatePresetMap';
+import { useToast } from '@/shared/toast/useToast';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -34,17 +35,15 @@ interface CreateRoomScreenProps {
 }
 
 type MatchFormat = '5vs5' | '7vs7' | '11vs11';
-type DurationMinutes = 60 | 90 | 120;
-
-const DURATION_OPTIONS: DurationMinutes[] = [ 60, 90, 120];
 
 const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const toast = useToast();
   const { user } = useAuthStore();
   const { visible, alertOptions, showInfo, showSuccess, showDanger, hideAlert } = useAlert();
   const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('5vs5');
-  const [durationMinutes, setDurationMinutes] = useState<DurationMinutes>(60);
+  const [durationMinutes, setDurationMinutes] = useState<number>(60);
   const {
     control,
     handleSubmit,
@@ -199,6 +198,25 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       }
     );
   };
+  const handleSetDurationMinutes = useCallback((type: 'increase' | 'decrease') => {
+    setDurationMinutes((prev) => {
+      if (type === 'increase') {
+        if (prev == 120) { 
+          toast.info(t('createRoom.validation.durationTooLong'));
+          return 120;
+        }
+        return prev + 30;
+      }
+      if (type === 'decrease') {
+        if (prev == 60) {
+          toast.info(t('createRoom.validation.durationTooShort'));
+          return 60;
+        }
+        return prev - 30;
+      }
+      return prev;
+    });
+  }, [t]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('vi-VN', { 
@@ -276,14 +294,11 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       gap: 8,
     },
     durationButton: {
-      flex: 1,
-      paddingVertical: 12,
+      // flex: 1,
+      width: 50,
+      height: 50,
+      borderWidth: 1,
       borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    durationButtonText: {
-      textAlign: 'center',
     },
     inputContainer: {
       borderRadius: 16,
@@ -351,6 +366,20 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       marginTop: 4,
       marginLeft: 4,
     },
+    durationDisplayText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+    },
+    durationDisplayContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+    },
   });
 
   return (
@@ -408,39 +437,23 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               {t('createRoom.duration')}
             </ThemedText>
             <View style={styles.durationRow}>
-              {DURATION_OPTIONS.map((duration) => (
-                <TouchableOpacity
-                  key={duration}
-                  style={[
-                    styles.durationButton, 
-                    { 
-                      backgroundColor: durationMinutes === duration 
-                        ? theme.colors.neonGreen 
-                        : theme.colors.surface,
-                      borderWidth: 1,
-                      borderColor: durationMinutes === duration 
-                        ? theme.colors.neonGreen 
-                        : theme.colors.border,
-                    }
-                  ]}
-                  onPress={() => setDurationMinutes(duration)}
-                >
-                  <ThemedText 
-                    size="m" 
-                    weight="semiBold" 
-                    style={[
-                      styles.durationButtonText, 
-                      { 
-                        color: durationMinutes === duration 
-                          ? '#000' 
-                          : theme.colors.textSecondary 
-                      }
-                    ]}
-                  >
-                    {duration} {t('createRoom.minutes')}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
+              <TouchableOpacity
+                style={[styles.durationButton]}
+                onPress={() => handleSetDurationMinutes('decrease')}
+              >
+                <ThemedIcon name="remove-circle" size={50} variant="accent" />
+              </TouchableOpacity> 
+              <View style={styles.durationDisplayContainer}>
+                <ThemedText size="m" weight="semiBold" style={styles.durationDisplayText}>
+                  {durationMinutes} {t('createRoom.minutes')}
+                </ThemedText>
+              </View>
+              <TouchableOpacity
+                style={[styles.durationButton, {alignItems: 'flex-end'}]}
+                onPress={() => handleSetDurationMinutes('increase')}
+              >
+                 <ThemedIcon name="add-circle" size={50} variant="accent" />
+              </TouchableOpacity> 
             </View>
           </View>
             {/* Venue Selection */}

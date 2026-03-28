@@ -9,10 +9,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed/ThemedText';
 import { useAuthStore } from '@/features/auth';
+import { useTranslation } from 'react-i18next';
 import { ShareRoom } from './ShareRoom';
 import PrivateRoomPasswordModal from './PrivateRoomPasswordModal';
 import { useUpdateRoomPrivacy } from '../hooks/useUpdateRoomPrivacy';
 import { InviteFriendsModal } from './InviteFriendsModal';
+import { EditRoomInfoModal } from './EditRoomInfoModal';
 
 interface HostMenuModalProps {
   room: {
@@ -21,6 +23,8 @@ interface HostMenuModalProps {
     format: string;
     datetime: string;
     venueName: string;
+    description?: string;
+    rules?: string;
   };
   visible: boolean;
   handleShowMenuModal: () => void;
@@ -28,11 +32,13 @@ interface HostMenuModalProps {
 
 const HostMenuModal: React.FC<HostMenuModalProps> = ({ room, visible, handleShowMenuModal }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const [shareRoomVisible, setShareRoomVisible] = useState(false);
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
   const [privacyError, setPrivacyError] = useState<string | undefined>(undefined);
+  const [editRoomInfoVisible, setEditRoomInfoVisible] = useState(false);
   const { mutate: updateRoomPrivacy, isPending: isUpdatingPrivacy } = useUpdateRoomPrivacy();
 
   const shareUrl = `kickify://room/${room.roomId}`;
@@ -52,6 +58,11 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({ room, visible, handleShow
     handleShowMenuModal();
     setPrivacyError(undefined);
     setPrivacyModalVisible(true);
+  };
+
+  const handleEditRoomInfo = () => {
+    handleShowMenuModal();
+    setEditRoomInfoVisible(true);
   };
 
   const handlePrivacyConfirm = (password: string) => {
@@ -100,6 +111,13 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({ room, visible, handleShow
               },
             ]}
           >
+            <TouchableOpacity style={styles.menuItem} onPress={handleEditRoomInfo}>
+              <Ionicons name="create-outline" size={24} color={primaryColor} />
+              <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.text }]}>
+                {t('roomDetail.editRoomInfo')}
+              </ThemedText>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.menuItem} onPress={handleShareRoom}>
               <Ionicons name="share-outline" size={24} color={primaryColor} />
               <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.text }]}>
@@ -156,6 +174,17 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({ room, visible, handleShow
         }}
         isLoading={isUpdatingPrivacy}
         errorMessage={privacyError}
+      />
+
+      <EditRoomInfoModal
+        visible={editRoomInfoVisible}
+        onClose={() => setEditRoomInfoVisible(false)}
+        roomId={room.roomId}
+        initialValues={{
+          roomName: room.roomName,
+          description: room.description,
+          rules: room.rules,
+        }}
       />
     </>
   );

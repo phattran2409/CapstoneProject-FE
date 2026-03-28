@@ -18,6 +18,7 @@ import {
 } from "@/shared/components/themed";
 import Button from "@/shared/components/Button";
 import { RootStackParamList } from "@/app/navigation/types";
+import { formatCurrency } from '@/shared/utils/formatters';
 
 type PaymentSuccessScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -143,20 +144,7 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
               color: theme.colors.neonGreen,
             }}
           >
-            + {amount} VND
-          </ThemedText>
-
-          <ThemedText
-            variant="secondary"
-            size="s"
-            style={{
-              marginTop: theme.spacing.s,
-              textAlign: "center",
-            }}
-          >
-            {t("payment.successDescription", {
-              defaultValue: "Số dư đã được cập nhật vào ví của bạn",
-            })}
+            + {formatCurrency(Number(amount))}
           </ThemedText>
         </View>
 

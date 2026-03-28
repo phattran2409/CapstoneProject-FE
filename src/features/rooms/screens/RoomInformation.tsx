@@ -544,8 +544,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     displayRoom.field.venue.venueName
   }\n\nJoin here: ${shareUrl}`;
 
-  console.log('displayRoom', displayRoom.matchDate, displayRoom.startTime, displayRoom.endTime);
-
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -734,7 +732,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             <RoomInfoCard
               icon="trophy"
               label={t('roomDetail.totalDepositCollected')}
-              value={formatCurrency(depositCollected, 'VND') || '0'}
+              value={formatCurrency(depositCollected) || '0 VND'}
               subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% ${t('roomDetail.depositProgress')}` : undefined}
             />
             
@@ -812,6 +810,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             format: displayRoom.matchFormat,
             datetime: formatDate(displayRoom.matchDate, 'short'),
             venueName: displayRoom.field.venue.venueName,
+            description: displayRoom.description,
+            rules: displayRoom.rules,
           }}
         />
       )}
