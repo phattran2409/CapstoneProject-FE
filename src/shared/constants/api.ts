@@ -41,6 +41,8 @@ export const API_CONFIG = {
       TEAM_NAME: "/match-rooms/:id/team-name",
       /** Cập nhật privacy (Private/Public + password) */
       PRIVACY: "/match-rooms/:id/privacy",
+      /** Mẫu tạo phòng của user (GET/PUT). Đổi path nếu backend khác. */
+      ME_CREATE_PRESET: "/match-rooms/me/create-preset",
       PROCESS_PAYMENT: "bookings/process-payment",
       VOTE_RESULT: "/match-rooms/:id/vote-result",
     },

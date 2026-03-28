@@ -183,6 +183,19 @@ const vi = {
     },
     successMessage: "Tạo phòng thành công!",
     errorMessage: "Không thể tạo phòng. Vui lòng thử lại.",
+    preset: {
+      title: "Mẫu tạo phòng",
+      subtitle:
+        "Lưu trên server: thể thức, thời lượng, tên phòng, mô tả, phòng riêng tư. Mật khẩu không lưu — sau khi áp dụng hãy nhập lại.",
+      openButton: "Mở mẫu tạo phòng",
+      saveButton: "Chỉ lưu mẫu",
+      applyButton: "Áp dụng cho form tạo phòng",
+      savedTitle: "Đã lưu",
+      savedMessage: "Đã lưu mẫu tạo phòng.",
+      validationName: "Vui lòng nhập tên phòng để lưu hoặc áp dụng mẫu.",
+      loadError: "Không tải được mẫu từ server.",
+      saveError: "Không lưu được mẫu. Kiểm tra kết nối hoặc API.",
+    },
   },
   venueSelection: {
     title: "Chọn sân",

@@ -11,6 +11,8 @@ export interface ChatItemData {
   timestamp: string;
   isOnline: boolean;
   avatar?: any;
+  /** Tin chưa đọc — cùng nguồn với FriendsScreen `useHasUnreadChats` (conversation.unreadCount) */
+  unreadCount?: number;
 }
 
 interface ChatItemProps {
@@ -20,6 +22,7 @@ interface ChatItemProps {
 
 export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
   const { theme } = useTheme();
+  const hasUnread = (item.unreadCount ?? 0) > 0;
 
   return (
     <TouchableOpacity
@@ -49,6 +52,21 @@ export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
             color={theme.colors.textSecondary}
           />
         </View>
+        {hasUnread && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: theme.colors.error,
+              borderWidth: 2,
+              borderColor: theme.colors.surface,
+            }}
+          />
+        )}
         {item.isOnline && (
           <View
             style={{
@@ -70,7 +88,7 @@ export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
           style={{
             fontSize: theme.fontSizes.m,
             color: theme.colors.text,
-            fontWeight: "600",
+            fontWeight: hasUnread ? "700" : "600",
             marginBottom: theme.spacing.xs,
           }}
         >
@@ -79,7 +97,8 @@ export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
         <Text
           style={{
             fontSize: theme.fontSizes.s,
-            color: theme.colors.textSecondary,
+            color: hasUnread ? theme.colors.text : theme.colors.textSecondary,
+            fontWeight: hasUnread ? "600" : "400",
           }}
           numberOfLines={1}
         >
@@ -90,13 +109,36 @@ export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
         <Text
           style={{
             fontSize: theme.fontSizes.xs,
-            color: theme.colors.textSecondary,
+            color: hasUnread ? theme.colors.text : theme.colors.textSecondary,
+            fontWeight: hasUnread ? "600" : "400",
             marginBottom: theme.spacing.xs,
           }}
         >
           {getRelativeTime(item.timestamp)}
         </Text>
-        {item.isOnline && (
+        {hasUnread ? (
+          <View
+            style={{
+              minWidth: 18,
+              height: 18,
+              paddingHorizontal: (item.unreadCount ?? 0) > 9 ? 5 : 0,
+              borderRadius: 9,
+              backgroundColor: theme.colors.error,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: "700",
+                color: "#fff",
+              }}
+            >
+              {(item.unreadCount ?? 0) > 99 ? "99+" : item.unreadCount}
+            </Text>
+          </View>
+        ) : item.isOnline ? (
           <View
             style={{
               width: 8,
@@ -105,7 +147,7 @@ export const ChatItem: React.FC<ChatItemProps> = ({ item, onPress }) => {
               backgroundColor: theme.colors.neonGreen,
             }}
           />
-        )}
+        ) : null}
       </View>
     </TouchableOpacity>
   );

@@ -186,6 +186,19 @@ const en = {
     },
     successMessage: "Room created successfully!",
     errorMessage: "Failed to create room. Please try again.",
+    preset: {
+      title: "Match presets",
+      subtitle:
+        "Stored on the server: format, duration, room name, description, private room. Passwords are not saved — re-enter after applying.",
+      openButton: "Open create-room preset",
+      saveButton: "Save preset only",
+      applyButton: "Apply to create form",
+      savedTitle: "Saved",
+      savedMessage: "Your create-room preset was saved.",
+      validationName: "Enter a room name to save or apply a preset.",
+      loadError: "Could not load preset from the server.",
+      saveError: "Could not save preset. Check connection or API.",
+    },
   },
   venueSelection: {
     title: "Select Venue",

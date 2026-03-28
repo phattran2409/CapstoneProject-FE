@@ -37,6 +37,7 @@ import { WalletScreen, WalletWithdrawScreen } from "@/features/wallet";
 import { PaymentSuccessScreen } from "@/features/payment";
 import { SearchScreen } from "@/features/search";
 import TeamScreen from "@/features/rooms/screens/TeamScreen";
+import CreateRoomPresetScreen from "@/features/rooms/screens/CreateRoomPresetScreen";
 import {
   FeedbackIntroScreen,
   FeedbackRatingScreen,
@@ -189,6 +190,14 @@ const StackNavigator: React.FC = () => {
               options={{
                 headerShown: false,
                 animation: "slide_from_bottom",
+              }}
+            />
+            <Stack.Screen
+              name="CreateRoomPreset"
+              component={CreateRoomPresetScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
               }}
             />
             <Stack.Screen

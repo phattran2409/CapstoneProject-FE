@@ -35,6 +35,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // Other screens
       Leaderboard: 'leaderboard',
       CreateRoom: 'create-room',
+      CreateRoomPreset: 'create-room/preset',
       VenueSelection: 'venue-selection',
       ChatList: 'chat',
       Chat: {

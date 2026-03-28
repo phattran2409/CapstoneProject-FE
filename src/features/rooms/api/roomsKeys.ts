@@ -27,6 +27,9 @@ export const roomsKeys = {
   
   // Room messages
   messages: (roomId: string) => [...roomsKeys.detail(roomId), 'messages'] as const,
+
+  /** Mẫu tạo phòng (user) */
+  createPreset: () => [...roomsKeys.all, 'create-preset'] as const,
 };
 
 /**

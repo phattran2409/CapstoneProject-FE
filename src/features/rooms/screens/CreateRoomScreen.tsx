@@ -22,6 +22,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { RoomFormData, roomSchema } from '../validation/roomSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { roomsApi } from '../api/roomsApi';
+import { matchFormatToUi } from '../utils/matchRoomCreatePresetMap';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -46,6 +48,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<RoomFormData>({
     resolver: zodResolver(roomSchema),
@@ -107,6 +110,20 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       if (!isNaN(d.getTime())) setMatchDate(d);
     }
   }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot, route?.params?.selectedDate]);
+
+  React.useEffect(() => {
+    const nonce = route?.params?.presetApplyNonce;
+    if (nonce == null) return;
+    void (async () => {
+      const p = await roomsApi.getCreateRoomPreset();
+      if (!p) return;
+      setSelectedFormat(matchFormatToUi(p.matchFormat));
+      setDurationMinutes(p.durationMinutes);
+      reset({ roomName: p.roomName, description: p.description || '' });
+      setIsPrivate(p.isPrivate);
+      setPassword('');
+    })();
+  }, [route?.params?.presetApplyNonce, reset]);
 
   const handleCreateRoom = (data: RoomFormData) => {
     setIsLoading(true);
@@ -218,6 +235,13 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
+      flex: 1,
+    },
+    presetButton: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     backButton: {
       width: 40,
@@ -342,10 +366,18 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           >
             <ThemedIcon name="arrow-back"  size={24} variant="secondary" />
           </TouchableOpacity>
-          <ThemedText size="xxl" weight="bold">
+          <ThemedText size="xxl" weight="bold" style={{ flexShrink: 1 }}>
             {t('createRoom.title')}
           </ThemedText>
         </View>
+        <TouchableOpacity
+          onPress={() => navigation?.navigate('CreateRoomPreset')}
+          style={styles.presetButton}
+          accessibilityRole="button"
+          accessibilityLabel={t('createRoom.preset.openButton')}
+        >
+          <ThemedIcon name="bookmark-outline" size={26} variant="accent" />
+        </TouchableOpacity>
       </ThemedView>
 
       <ThemedScrollView showsVerticalScrollIndicator={false}>

@@ -17,7 +17,10 @@ export type RootStackParamList = {
     selectedField?: Field;
     selectedTimeSlot?: TimeSlot;
     selectedDate?: string; // YYYY-MM-DD from FieldsModal
+    /** Khi áp dụng mẫu từ CreateRoomPreset — đổi giá trị để CreateRoom chạy lại effect */
+    presetApplyNonce?: number;
   } | undefined;
+  CreateRoomPreset: undefined;
   VenueSelection: { matchFormat?: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' } | undefined;
   VenueDetail: { venueId: string };
   RoomInformation: { roomId: string; venuePhotos?: VenuePhoto[] };
