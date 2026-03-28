@@ -438,6 +438,52 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
               }
             />
 
+            {isCurrentUser && (
+              <View style={{ marginHorizontal: theme.spacing.m, marginBottom: theme.spacing.m, gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("ReceivedFeedback")}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: theme.spacing.m,
+                    paddingHorizontal: theme.spacing.m,
+                    borderRadius: theme.radius?.m ?? 12,
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    gap: 10,
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("personalPage.receivedFeedback.title")}
+                >
+                  <Ionicons
+                    name="chatbox-ellipses-outline"
+                    size={22}
+                    style={{ paddingLeft: 15 }}
+                    color={theme.colors.neonGreen}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.m,
+                        fontWeight: "700",
+                        color: theme.colors.text,
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("personalPage.receivedFeedback.title")}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Navigation Tabs */}
             <View
               style={{

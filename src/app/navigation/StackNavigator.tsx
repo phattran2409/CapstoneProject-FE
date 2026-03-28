@@ -46,6 +46,8 @@ import {
 } from "@/screens";
 import FeedbackMatchResultScreen from "@/features/feedback/screens/FeedbackMatchResultScreen";
 import FeedbackFieldRatingScreen from "@/features/feedback/screens/FeedbackFieldRatingScreen";
+import ReceivedFeedbackScreen from "@/features/feedback/screens/ReceivedFeedbackScreen";
+import GivenFeedbackScreen from "@/features/feedback/screens/GivenFeedbackScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -404,6 +406,22 @@ const StackNavigator: React.FC = () => {
                 headerShown: false,
                 animation: "fade",
                 gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name="ReceivedFeedback"
+              component={ReceivedFeedbackScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="GivenFeedback"
+              component={GivenFeedbackScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
               }}
             />
           </>

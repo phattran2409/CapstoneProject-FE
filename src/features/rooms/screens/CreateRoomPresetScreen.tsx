@@ -140,7 +140,7 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation }) => {
     backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
     scroll: { paddingHorizontal: 20, paddingBottom: 32 },
     section: { marginBottom: 20 },
-    sectionTitle: { marginBottom: 10 },
+    sectionTitle: { marginBottom: 10, marginTop: 10 },
     formatRow: { flexDirection: 'row', gap: 10 },
     formatBtn: { flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: 'center' },
     durationRow: { flexDirection: 'row', gap: 8 },
@@ -211,9 +211,6 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation }) => {
           </ThemedText>
         )}
 
-        <ThemedText variant="muted" size="s" style={{ marginBottom: 16 }}>
-          {t('createRoom.preset.subtitle')}
-        </ThemedText>
 
         <View style={styles.section}>
           <ThemedText variant="muted" size="m" weight="semiBold" style={styles.sectionTitle}>

@@ -56,6 +56,10 @@ export type RootStackParamList = {
   FeedbackRating: undefined;
   FeedbackFieldRating: { venueId?: string };
   FeedbackComplete: undefined;
+  /** FR-27/28: feedback nhận được + phản hồi */
+  ReceivedFeedback: undefined;
+  /** Feedback đã gửi + phản hồi từ người được đánh giá */
+  GivenFeedback: undefined;
 };
 
 export type TabParamList = {

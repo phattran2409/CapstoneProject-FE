@@ -67,6 +67,13 @@ export const API_CONFIG = {
       CREATE: "/withdrawals",
       GET_MY: "/withdrawals/my",
     },
+    /** Đánh giá nhận được + phản hồi (FR-27/28). Đổi path nếu BE khác. */
+    FEEDBACK: {
+      RECEIVED: "/match-feedbacks/received",
+      /** Đánh giá mình đã gửi + phản hồi từ người được đánh giá */
+      GIVEN: "/match-feedbacks/given",
+      REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/reply`,
+    },
   },
 } as const;
 
