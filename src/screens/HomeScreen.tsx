@@ -59,6 +59,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
   const { user } = useAuthStore();
+  const pendingLoginSuccessToast = useAuthStore(
+    (s) => s.pendingLoginSuccessToast,
+  );
+  const setPendingLoginSuccessToast = useAuthStore(
+    (s) => s.setPendingLoginSuccessToast,
+  );
   const hasSyncedFcmRef = useRef(false);
   const toast = useToast();
   const leaderboardQuery = useLeaderboard();
@@ -66,6 +72,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     () => (leaderboardQuery.data?.data?.leaderboard ?? []).slice(0, 5),
     [leaderboardQuery.data],
   );
+
+  // Toast đăng nhập thành công: gọi ở đây vì Login unmount ngay khi chuyển sang MainTabs
+  useEffect(() => {
+    if (!pendingLoginSuccessToast || !user) return;
+    setPendingLoginSuccessToast(false);
+    toast.success(
+      t("login.success.title", "Đăng nhập thành công"),
+      t("login.success.message", "Chào mừng bạn trở lại!"),
+    );
+  }, [pendingLoginSuccessToast, user, setPendingLoginSuccessToast, toast, t]);
 
   // Đăng ký / đồng bộ FCM token sau khi user đã đăng nhập và vào Home
   useEffect(() => {

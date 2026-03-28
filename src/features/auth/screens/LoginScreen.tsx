@@ -75,15 +75,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       { email: data.email, password: data.password },
       {
         onSuccess: () => {
-          toast.success(
-            t("login.success.title", "Đăng nhập thành công"),
-            t("login.success.message", "Chào mừng bạn trở lại!")
-          );
-          // Sau khi login thành công, lấy FCM token và gửi lên BE
+          // Toast đăng nhập: hiển thị trên Home sau khi chuyển stack (xem pendingLoginSuccessToast)
           getFcmToken().then((token) => {
             if (token) authApi.updateFcmToken(token);
           });
-          // Navigation tự động xảy ra khi isAuthenticated thay đổi
         },
         onError: (error: any) => {
           const isNotVerified =
@@ -116,13 +111,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const handleGoogleSignIn = () => {
     signInWithGoogle(undefined, {
       onSuccess: () => {
-        toast.success(
-          t("login.success.title", "Đăng nhập thành công"),
-          t("login.success.googleMessage", "Đăng nhập bằng Google thành công!")
-        );
-        // Sau khi login Google thành công, cũng đăng ký FCM token
-
-        // Navigation tự động xảy ra khi isAuthenticated thay đổi
+        // Toast chào mừng hiển thị trên Home (pendingLoginSuccessToast)
+        getFcmToken().then((token) => {
+          if (token) authApi.updateFcmToken(token);
+        });
       },
       onError: (error: any) => {
         toast.error(

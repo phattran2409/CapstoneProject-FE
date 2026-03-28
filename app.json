@@ -66,7 +66,8 @@
     "extra": {
       "eas": {
         "projectId": "27b70d13-d3b5-44e1-89ef-9878c60fcdbf"
-      }
+      },
+      "googleWebClientId": "600662709460-m0tclu997im6r5qliinv06hj7ut542ag.apps.googleusercontent.com"
     }
   }
 }
