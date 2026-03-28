@@ -1,6 +1,6 @@
 const vi = {
   common: {
-    appName: "Ứng dụng Neon Football",
+    appName: "Kickify",
     success: "Thành công",
     error: "Lỗi",
     language: {
@@ -425,8 +425,56 @@ const vi = {
     language: "Ngôn ngữ",
     interface: "Giao diện tối",
     privacyPolicy: "Chính sách bảo mật",
-    termsOfService: "Điều khoản dịch vụ",
+    termsOfService: "Điều khoản & giới thiệu app",
     goToChats: "Đi đến trò chuyện",
+  },
+  appIntro: {
+    screenTitle: "Giới thiệu & điều khoản",
+    projectCode: "AI-Driven Team Formation and Player Evaluation System",
+    projectName:
+      "AI-Driven Football Team Formation and Player Evaluation System",
+    projectNameVi:
+      "Hệ thống hình thành đội đá bóng và đánh giá người tham gia dựa trên AI",
+    tagline:
+      "Tổ chức trận giao hữu, xếp hạng công bằng, kết nối cộng đồng — trên một ứng dụng di động.",
+    sectionContextTitle: "Ứng dụng giải quyết điều gì",
+    sectionContextBody:
+      "{{appName}} thay thế việc hẹn trận rời rạc bằng phòng đấu có quy trình, minh bạch hóa xếp hạng kiểu Elo và tích hợp mạng xã hội để người chơi dễ tìm trận cân tài, sân có lịch, và phản hồi sau trận giúp cải thiện lối chơi tập thể. Bản mobile này phục vụ người chơi và chủ phòng; chủ sân và quản trị dùng hệ thống web riêng.",
+    sectionPlayerTitle: "Dành cho người chơi",
+    playerFeatures: [
+      "Đăng ký bằng email và xác thực OTP; đăng nhập email/mật khẩu hoặc Google.",
+      "Cập nhật hồ sơ (ảnh đại diện, bio, vị trí, số áo) và cấu hình loại thông báo cần nhận.",
+      "Xem phòng đấu gần sân, vào hoặc rời phòng, trò chuyện trong phòng trước trận.",
+      "Xác nhận tham gia và đóng phần tiền cọc sân khi chủ phòng bật thu quỹ.",
+      "Đội trưởng chỉnh đội hình để cả đội nắm rõ vị trí.",
+      "Xem bảng Elo và chi tiết thay đổi điểm sau trận; xem lịch sử trận trên trang cá nhân.",
+      "Kết bạn, chấp nhận lời mời, chia sẻ link phòng, chat riêng một-một.",
+      "Bảng tin: đăng bài, bình luận, thích và nhận thông báo tương tác.",
+      "Sau trận: chấm sao và nhận xét đồng đội; xem feedback nhận được, phản hồi ngắn, và feedback đã gửi cùng phản hồi từ người được chấm.",
+      "Mở khóa thành tích và xem thống kê hồ sơ theo thời gian.",
+      "Cảnh báo khi chênh Elo giữa hai đội quá lớn hoặc khi bạn đang giữ slot phòng đang hoạt động.",
+    ],
+    sectionHostTitle: "Dành cho chủ phòng",
+    hostFeatures: [
+      "Tạo phòng: chọn sân, khung giờ, thể thức (5v5, 7v7, 11v11), tên và mô tả.",
+      "Lưu mẫu tạo phòng trên server và áp dụng lại để mở trận tương tự nhanh hơn.",
+      "Phòng công khai hoặc phòng riêng có mật khẩu.",
+      "Mời/kick người chơi không phù hợp và chuyển quyền chủ phòng khi cần.",
+      "Cập nhật thông tin trận trước giờ bóng lăn và gửi link mời tham gia.",
+    ],
+    sectionPlatformTitle: "Nền tảng & công bằng",
+    platformFeatures: [
+      "Điểm xếp hạng phản ánh kết quả trận, kỳ vọng theo chênh lệch kỹ năng, feedback đồng đội và tín hiệu hành vi theo thời gian.",
+      "Nội dung nhận xét có thể được phân tích cảm xúc để khuyến khích văn hóa chơi tích cực.",
+      "Tín hiệu tin cậy (báo cáo, điểm danh, thói quen feedback) hỗ trợ cộng đồng thi đấu lành mạnh.",
+    ],
+    sectionTermsTitle: "Điều khoản sử dụng",
+    sectionTermsBody:
+      "Khi dùng {{appName}} bạn cam kết cung cấp thông tin tài khoản trung thực, tuân thủ nội quy sân và chủ phòng, và tôn trọng người chơi khác. Lạm dụng, quấy rối, gian lận hoặc thao túng thanh toán/xếp hạng có thể bị cảnh báo, tạm khóa hoặc chấm dứt tài khoản theo quyết định của đơn vị vận hành.",
+    sectionTermsBody2:
+      "Tính năng được triển khai theo giai đoạn; một số mục phụ thuộc cấu hình backend và có thể chưa có trên mọi bản build. Chi tiết xử lý dữ liệu xem chính sách bảo mật khi được công bố trong app.",
+    footerMeta:
+      "Kickify · AI-Driven Team Formation and Player Evaluation System",
   },
   changePassword: {
     title: "Đổi mật khẩu",

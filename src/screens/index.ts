@@ -12,6 +12,7 @@ export { default as ProfileScreen } from "../features/profile/screens/ProfileScr
 export { default as PersonalPageScreen } from "../features/profile/screens/PersonalPageScreen";
 export { default as ProfileDetailScreen } from "../features/profile/screens/ProfileDetailScreen";
 export { default as AchievementsScreen } from "../features/profile/screens/AchievementsScreen";
+export { default as AppAboutTermsScreen } from "../features/profile/screens/AppAboutTermsScreen";
 
 // Rooms Feature Screens
 export { default as RoomInformation } from "../features/rooms/screens/RoomInformation";

@@ -1,6 +1,6 @@
 const en = {
   common: {
-    appName: "Neon Football App",
+    appName: "Kickify",
     success: "Success",
     error: "Error",
     language: {
@@ -428,8 +428,56 @@ const en = {
     language: "Language",
     interface: "Dark Mode",
     privacyPolicy: "Privacy policy",
-    termsOfService: "Terms of service",
+    termsOfService: "Terms & app introduction",
     goToChats: "Go to chats",
+  },
+  appIntro: {
+    screenTitle: "About & terms",
+    projectCode: "AI-Driven Team Formation and Player Evaluation System",
+    projectName:
+      "AI-Driven Football Team Formation and Player Evaluation System",
+    projectNameVi:
+      "Hệ thống hình thành đội đá bóng và đánh giá người tham gia dựa trên AI",
+    tagline:
+      "Organize football matches, fair rankings, social play — in one mobile experience.",
+    sectionContextTitle: "Why this app exists",
+    sectionContextBody:
+      "{{appName}} replaces messy group chats with structured match rooms, transparent Elo-style ratings, and social tools so players find balanced games, venues get bookings, and feedback improves teamwork. This mobile client focuses on players and match hosts; venue owners and admins use separate web consoles.",
+    sectionPlayerTitle: "For players",
+    playerFeatures: [
+      "Sign up with email and OTP verification; sign in with email/password or Google.",
+      "Edit your profile (avatar, bio, position, shirt number) and choose which notifications you want.",
+      "Browse and join match rooms near football venues, leave when plans change, and chat inside the room before kickoff.",
+      "Confirm attendance and pay your share of the field deposit when the host enables payment collection.",
+      "As captain, set team formation and lineups so everyone knows who plays where.",
+      "See Elo-style leaderboards and a breakdown of rating changes after matches; review match history on your personal page.",
+      "Add friends, accept requests, share room invites, and use private one-to-one chat.",
+      "Use the social feed: create posts, comment, like, and get notified when others interact with your content.",
+      "After a match, rate teammates with stars and comments; read feedback others left for you, reply in short text, and see feedback you gave plus player replies.",
+      "Earn achievements and view profile stats as you keep playing.",
+      "Get alerts for unbalanced Elo between teams and when you already hold an active room slot.",
+    ],
+    sectionHostTitle: "For match hosts (this app)",
+    hostFeatures: [
+      "Create a room by picking venue, field, date/time, format (5v5, 7v7, 11v11), name, and description.",
+      "Save a create-room preset on the server and apply it later to set up similar matches faster.",
+      "Run public pick-up games or private rooms protected by a password.",
+      "Remove participants or transfer the host role if you need to hand over organizing.",
+      "Update editable details before the match and share links so friends can join quickly.",
+    ],
+    sectionPlatformTitle: "Platform & fairness",
+    platformFeatures: [
+      "Ratings combine match outcomes, expected results from skill gaps, teammate feedback, and behavior signals so competition stays fair over time.",
+      "Comments can be analyzed for tone so qualitative feedback supports positive play, not just raw scores.",
+      "Trust-style signals (reports, attendance, fair feedback habits) help highlight reliable, sporting players.",
+    ],
+    sectionTermsTitle: "Terms of use",
+    sectionTermsBody:
+      "By using {{appName}} you agree to provide accurate account information, follow venue and host rules, and treat other players respectfully. Misuse, harassment, fraud, or attempts to manipulate ratings or payments may lead to warnings, suspension, or account termination at the operator’s discretion.",
+    sectionTermsBody2:
+      "Features roll out gradually; some items above depend on backend configuration and may not be available in every build. For data handling details, refer to the privacy policy when it is published in-app.",
+    footerMeta:
+      "Kickify · AI-Driven Team Formation and Player Evaluation System",
   },
   changePassword: {
     title: "Change Password",

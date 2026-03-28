@@ -34,6 +34,8 @@ export type RootStackParamList = {
   Chat: { chatId: string; chatName: string };
   RoomChat: { roomId: string };
   Profile: undefined;
+  /** Giới thiệu app, tính năng mobile & tóm tắt điều khoản (Capstone register) */
+  AppAboutTerms: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };
   CreatePost: undefined;
