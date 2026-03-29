@@ -13,7 +13,7 @@ export const roomsKeys = {
   list: (filters: RoomFilters) => [...roomsKeys.lists(), filters] as const,
 
   myRooms: () => [...roomsKeys.all, 'my-rooms'] as const,
-
+  historyRooms: (userId: string) => [...roomsKeys.all, 'history-rooms', userId] as const,
   // List of room by user
   listByUser: (userId: string) => [...roomsKeys.lists(), userId] as const,
   

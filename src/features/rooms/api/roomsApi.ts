@@ -51,6 +51,11 @@ export const roomsApi = {
     return data as unknown as MyRoomsResponse;
   },
 
+  getHistoryRooms: async (userId: string): Promise<MyRoomsResponse> => {
+    const data = await apiClient.get(`/match-rooms/player/${userId}`);
+    return data as unknown as MyRoomsResponse;
+  },
+
   /**
    * Get full room information including venue, teams, and players
    */

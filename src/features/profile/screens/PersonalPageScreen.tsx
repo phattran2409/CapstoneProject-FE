@@ -43,7 +43,10 @@ import {
   useRemoveFriend,
   useRespondToFriendRequest,
 } from "@/features/friends/hooks";
-import { useMyRooms } from "@/features/rooms/hooks/useMatchRooms";
+import {
+  useMyRooms,
+  useHistoryRooms,
+} from "@/features/rooms/hooks/useMatchRooms";
 import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
 import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
@@ -148,7 +151,11 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     pageSize: 10,
   });
 
-  // Matches data - only fetch for current user
+  const myRoomsQuery = useMyRooms({ enabled: isCurrentUser });
+  const historyRoomsQuery = useHistoryRooms(userId, {
+    enabled: !isCurrentUser && !!userId,
+  });
+
   const {
     myRooms: matches,
     loading: matchesLoading,
@@ -158,7 +165,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     hasMore: matchesHasMore,
     refresh: matchesRefresh,
     loadMore: matchesLoadMore,
-  } = useMyRooms();
+  } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
   const stats = {
     matches: 88,
@@ -279,7 +286,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const handleViewDetail = (matchId: string) => {
     setModalVisible(false);
     setSelectedMatch(null);
-    navigation.navigate("RoomInformation", { roomId: matchId });
+    navigation.navigate("RoomInformation", {
+      roomId: matchId,
+      viewAsOthersMatchHistory: !isCurrentUser,
+    });
   };
 
   const handleAddFriend = () => {

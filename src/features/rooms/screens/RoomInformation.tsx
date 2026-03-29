@@ -56,7 +56,11 @@ interface RoomInformationScreenProps {
 const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { roomId, venuePhotos: venuePhotosFromParams } = route?.params ?? {};
+  const {
+    roomId,
+    venuePhotos: venuePhotosFromParams,
+    viewAsOthersMatchHistory = false,
+  } = route?.params ?? {};
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
   const handleGoBack = () => {
@@ -836,6 +840,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         onJoinMatch={handleJoinMatch}
         onNavigateToFeedbackIntro={handleNavigateToFeedbackIntro}
         onNavigateToEloBreakdown={handleNavigateToEloBreakdown}
+        currentUserId={user?.userId ?? null}
+        isViewingOthersMatchHistory={viewAsOthersMatchHistory}
       />
     </ThemedSafeAreaView>
   );

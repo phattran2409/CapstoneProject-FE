@@ -23,7 +23,12 @@ export type RootStackParamList = {
   CreateRoomPreset: undefined;
   VenueSelection: { matchFormat?: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' } | undefined;
   VenueDetail: { venueId: string };
-  RoomInformation: { roomId: string; venuePhotos?: VenuePhoto[] };
+  RoomInformation: {
+    roomId: string;
+    venuePhotos?: VenuePhoto[];
+    /** Mở từ lịch sử đấu trên profile người khác — ẩn hành động cá nhân (Elo / đánh giá) */
+    viewAsOthersMatchHistory?: boolean;
+  };
   Team: { roomId: string; team: "A" | "B" };
   PersonalPage: { userId?: string };
   ProfileDetail: { player: User };
