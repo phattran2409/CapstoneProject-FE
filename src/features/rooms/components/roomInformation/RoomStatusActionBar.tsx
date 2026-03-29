@@ -192,6 +192,31 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
     );
   }
 
+  if (isViewingOthersMatchHistory) {
+    return (
+      <View style={containerStyle}>
+        <TouchableOpacity
+          style={[
+            actionStyles.joinButton,
+            { backgroundColor: theme.colors.border, shadowColor: 'transparent' },
+          ]}
+          disabled
+        >
+          <ThemedText
+            size="l"
+            weight="bold"
+            style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}
+          >
+            {t(
+              'roomDetail.statusActions.historyViewReadOnly',
+              'Đang xem trận từ lịch sử người chơi khác',
+            )}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={containerStyle}>
       <TouchableOpacity

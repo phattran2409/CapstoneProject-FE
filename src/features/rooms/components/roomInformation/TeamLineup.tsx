@@ -20,6 +20,8 @@ interface TeamLineupProps {
   pendingTeamAssignment: TeamAssignment | null;
   onOpenPositionModal: (teamAssignment: TeamAssignment) => void;
   onParticipantPress?: (userId: string) => void;
+  /** Xem phòng từ lịch sử người chơi khác — tắt kick / ô trống join */
+  roomActionsDisabled?: boolean;
 }
 
 export const TeamLineup: React.FC<TeamLineupProps> = ({
@@ -35,9 +37,11 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   pendingTeamAssignment,
   onOpenPositionModal,
   onParticipantPress,
+  roomActionsDisabled = false,
 }) => {
   const { theme } = useTheme();
   const slotsPerTeam = displayRoom.totalSlots / 2;
+  const canHostActOnParticipants = isHost && !roomActionsDisabled;
 
   return (
     <View style={styles.teamLineupSection}>
@@ -89,7 +93,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               key={participant.participantId}
               participant={participant}
               teamColor="#4CAF50"
-              isHost={isHost}
+              isHost={canHostActOnParticipants}
               currentUserId={currentUserId}
               isKicking={isKicking}
               onKickPlayer={onKickPlayer}
@@ -101,6 +105,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               teamAssignment="A"
               teamColor="#4CAF50"
               isJoining={isUpdatingParticipant && pendingTeamAssignment === 'A'}
+              disabled={roomActionsDisabled}
               onPress={() => onOpenPositionModal('A')}
             />
           )}
@@ -134,7 +139,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               key={participant.participantId}
               participant={participant}
               teamColor="#2196F3"
-              isHost={isHost}
+              isHost={canHostActOnParticipants}
               currentUserId={currentUserId}
               isKicking={isKicking}
               onKickPlayer={onKickPlayer}
@@ -146,6 +151,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               teamAssignment="B"
               teamColor="#2196F3"
               isJoining={isUpdatingParticipant && pendingTeamAssignment === 'B'}
+              disabled={roomActionsDisabled}
               onPress={() => onOpenPositionModal('B')}
             />
           )}
@@ -171,7 +177,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
                 key={participant.participantId}
                 participant={participant}
                 teamColor="#9E9E9E"
-                isHost={isHost}
+                isHost={canHostActOnParticipants}
                 currentUserId={currentUserId}
                 isKicking={isKicking}
                 onKickPlayer={onKickPlayer}

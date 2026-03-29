@@ -61,6 +61,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     venuePhotos: venuePhotosFromParams,
     viewAsOthersMatchHistory = false,
   } = route?.params ?? {};
+  /** Mở phòng từ lịch sử profile người khác — chỉ xem, không thao tác phòng */
+  const roomActionsBlocked = viewAsOthersMatchHistory;
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
   const handleGoBack = () => {
@@ -273,6 +275,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   // ✅ Handle open position selection modal
   const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
+    if (roomActionsBlocked) return;
+
     if (!user) {
       showInfo(t('roomDetail.loginRequired'), t('roomDetail.loginRequiredDesc'));
       return;
@@ -299,6 +303,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   // ✅ Handle position selected from modal - Cập nhật team assignment và position
   const handlePositionSelected = (position: PlayerPosition) => {
+    if (roomActionsBlocked) return;
     if (!pendingTeamAssignment || !displayRoom) return;
 
     // Gọi PUT /participants/me để cập nhật team và position
@@ -336,6 +341,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   };
 
   const handleJoinMatch = () => {
+    if (roomActionsBlocked) return;
+
     if (!currentUserParticipant) {
       showInfo(t('roomDetail.joinFirstRoom'), t('roomDetail.joinFirstRoomDesc'));
       return;
@@ -353,6 +360,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   // ✅ Handle kick player (host only)
   const handleKickPlayer = (userId: string, playerName: string) => {
+    if (roomActionsBlocked) return;
+
     showDanger(
       t('roomDetail.kickTitle'),
       t('roomDetail.kickMessage', { name: playerName }),
@@ -401,6 +410,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   // ✅ Handle leave room
   const handleLeaveRoom = () => {
+    if (roomActionsBlocked) return;
+
     showConfirm(
       t('roomDetail.leaveRoomTitle', 'Rời phòng'),
       t('roomDetail.leaveRoomMessage', 'Bạn có chắc muốn rời khỏi phòng này?'),
@@ -431,6 +442,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   const handleNavigateToFeedbackIntro = async () => {
     if (!displayRoom || !user?.userId) return;
+    if (roomActionsBlocked) return;
 
     if (feedbackSession?.roomId === displayRoom.roomId) {
       switch (feedbackSession.currentStep) {
@@ -500,6 +512,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   };
 
   const handleNavigateToEloBreakdown = () => {
+    if (roomActionsBlocked) return;
     navigation?.navigate('EloBreakdown');
   };
 
@@ -570,7 +583,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             </ThemedText>
           </View>
         </View>
-        {displayRoom.status === 'Open' && (
+        {displayRoom.status === 'Open' && !roomActionsBlocked && (
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => {
@@ -756,6 +769,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             pendingTeamAssignment={pendingTeamAssignment}
             onOpenPositionModal={handleOpenPositionModal}
             onParticipantPress={(userId) => navigation?.navigate('PersonalPage', { userId })}
+            roomActionsDisabled={roomActionsBlocked}
           />
             </>
           )}
@@ -804,7 +818,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       />
 
       {/* Host Menu Modal */}
-      {isHost && (
+      {isHost && !roomActionsBlocked && (
         <HostMenuModal
           visible={showMenuModal}
           handleShowMenuModal={() => setShowMenuModal(false)}
