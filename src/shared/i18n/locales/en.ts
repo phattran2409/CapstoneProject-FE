@@ -567,6 +567,8 @@ const en = {
     reportIssue: "Report Issue",
   },
   chat: {
+    empty: "No chats yet",
+    inviteFriends: "Start chatting",
     searchPlaceholder: "Search chat",
     title: "Chats",
     you: "You",
@@ -578,6 +580,7 @@ const en = {
     online: "Online",
     offline: "Offline",
     isTyping: "is typing",
+    noConversations: "No conversations yet",
   },
   onboarding_1: {
     skip: "Skip",

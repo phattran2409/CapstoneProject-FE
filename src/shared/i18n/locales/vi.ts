@@ -574,6 +574,9 @@ const vi = {
     online: "Đang online",
     offline: "Offline",
     isTyping: "đang nhập",
+    empty: "Không có trò chuyện nào",
+    inviteFriends: "Hãy bắt đầu trò chuyện",
+    noConversations: "Không có cuộc hội thoại nào",
   },
   onboarding_1: {
     title: "Đặt Sân Chỉ Trong Vài Giây",
