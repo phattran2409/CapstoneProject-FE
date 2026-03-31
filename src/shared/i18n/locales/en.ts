@@ -123,6 +123,10 @@ const en = {
     title: "Matches",
     noMatches: "No matches yet",
     passwordInvalid: "Incorrect password. Please try again.",
+    myRoomsTitle: "My Match Rooms",
+    manageBadge: "MANAGE",
+    detailButton: "Details",
+    privateLabel: "Private",
   },
   tabs: {
     home: "Home",

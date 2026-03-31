@@ -43,8 +43,16 @@ export const roomsApi = {
     return data as unknown as MatchRoomsResponse;
   },
 
-  getMyRooms: async (): Promise<MyRoomsResponse> => {
-    const data = await apiClient.get("/match-rooms/mine");
+  getMyRooms: async (
+    filters?: Pick<MatchRoomFilters, "availableOnly">,
+  ): Promise<MyRoomsResponse> => {
+    const params = {
+      ...(filters?.availableOnly !== undefined
+        ? { availableOnly: filters.availableOnly }
+        : {}),
+    };
+
+    const data = await apiClient.get("/match-rooms/mine", { params });
     return data as unknown as MyRoomsResponse;
   },
 

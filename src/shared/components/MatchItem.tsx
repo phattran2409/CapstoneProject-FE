@@ -6,10 +6,11 @@
 import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { useTheme } from "@/shared/theme";
-import { ThemedText, ThemedIcon } from "@/shared/components/themed";
+import { ThemedText } from "@/shared/components/themed";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getImageSource } from "../utils/imageSource";
 import { MatchRoomStatus } from "@/features/rooms";
+import { useTranslation } from "react-i18next";
 
 export interface MatchItemData {
   id: string;
@@ -27,7 +28,7 @@ export interface MatchItemData {
 
 export interface MatchItemProps {
   match: MatchItemData;
-  variant?: "card" | "list" | "compact";
+  variant?: "card" | "list" | "compact" | "third";
   onPress?: (matchId: string) => void;
   showStatus?: boolean;
 }
@@ -41,6 +42,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
   showStatus = true,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   // const imageSource = match.image?.trim()
   //   ? { uri: match.image.trim() }
@@ -106,12 +108,12 @@ const MatchItem: React.FC<MatchItemProps> = ({
           color={theme.colors.textSecondary}
         />
         <ThemedText size="xs" weight="semiBold" style={styles.privateBadgeText}>
-          Riêng tư
+          {t("matches.privateLabel", "Riêng tư")}
         </ThemedText>
       </View>
     ) : null;
 
-  if (variant === "card") {
+    if (variant === "card") {
     return (
       <TouchableOpacity
         style={[
@@ -151,6 +153,87 @@ const MatchItem: React.FC<MatchItemProps> = ({
             </ThemedText>
           )}
         </View>
+      </TouchableOpacity>
+    );
+  }
+
+  if (variant === "third") {
+    const startTime = match.time?.split("-")?.[0]?.trim() ?? "";
+    const dateLabel = match.date ?? "";
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.thirdContainer,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
+        onPress={() => onPress?.(match.id)}
+        activeOpacity={0.9}
+      >
+        <View style={styles.thirdHeaderRow}>
+          <ThemedText size="l" weight="bold" style={styles.thirdTitle}>
+            {match.title}
+          </ThemedText>
+
+          {/* <View
+            style={[
+              styles.thirdManagePill,
+              { backgroundColor: theme.colors.neonGreen },
+            ]}
+          >
+            <ThemedText
+              size="xs"
+              weight="bold"
+              style={{ color: theme.colors.background }}
+            >
+              {t("matches.manageBadge", "QUẢN LÝ")}
+            </ThemedText>
+          </View> */}
+        </View>
+
+        <View style={styles.thirdMetaRow}>
+          <Ionicons name="people-outline" size={18} color={theme.colors.textSecondary} />
+          <ThemedText variant="secondary" size="s">
+            {match.format} {match.players ? `• ${match.players}` : ""}
+          </ThemedText>
+        </View>
+
+        <View style={styles.thirdDivider} />
+
+        <View style={styles.thirdInfoRow}>
+          <Ionicons name="time-outline" size={18} color={theme.colors.textSecondary} />
+          <ThemedText variant="secondary" size="m">
+            {startTime}
+            {dateLabel ? ` - ${dateLabel}` : ""}
+          </ThemedText>
+        </View>
+
+        <View style={styles.thirdInfoRow}>
+          <Ionicons name="location-outline" size={18} color={theme.colors.textSecondary} />
+          <ThemedText variant="secondary" size="m" numberOfLines={1}>
+            {match.venue}
+          </ThemedText>
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.thirdDetailButton,
+            { backgroundColor: theme.colors.neonGreen },
+          ]}
+          onPress={() => onPress?.(match.id)}
+          activeOpacity={0.9}
+        >
+          <ThemedText
+            size="m"
+            weight="bold"
+            style={{ color: theme.colors.background }}
+          >
+            {t("matches.detailButton", "Chi tiết")}
+          </ThemedText>
+        </TouchableOpacity>
       </TouchableOpacity>
     );
   }
@@ -350,6 +433,54 @@ const styles = StyleSheet.create({
   },
   compactStatus: {
     marginLeft: 8,
+  },
+  // Third (screenshot-matching) variant styles
+  thirdContainer: {
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 16,
+    width: 340,
+    maxWidth: "100%",
+  },
+  thirdHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  thirdTitle: {
+    flex: 1,
+  },
+  thirdManagePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thirdMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+  thirdDivider: {
+    height: 1,
+    backgroundColor: "#2e2e2e",
+    marginVertical: 12,
+  },
+  thirdInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 6,
+  },
+  thirdDetailButton: {
+    marginTop: 14,
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

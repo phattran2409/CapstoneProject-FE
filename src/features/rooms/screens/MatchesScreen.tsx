@@ -12,6 +12,7 @@ import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
+import { useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
 import { PrivateRoomPasswordModal } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
 import { FilterRoomMatch } from '../components/FilterRoomMatch';
@@ -19,6 +20,7 @@ import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter'
 import { OptionFilter } from '@/features/venues';
 import { useToast } from '@/shared/toast';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { toMatchItemData } from '../utils/matchItemMapper';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -28,37 +30,6 @@ type MatchesScreenNavigationProp = CompositeNavigationProp<
 interface MatchesScreenProps {
   navigation: MatchesScreenNavigationProp;
 }
-
-// Helper function to convert MatchRoom to MatchItemData
-const convertMatchRoomToMatchItemData = (room: MatchRoom): MatchItemData => {
-  // Convert matchFormat to display format
-  const formatMap: Record<string, string> = {
-    'FiveVsFive': '5vs5',
-    'SevenVsSeven': '7vs7',
-    'ElevenVsEleven': '11vs11',
-  };
- 
-  // Format date
-  const matchDate = new Date(room.matchDate);
-  const formattedDate = matchDate.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-
-  return {
-    id: room.roomId,
-    title: room.roomName,
-    format: formatMap[room.matchFormat] || room.matchFormat,
-    players: `${room.filledSlots}/${room.totalSlots}`,
-    image: room.venuePhotos[0]?.photoUrl || '',
-    status: room.status,
-    date: formattedDate,
-    venue: room.venueName,
-    time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
-    isPrivate: room.isPrivate ?? (room.visibility === 'Private'),
-  };
-};
 
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -114,23 +85,43 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     }
   );
 
-  const isLoading = loadingRecommended || loadingNearby;
+  const {
+    myRooms: myRoomsData,
+    loading: loadingMyRooms,
+    refreshing: refreshingMyRooms,
+    refresh: refreshMyRooms,
+  } = useMyRooms({ availableOnly: true });
+
+  // If only "my rooms" has data and match lists are still loading, we still render UI.
+  const isLoading =
+    (loadingRecommended || loadingNearby || loadingMyRooms) &&
+    recommendedRooms.length === 0 &&
+    nearbyRooms.length === 0 &&
+    (myRoomsData?.length ?? 0) === 0;
 
   // Convert API data to MatchItemData format
   const featuredMatches = useMemo(() => {
-    return recommendedRooms.map(convertMatchRoomToMatchItemData);
+    return recommendedRooms.map(toMatchItemData);
   }, [recommendedRooms]);
 
   const listMatches = useMemo(() => {
-    return nearbyRooms.map(convertMatchRoomToMatchItemData);
+    return nearbyRooms.map(toMatchItemData);
   }, [nearbyRooms]);
 
+  const myRoomsMatches = useMemo(() => {
+    return (myRoomsData ?? []).map(toMatchItemData).filter((m) => !!m.id);
+  }, [myRoomsData]);
+
   const allMatches = useMemo(
-    () => [...featuredMatches, ...listMatches],
-    [featuredMatches, listMatches]
+    () => [...myRoomsMatches, ...featuredMatches, ...listMatches],
+    [myRoomsMatches, featuredMatches, listMatches]
   );
   
-  const isEmptyMatches = !isLoading && featuredMatches.length === 0 && listMatches.length === 0;
+  const isEmptyMatches =
+    !isLoading &&
+    featuredMatches.length === 0 &&
+    listMatches.length === 0 &&
+    myRoomsMatches.length === 0;
   
   const handleMatchPress = useCallback((matchId: string) => {
     const match = allMatches.find(m => m.id === matchId);
@@ -155,11 +146,16 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
   // ✅ Hook để join room (tự động thêm vào Unassigned)
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
- const toast = useToast();
+  const toast = useToast();
   const handleViewDetail = (matchId: string) => {
     const match = allMatches.find((m) => m.id === matchId);
-    const room = [...recommendedRooms, ...nearbyRooms].find((r) => r.roomId === matchId);
-    const venuePhotos = room?.venuePhotos;
+    const room = [
+      ...recommendedRooms,
+      ...nearbyRooms,
+      ...(myRoomsData ?? []),
+    ].find((r: any) => r.roomId === matchId);
+
+    const venuePhotos = (room as any)?.venuePhotos;
     const params = { roomId: matchId, ...(venuePhotos?.length ? { venuePhotos } : {}) };
 
     if (match?.isPrivate) {
@@ -229,6 +225,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const handleCloseFilter = () => {
     setFilterVisible(false);
   }
+
+
   return (
     <ThemedSafeAreaView style={{ flex: 1 , position: 'relative'}}>
       {/* Header */}
@@ -275,8 +273,11 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           nestedScrollEnabled={true}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
-              onRefresh={refresh}
+              refreshing={refreshing || refreshingMyRooms}
+              onRefresh={() => {
+                refresh();
+                refreshMyRooms();
+              }}
               colors={[theme.colors.neonGreen]}
               tintColor={theme.colors.neonGreen}
             />
@@ -288,6 +289,19 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             </View>
           ) : (
             <>
+              {/* My rooms (Phòng đấu của tôi) */}
+              {myRoomsMatches.length > 0 && (
+                <MatchList
+                  matches={myRoomsMatches}
+                  title={t('matches.myRoomsTitle')}
+                  variant="horizontal"
+                  itemVariant="third"
+                  onMatchPress={handleMatchPress}
+                  showStatus={false}
+                  containerStyle={{ marginBottom: theme.spacing.xxl }}
+                />
+              )}
+
               {/* Featured Matches Section (không dùng vị trí) */}
               {featuredMatches.length > 0 && (
                 <MatchList
@@ -296,7 +310,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                   variant="horizontal"
                   itemVariant="card"
                   onMatchPress={handleMatchPress}
-                  showStatus={true}
+                  showStatus={false}
                 />
               )}
 
@@ -316,7 +330,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                     variant="vertical"
                     itemVariant="list"
                     onMatchPress={handleMatchPress}
-                    showStatus={true}
+                    showStatus={false}
                     containerStyle={{ marginBottom: theme.spacing.xxl * 2 }}
                   />
                 </>
@@ -368,6 +382,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
                   </View>
                 </>
               )}
+              
             </>
           )}
         </ScrollView>

@@ -1,5 +1,7 @@
 import type { RoomFilters, MatchRoomFilters } from '../types/room.types';
 
+type MyRoomsFilters = Pick<MatchRoomFilters, 'availableOnly'>;
+
 /**
  * Query keys for React Query
  * Hierarchical structure for easy invalidation
@@ -12,7 +14,9 @@ export const roomsKeys = {
   lists: () => [...roomsKeys.all, 'list'] as const,
   list: (filters: RoomFilters) => [...roomsKeys.lists(), filters] as const,
 
-  myRooms: () => [...roomsKeys.all, 'my-rooms'] as const,
+  myRoomsBase: () => [...roomsKeys.all, 'my-rooms'] as const,
+  myRooms: (filters?: MyRoomsFilters) =>
+    [...roomsKeys.myRoomsBase(), filters] as const,
 
   // List of room by user
   listByUser: (userId: string) => [...roomsKeys.lists(), userId] as const,

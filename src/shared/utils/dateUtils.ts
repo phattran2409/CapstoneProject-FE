@@ -107,6 +107,31 @@ export const formatDateDDMMYYYY = (yyyyMmDd: string): string => {
   return new Date(yyyyMmDd).toLocaleDateString("vi-VN");
 };  
 
+/**
+ * Format date with Vietnamese "today" label.
+ * - If date is today => "Hôm nay"
+ * - Else => dd/mm/yyyy (2-digit day/month)
+ */
+export const formatDateWithTodayLabel = (
+  dateInput: string | Date | number,
+): string => {
+  if (dateInput === undefined || dateInput === null) return "";
+
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  const isTodayLabel = date.toDateString() === now.toDateString();
+
+  return isTodayLabel
+    ? "Hôm nay"
+    : date.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+};
+
 export const getMaxSelectableDate = () => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
