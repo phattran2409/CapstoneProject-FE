@@ -443,6 +443,7 @@ const en = {
     matchInvitations: "Notifications",
     matchNotification: "Match Notification",
     friendshipNotification: "Friendship Notification",
+    chatNotification: "Chat Notification",
     postNotification: "Post Notification",
     newsUpdates: "News & updates",
     application: "Application",

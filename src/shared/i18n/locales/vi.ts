@@ -440,6 +440,7 @@ const vi = {
     matchInvitations: "Thông báo",
     matchNotification: "Thông báo trận đấu",
     friendshipNotification: "Thông báo lời mời kết bạn",
+    chatNotification: "Thông báo trò chuyện",
     postNotification: "Thông báo bài viết",
     newsUpdates: "Tin tức & cập nhật",
     application: "Ứng dụng",

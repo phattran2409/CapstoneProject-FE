@@ -57,11 +57,13 @@ export const useUpdateNotificationSettings = () => {
       matchRoom,
       friendship,
       post,
+      chat,
     }: {
       matchRoom: boolean;
       friendship: boolean;
       post: boolean;
-    }) => updateNotificationSettings(matchRoom, friendship, post),
+      chat: boolean;
+    }) => updateNotificationSettings(matchRoom, friendship, post, chat),
     onSuccess: (response) => {
       queryClient.setQueryData(
         profileKeys.notificationPreferences(),

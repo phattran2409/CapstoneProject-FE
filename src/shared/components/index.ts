@@ -50,3 +50,5 @@ export { RankBadge, getRankInfoFromElo } from "./RankBadge";
 export type { RankBadgeProps, RankInfo, RankTier } from "./RankBadge";
 export { default as ReportModal } from "./ReportModal";
 export type { ReportModalProps, ReportType } from "./ReportModal";
+export { default as HorizontalScrollWithHint } from "./HorizontalScrollWithHint";
+export type { HorizontalScrollWithHintProps } from "./HorizontalScrollWithHint";

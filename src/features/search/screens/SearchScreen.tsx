@@ -75,6 +75,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     users,
     loading: loadingPlayers,
     loadingMore: loadingMorePlayers,
+    hasMore: hasMorePlayers,
     loadMore: loadMorePlayers,
     refresh: refreshPlayers,
     refreshing: refreshingPlayers,
@@ -90,6 +91,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     posts,
     loading: loadingPosts,
     loadingMore: loadingMorePosts,
+    hasMore: hasMorePosts,
     loadMore: loadMorePosts,
     refresh: refreshPosts,
     refreshing: refreshingPosts,
@@ -142,15 +144,15 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     }
   };
 
-  // Handle load more
+  // Handle load more — only call if that source still has more pages
   const handleLoadMore = () => {
     if (activeFilter === "all") {
-      loadMorePlayers();
-      loadMorePosts();
+      if (hasMorePlayers && !loadingMorePlayers) loadMorePlayers();
+      if (hasMorePosts && !loadingMorePosts) loadMorePosts();
     } else if (activeFilter === "players") {
-      loadMorePlayers();
+      if (hasMorePlayers && !loadingMorePlayers) loadMorePlayers();
     } else if (activeFilter === "posts") {
-      loadMorePosts();
+      if (hasMorePosts && !loadingMorePosts) loadMorePosts();
     }
   };
 

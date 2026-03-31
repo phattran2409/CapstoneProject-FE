@@ -109,12 +109,14 @@ export const updateNotificationSettings = async (
   matchRoom: boolean,
   friendship: boolean,
   post: boolean,
+  chat: boolean,
 ): Promise<ApiResponse> => {
   try {
     const response = await apiClient.put(`/notification-preferences`, {
       matchRoom,
       friendship,
       post,
+      chat,
     });
     console.log("response :", response);
     return response.data;
@@ -128,6 +130,7 @@ export interface NotificationPreferences {
   matchRoom: boolean;
   friendship: boolean;
   post: boolean;
+  chat: boolean;
 }
 
 export const getNotificationSettings =
