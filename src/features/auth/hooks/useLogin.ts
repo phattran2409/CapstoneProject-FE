@@ -20,7 +20,7 @@ import type { LoginRequest } from '../types/auth.types';
  * );
  */
 export const useLogin = () => {
-  const { setUser, setToken } = useAuthStore();
+  const { setUser, setToken, setPendingLoginSuccessToast } = useAuthStore();
 
   return useMutation({
     mutationFn: (request: LoginRequest) => authApi.login(request),
@@ -35,8 +35,13 @@ export const useLogin = () => {
       await setRefreshToken(refreshTokenValue);
       
       // Update auth store
-      setUser(response.data || null);
+      const userData = response.data || null;
+      setUser(userData);
       setToken(accessToken);
+      if (userData?.isEmailVerified) {
+        // Toast shown on Home after stack switches (Login unmounts immediately)
+        setPendingLoginSuccessToast(true);
+      }
     },
     
     onError: async (error) => {

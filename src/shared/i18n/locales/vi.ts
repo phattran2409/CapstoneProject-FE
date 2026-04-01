@@ -123,6 +123,10 @@ const vi = {
     title: "Trận đấu",
     noMatches: "Chưa có trận đấu nào",
     passwordInvalid: "Mật khẩu không đúng. Vui lòng thử lại.",
+    myRoomsTitle: "Phòng đấu của tôi",
+    manageBadge: "QUẢN LÝ",
+    detailButton: "Chi tiết",
+    privateLabel: "Riêng tư",
   },
   tabs: {
     home: "Trang chủ",
@@ -702,6 +706,9 @@ const vi = {
     online: "Đang hoạt động",
     offline: "Đang không hoạt động",
     isTyping: "đang nhập",
+    empty: "Không có trò chuyện nào",
+    inviteFriends: "Hãy bắt đầu trò chuyện",
+    noConversations: "Không có cuộc hội thoại nào",
   },
   onboarding_1: {
     title: "Đặt Sân Chỉ Trong Vài Giây",

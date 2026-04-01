@@ -39,6 +39,10 @@ export const useCreateRoom = () => {
         queryKey: roomsKeys.matchRooms(),
         exact: false,
       });
+      queryClient.invalidateQueries({
+        queryKey: roomsKeys.myRoomsBase(),
+        exact: false,
+      });
     },
   });
 };

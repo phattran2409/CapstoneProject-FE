@@ -57,12 +57,15 @@ export const useMatchRooms = (filters?: Omit<MatchRoomFilters, 'page' | 'pageSiz
   };
 };
 
-export const useMyRooms = (options?: { enabled?: boolean }) => {
+export const useMyRooms = (
+  filters?: Pick<MatchRoomFilters, "availableOnly">,
+  options?: { enabled?: boolean }
+) => {
   const enabled = options?.enabled ?? true;
   const pagination = usePagination<MyRoom>({
-    queryKey: roomsKeys.myRooms(),
+    queryKey: roomsKeys.myRooms(filters),
     fetchFunction: async () => {
-      const result = await roomsApi.getMyRooms();
+      const result = await roomsApi.getMyRooms(filters);
       return {
         data: result.data.rooms,
         totalPages: result.data.totalPages,

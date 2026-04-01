@@ -172,7 +172,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             t('createRoom.successMessage'),
             async () => {
               if (newRoom?.roomId) {
-                await setActiveRoom(newRoom.roomId);
+                // await setActiveRoom(newRoom.roomId);
                 // Reset stack: đảm bảo Back từ RoomInformation luôn về MatchesScreen
                 // bất kể trước đó VenueSelection hay bao nhiêu screen còn trong stack
                 navigation?.dispatch(

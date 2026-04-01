@@ -28,12 +28,14 @@ const createWrapper = () => {
 describe('useLogin', () => {
   const mockSetUser = jest.fn();
   const mockSetToken = jest.fn();
+  const mockSetPendingLoginSuccessToast = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useAuthStore as unknown as jest.Mock).mockReturnValue({
       setUser: mockSetUser,
       setToken: mockSetToken,
+      setPendingLoginSuccessToast: mockSetPendingLoginSuccessToast,
     });
   });
 
@@ -44,6 +46,7 @@ describe('useLogin', () => {
         refreshToken: 'refresh-token-456',
         id: 'user-1',
         email: 'user@example.com',
+        isEmailVerified: true,
       },
     };
     (authApi.login as jest.Mock).mockResolvedValue(mockResponse);
@@ -64,6 +67,7 @@ describe('useLogin', () => {
     expect(setRefreshToken).toHaveBeenCalledWith('refresh-token-456');
     expect(mockSetUser).toHaveBeenCalledWith(mockResponse.data);
     expect(mockSetToken).toHaveBeenCalledWith('access-token-123');
+    expect(mockSetPendingLoginSuccessToast).toHaveBeenCalledWith(true);
   });
 
   it('should clear auth state on error', async () => {

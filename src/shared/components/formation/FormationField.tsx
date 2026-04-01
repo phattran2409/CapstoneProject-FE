@@ -153,6 +153,28 @@ const FormationField = forwardRef<FormationFieldRef, FormationFieldProps>(
       setAssignments(mapped);
     }, []);
 
+    /** Đồng bộ từ parent (vd. captain gán slot bên ngoài FormationField) — tránh chỉ init một lần từ initialAssignments */
+    const initialAssignmentsKey = useMemo(
+      () =>
+        initialAssignments
+          .map((a) => `${a.slotId}:${a.playerId}`)
+          .sort()
+          .join('|'),
+      [initialAssignments],
+    );
+
+    useEffect(() => {
+      if (!formation) return;
+      const validSlotIds = new Set(formation.slots.map((s) => s.id));
+      const mapped: Record<string, string> = {};
+      initialAssignments.forEach((a) => {
+        if (validSlotIds.has(a.slotId)) {
+          mapped[a.slotId] = a.playerId;
+        }
+      });
+      setAssignments(mapped);
+    }, [initialAssignmentsKey, initialAssignments, formation]);
+
     // Expose methods via ref
     useImperativeHandle(
       ref,
