@@ -409,6 +409,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     {
                       paddingVertical: theme.spacing.m,
                       paddingHorizontal: theme.spacing.m,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
                     },
                   ]}
                 >

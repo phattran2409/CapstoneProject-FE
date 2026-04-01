@@ -204,7 +204,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   name="send"
                   size={16}
                   color={
-                    replyContent.trim() ? "#fff" : theme.colors.textSecondary
+                    replyContent.trim() ? theme.colors.darkBlack : theme.colors.textSecondary
                   }
                 />
               </TouchableOpacity>

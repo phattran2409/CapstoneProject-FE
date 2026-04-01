@@ -243,8 +243,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
     return (
       <EmptyState
         icon="chatbubble-ellipses-outline"
-        title={t("chat.empty")}
-        description={t("chat.inviteFriends")}
+        title={t("chat.noMessages")}
+        description={t("chat.noMessagesDescription")}
       />
     );
   };

@@ -687,6 +687,10 @@ const vi = {
     reportIssue: "Báo cáo vấn đề",
   },
   chat: {
+    noConversations: "Không có trò chuyện",
+    noConversationsDescription: "Không có trò chuyện nào. Hãy bắt đầu trò chuyện với người khác.",
+    noMessages: "Không có tin nhắn",
+    noMessagesDescription: "Không có tin nhắn nào. Hãy bắt đầu trò chuyện với người khác.",
     searchPlaceholder: "Tìm kiếm trò chuyện",
     title: "Trò chuyện",
     you: "Bạn",
@@ -695,8 +699,8 @@ const vi = {
     inputPlaceholder: "Nhập tin nhắn...",
     yesterday: "Hôm qua",
     friday: "Thứ Sáu",
-    online: "Đang online",
-    offline: "Offline",
+    online: "Đang hoạt động",
+    offline: "Đang không hoạt động",
     isTyping: "đang nhập",
   },
   onboarding_1: {

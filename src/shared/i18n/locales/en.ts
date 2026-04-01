@@ -690,6 +690,10 @@ const en = {
     reportIssue: "Report Issue",
   },
   chat: {
+    noConversations: "No conversations",
+    noConversationsDescription: "No conversations yet. Start a conversation with someone.",
+    noMessages: "No messages",
+    noMessagesDescription: "No messages yet. Start a conversation with someone.",
     searchPlaceholder: "Search chat",
     title: "Chats",
     you: "You",
