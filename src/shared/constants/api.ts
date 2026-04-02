@@ -41,6 +41,8 @@ export const API_CONFIG = {
       TEAM_NAME: "/match-rooms/:id/team-name",
       /** Cập nhật privacy (Private/Public + password) */
       PRIVACY: "/match-rooms/:id/privacy",
+      /** Mẫu tạo phòng của user (GET/PUT). Đổi path nếu backend khác. */
+      ME_CREATE_PRESET: "/match-rooms/me/create-preset",
       PROCESS_PAYMENT: "bookings/process-payment",
       VOTE_RESULT: "/match-rooms/:id/vote-result",
     },
@@ -64,6 +66,13 @@ export const API_CONFIG = {
     WITHDRAWALS: {
       CREATE: "/withdrawals",
       GET_MY: "/withdrawals/my",
+    },
+    /** Đánh giá nhận được + phản hồi (FR-27/28). Đổi path nếu BE khác. */
+    FEEDBACK: {
+      RECEIVED: "/match-feedbacks/received",
+      /** Đánh giá mình đã gửi + phản hồi từ người được đánh giá */
+      GIVEN: "/match-feedbacks/given",
+      REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/reply`,
     },
   },
 } as const;

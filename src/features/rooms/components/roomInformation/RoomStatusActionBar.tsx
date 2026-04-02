@@ -19,6 +19,10 @@ interface RoomStatusActionBarProps {
   onJoinMatch: () => void;
   onNavigateToFeedbackIntro: () => void;
   onNavigateToEloBreakdown: () => void;
+  /** `user.userId` từ auth (truyền từ RoomInformation) */
+  currentUserId?: string | null;
+  /** Mở phòng từ lịch sử đấu trên profile người khác */
+  isViewingOthersMatchHistory?: boolean;
 }
 
 const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
@@ -32,6 +36,8 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
   onJoinMatch,
   onNavigateToFeedbackIntro,
   onNavigateToEloBreakdown,
+  currentUserId = null,
+  isViewingOthersMatchHistory = false,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -49,6 +55,21 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
   ];
 
   if (status === 'Reviewing') {
+    if (isViewingOthersMatchHistory || !currentUserId) {
+      return (
+        <View style={containerStyle}>
+          <TouchableOpacity
+            style={[actionStyles.joinButton, { backgroundColor: theme.colors.border, shadowColor: 'transparent' }]}
+            disabled
+          >
+            <ThemedText size="l" weight="bold" style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}>
+              {t('roomDetail.statusActions.reviewingInProgress', 'Đang đánh giá')}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     if (hasLeftFeedback) {
       return (
         <View style={containerStyle}>
@@ -63,6 +84,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
         </View>
       );
     }
+
     return (
       <View style={containerStyle}>
         <TouchableOpacity
@@ -86,6 +108,22 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
       </View>
     );
   }
+
+  if (status === 'Completed' && isViewingOthersMatchHistory) {
+    return (
+      <View style={containerStyle}>
+        <TouchableOpacity
+          style={[actionStyles.joinButton, { backgroundColor: theme.colors.border, shadowColor: 'transparent' }]}
+          disabled
+        >
+          <ThemedText size="l" weight="bold" style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}>
+            {t('roomDetail.statusActions.matchFinishedReadOnly', 'Trận đấu đã xong')}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (hasLeftFeedback) {
     return (
       <View style={containerStyle}>
@@ -148,6 +186,31 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
             ]}
           >
             {t('roomDetail.statusActions.cancelled', 'Phòng đã bị hủy')}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (isViewingOthersMatchHistory) {
+    return (
+      <View style={containerStyle}>
+        <TouchableOpacity
+          style={[
+            actionStyles.joinButton,
+            { backgroundColor: theme.colors.border, shadowColor: 'transparent' },
+          ]}
+          disabled
+        >
+          <ThemedText
+            size="l"
+            weight="bold"
+            style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}
+          >
+            {t(
+              'roomDetail.statusActions.historyViewReadOnly',
+              'Đang xem trận từ lịch sử người chơi khác',
+            )}
           </ThemedText>
         </TouchableOpacity>
       </View>

@@ -247,6 +247,15 @@ export interface CreateRoomRequest {
   password?: string;
 }
 
+/** Preset tạo phòng (lưu trên server) — map body/response trong roomsApi nếu BE khác field */
+export interface MatchRoomCreatePresetDto {
+  matchFormat: MatchFormat;
+  durationMinutes: 60 | 90 | 120;
+  roomName: string;
+  description: string;
+  isPrivate: boolean;
+}
+
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {
   status?: RoomStatus;
   currentPlayers?: number;

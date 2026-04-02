@@ -3,6 +3,7 @@ import { View, Text, FlatList, ListRenderItem, TouchableOpacity, Linking } from 
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useJoinRoomAsUnassigned } from "@/features/rooms";
 
 export interface Message {
   id: string;
@@ -51,6 +52,8 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
   ) => {
     const { theme } = useTheme();
     const { t } = useTranslation();
+    const { mutate: joinRoomAsUnassigned, isPending: isJoiningRoom } =
+      useJoinRoomAsUnassigned();
     const flatListRef = useRef<FlatList>(null);
     const isAtBottomRef = useRef(true);
     const lastMessageCountRef = useRef(messages.length);
@@ -117,9 +120,25 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
         };
 
         const handleJoinRoom = () => {
-          if (roomLink) {
-            handleDeepLink(roomLink);
-          }
+          const taggedRoomIdMatch = item.text.match(/\[ROOM_ID:([^\]]+)\]/);
+          const taggedRoomId = taggedRoomIdMatch?.[1]?.trim();
+          const roomIdFromLink = roomLink?.replace("kickify://room/", "").split(/[/?#]/)[0];
+          const roomId = taggedRoomId || roomIdFromLink;
+
+          if (!roomId) return;
+
+          joinRoomAsUnassigned(
+            { roomId },
+            {
+              onSuccess: () => {
+                handleDeepLink(roomLink || `kickify://room/${roomId}`);
+              },
+              onError: () => {
+                // Fallback mở deeplink để user vẫn có thể vào màn room
+                handleDeepLink(roomLink || `kickify://room/${roomId}`);
+              },
+            },
+          );
         };
 
         return (
@@ -175,7 +194,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                     color: item.isOwn ? theme.colors.black : theme.colors.text,
                   }}
                 >
-                  {item.text}
+                  {item.text.replace(/\n?\[ROOM_ID:[^\]]+\]/g, "")}
                 </Text>
 
                 {roomLink && (
@@ -191,6 +210,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                       paddingHorizontal: 10,
                       alignSelf: "flex-start",
                     }}
+                    disabled={isJoiningRoom}
                   >
                     <Text
                       style={{
@@ -326,7 +346,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           </View>
         );
       },
-      [theme, t],
+      [theme, t, joinRoomAsUnassigned, isJoiningRoom],
     );
 
     // Handle content size change để auto scroll khi content được render

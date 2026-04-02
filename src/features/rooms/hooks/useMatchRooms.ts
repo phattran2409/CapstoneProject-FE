@@ -59,7 +59,9 @@ export const useMatchRooms = (filters?: Omit<MatchRoomFilters, 'page' | 'pageSiz
 
 export const useMyRooms = (
   filters?: Pick<MatchRoomFilters, "availableOnly">,
+  options?: { enabled?: boolean },
 ) => {
+  const enabled = (options?.enabled ?? true) && !!filters;
   const pagination = usePagination<MyRoom>({
     queryKey: roomsKeys.myRooms(filters),
     fetchFunction: async () => {
@@ -72,12 +74,11 @@ export const useMyRooms = (
     },
     pageSize: 10,
     staleTime: 5 * 60 * 1000,
-    enabled: true,
+    enabled,
     onError: (error) => {
       console.error("Error fetching my rooms:", error);
     },
   });
-
   return {
     myRooms: pagination.data,
     loading: pagination.loading,
@@ -92,6 +93,40 @@ export const useMyRooms = (
   };
 };
 
-
+export const useHistoryRooms = (
+  userId: string,
+  options?: { enabled?: boolean },
+) => {
+  const enabled = (options?.enabled ?? true) && !!userId;
+  const pagination = usePagination<MyRoom>({
+    queryKey: roomsKeys.historyRooms(userId),
+    fetchFunction: async () => {
+      const result = await roomsApi.getHistoryRooms(userId);
+      return {
+        data: result.data.rooms,
+        totalPages: result.data.totalPages,
+        totalCount: result.data.totalCount,
+      };
+    },
+    pageSize: 10,
+    staleTime: 5 * 60 * 1000,
+    enabled,
+    onError: (error) => {
+      console.error("Error fetching history rooms:", error);
+    },
+  });
+  return {
+    myRooms: pagination.data,
+    loading: pagination.loading,
+    refreshing: pagination.refreshing,
+    loadingMore: pagination.loadingMore,
+    error: pagination.error,
+    hasMore: pagination.hasMore,
+    page: pagination.page,
+    totalPages: pagination.totalPages,
+    refresh: pagination.refresh,
+    loadMore: pagination.loadMore,
+  };
+};
 
 

@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client';
+import type { ApiError } from '@/shared/api/types';
 import type {
   RoomFilters,
   CreateRoomRequest,
@@ -13,6 +14,8 @@ import type {
   MyRoomsResponse,
   UpdateFormationRequest,
   UpdateTeamNameRequest,
+  MatchRoomCreatePresetDto,
+  MatchFormat,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -53,6 +56,11 @@ export const roomsApi = {
     };
 
     const data = await apiClient.get("/match-rooms/mine", { params });
+    return data as unknown as MyRoomsResponse;
+  },
+
+  getHistoryRooms: async (userId: string): Promise<MyRoomsResponse> => {
+    const data = await apiClient.get(`/match-rooms/player/${userId}`);
     return data as unknown as MyRoomsResponse;
   },
 
@@ -287,5 +295,78 @@ export const roomsApi = {
   //   const data = await apiClient.get(`/match-rooms/${roomId}`);
   //   return data as unknown as MatchRoomFullInfo;
   // },
+
+  /**
+   * Lấy mẫu tạo phòng đã lưu (user hiện tại). 404 → null.
+   */
+  getCreateRoomPreset: async (): Promise<MatchRoomCreatePresetDto | null> => {
+    try {
+      const url = API_CONFIG.ENDPOINTS.ROOMS.ME_CREATE_PRESET;
+      const response = (await apiClient.get(url)) as unknown;
+      const parsed = parseCreateRoomPresetResponse(response);
+      return parsed;
+    } catch (e: unknown) {
+      const err = e as ApiError;
+      if (err?.status === 404) return null;
+      throw e;
+    }
+  },
+
+  /**
+   * Lưu / cập nhật mẫu tạo phòng (PUT).
+   */
+  upsertCreateRoomPreset: async (
+    dto: MatchRoomCreatePresetDto,
+  ): Promise<MatchRoomCreatePresetDto> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.ME_CREATE_PRESET;
+    const body = createRoomPresetToWire(dto);
+    const response = (await apiClient.put(url, body)) as unknown;
+    const parsed = parseCreateRoomPresetResponse(response);
+    return parsed ?? dto;
+  },
 };
+
+const MATCH_FORMATS: MatchFormat[] = ['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'];
+
+function createRoomPresetToWire(dto: MatchRoomCreatePresetDto) {
+  return {
+    matchFormat: dto.matchFormat,
+    durationMinutes: dto.durationMinutes,
+    roomName: dto.roomName,
+    description: dto.description ?? '',
+    visibility: dto.isPrivate ? 'Private' : 'Public',
+  };
+}
+
+function parseCreateRoomPresetResponse(
+  response: unknown,
+): MatchRoomCreatePresetDto | null {
+  let raw: Record<string, unknown> | null = null;
+  if (response && typeof response === 'object' && 'isSuccess' in response) {
+    const wrap = response as ApiResponse<Record<string, unknown>>;
+    if (wrap.isSuccess && wrap.data && typeof wrap.data === 'object') {
+      raw = wrap.data as Record<string, unknown>;
+    }
+  } else if (response && typeof response === 'object' && 'matchFormat' in response) {
+    raw = response as Record<string, unknown>;
+  }
+  if (!raw) return null;
+
+  const matchFormat = raw.matchFormat as MatchFormat;
+  if (!MATCH_FORMATS.includes(matchFormat)) return null;
+
+  const dm = Number(raw.durationMinutes);
+  if (![60, 90, 120].includes(dm)) return null;
+
+  return {
+    matchFormat,
+    durationMinutes: dm as 60 | 90 | 120,
+    roomName: String(raw.roomName ?? ''),
+    description: String(raw.description ?? ''),
+    isPrivate:
+      raw.visibility === 'Private' ||
+      raw.isPrivate === true ||
+      String(raw.visibility).toLowerCase() === 'private',
+  };
+}
 

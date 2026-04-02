@@ -43,7 +43,10 @@ import {
   useRemoveFriend,
   useRespondToFriendRequest,
 } from "@/features/friends/hooks";
-import { useMyRooms } from "@/features/rooms/hooks/useMatchRooms";
+import {
+  useMyRooms,
+  useHistoryRooms,
+} from "@/features/rooms/hooks/useMatchRooms";
 import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
 import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
@@ -148,7 +151,11 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     pageSize: 10,
   });
 
-  // Matches data - only fetch for current user
+  const myRoomsQuery = useMyRooms({ enabled: isCurrentUser });
+  const historyRoomsQuery = useHistoryRooms(userId, {
+    enabled: !isCurrentUser && !!userId,
+  });
+
   const {
     myRooms: matches,
     loading: matchesLoading,
@@ -158,7 +165,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     hasMore: matchesHasMore,
     refresh: matchesRefresh,
     loadMore: matchesLoadMore,
-  } = useMyRooms();
+  } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
   const stats = {
     matches: 88,
@@ -279,7 +286,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const handleViewDetail = (matchId: string) => {
     setModalVisible(false);
     setSelectedMatch(null);
-    navigation.navigate("RoomInformation", { roomId: matchId });
+    navigation.navigate("RoomInformation", {
+      roomId: matchId,
+      viewAsOthersMatchHistory: !isCurrentUser,
+    });
   };
 
   const handleAddFriend = () => {
@@ -437,6 +447,52 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
                 isRespondingToRequest
               }
             />
+
+            {isCurrentUser && (
+              <View style={{ marginHorizontal: theme.spacing.m, marginBottom: theme.spacing.m, gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("ReceivedFeedback")}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: theme.spacing.m,
+                    paddingHorizontal: theme.spacing.m,
+                    borderRadius: theme.radius?.m ?? 12,
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    gap: 10,
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("personalPage.receivedFeedback.title")}
+                >
+                  <Ionicons
+                    name="chatbox-ellipses-outline"
+                    size={22}
+                    style={{ paddingLeft: 15 }}
+                    color={theme.colors.neonGreen}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.m,
+                        fontWeight: "700",
+                        color: theme.colors.text,
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("personalPage.receivedFeedback.title")}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Navigation Tabs */}
             <View

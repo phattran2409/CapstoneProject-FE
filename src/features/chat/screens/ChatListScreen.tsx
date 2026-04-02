@@ -60,6 +60,7 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
       timestamp: c.lastMessageAt,
       isOnline: c.isOnline,
       avatar: c.otherUserAvatarUrl,
+      unreadCount: c.unreadCount,
     })) ?? [];
 
   const handleChatPress = (chatId: string, chatName: string) => {

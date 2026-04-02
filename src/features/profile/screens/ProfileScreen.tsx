@@ -612,6 +612,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   marginBottom: theme.spacing.xs,
                 },
               ]}
+              onPress={() => navigation.navigate("AppAboutTerms")}
+              accessibilityRole="button"
+              accessibilityLabel={t("profile.termsOfService")}
             >
               <Ionicons
                 name="document-text-outline"

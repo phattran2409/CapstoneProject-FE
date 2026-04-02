@@ -157,7 +157,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const handleScrollToBottom = useCallback((isAtBottom: boolean) => {
     isAtBottomRef.current = isAtBottom;
   }, []);
-
+  
   // Handle layout để scroll khi FlatList đã render xong
   const handleMessageListLayout = useCallback(() => {
     if (

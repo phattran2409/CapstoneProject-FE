@@ -17,6 +17,7 @@ import { useAuthStore } from '@/features/auth';
 
 interface InviteFriendsModalProps {
   visible: boolean;
+  roomId: string;
   shareMessage: string;
   onClose: () => void;
   title?: string;
@@ -24,6 +25,7 @@ interface InviteFriendsModalProps {
 
 const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
   visible,
+  roomId,
   shareMessage,
   onClose,
   title,
@@ -43,11 +45,12 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
 
   const handleSendToFriend = (receiverId: string) => {
     if (!user?.userId) return;
+    const inviteMessage = `${shareMessage}\n\n[ROOM_ID:${roomId}]`;
     sendChatMessage(
       {
         senderId: user.userId,
         receiverId,
-        messageText: shareMessage,
+        messageText: inviteMessage,
         messageType: 'Text',
       },
       {
