@@ -30,6 +30,8 @@ export const roomsKeys = {
   messages: (roomId: string) => [...roomsKeys.detail(roomId), 'messages'] as const,
   /** Mẫu tạo phòng (user) */
   createPreset: () => [...roomsKeys.all, 'create-preset'] as const,
+  matchPresetList: (filters?: Pick<MatchRoomFilters, 'page' | 'pageSize'>) => [...roomsKeys.all, 'match-preset-list', filters] as const,
+  matchPresetDetail: (id: string) => [...roomsKeys.all, 'match-preset-detail', id] as const,
 };
 
 /**

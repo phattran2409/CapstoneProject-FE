@@ -248,13 +248,6 @@ export interface CreateRoomRequest {
 }
 
 /** Preset tạo phòng (lưu trên server) — map body/response trong roomsApi nếu BE khác field */
-export interface MatchRoomCreatePresetDto {
-  matchFormat: MatchFormat;
-  durationMinutes: 60 | 90 | 120;
-  roomName: string;
-  description: string;
-  isPrivate: boolean;
-}
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {
   status?: RoomStatus;
@@ -315,4 +308,51 @@ export interface SendMessageRequest {
   roomId: string;
   userId: string;
   message: string;
+}
+
+/** DTO dùng để tạo mới / upsert preset đơn (legacy) */
+export interface MatchRoomCreatePresetDto {
+  matchFormat: MatchFormat;
+  durationMinutes: number;
+  roomName: string;
+  description: string;
+  visibility: 'Public' | 'Private';
+  rules: string;
+  password: string;
+}
+
+/** DTO tạo preset mới theo danh sách preset (POST /match-presets) */
+export interface CreateMatchPresetDto {
+  fieldId: string;
+  roomName: string;
+  matchFormat: string;
+  visibility: 'Public' | 'Private';
+  startTime: string;
+  durationMinutes: number;
+  rules: string;
+  password: string;
+  description: string;
+}
+
+/** DTO dùng để cập nhật preset theo ID (PUT /match-presets/:id) */
+export type UpdateMatchPresetDto = Partial<Omit<MatchRoomCreatePresetDto, 'isPrivate'>> & {
+  visibility?: 'Public' | 'Private';
+  password?: string;
+};
+
+export interface RoomPresetItem {
+  presetId: string;
+  fieldId: string;
+  fieldName: string;
+  venueName: string;
+  venueAddress: string;
+  roomName: string;
+  matchFormat: MatchFormat;
+  visibility: string;
+  password?: string;
+  startTime: string;
+  rules: string;
+  durationMinutes: number;
+  description: string;
+  createdAt: string;
 }

@@ -27,14 +27,23 @@ export const API_CONFIG = {
     },
     ROOMS: {
       LIST: "/match-rooms",
+      CREATE: "/match-rooms",
+      MINE: "/match-rooms/mine",
+      PLAYER_HISTORY: "/match-rooms/player/:userId",
       JOIN: "/match-rooms/:id/join",
       LEAVE: "/match-rooms/:id/leave",
       DETAIL: "/match-rooms/:id",
       FULL_INFO: "/match-rooms/:id",
       TEAMS: "/match-rooms/:id/teams",
-      MESSAGES: "/match-rooms/:id/messages",
-      CREATE: "/match-rooms",
+      /** Tin nhắn phòng (GET/POST, query/body roomId) */
+      CHAT_MESSAGES: "/messages",
       UPDATE_PARTICIPANT: "/match-rooms/:id/participants/me",
+      /** Cập nhật thông tin phòng (tên, mô tả, luật) */
+      ROOM_INFO: "/match-rooms/:id/info",
+      /** Hủy phòng (host); query tùy chọn: reason */
+      CANCEL: "/match-rooms/:id/cancel",
+      /** Kick cầu thủ khỏi phòng */
+      KICK_PARTICIPANT: "/match-rooms/:id/participants/:playerId",
       /** Cập nhật đội hình (vị trí từng thành viên) – captain */
       FORMATION: "/match-rooms/:id/formation",
       /** Cập nhật tên đội – captain */
@@ -42,9 +51,13 @@ export const API_CONFIG = {
       /** Cập nhật privacy (Private/Public + password) */
       PRIVACY: "/match-rooms/:id/privacy",
       /** Mẫu tạo phòng của user (GET/PUT). Đổi path nếu backend khác. */
-      ME_CREATE_PRESET: "/match-rooms/me/create-preset",
-      PROCESS_PAYMENT: "bookings/process-payment",
+      MY_PRESET_LIST: "/match-presets/mine",
+      PRESET_CREATE: "/match-presets",
+      PRESET_DETAIL: "/match-presets/:id",
+      PROCESS_PAYMENT: "/bookings/process-payment",
       VOTE_RESULT: "/match-rooms/:id/vote-result",
+      /** Legacy resource (không phải match-rooms) */
+      LEGACY_ROOM: "/rooms/:id",
     },
     VENUES: {
       LIST: "/venues",

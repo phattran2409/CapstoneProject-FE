@@ -129,29 +129,54 @@ export const backendErrorMessages = {
     "Invalid criteria type": "Chưa hoàn thành đủ nội dung",
 };
 
-export const getTranslatedError = (errMessage?: string): string => {
-  if (!errMessage) return '';
+// Backend error "title/code" map (code-based translation).
+// Note: current backend responses may look like:
+// { title: "MatchRoom.OutsideOperatingHours", detail: "Requested time ...", status: 409, ... }
+const backendErrorCodeMessages: Record<string, string> = {
+  "MatchRoom.OutsideOperatingHours": "Thời gian yêu cầu nằm ngoài khung giờ hoạt động của sân.",
+};
+
+export const getTranslatedError = (errMessage?: string, errCode?: string): string => {
   const language = useAppStore.getState().language;
 
+  // English: prefer showing backend detail/message as-is.
   if (language === 'en') {
-    return errMessage;
+    return errMessage ?? '';
   }
 
-  // Exact Match
+  // Code-based translation (title/code).
+  if (errCode) {
+    // Special-case: keep dynamic times from backend detail.
+    if (errCode === "MatchRoom.OutsideOperatingHours" && errMessage) {
+      const match = errMessage.match(
+        /Requested time \((.+?)\) is outside operating hours \((.+?)\)/i,
+      );
+      if (match) {
+        return `Thời gian yêu cầu (${match[1]}) nằm ngoài khung giờ hoạt động (${match[2]}).`;
+      }
+    }
+
+    const mapped = backendErrorCodeMessages[errCode];
+    if (mapped) return mapped;
+  }
+
+  if (!errMessage) return '';
+
+  // Exact Match (message-based translation).
   if (backendErrorMessages[errMessage as keyof typeof backendErrorMessages]) {
     return backendErrorMessages[errMessage as keyof typeof backendErrorMessages];
   }
 
   // StartWith match for dynamic formatted string like "The post with the Id = 'xxxx' was not found"
   for (const [key, value] of Object.entries(backendErrorMessages)) {
-     if (errMessage.includes(key.replace("{0}", "")) || errMessage.startsWith(key)) {
-         return value;
-     }
+    if (errMessage.includes(key.replace("{0}", "")) || errMessage.startsWith(key)) {
+      return value;
+    }
   }
 
   // Some common patterns:
   if (errMessage.startsWith("Failed to upload")) {
-       return "Lỗi phản hồi mạng khi tải file: " + errMessage.replace("Failed to upload", "");
+    return "Lỗi phản hồi mạng khi tải file: " + errMessage.replace("Failed to upload", "");
   }
 
   return errMessage;

@@ -228,10 +228,10 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
                 <Ionicons name="football-outline" size={20} color={theme.colors.neonGreen} />
                 <View>
                   <Text style={[styles.fieldsCount, { color: theme.colors.neonGreen }]}>
-                    {venue.fields.length} sân có sẵn
+                    {t('venueSelection.fieldsAvailableCount', { count: venue.fields.length })}
                   </Text>
                   <Text style={[styles.fieldsHint, { color: theme.colors.textSecondary }]}>
-                    Nhấn để xem chi tiết & đặt sân
+                    {t('venueSelection.fieldsTapHint')}
                   </Text>
                 </View>
               </View>
@@ -245,7 +245,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => handleSelectVenue(venue)}
           >
             <Text style={[styles.viewDetailText, { color: theme.colors.textSecondary }]}>
-              Xem chi tiết
+              {t('venueSelection.viewDetail')}
             </Text>
             <Ionicons name="arrow-forward" size={16} color={theme.colors.textSecondary} />
           </TouchableOpacity>

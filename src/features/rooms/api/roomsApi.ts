@@ -14,8 +14,11 @@ import type {
   MyRoomsResponse,
   UpdateFormationRequest,
   UpdateTeamNameRequest,
-  MatchRoomCreatePresetDto,
   MatchFormat,
+  RoomPresetItem,
+  MatchRoomCreatePresetDto,
+  UpdateMatchPresetDto,
+  CreateMatchPresetDto,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -41,8 +44,7 @@ export const roomsApi = {
       ...(filters?.radiusKm && { radiusKm: filters.radiusKm }),
       ...(filters?.date && { date: filters.date }),
     };
-    console.log(params);
-    const data = await apiClient.get("/match-rooms", { params });
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.LIST, { params });
     return data as unknown as MatchRoomsResponse;
   },
 
@@ -55,12 +57,13 @@ export const roomsApi = {
         : {}),
     };
 
-    const data = await apiClient.get("/match-rooms/mine", { params });
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.MINE, { params });
     return data as unknown as MyRoomsResponse;
   },
 
   getHistoryRooms: async (userId: string): Promise<MyRoomsResponse> => {
-    const data = await apiClient.get(`/match-rooms/player/${userId}`);
+    const url = API_CONFIG.ENDPOINTS.ROOMS.PLAYER_HISTORY.replace(':userId', userId);
+    const data = await apiClient.get(url);
     return data as unknown as MyRoomsResponse;
   },
 
@@ -89,7 +92,10 @@ export const roomsApi = {
    */
   createRoom: async (room: CreateRoomRequest): Promise<MatchRoom> => {
     try {
-      const response = await apiClient.post<ApiResponse<MatchRoom>>('/match-rooms', room);
+      const response = await apiClient.post<ApiResponse<MatchRoom>>(
+        API_CONFIG.ENDPOINTS.ROOMS.CREATE,
+        room,
+      );
       const body = response as unknown as ApiResponse<MatchRoom>;
       return body.data as MatchRoom;
     } catch (error) {
@@ -102,7 +108,8 @@ export const roomsApi = {
    * Update room
    */
   updateRoom: async (id: string, updates: UpdateRoomRequest): Promise<MatchRoom> => {
-    const data = await apiClient.patch(`/rooms/${id}`, updates);
+    const url = API_CONFIG.ENDPOINTS.ROOMS.LEGACY_ROOM.replace(':id', id);
+    const data = await apiClient.patch(url, updates);
     return data as unknown as MatchRoom;
   },
 
@@ -114,7 +121,8 @@ export const roomsApi = {
     roomId: string,
     body: { roomName: string; description?: string; rules?: string },
   ): Promise<void> => {
-    await apiClient.patch(`/match-rooms/${roomId}/info`, body);
+    const url = API_CONFIG.ENDPOINTS.ROOMS.ROOM_INFO.replace(':id', roomId);
+    await apiClient.patch(url, body);
   },
 
   /**
@@ -133,7 +141,8 @@ export const roomsApi = {
    * Delete room
    */
   deleteRoom: async (id: string): Promise<void> => {
-    await apiClient.delete(`/rooms/${id}`);
+    const url = API_CONFIG.ENDPOINTS.ROOMS.LEGACY_ROOM.replace(':id', id);
+    await apiClient.delete(url);
   },
 
   /**
@@ -154,7 +163,7 @@ export const roomsApi = {
    * Get messages for a room
    */
   getRoomMessages: async (roomId: string): Promise<Message[]> => {
-    const data = await apiClient.get("/messages", {
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.CHAT_MESSAGES, {
       params: { roomId },
     });
     return data as unknown as Message[];
@@ -164,7 +173,7 @@ export const roomsApi = {
    * Send a message to a room
    */
   sendMessage: async (request: SendMessageRequest): Promise<Message> => {
-    const data = await apiClient.post("/messages", {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.ROOMS.CHAT_MESSAGES, {
       ...request,
       createdAt: new Date().toISOString(),
     });
@@ -175,14 +184,24 @@ export const roomsApi = {
    * Kick a player from a room (host only)
    */
   kickPlayer: async (roomId: string, playerId: string): Promise<void> => {
-    await apiClient.delete(`/match-rooms/${roomId}/participants/${playerId}`);
+    const url = API_CONFIG.ENDPOINTS.ROOMS.KICK_PARTICIPANT.replace(':id', roomId).replace(
+      ':playerId',
+      playerId,
+    );
+    await apiClient.delete(url);
   },
 
   /**
-   * Cancel/Delete a room (host only)
+   * Cancel a match room (host only)
+   * GET /match-rooms/:id/cancel — optional query: ?reason=
+   * Axios maps `params` to the URL query string and encodes values (e.g. spaces → %20).
    */
-  cancelRoom: async (roomId: string): Promise<void> => {
-    await apiClient.patch(`/rooms/${roomId}`, { status: "cancelled" });
+  cancelRoom: async (roomId: string, reason?: string): Promise<void> => {
+    const trimmed = reason?.trim();
+    const url = API_CONFIG.ENDPOINTS.ROOMS.CANCEL.replace(':id', roomId);
+    await apiClient.delete(url, {
+      params: trimmed ? { reason: trimmed } : {},
+    });
   },
 
   /**
@@ -213,13 +232,11 @@ export const roomsApi = {
     teamAssignment: "A" | "B",
     position: string,
   ): Promise<any> => {
-    const data = await apiClient.post(
-      `/match-rooms/${roomId}/participants/me`,
-      {
-        teamAssignment,
-        position,
-      },
-    );
+    const url = API_CONFIG.ENDPOINTS.ROOMS.UPDATE_PARTICIPANT.replace(':id', roomId);
+    const data = await apiClient.post(url, {
+      teamAssignment,
+      position,
+    });
     return data;
   },
 
@@ -228,7 +245,8 @@ export const roomsApi = {
    * SignalR will broadcast UserLeftRoom event to all players in the room
    */
   leaveMatchRoom: async (roomId: string): Promise<void> => {
-    await apiClient.post(`/match-rooms/${roomId}/leave`);
+    const url = API_CONFIG.ENDPOINTS.ROOMS.LEAVE.replace(':id', roomId);
+    await apiClient.post(url);
   },
 
   /**
@@ -241,7 +259,8 @@ export const roomsApi = {
     teamAssignment: "A" | "B" | "Unassigned",
     position?: string,
   ): Promise<any> => {
-    const data = await apiClient.put(`/match-rooms/${roomId}/participants/me`, {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.UPDATE_PARTICIPANT.replace(':id', roomId);
+    const data = await apiClient.put(url, {
       teamAssignment,
       ...(position && { position }),
     });
@@ -299,74 +318,82 @@ export const roomsApi = {
   /**
    * Lấy mẫu tạo phòng đã lưu (user hiện tại). 404 → null.
    */
+  getMatchPresetList: async (filter? : Pick<MatchRoomFilters, 'page' | 'pageSize'>) => {
+    const params = {
+      page: filter?.page || 1,
+      pageSize: filter?.pageSize || 10,
+    };
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.MY_PRESET_LIST, { params });
+    
+    return data as unknown as ApiResponse<{
+      items: RoomPresetItem[];
+      page: number;
+      pageSize: number;
+      totalPages: number;
+      totalCount: number;
+    }>;
+  },
+
+  /**
+   * GET /match-presets/:id — lấy chi tiết một preset theo ID
+   */
+  getMatchPresetById: async (id: string): Promise<RoomPresetItem> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.PRESET_DETAIL.replace(':id', id);
+    const data = await apiClient.get(url);
+    const body = data as unknown as ApiResponse<RoomPresetItem>;
+    if (body?.isSuccess) return body.data as RoomPresetItem;
+    return data as unknown as RoomPresetItem;
+  },
+
+  /**
+   * PUT /match-presets/:id — cập nhật preset theo ID
+   */
+  updateMatchPreset: async (id: string, dto: UpdateMatchPresetDto): Promise<RoomPresetItem> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.PRESET_DETAIL.replace(':id', id);
+    const data = await apiClient.put(url, dto);
+    const body = data as unknown as ApiResponse<RoomPresetItem>;
+    if (body?.isSuccess) return body.data as RoomPresetItem;
+    return data as unknown as RoomPresetItem;
+  },
+
+  /**
+   * POST /match-presets — tạo preset mới
+   */
+  createMatchPreset: async (dto: CreateMatchPresetDto): Promise<RoomPresetItem> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.ROOMS.PRESET_CREATE, dto);
+    const body = data as unknown as ApiResponse<RoomPresetItem>;
+    if (body?.isSuccess) return body.data as RoomPresetItem;
+    return data as unknown as RoomPresetItem;
+  },
+
+  /**
+   * DELETE /match-presets/:id — xoá preset theo ID
+   */
+  deleteMatchPreset: async (id: string): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.PRESET_DETAIL.replace(':id', id);
+    await apiClient.delete(url);
+  },
+
+  /**
+   * Legacy: lấy mẫu tạo phòng đơn của user hiện tại (GET). 404 → null.
+   */
   getCreateRoomPreset: async (): Promise<MatchRoomCreatePresetDto | null> => {
     try {
-      const url = API_CONFIG.ENDPOINTS.ROOMS.ME_CREATE_PRESET;
-      const response = (await apiClient.get(url)) as unknown;
-      const parsed = parseCreateRoomPresetResponse(response);
-      return parsed;
-    } catch (e: unknown) {
-      const err = e as ApiError;
-      if (err?.status === 404) return null;
-      throw e;
+      const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.MY_PRESET_LIST);
+      return data as unknown as MatchRoomCreatePresetDto;
+    } catch {
+      return null;
     }
   },
 
   /**
-   * Lưu / cập nhật mẫu tạo phòng (PUT).
+   * Legacy: upsert mẫu tạo phòng đơn (POST /match-presets)
    */
-  upsertCreateRoomPreset: async (
-    dto: MatchRoomCreatePresetDto,
-  ): Promise<MatchRoomCreatePresetDto> => {
-    const url = API_CONFIG.ENDPOINTS.ROOMS.ME_CREATE_PRESET;
-    const body = createRoomPresetToWire(dto);
-    const response = (await apiClient.put(url, body)) as unknown;
-    const parsed = parseCreateRoomPresetResponse(response);
-    return parsed ?? dto;
+  upsertCreateRoomPreset: async (dto: MatchRoomCreatePresetDto): Promise<void> => {
+    await apiClient.post(API_CONFIG.ENDPOINTS.ROOMS.PRESET_CREATE, dto);
   },
+
 };
 
-const MATCH_FORMATS: MatchFormat[] = ['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'];
 
-function createRoomPresetToWire(dto: MatchRoomCreatePresetDto) {
-  return {
-    matchFormat: dto.matchFormat,
-    durationMinutes: dto.durationMinutes,
-    roomName: dto.roomName,
-    description: dto.description ?? '',
-    visibility: dto.isPrivate ? 'Private' : 'Public',
-  };
-}
-
-function parseCreateRoomPresetResponse(
-  response: unknown,
-): MatchRoomCreatePresetDto | null {
-  let raw: Record<string, unknown> | null = null;
-  if (response && typeof response === 'object' && 'isSuccess' in response) {
-    const wrap = response as ApiResponse<Record<string, unknown>>;
-    if (wrap.isSuccess && wrap.data && typeof wrap.data === 'object') {
-      raw = wrap.data as Record<string, unknown>;
-    }
-  } else if (response && typeof response === 'object' && 'matchFormat' in response) {
-    raw = response as Record<string, unknown>;
-  }
-  if (!raw) return null;
-
-  const matchFormat = raw.matchFormat as MatchFormat;
-  if (!MATCH_FORMATS.includes(matchFormat)) return null;
-
-  const dm = Number(raw.durationMinutes);
-  if (![60, 90, 120].includes(dm)) return null;
-
-  return {
-    matchFormat,
-    durationMinutes: dm as 60 | 90 | 120,
-    roomName: String(raw.roomName ?? ''),
-    description: String(raw.description ?? ''),
-    isPrivate:
-      raw.visibility === 'Private' ||
-      raw.isPrivate === true ||
-      String(raw.visibility).toLowerCase() === 'private',
-  };
-}
 

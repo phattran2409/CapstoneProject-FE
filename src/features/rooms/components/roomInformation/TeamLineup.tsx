@@ -71,14 +71,14 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         <View style={styles.teamHeader}>
           <ThemedIcon name="shield" size={20} variant="accent" />
           <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-            Team A
+            {t('roomDetail.teamA')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'A' && (
             <View
               style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.neonGreen + '30' }]}
             >
               <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                Your Team
+                {t('roomDetail.yourTeam')}
               </ThemedText>
             </View>
           )}
@@ -117,7 +117,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         <View style={styles.teamHeader}>
           <ThemedIcon name="shield" size={20} variant="accent" />
           <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-            Team B
+            {t('roomDetail.teamB')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'B' && (
             <View
@@ -164,7 +164,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           <View style={styles.teamHeader}>
             <ThemedIcon name="people" size={20} variant="secondary" />
             <ThemedText variant="secondary" size="m" weight="bold" style={styles.teamName}>
-              Unassigned
+              {t('roomDetail.unassigned')}
             </ThemedText>
           </View>
           <ScrollView
