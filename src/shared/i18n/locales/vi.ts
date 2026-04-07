@@ -738,7 +738,7 @@ const vi = {
     isTyping: "đang nhập",
     empty: "Không có trò chuyện nào",
     inviteFriends: "Hãy bắt đầu trò chuyện",
-    noConversations: "Không có cuộc hội thoại nào",
+    inviteFriendsDescription: "Hãy mời bạn bè tham gia cùng bạn!",
   },
   onboarding_1: {
     title: "Đặt Sân Chỉ Trong Vài Giây",

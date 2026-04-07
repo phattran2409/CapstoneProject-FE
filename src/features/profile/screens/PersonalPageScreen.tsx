@@ -151,7 +151,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     pageSize: 10,
   });
 
-  const myRoomsQuery = useMyRooms({ enabled: isCurrentUser });
+  const myRoomsQuery = useMyRooms({ availableOnly: true }, { enabled: isCurrentUser });
   const historyRoomsQuery = useHistoryRooms(userId, {
     enabled: !isCurrentUser && !!userId,
   });

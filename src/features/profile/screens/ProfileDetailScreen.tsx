@@ -421,6 +421,7 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
 
       <InviteFriendsModal
         visible={shareProfileVisible}
+        roomId={player.userId}
         shareMessage={shareProfileMessage}
         onClose={() => setShareProfileVisible(false)}
         title={t("profileDetail.shareProfile", {
