@@ -83,7 +83,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { mutate: updateParticipant, isPending: isUpdatingParticipant } = useUpdateParticipant();
   const { mutate: leaveMatchRoom, isPending: isLeaving } = useLeaveMatchRoom();
   const { mutate: kickPlayer, isPending: isKicking } = useKickPlayer();
-  const { mutate: cancelRoom, isPending: isCancelling } = useCancelRoom();
+  // const { mutate: cancelRoom, isPending: isCancelling } = useCancelRoom();
 
   const { user } = useAuthStore();
   
@@ -171,9 +171,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   
   // ✅ Toast hook for notifications
   const toast = useToast();
-
-  console.log('', displayRoom);
-  
   /**
    * Callback hiển thị notification - sử dụng Toast thay vì Alert
    */
@@ -326,7 +323,10 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           refetch();
         },
         onError: (error: any) => {
-          toast.error(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.chooseTeamError'));
+          toast.error(
+            t('roomDetail.notifications.error'),
+            getTranslatedError(error?.message, error?.code) || t('roomDetail.chooseTeamError')
+          );
           setShowPositionModal(false);
           setPendingTeamAssignment(null);
         },
@@ -374,7 +374,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
               refetch();
             },
             onError: (error: any) => {
-              showDanger(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.kickError'), () => {});
+              showDanger(
+                t('roomDetail.notifications.error'),
+                getTranslatedError(error?.message, error?.code) || t('roomDetail.kickError'),
+                () => {}
+              );
             },
           }
         );
@@ -386,30 +390,35 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   };
 
   // ✅ Handle cancel room (host only)
-  const handleCancelRoom = () => {
-    showDanger(
-      t('roomDetail.cancelTitle'),
-      t('roomDetail.cancelMessage'),
-      () => {
-        cancelRoom(roomId, {
-          onSuccess: () => {
-            showSuccess(t('roomDetail.cancelSuccess'), t('roomDetail.cancelSuccessDesc'), () => {
-              navigation?.goBack();
-            });
-          },
-          onError: (error: any) => {
-            showDanger(t('roomDetail.notifications.error'), getTranslatedError(error?.message) || t('roomDetail.cancelError'), () => {});
-          },
-        });
-      },
-      undefined,
-      t('roomDetail.yesCancel'),
-      t('roomDetail.no'),
-    );
-  };
+  // const handleCancelRoom = () => {
+  //   showDanger(
+  //     t('roomDetail.cancelTitle'),
+  //     t('roomDetail.cancelMessage'),
+  //     () => {
+  //       cancelRoom({ roomId, reason: undefined }, {
+  //         onSuccess: () => {
+  //           showSuccess(t('roomDetail.cancelSuccess'), t('roomDetail.cancelSuccessDesc'), () => {
+  //             navigation?.goBack();
+  //           });
+  //         },
+  //         onError: (error: any) => {
+  //           showDanger(
+  //             t('roomDetail.notifications.error'),
+  //             getTranslatedError(error?.message, error?.code) || t('roomDetail.cancelError'),
+  //             () => {}
+  //           );
+  //         },
+  //       });
+  //     },
+  //     undefined,
+  //     t('roomDetail.yesCancel'),
+  //     t('roomDetail.no'),
+  //   );
+  // };
 
   // ✅ Handle leave room
   const handleLeaveRoom = () => {
+    console.log('handleLeaveRoom');
     if (roomActionsBlocked) return;
 
     showConfirm(
@@ -427,7 +436,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           onError: (error: any) => {
             toast.error(
               t('common.error', 'Lỗi'),
-              getTranslatedError(error?.message) || t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
+              getTranslatedError(error?.message, error?.code) ||
+                t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
             );
           },
         });
@@ -577,50 +587,22 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           >
             <ThemedIcon name="arrow-back" size={24} variant="secondary" />
           </TouchableOpacity>
-          <View style={{  flex: displayRoom.status !== 'Open' ? 1 : 0 }}>
+          <View style={{  flex: 1}}>
             <ThemedText size="xl" weight="bold" style={{ textAlign: displayRoom.status !== 'Open' ? 'center' : 'left' }}>
               {t('roomDetail.title')}
             </ThemedText>
           </View>
+          <View style={{width : 30, height : 'auto'}}>
+          </View>
         </View>
-        {displayRoom.status === 'Open' && !roomActionsBlocked && (
+        {displayRoom.status === 'Open' && !roomActionsBlocked && (isHost || currentUserParticipant) && (
         <View style={styles.headerRight}>
           <TouchableOpacity
-            onPress={() => {
-              setInviteFriendsVisible(true);
-            }}
+            onPress={() => setShowMenuModal(true)}
             style={styles.menuButton}
           >
-            <Ionicons
-              name="people-outline"
-              size={24}
-              color={theme.colors.textSecondary}
-            />
+            <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
           </TouchableOpacity>
-          {/* Leave Room Button (when user is participant) */}
-          {currentUserParticipant && (
-            <TouchableOpacity
-              onPress={handleLeaveRoom}
-              disabled={isLeaving}
-              style={styles.menuButton}
-            >
-              <Ionicons
-                name="exit-outline"
-                size={24}
-                color={theme.colors.error || '#ef4444'}
-              />
-            </TouchableOpacity>
-          )}
-          {/* Menu Button (Host only) */}
-          {isHost && (
-            <TouchableOpacity
-              onPress={() => setShowMenuModal(true)}
-              style={styles.menuButton}
-            >
-              <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-          
         </View>
         )} 
       </ThemedView>
@@ -776,7 +758,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
           {/* Host Info Tab Content */}
           {activeTab === 'host' && displayRoom.host && (
-            <HostTabContent displayRoom={displayRoom} />
+            <HostTabContent displayRoom={displayRoom} t={t}/>
           )}
 
           {/* Venue Details Tab Content */}
@@ -813,13 +795,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       {/* Invite Friends Modal */}
       <InviteFriendsModal
         visible={inviteFriendsVisible}
+        roomId={displayRoom.roomId}
         shareMessage={shareMessage}
         onClose={() => setInviteFriendsVisible(false)}
       />
 
-      {/* Host Menu Modal */}
-      {isHost && !roomActionsBlocked && (
+      {/* Room menu: host (quản lý phòng) | player (mời bạn bè, rời phòng) */}
+      {(isHost || currentUserParticipant) && !roomActionsBlocked && displayRoom.status === 'Open' && (
         <HostMenuModal
+          variant={isHost ? 'host' : 'player'}
           visible={showMenuModal}
           handleShowMenuModal={() => setShowMenuModal(false)}
           room={{
@@ -831,6 +815,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             description: displayRoom.description,
             rules: displayRoom.rules,
           }}
+          {...((isHost || currentUserParticipant) && !roomActionsBlocked
+            ? {
+                onInviteFriends: () => setInviteFriendsVisible(true),
+                onLeaveRoom: handleLeaveRoom,
+                isLeavingRoom: isLeaving,
+              }
+            : {})}
         />
       )}
     
@@ -926,6 +917,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
   },

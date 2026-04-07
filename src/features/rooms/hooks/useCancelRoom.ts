@@ -10,9 +10,10 @@ export const useCancelRoom = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (roomId: string) => roomsApi.cancelRoom(roomId),
-    
-    onSuccess: (_data, roomId) => {
+    mutationFn: (vars: { roomId: string; reason?: string }) =>
+      roomsApi.cancelRoom(vars.roomId, vars.reason),
+
+    onSuccess: (_data, { roomId }) => {
       // Invalidate room detail
       queryClient.invalidateQueries({ 
         queryKey: roomsKeys.detail(roomId) 
@@ -22,6 +23,10 @@ export const useCancelRoom = () => {
       queryClient.invalidateQueries({ 
         queryKey: roomsKeys.lists() 
       });
+    },
+    onError: (error) => {
+      console.error("Failed to cancel room:", error);
+      throw error;
     },
   });
 };

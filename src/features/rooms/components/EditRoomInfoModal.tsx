@@ -112,7 +112,8 @@ const EditRoomInfoModal: React.FC<EditRoomInfoModalProps> = ({
         onError: (err: any) => {
           toast.error(
             t('common.error'),
-            getTranslatedError(err?.message) || t('roomDetail.editRoomInfoError'),
+            getTranslatedError(err?.message, err?.code) ||
+              t('roomDetail.editRoomInfoError'),
           );
         },
       },

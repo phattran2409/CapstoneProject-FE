@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions, ActivityIndicator, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Venue, Field, TimeSlot, FieldAvailability } from '../types/venue.types';
 import { getFieldAvailability } from '../api/venuesApi';
 import { getMaxSelectableDate, formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
+import { formatCurrency } from '@/shared/utils/formatters';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -126,14 +127,35 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     }
   }, [venue, selectedSlot, selectedDate, onSelectField]);
 
+  /** Sân tương ứng với khung giờ đang chọn (key: `${fieldId}-${index}`) */
+  const selectedFieldForBook = useMemo(() => {
+    if (!venue || !selectedTimeKey) return null;
+    return venue.fields.find((f) => selectedTimeKey.startsWith(`${f.fieldId}-`)) ?? null;
+  }, [venue, selectedTimeKey]);
+
+  const hasAnyBookableField = useMemo(
+    () =>
+      venue?.fields.some(
+        (f) => f.status !== 'booked' && f.status !== 'maintenance'
+      ) ?? false,
+    [venue]
+  );
+
+  const hasSelectedSlotForBook =
+    !!selectedSlot &&
+    !!selectedFieldForBook &&
+    selectedTimeKey?.startsWith(`${selectedFieldForBook.fieldId}-`) &&
+    selectedFieldForBook.status !== 'booked' &&
+    selectedFieldForBook.status !== 'maintenance';
+
   if (!venue) return null;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
+  // const formatPrice = (price: number) => {
+  //   return new Intl.NumberFormat('vi-VN', {
+  //     style: 'currency',
+  //     currency: 'VND',
+  //   }).format(price);
+  // };
 
   const getFieldTypeColor = (fieldType: string) : {color: string, shortNameType: string} => {
     switch (fieldType) {
@@ -257,7 +279,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                         { color: isSelected ? theme.colors.darkBlack : theme.colors.textSecondary },
                       ]}
                     >
-                      {formatPrice(slot.hourlyRate)}
+                      {formatCurrency(slot.hourlyRate)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -378,8 +400,6 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
           >
             {venue.fields.map((field, index) => {
               const isExpanded = expandedFieldId === field.fieldId;
-              const isAvailable = field.status !== 'booked' && field.status !== 'maintenance';
-              const hasSelectedSlot = selectedTimeKey?.startsWith(field.fieldId + '-');
               
               return (
                 <View
@@ -448,40 +468,52 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                         </Text>
                         {renderTimeSlots(field)}
                       </View>
-
-                      {/* Book Button */}
-                      {isAvailable && (
-                        <TouchableOpacity
-                          style={[
-                            styles.bookButton,
-                            { 
-                              backgroundColor: hasSelectedSlot ? theme.colors.neonGreen : '#3a3a3a',
-                            },
-                          ]}
-                          disabled={!hasSelectedSlot}
-                          onPress={() => handleBookField(field)}
-                        >
-                          <Ionicons 
-                            name="calendar-outline" 
-                            size={18} 
-                            color={hasSelectedSlot ? theme.colors.darkBlack : '#666'} 
-                          />
-                          <Text style={[
-                            styles.bookButtonText, 
-                            { color: hasSelectedSlot ? theme.colors.darkBlack : '#666' }
-                          ]}>
-                            {hasSelectedSlot 
-                              ? t('fieldsModal.bookNow', 'Đặt sân ngay') 
-                              : t('fieldsModal.selectTimeFirst', 'Chọn khung giờ trước')}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
                     </View>
                   )}
                 </View>
               );
             })}
           </ScrollView>
+
+          {hasAnyBookableField && (
+            <View
+              style={[
+                styles.bookFooter,
+                {
+                  borderTopColor: '#2a2a2a',
+                  backgroundColor: '#121212',
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.bookButton,
+                  {
+                    backgroundColor: hasSelectedSlotForBook ? theme.colors.neonGreen : '#3a3a3a',
+                  },
+                ]}
+                disabled={!hasSelectedSlotForBook}
+                onPress={() => selectedFieldForBook && handleBookField(selectedFieldForBook)}
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color={hasSelectedSlotForBook ? theme.colors.darkBlack : '#666'}
+                />
+                <Text
+                  style={[
+                    styles.bookButtonText,
+                    { color: hasSelectedSlotForBook ? theme.colors.darkBlack : '#666' },
+                  ]}
+                >
+                  {hasSelectedSlotForBook
+                    ? t('fieldsModal.bookNow', 'Đặt sân ngay')
+                    : t('fieldsModal.selectTimeFirst', 'Chọn khung giờ trước')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -500,6 +532,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     maxHeight: SCREEN_HEIGHT * 0.85,
     minHeight: SCREEN_HEIGHT * 0.5,
+    width: '100%',
+    flexDirection: 'column',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -554,8 +588,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   fieldsScrollView: {
+    maxHeight: SCREEN_HEIGHT * 0.52,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  bookFooter: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    borderTopWidth: 1,
   },
   // Field Card styles
   fieldCard: {

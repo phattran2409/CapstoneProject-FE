@@ -14,28 +14,24 @@ export const roomsKeys = {
   lists: () => [...roomsKeys.all, 'list'] as const,
   list: (filters: RoomFilters) => [...roomsKeys.lists(), filters] as const,
 
-  // myRooms: () => [...roomsKeys.all, 'my-rooms'] as const,
-  historyRooms: (userId: string) => [...roomsKeys.all, 'history-rooms', userId] as const,
   myRoomsBase: () => [...roomsKeys.all, 'my-rooms'] as const,
   myRooms: (filters?: MyRoomsFilters) =>
     [...roomsKeys.myRoomsBase(), filters] as const,
 
-  // List of room by user
+  historyRooms: (userId: string) => [...roomsKeys.all, 'history-rooms', userId] as const,
   listByUser: (userId: string) => [...roomsKeys.lists(), userId] as const,
-  
   // Match rooms (paginated)
   matchRooms: () => [...roomsKeys.all, 'match-rooms'] as const,
   matchRoomsList: (filters?: MatchRoomFilters) => [...roomsKeys.matchRooms(), filters] as const,
-  
   // Room details
   details: () => [...roomsKeys.all, 'detail'] as const,
   detail: (id: string) => [...roomsKeys.details(), id] as const,
-  
   // Room messages
   messages: (roomId: string) => [...roomsKeys.detail(roomId), 'messages'] as const,
-
   /** Mẫu tạo phòng (user) */
   createPreset: () => [...roomsKeys.all, 'create-preset'] as const,
+  matchPresetList: (filters?: Pick<MatchRoomFilters, 'page' | 'pageSize'>) => [...roomsKeys.all, 'match-preset-list', filters] as const,
+  matchPresetDetail: (id: string) => [...roomsKeys.all, 'match-preset-detail', id] as const,
 };
 
 /**

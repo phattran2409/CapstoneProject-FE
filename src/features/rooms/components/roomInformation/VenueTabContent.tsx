@@ -10,6 +10,7 @@ import { ThemedText, ThemedCard, ThemedIcon } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
 import type { MatchRoomFullInfo } from '@/features/rooms';
 import type { VenuePhoto } from '@/features/venues';
+import { formatCurrency } from '@/shared/utils/formatters';
 
 interface VenueTabContentProps {
   displayRoom: MatchRoomFullInfo;
@@ -41,7 +42,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
   return (
     <View>
       <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
-        Venue & Field Details
+        {t('roomDetail.venueFieldDetails')}
       </ThemedText>
 
       {venuePhotosToShow.length > 0 && (
@@ -98,7 +99,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
           <View style={styles.venueInfoHeader}>
             <ThemedIcon name="football" size={20} variant="accent" />
             <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-              Field
+              {t('roomDetail.field')}
             </ThemedText>
           </View>
           <ThemedText size="l" weight="semiBold">
@@ -116,17 +117,14 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
               <ThemedIcon name="cash" size={20} variant="accent" />
               <ThemedText
                 size="xs"
-                variant="secondary"
+                weight='bold'
                 style={styles.venueInfoLabel}
               >
-                Field Rate/Hour
+                {t('roomDetail.fieldRateHour')}
               </ThemedText>
             </View>
             <ThemedText size="xl" weight="bold">
-              {new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              }).format(displayRoom.field.hourlyRate)}
+              {formatCurrency(displayRoom.field.hourlyRate)}
             </ThemedText>
           </ThemedCard>
 
@@ -135,10 +133,10 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
               <ThemedIcon name="time" size={20} variant="accent" />
               <ThemedText
                 size="xs"
-                variant="secondary"
+                weight="bold"
                 style={styles.venueInfoLabel}
               >
-                Duration
+                {t('roomDetail.duration')}
               </ThemedText>
             </View>
             <ThemedText size="xl" weight="bold">
@@ -151,7 +149,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
           <View style={styles.venueInfoHeader}>
             <ThemedIcon name="business" size={20} variant="accent" />
             <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-              Venue
+              {t('roomDetail.venue')}
             </ThemedText>
           </View>
           <ThemedText size="l" weight="semiBold">
@@ -163,7 +161,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
           <View style={styles.venueInfoHeader}>
             <ThemedIcon name="location" size={20} variant="accent" />
             <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-              Address
+              {t('roomDetail.address')}
             </ThemedText>
           </View>
           <ThemedText variant="secondary" size="m">
@@ -176,7 +174,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
             <View style={styles.venueInfoHeader}>
               <ThemedIcon name="call" size={20} variant="accent" />
               <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-                Contact
+                {t('roomDetail.contact')}
               </ThemedText>
             </View>
             <ThemedText size="m">

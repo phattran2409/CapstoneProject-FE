@@ -343,7 +343,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ navigation, route }) => {
     } catch (error: unknown) {
       console.error("Failed to save formation:", error);
       toast.error(
-        getTranslatedError((error as { message?: string })?.message) ||
+        getTranslatedError(
+          (error as { message?: string; code?: string })?.message,
+          (error as { message?: string; code?: string })?.code
+        ) ||
           t("teamScreen.saveFormationError"),
       );
     }
@@ -394,7 +397,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ navigation, route }) => {
     } catch (error: unknown) {
       console.error("Failed to save team name:", error);
       toast.error(
-        getTranslatedError((error as { message?: string })?.message) ||
+        getTranslatedError(
+          (error as { message?: string; code?: string })?.message,
+          (error as { message?: string; code?: string })?.code
+        ) ||
           t("teamScreen.teamNameError"),
       );
     } finally {
@@ -413,7 +419,10 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ navigation, route }) => {
     } catch (error: unknown) {
       console.error("Failed to process payment:", error);
       toast.error(
-        getTranslatedError((error as { message?: string })?.message) ||
+        getTranslatedError(
+          (error as { message?: string; code?: string })?.message,
+          (error as { message?: string; code?: string })?.code
+        ) ||
           t("teamScreen.processPaymentError"),
       );
     } finally {

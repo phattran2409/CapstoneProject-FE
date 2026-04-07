@@ -5,10 +5,11 @@ import { useTheme } from '@/shared/theme';
 import type { MatchRoomFullInfo } from '@/features/rooms';
 
 interface HostTabContentProps {
+  t: (key: string) => string;
   displayRoom: MatchRoomFullInfo;
 }
 
-export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom }) => {
+export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}) => {
   const { theme } = useTheme();
   const host = displayRoom.host;
 
@@ -17,7 +18,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom }) =
   return (
     <View>
       <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
-        Host Information
+        {t('roomDetail.hostInformation')}
       </ThemedText>
 
       <ThemedCard style={styles.hostCard}>
@@ -43,7 +44,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom }) =
         {displayRoom.description && (
           <View style={styles.hostBio}>
             <ThemedText variant="secondary" size="xs" style={{ marginBottom: 4 }}>
-              Description
+              {t('roomDetail.description')}
             </ThemedText>
             <ThemedText size="m">{displayRoom.description}</ThemedText>
           </View>
@@ -52,7 +53,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom }) =
         {displayRoom.rules && (
           <View style={[styles.hostBio, { marginTop: 12 }]}>
             <ThemedText variant="secondary" size="xs" style={{ marginBottom: 4 }}>
-              Rules
+              {t('roomDetail.rules')}
             </ThemedText>
             <ThemedText size="m">{displayRoom.rules}</ThemedText>
           </View>
@@ -67,7 +68,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom }) =
               ]}
             >
               <ThemedText variant="secondary" size="xs" style={styles.contactLabel}>
-                Venue Contact
+                {t('roomDetail.contact')}
               </ThemedText>
               <ThemedText size="s" weight="medium">
                 {displayRoom.field.venue.contactPhone}

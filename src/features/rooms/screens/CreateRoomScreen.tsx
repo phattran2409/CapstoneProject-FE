@@ -25,6 +25,10 @@ import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { roomsApi } from '../api/roomsApi';
 import { matchFormatToUi } from '../utils/matchRoomCreatePresetMap';
 import { useToast } from '@/shared/toast/useToast';
+import { formatDate, formatTime } from '@/shared/utils';
+import { PresetListBottomSheet } from '../components/PresetListBottomSheet';
+import { RoomPresetItem } from '../types/room.types';
+import { useCreateMatchPreset } from '../hooks/useMatchPresetActions';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -48,12 +52,14 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     control,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<RoomFormData>({
     resolver: zodResolver(roomSchema),
     defaultValues: {
       roomName: '',
       description: '',
+      rules: '',
     },
   });
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(
@@ -71,9 +77,11 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [presetSheetVisible, setPresetSheetVisible] = useState(false);
 
   // ✅ Use React Query mutation
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
+  const { mutate: createMatchPreset, isPending: isCreatingPreset } = useCreateMatchPreset();
   const { setActiveRoom } = useActiveRoomStore();
   
   const FormatMatch = (format: MatchFormat): 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | undefined => {
@@ -118,8 +126,8 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       if (!p) return;
       setSelectedFormat(matchFormatToUi(p.matchFormat));
       setDurationMinutes(p.durationMinutes);
-      reset({ roomName: p.roomName, description: p.description || '' });
-      setIsPrivate(p.isPrivate);
+      reset({ roomName: p.roomName, description: p.description || '', rules: p.rules || '' });
+      setIsPrivate(p.visibility === 'Private');
       setPassword('');
     })();
   }, [route?.params?.presetApplyNonce, reset]);
@@ -159,7 +167,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         matchFormat: FormatMatch(selectedFormat) ?? (selectedFormat as string),
         roomName: data.roomName,
         description: data.description || '',
-        rules: '',
+        rules: data.rules || '',
         visibility: isPrivate ? 'Private' : 'Public',
         ...(isPrivate && password.trim() ? { password: password.trim() } : {}),
       },
@@ -193,11 +201,16 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         },
         onError: (error: any) => {
           setIsLoading(false);
-          showDanger(t('common.error'), getTranslatedError(error?.message) || t('createRoom.errorMessage'), () => {});
+          showDanger(
+            t('common.error'),
+            getTranslatedError(error?.message, error?.code) || t('createRoom.errorMessage'),
+            () => {}
+          );
         },
       }
     );
   };
+  
   const handleSetDurationMinutes = useCallback((type: 'increase' | 'decrease') => {
     setDurationMinutes((prev) => {
       if (type === 'increase') {
@@ -218,21 +231,109 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     });
   }, [t]);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('vi-VN', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
+  const handleSelectPreset = useCallback((preset: RoomPresetItem) => {
+    reset({ roomName: preset.roomName, description: preset.description || '', rules: preset.rules || '' });
+    setSelectedFormat(matchFormatToUi(preset.matchFormat));
+    setDurationMinutes(preset.durationMinutes);
+    setIsPrivate(preset.visibility === 'Private');
+    setPassword(preset.password ?? '');
+    setSelectedField({
+      fieldId: preset.fieldId,
+      fieldName: preset.fieldName || preset.venueName || 'Preset Field',
+      fieldType: preset.matchFormat,
+      hourlyRate: 0,
     });
-  };
+    setSelectedVenue({
+      venueId: preset.fieldId,
+      name: preset.venueName || preset.fieldName || t('createRoom.venuePlaceholder'),
+      address: preset.venueAddress || '',
+      latitude: 0,
+      longitude: 0,
+      description: '',
+      amenities: '',
+      contactPhone: '',
+      contactEmail: '',
+      amentities: null,
+      fields: [],
+      createdAt: new Date().toISOString(),
+    });
+    if (preset.startTime) {
+      const [hours, minutes] = preset.startTime.split(':').map(Number);
+      if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+        const newTime = new Date();
+        newTime.setHours(hours, minutes, 0, 0);
+        setMatchTime(newTime);
+      }
+      setSelectedTimeSlot({
+        startTime: preset.startTime,
+        isAvailable: true,
+        hourlyRate: 0,
+      });
+    }
+  }, [reset, t]);
 
-  const formatTime = (time: Date) => {
-    return time.toLocaleTimeString('vi-VN', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false,
-    });
-  };
+  const handleSaveCurrentPreset = useCallback(() => {
+    const formData = getValues();
+    if (!selectedField?.fieldId) {
+      showInfo(t('createRoom.title'), t('createRoom.validation.venueRequired'));
+      return;
+    }
+    if (!formData.roomName?.trim()) {
+      showInfo(t('createRoom.title'), t('createRoom.preset.validationName'));
+      return;
+    }
+
+    const startTime = selectedTimeSlot?.startTime
+      ? (selectedTimeSlot.startTime.length === 5 ? `${selectedTimeSlot.startTime}:00` : selectedTimeSlot.startTime)
+      : `${formatTime(matchTime)}:00`;
+
+    createMatchPreset(
+      {
+        fieldId: selectedField.fieldId,
+        roomName: formData.roomName.trim(),
+        matchFormat: FormatMatch(selectedFormat) ?? selectedFormat,
+        visibility: isPrivate ? 'Private' : 'Public',
+        startTime,
+        durationMinutes,
+        rules: formData.rules || '',
+        password: isPrivate ? password.trim() : '',
+        description: formData.description || '',
+      },
+      {
+        onSuccess: () => {
+          setPresetSheetVisible(false);
+          showSuccess(
+            t('createRoom.preset.savedTitle'),
+            t('createRoom.preset.savedMessage'),
+            () => {},
+            true
+          );
+        },
+        onError: (error: unknown) => {
+          showDanger(
+            t('common.error'),
+            error instanceof Error ? error.message : t('createRoom.preset.saveError'),
+            () => {}
+          );
+        },
+      }
+    );
+  }, [
+    createMatchPreset,
+    durationMinutes,
+    getValues,
+    isPrivate,
+    matchTime,
+    password,
+    selectedField,
+    selectedFormat,
+    selectedTimeSlot?.startTime,
+    showDanger,
+    showInfo,
+    showSuccess,
+    t,
+  ]);
+
   const getErrorMessage = (message?: string) => {
     if (!message) return '';
     return message.startsWith('createRoom.validation.') ? t(message) : message;
@@ -400,7 +501,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           </ThemedText>
         </View>
         <TouchableOpacity
-          onPress={() => navigation?.navigate('CreateRoomPreset')}
+          onPress={() => setPresetSheetVisible(true)}
           style={styles.presetButton}
           accessibilityRole="button"
           accessibilityLabel={t('createRoom.preset.openButton')}
@@ -547,6 +648,40 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             </Text>
           )}
           </View>
+          {/* Rules */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('roomDetail.editRoomInfoRules')}
+            </ThemedText>
+            <Controller
+              control={control}
+              name="rules"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ThemedView
+                  variant="surface"
+                  style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
+                >
+                  <TextInput
+                    style={{ color: theme.colors.text, fontSize: 16 }}
+                    multiline
+                    numberOfLines={4}
+                    maxLength={1000}
+                    textAlignVertical="top"
+                    placeholder={t('roomDetail.editRoomInfoRulesPlaceholder')}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </ThemedView>
+              )}
+            />
+          {errors.rules && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {getErrorMessage(errors.rules.message)}
+            </Text>
+          )}
+          </View>
 
           {/* Date and Time - read-only from TimeSlot khi đã chọn sân (DateTimePicker đã tắt) */}
           <View style={styles.dateTimeRow}>
@@ -564,7 +699,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 pointerEvents="none"
               >
                 <ThemedText variant="muted" size="m">
-                  {formatDate(matchDate)}
+                  {formatDate(matchDate.toISOString(), 'long')}
                 </ThemedText>
                 <ThemedIcon name="calendar" size={20} variant="secondary" />
               </View>
@@ -681,6 +816,15 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             autoCloseDelay={alertOptions.autoCloseDelay}
           />
         )}
+
+        <PresetListBottomSheet
+          visible={presetSheetVisible}
+          onClose={() => setPresetSheetVisible(false)}
+          onSelectPreset={handleSelectPreset}
+          onSaveCurrentPreset={handleSaveCurrentPreset}
+          savingCurrentPreset={isCreatingPreset}
+          t={t}
+        />
     </ThemedSafeAreaView>
    
   );

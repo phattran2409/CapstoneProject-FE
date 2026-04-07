@@ -61,6 +61,22 @@ export const formatDateTime = (
 };
 
 /**
+ * Format a time to a localized time string
+ * @param time - Date object
+ * @returns Formatted time string
+ *
+ * @example
+ * formatTime("2024-01-24T10:00:00Z") // "10:00:00"
+ */
+export const formatTime = (time: Date): string => {
+  return time.toLocaleTimeString('vi-VN', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false,
+  });
+};
+
+/**
  * Check if a date is today
  * @param dateString - ISO date string or any valid date string
  * @returns True if the date is today

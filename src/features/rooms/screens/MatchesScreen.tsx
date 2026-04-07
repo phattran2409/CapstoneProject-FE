@@ -178,7 +178,10 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           navigation.navigate('RoomInformation', params);
         },
         onError: (error: any) => {
-          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
+          toast.error(
+            getTranslatedError(error?.message, error?.code) ||
+              t("personalPage.editForm.toast.updateError")
+          );
           console.log('Join room error (may already be participant):', error?.message);
           navigation.navigate('RoomInformation', params);
         },
@@ -198,8 +201,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           navigation.navigate('RoomInformation', pendingJoinParams.params);
         },
         onError: (error: any) => {
-          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
-          setPasswordError(getTranslatedError(error?.message) || t('matches.passwordInvalid'));
+          toast.error(
+            getTranslatedError(error?.message, error?.code) ||
+              t("personalPage.editForm.toast.updateError")
+          );
+          setPasswordError(
+            getTranslatedError(error?.message, error?.code) ||
+              t('matches.passwordInvalid')
+          );
         },
       }
     );

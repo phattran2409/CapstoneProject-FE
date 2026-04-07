@@ -20,7 +20,9 @@ export type RootStackParamList = {
     /** Khi áp dụng mẫu từ CreateRoomPreset — đổi giá trị để CreateRoom chạy lại effect */
     presetApplyNonce?: number;
   } | undefined;
-  CreateRoomPreset: undefined;
+  CreateRoomPreset: {
+    presetId?: string;
+  };
   VenueSelection: { matchFormat?: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' } | undefined;
   VenueDetail: { venueId: string };
   RoomInformation: {
