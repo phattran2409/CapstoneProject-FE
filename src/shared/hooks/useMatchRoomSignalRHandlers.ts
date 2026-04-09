@@ -22,6 +22,9 @@ import type {
   RoomStopTypingPayload,
   ParticipantPaidEvent,
   FormationUpdatedPayload,
+  HostTransferRequestedPayload,
+  HostTransferRejectedPayload,
+  HostTransferredPayload,
 } from "./useMatchRoomSignalR";
 
 export interface UseMatchRoomSignalRHandlersOptions {
@@ -58,6 +61,10 @@ export interface UseMatchRoomSignalRHandlersOptions {
   // Formation callbacks
   onFormationUpdated?: (payload: FormationUpdatedPayload) => void;
 
+  // Host transfer callbacks
+  onHostTransferRequested?: (payload: HostTransferRequestedPayload) => void;
+  onHostTransferRejected?: (payload: HostTransferRejectedPayload) => void;
+  onHostTransferred?: (payload: HostTransferredPayload) => void; 
   // Toast/Alert notifications
   showNotification?: (
     message: string,
@@ -106,6 +113,9 @@ export const useMatchRoomSignalRHandlers = (
     showNotification,
     onParticipantPaid: onParticipantPaidCallback,
     onFormationUpdated: onFormationUpdatedCallback,
+    onHostTransferRequested: onHostTransferRequestedCallback,
+    onHostTransferRejected: onHostTransferRejectedCallback,
+    onHostTransferred: onHostTransferredCallback,
   } = options;
 
   const queryClient = useQueryClient();
@@ -821,6 +831,45 @@ export const useMatchRoomSignalRHandlers = (
     ],
   );
 
+  /**
+   * Handler khi nhận yêu cầu chuyển quyền host
+   * Chỉ xử lý nếu targetUserId trùng với currentUserId
+   */
+  const onHostTransferRequested = useCallback(
+    (payload: HostTransferRequestedPayload) => {
+      console.log("👑 Handler - HostTransferRequested:", payload);
+
+      if (payload.roomId !== roomId) return;
+
+      if (payload.targetUserId === currentUserId) {
+        onHostTransferRequestedCallback?.(payload);
+      }
+    },
+    [roomId, currentUserId, onHostTransferRequestedCallback],
+  );
+
+  /**
+   * Handler khi nhận yêu cầu chuyển host qua SignalR
+   */
+  const onHostTransferRejected = useCallback(
+    (payload: HostTransferRejectedPayload) => {
+      console.log("👑 Handler - HostTransferRejected:", payload);
+      if (payload.roomId !== roomId) return;
+      onHostTransferRejectedCallback?.(payload);
+    },
+    [roomId, currentUserId, onHostTransferRejectedCallback],
+  );
+  /**
+   * Handler khi host chuyển quyền host thành công
+   */
+  const onHostTransferred = useCallback(
+    (payload: HostTransferredPayload) => {
+      console.log("👑 Handler - HostTransferred:", payload);
+      if (payload.roomId !== roomId) return;
+      onHostTransferredCallback?.(payload);
+    },
+    [roomId, currentUserId, onHostTransferredCallback],
+  );
   return {
     roomId,
     onUserJoinedRoom,
@@ -836,5 +885,8 @@ export const useMatchRoomSignalRHandlers = (
     onError,
     onParticipantPaid,
     onFormationUpdated,
+    onHostTransferRequested, 
+    onHostTransferRejected,
+    onHostTransferred,
   };
 };

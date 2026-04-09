@@ -56,6 +56,9 @@ export const API_CONFIG = {
       PRESET_DETAIL: "/match-presets/:id",
       PROCESS_PAYMENT: "/bookings/process-payment",
       VOTE_RESULT: "/match-rooms/:id/vote-result",
+      /** Chuyển quyền host sang người chơi khác */
+      TRANSFER_HOST: "/match-rooms/:id/transfer-host",
+      RESPONSE_TRANSFER_HOST: "/match-rooms/:id/transfer-host/respond",
       /** Legacy resource (không phải match-rooms) */
       LEGACY_ROOM: "/rooms/:id",
     },

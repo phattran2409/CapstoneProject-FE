@@ -359,6 +359,12 @@ const en = {
     fieldRateHour: "Field Rate/Hour",
     address: "Address",
     venueFieldDetails: "Venue & Field Details",
+    transferRequested: "Transfer requested",
+    transferRequestedDesc: "{{hostName}} has requested to transfer the host role to you",
+    transferRejected: "Transfer rejected",
+    transferRejectedDesc: "{{targetUserName}} has rejected your transfer request",
+    transferAccepted: "Transfer accepted successfully",
+    transferAcceptedDesc: "{{newHostName}} is now the host of the room",
   },
   teamScreen: {
     formationUpdated: "Formation updated",

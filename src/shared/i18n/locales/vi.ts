@@ -357,6 +357,12 @@ const vi = {
     duration: "Thời lượng",
     address: "Địa chỉ",
     venueFieldDetails: "Chi tiết địa điểm",
+    transferRequested: "Yêu cầu chuyển host",
+    transferRequestedDesc: "{{hostName}} đã yêu cầu chuyển quyền host cho bạn",
+    transferRejected: "Yêu cầu chuyển host bị từ chối",
+    transferRejectedDesc: "{{targetUserName}} đã từ chối yêu cầu chuyển quyền host của bạn",
+    transferAccepted: "Yêu cầu chuyển host đã được chấp nhận",
+    transferAcceptedDesc: "{{newHostName}} đã trở thành host của phòng",
   },
   teamScreen: {
     formationUpdated: "Đội hình đã được cập nhật",

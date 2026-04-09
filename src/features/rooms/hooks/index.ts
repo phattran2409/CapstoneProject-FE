@@ -16,3 +16,4 @@ export {
   useUpsertMatchRoomCreatePreset,
 } from './useMatchRoomCreatePreset';
 export { useUpdateRoomInfo } from './useUpdateRoomInfo';
+export { useTransferHost } from './useTransferHost';

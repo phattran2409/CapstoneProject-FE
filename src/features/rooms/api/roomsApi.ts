@@ -375,6 +375,19 @@ export const roomsApi = {
   },
 
   /**
+   * POST /match-rooms/:id/transfer-host — chuyển quyền host sang người chơi khác.
+   */
+  transferHost: async (roomId: string, targetUserId: string): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.TRANSFER_HOST.replace(':id', roomId);
+    await apiClient.post(url, { targetUserId });
+  },
+
+  responseTransferHost: async (roomId: string, isAccepted: boolean): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.RESPONSE_TRANSFER_HOST.replace(':id', roomId);
+    await apiClient.post(url, {isAccepted });
+  },
+
+  /**
    * Legacy: lấy mẫu tạo phòng đơn của user hiện tại (GET). 404 → null.
    */
   getCreateRoomPreset: async (): Promise<MatchRoomCreatePresetDto | null> => {

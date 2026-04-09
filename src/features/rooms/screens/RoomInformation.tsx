@@ -18,7 +18,6 @@ import {
   useUpdateParticipant,
   useLeaveMatchRoom,
   useKickPlayer, 
-  useCancelRoom, 
   type MatchRoomFullInfo,
   type MatchRoomParticipant,
   type TeamAssignment,
@@ -36,9 +35,13 @@ import {
   MatchCountdown,
   type PlayerPosition,
   InviteFriendsModal,
+  TransferHostModal,
+  HostTransferRequestDialog,
 } from '../components';
+import type { HostTransferRequestPayload } from '../components/HostTransferRequestDialog';
+import { useResponseTransferHost, useTransferHost } from '../hooks/useTransferHost';
 import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusActionBar';
-import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert } from '@/shared/hooks';
+import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert, HostTransferRejectedPayload, HostTransferredPayload } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 import { useFeedbackSessionStore } from '@/features/feedback';
@@ -167,6 +170,12 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [showPositionModal, setShowPositionModal] = useState(false);
   const [pendingTeamAssignment, setPendingTeamAssignment] = useState<'A' | 'B' | null>(null);
 
+  // ✅ Transfer host state
+  const [transferHostVisible, setTransferHostVisible] = useState(false);
+  const [transferRequest, setTransferRequest] = useState<HostTransferRequestPayload | null>(null);
+  const [transferRejected, setTransferRejected] = useState<HostTransferRejectedPayload | null>(null);
+  const { mutate: acceptTransfer, isPending: isAcceptingTransfer } = useResponseTransferHost();
+
   // ==================== SignalR Integration ====================
   
   // ✅ Toast hook for notifications
@@ -251,6 +260,92 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     }
   }, [user?.userId, refetch, showSuccess, t]);
 
+  /**
+   * Callback khi nhận yêu cầu chuyển host qua SignalR
+   */
+  const handleHostTransferRequested = useCallback(
+    (payload: HostTransferRequestPayload) => {
+      setTransferRequest(payload);
+    },
+    [],
+  );
+
+  /**
+   * Callback khi nhận yêu cầu chuyển host qua SignalR
+   */
+  const handleHostTransferRejected = useCallback(
+    (payload: HostTransferRejectedPayload) => {
+      setTransferRequest(null);
+      refetch();
+      console.log('handleHostTransferRejected', payload);
+      toast.error(
+        t('roomDetail.transferRejected'),
+        t('roomDetail.transferRejectedDesc', { targetUserName: payload.targetUserName }),
+      );
+    },
+    [refetch, toast, t],
+  );
+  
+  /**
+   * Callback khi host chuyển quyền host thành công
+   */
+  const handleHostTransferred = useCallback(
+    (payload: HostTransferredPayload) => {
+      setTransferRequest(null);
+      refetch();
+      toast.success(
+        t('roomDetail.transferAccepted'),
+        t('roomDetail.transferAcceptedDesc', { newHostName: payload.newHostName }),
+      );
+    },
+      [refetch, toast, t],
+  );
+  const handleAcceptTransfer = useCallback(() => {
+    if (!transferRequest) return;
+    acceptTransfer(
+      { roomId: transferRequest.roomId, isAccepted: true },
+      {
+        onSuccess: () => {
+          setTransferRequest(null);
+          refetch();
+          toast.success(
+            t('roomDetail.transferAccepted')
+          );
+        },
+        onError: (error: any) => {
+          toast.error(
+            t('common.error', 'Lỗi'),
+            getTranslatedError(error?.message, error?.code) ||
+              t('roomDetail.transferAcceptError', 'Không thể chấp nhận chuyển host'),
+          );
+        },
+      },
+    );
+  }, [transferRequest, acceptTransfer, refetch, toast, t]);
+
+  const handleRejectTransfer = useCallback(() => {
+    if (!transferRequest) return;
+    acceptTransfer(
+      { roomId: transferRequest.roomId, isAccepted: false },
+      {
+        onSuccess: () => {
+          setTransferRequest(null);
+          refetch();
+          toast.success(
+            t('roomDetail.transferRejected')
+          );
+        },
+        onError: (error: any) => {
+          toast.error(
+            t('common.error', 'Lỗi'),
+            getTranslatedError(error?.message, error?.code) ||
+              t('roomDetail.transferRejectError'),
+          );
+        },
+      },
+    );
+  }, [transferRequest , acceptTransfer, refetch, toast, t]);
+
   // ✅ Tạo SignalR handlers
   const signalRHandlers = useMatchRoomSignalRHandlers({
     roomId,
@@ -260,6 +355,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     onKicked: handleKickedFromRoom,
     onRoomDeleted: handleRoomDeleted,
     onHostChanged: handleHostChanged,
+    onHostTransferRequested: handleHostTransferRequested,
+    onHostTransferRejected: handleHostTransferRejected,
+    onHostTransferred: handleHostTransferred,
   });
 
   // ✅ Kết nối SignalR với handlers
@@ -388,34 +486,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       t('common.buttons.cancel'),
     );
   };
-
-  // ✅ Handle cancel room (host only)
-  // const handleCancelRoom = () => {
-  //   showDanger(
-  //     t('roomDetail.cancelTitle'),
-  //     t('roomDetail.cancelMessage'),
-  //     () => {
-  //       cancelRoom({ roomId, reason: undefined }, {
-  //         onSuccess: () => {
-  //           showSuccess(t('roomDetail.cancelSuccess'), t('roomDetail.cancelSuccessDesc'), () => {
-  //             navigation?.goBack();
-  //           });
-  //         },
-  //         onError: (error: any) => {
-  //           showDanger(
-  //             t('roomDetail.notifications.error'),
-  //             getTranslatedError(error?.message, error?.code) || t('roomDetail.cancelError'),
-  //             () => {}
-  //           );
-  //         },
-  //       });
-  //     },
-  //     undefined,
-  //     t('roomDetail.yesCancel'),
-  //     t('roomDetail.no'),
-  //   );
-  // };
-
   // ✅ Handle leave room
   const handleLeaveRoom = () => {
     console.log('handleLeaveRoom');
@@ -587,13 +657,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           >
             <ThemedIcon name="arrow-back" size={24} variant="secondary" />
           </TouchableOpacity>
-          <View style={{  flex: 1}}>
+          <View style={{  flex: displayRoom.status == 'Open' ? 0 : 1}}>
             <ThemedText size="xl" weight="bold" style={{ textAlign: displayRoom.status !== 'Open' ? 'center' : 'left' }}>
               {t('roomDetail.title')}
             </ThemedText>
           </View>
-          <View style={{width : 30, height : 'auto'}}>
-          </View>
+          {displayRoom.status !== 'Open' &&(
+            <View style={{width : 30, height : 'auto'}}>
+            </View>
+          )}
         </View>
         {displayRoom.status === 'Open' && !roomActionsBlocked && (isHost || currentUserParticipant) && (
         <View style={styles.headerRight}>
@@ -822,9 +894,34 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                 isLeavingRoom: isLeaving,
               }
             : {})}
+          onTransferHost={() => setTransferHostVisible(true)}
         />
       )}
-    
+
+      {/* Transfer Host Modal */}
+      {isHost && displayRoom && user?.userId && (
+        <TransferHostModal
+          visible={transferHostVisible}
+          onClose={() => setTransferHostVisible(false)}
+          roomId={displayRoom.roomId}
+          participants={[
+            ...displayRoom.participants.teamA,
+            ...displayRoom.participants.teamB,
+            ...displayRoom.participants.unassigned,
+          ]}
+          currentUserId={user.userId}
+        />
+      )}
+
+      {/* Host Transfer Request Dialog (target user nhận yêu cầu qua SignalR) */}
+      <HostTransferRequestDialog
+        visible={!!transferRequest}
+        request={transferRequest}
+        isAccepting={isAcceptingTransfer}
+        onAccept={handleAcceptTransfer}
+        onReject={handleRejectTransfer}
+      />
+
       {/* Position Selection Modal */}
       <PositionSelectionModal
         visible={showPositionModal}

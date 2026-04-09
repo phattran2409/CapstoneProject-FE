@@ -34,6 +34,10 @@ const MATCH_ROOM_HUB_EVENTS = {
   ParticipantPaid: "ParticipantPaid",
   // Formation-related events
   FormationUpdated: "FormationUpdated",
+  // Host transfer events
+  HostTransferRequested: "HostTransferRequested",
+  HostTransferRejected: "HostTransferRejected",
+  HostTransferred : "HostTransferred"
 } as const;
 
 /**
@@ -76,6 +80,12 @@ export interface UseMatchRoomSignalROptions {
 
   // Formation events
   onFormationUpdated?: (payload: FormationUpdatedPayload) => void;
+
+  // Host transfer events
+  onHostTransferRequested?: (payload: HostTransferRequestedPayload) => void;
+  // 
+  onHostTransferRejected?: (payload: HostTransferRejectedPayload) => void;
+  onHostTransferred?: (payload: HostTransferredPayload) => void; 
 }
 
 // ==================== Payload Types ====================
@@ -273,6 +283,35 @@ export interface FormationUpdatedPayload {
   updatedAt: string;
 }
 
+/**
+ * Payload khi host gửi yêu cầu chuyển quyền host cho một người chơi
+ * Backend: HostTransferRequested event
+ */
+export interface HostTransferRequestedPayload {
+  roomId: string;
+  hostName: string;
+  targetUserId: string;
+  requestedAt: string;
+}
+/**
+ * Payload khi host từ chối yêu cầu chuyển quyền host
+ * Backend: HostTransferRejected event
+ */
+export interface HostTransferRejectedPayload {
+  roomId: string;
+  targetUserName?: string | null; 
+  rejectedAt: string;
+}
+/**
+ * Payload khi host chuyển quyền host thành công
+ * Backend: HostTransferred event
+ */
+export interface HostTransferredPayload {
+  roomId: string;
+  newHostId: string;
+  newHostName: string;
+  transferredAt: string;
+}
 /**
  * Hook quản lý kết nối SignalR cho Match Room
  *
@@ -517,6 +556,33 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
           (payload: FormationUpdatedPayload) => {
             console.log("⚽ FormationUpdated:", payload);
             optionsRef.current.onFormationUpdated?.(payload);
+          },
+        );
+
+        // Host transfer requested
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.HostTransferRequested,
+          (payload: HostTransferRequestedPayload) => {
+            console.log("👑 HostTransferRequested:", payload);
+            optionsRef.current.onHostTransferRequested?.(payload);
+          },
+        );
+
+        // Host transfer rejected by target user
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.HostTransferRejected,
+          (payload: HostTransferRejectedPayload) => {
+            console.log("👑 HostTransferRejected:", payload);
+            optionsRef.current.onHostTransferRejected?.(payload);
+          },
+        );
+
+        // Host transferred successfully
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.HostTransferred,
+          (payload: HostTransferredPayload) => {
+            console.log("👑 HostTransferred:", payload);
+            optionsRef.current.onHostTransferred?.(payload);
           },
         );
 
