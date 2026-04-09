@@ -173,7 +173,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   // ✅ Transfer host state
   const [transferHostVisible, setTransferHostVisible] = useState(false);
   const [transferRequest, setTransferRequest] = useState<HostTransferRequestPayload | null>(null);
-  const [transferRejected, setTransferRejected] = useState<HostTransferRejectedPayload | null>(null);
   const { mutate: acceptTransfer, isPending: isAcceptingTransfer } = useResponseTransferHost();
 
   // ==================== SignalR Integration ====================
@@ -276,14 +275,12 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const handleHostTransferRejected = useCallback(
     (payload: HostTransferRejectedPayload) => {
       setTransferRequest(null);
-      refetch();
-      console.log('handleHostTransferRejected', payload);
       toast.error(
         t('roomDetail.transferRejected'),
         t('roomDetail.transferRejectedDesc', { targetUserName: payload.targetUserName }),
       );
     },
-    [refetch, toast, t],
+    [ toast, t],
   );
   
   /**
@@ -330,7 +327,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       {
         onSuccess: () => {
           setTransferRequest(null);
-          refetch();
           toast.success(
             t('roomDetail.transferRejected')
           );
@@ -344,7 +340,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         },
       },
     );
-  }, [transferRequest , acceptTransfer, refetch, toast, t]);
+  }, [transferRequest , toast, t]);
 
   // ✅ Tạo SignalR handlers
   const signalRHandlers = useMatchRoomSignalRHandlers({

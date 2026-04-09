@@ -528,7 +528,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
 
         // User typing in room
         hubConnection.on("RoomUserTyping", (payload: RoomTypingPayload) => {
-          console.log("⌨️ RoomUserTyping:", payload);
           optionsRef.current.onRoomUserTyping?.(payload);
         });
 
@@ -536,7 +535,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           "RoomUserStopTyping",
           (payload: RoomStopTypingPayload) => {
-            console.log("⌨️ RoomUserStopTyping:", payload);
             optionsRef.current.onRoomUserStopTyping?.(payload);
           },
         );
@@ -545,7 +543,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.ParticipantPaid,
           (payload: ParticipantPaidEvent) => {
-            console.log("💵 ParticipantPaid:", payload);
             optionsRef.current.onParticipantPaid?.(payload);
           },
         );
@@ -554,7 +551,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.FormationUpdated,
           (payload: FormationUpdatedPayload) => {
-            console.log("⚽ FormationUpdated:", payload);
             optionsRef.current.onFormationUpdated?.(payload);
           },
         );
@@ -563,7 +559,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.HostTransferRequested,
           (payload: HostTransferRequestedPayload) => {
-            console.log("👑 HostTransferRequested:", payload);
             optionsRef.current.onHostTransferRequested?.(payload);
           },
         );
@@ -572,7 +567,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.HostTransferRejected,
           (payload: HostTransferRejectedPayload) => {
-            console.log("👑 HostTransferRejected:", payload);
             optionsRef.current.onHostTransferRejected?.(payload);
           },
         );
@@ -581,14 +575,12 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.HostTransferred,
           (payload: HostTransferredPayload) => {
-            console.log("👑 HostTransferred:", payload);
             optionsRef.current.onHostTransferred?.(payload);
           },
         );
 
         // Error from server
         hubConnection.on(MATCH_ROOM_HUB_EVENTS.Error, (payload: any) => {
-          console.warn("❌ MatchRoom SignalR Error:", payload);
           optionsRef.current.onError?.(payload);
         });
 

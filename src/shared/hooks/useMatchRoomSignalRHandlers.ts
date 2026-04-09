@@ -838,7 +838,6 @@ export const useMatchRoomSignalRHandlers = (
   const onHostTransferRequested = useCallback(
     (payload: HostTransferRequestedPayload) => {
       console.log("👑 Handler - HostTransferRequested:", payload);
-
       if (payload.roomId !== roomId) return;
 
       if (payload.targetUserId === currentUserId) {
@@ -865,7 +864,7 @@ export const useMatchRoomSignalRHandlers = (
   const onHostTransferred = useCallback(
     (payload: HostTransferredPayload) => {
       console.log("👑 Handler - HostTransferred:", payload);
-      if (payload.roomId !== roomId) return;
+      if (payload.roomId !== roomId ) return;
       onHostTransferredCallback?.(payload);
     },
     [roomId, currentUserId, onHostTransferredCallback],
