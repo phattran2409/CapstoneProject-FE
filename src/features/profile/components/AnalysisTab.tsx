@@ -3,46 +3,45 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RadarChart } from "./RadarChart";
+import RadarChart from "@/features/profile/components/RadarChart";
 import { AIAssessmentCard } from "./AIAssessmentCard";
 
 interface AnalysisTabProps {
-  stats: {
-    matches: number;
-    winRate: number;
-  };
   radarData: {
-    WinLoss: number;
-    Perf: number;
-    Feedback: number;
-    Sentiment: number;
-    Trust: number;
-    RoleFactor: number;
-  };
+    form: number;
+    winRate: number;
+    communityScore: number;
+    trust: number;
+    contribution: number;
+    summary?: string;
+    assessments?: Array<{
+      title: string;
+      description: string;
+      type?: string;
+    }>;
+  } | null;
+  isLoading?: boolean;
 }
 
 export const AnalysisTab: React.FC<AnalysisTabProps> = ({
-  stats,
   radarData,
+  isLoading = false,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  const assessments = [
-    {
-      title: "Tiềm năng thủ lĩnh",
-      description: `Dựa trên ${stats.matches} trận đấu, bạn duy trì sự ổn định đáng kinh ngạc. Tỷ lệ thắng ${stats.winRate}% là minh chứng rõ ràng cho khả năng dẫn dắt đội bóng của bạn.`,
-      icon: "star" as const,
-      iconColor: theme.colors.neonGreen,
-    },
-    {
-      title: "Cần cải thiện RoleFactor",
-      description:
-        "Biểu đồ năng lực cho thấy RoleFactor của bạn hơi thấp so với Rank Diamond I. Hãy tích cực tham gia vào các pha phối hợp nhóm hơn để tối ưu hóa hiệu suất.",
-      icon: "bar-chart" as const,
-      iconColor: theme.colors.textSecondary,
-    },
-  ];
+  const assessments = (radarData?.assessments ?? []).map((assessment) => ({
+    title: assessment.title,
+    description: assessment.description,
+    icon:
+      assessment.type === "warning"
+        ? ("bar-chart" as const)
+        : ("star" as const),
+    iconColor:
+      assessment.type === "warning"
+        ? theme.colors.textSecondary
+        : theme.colors.neonGreen,
+  }));
 
   return (
     <View style={[styles.container, { paddingHorizontal: theme.spacing.m }]}>
@@ -103,17 +102,28 @@ ví dụ trả về
   "contribution": 0.6
 } */}
 
-        <RadarChart
-          data={{
-            form: radarData.Perf / 50 - 1, // Convert 0-100 to -1..1
-            winRate: radarData.WinLoss / 100, // Convert 0-100 to 0..1
-            avgStar: (radarData.Feedback / 100) * 5, // Convert 0-100 to 0..5
-            sentiment: radarData.Sentiment / 100, // Convert 0-100 to 0..1
-            trust: radarData.Trust, // Keep 0-100
-            contribution: radarData.RoleFactor / 100, // Convert 0-100 to 0..1
-          }}
-        />
+        <RadarChart data={radarData ?? undefined} />
       </View>
+
+      {radarData?.summary ? (
+        <Text
+          style={{
+            color: theme.colors.textSecondary,
+            marginBottom: theme.spacing.m,
+            lineHeight: 20,
+          }}
+        >
+          {radarData.summary}
+        </Text>
+      ) : null}
+
+      {isLoading ? (
+        <Text style={{ color: theme.colors.textSecondary }}>
+          {t("personalPage.analysis.loadingHint", {
+            defaultValue: "Đang cập nhật phân tích AI...",
+          })}
+        </Text>
+      ) : null}
 
       {/* AI Assessment Section */}
       <View style={styles.assessmentSection}>
@@ -154,6 +164,14 @@ ví dụ trả về
             iconColor={assessment.iconColor}
           />
         ))}
+
+        {!isLoading && assessments.length === 0 ? (
+          <Text style={{ color: theme.colors.textSecondary }}>
+            {t("personalPage.analysis.noAssessment", {
+              defaultValue: "Chưa có đánh giá AI mới.",
+            })}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

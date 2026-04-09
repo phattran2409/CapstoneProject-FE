@@ -27,6 +27,8 @@ export interface RankInfo {
 
 export interface RankBadgeProps {
   elo: number;
+  rankTier?: string | null;
+  isLegend?: boolean;
   /**
    * Show numeric Elo next to the badge label
    */
@@ -109,8 +111,50 @@ export const getRankInfoFromElo = (
   };
 };
 
+const normalizeRankTier = (tier?: string | null, isLegend?: boolean): RankTier | null => {
+  if (isLegend) return "Legend";
+  if (!tier) return null;
+  const normalized = tier.replace(/[\s_-]/g, "").toLowerCase();
+  switch (normalized) {
+    case "legend":
+      return "Legend";
+    case "elite":
+      return "Elite";
+    case "master":
+      return "Master";
+    case "pro":
+      return "Pro";
+    case "semipro":
+      return "SemiPro";
+    case "amateur":
+      return "Amateur";
+    default:
+      return null;
+  }
+};
+
+const getRankInfoFromTier = (tier: RankTier, fallbackColor: string): RankInfo => {
+  switch (tier) {
+    case "Legend":
+      return { tier, label: "Legend", color: "#FACC15", icon: "flame" };
+    case "Elite":
+      return { tier, label: "Elite", color: "#F97316", icon: "trophy" };
+    case "Master":
+      return { tier, label: "Master", color: "#A855F7", icon: "ribbon" };
+    case "Pro":
+      return { tier, label: "Pro", color: "#22C55E", icon: "medal" };
+    case "SemiPro":
+      return { tier, label: "Semi-Pro", color: "#38BDF8", icon: "star" };
+    case "Amateur":
+    default:
+      return { tier: "Amateur", label: "Amateur", color: fallbackColor, icon: "ellipse" };
+  }
+};
+
 export const RankBadge: React.FC<RankBadgeProps> = ({
   elo,
+  rankTier,
+  isLegend = false,
   showElo = true,
   size = "medium",
   style,
@@ -122,7 +166,10 @@ export const RankBadge: React.FC<RankBadgeProps> = ({
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
 
-  const rank = getRankInfoFromElo(elo, theme.colors.neonGreen);
+  const mappedTier = normalizeRankTier(rankTier, isLegend);
+  const rank = mappedTier
+    ? getRankInfoFromTier(mappedTier, theme.colors.neonGreen)
+    : getRankInfoFromElo(elo, theme.colors.neonGreen);
 
   const isLarge = size === "large";
   const containerPaddingVertical = size === "small" ? 4 : isLarge ? 8 : 6;

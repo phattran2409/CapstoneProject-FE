@@ -5,13 +5,12 @@ export interface Leaderboard {
   email: string;
   avatarUrl: string | null;
   currentElo: number;
+  currentRank: string;
+  isLegend: boolean;
   eloChange: number;
   totalMatches: number;
 }
 
 export interface LeaderboardResponse {
-  isSuccess: boolean;
-  data: {
-      leaderboard: Leaderboard[];
-  };
+  leaderboard: Leaderboard[];
 }

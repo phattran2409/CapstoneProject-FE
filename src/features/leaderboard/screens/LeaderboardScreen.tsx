@@ -38,7 +38,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
   const myRankQuery = useMyRank();
 
   const leaderboard = useMemo(() => {
-    const items = leaderboardQuery.data?.data?.leaderboard ?? [];
+    const items = leaderboardQuery.data?.leaderboard ?? [];
     // Product requirement: list size is implicitly 20
     return items.slice(0, 20);
   }, [leaderboardQuery.data]);
@@ -148,6 +148,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
           <View style={styles.statItem}>
             <RankBadge
               elo={player.currentElo ?? 0}
+              rankTier={player.currentRank}
+              isLegend={player.isLegend}
               size="medium"
               showElo
               transparent

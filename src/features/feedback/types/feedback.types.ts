@@ -45,6 +45,8 @@ export interface ReceivedFeedbackItem {
   criteria: string;
   comment: string;
   receivedAt: string;
+  sentimentScore?: number | null;
+  sentimentLabel?: string | null;
   myResponse: string | null;
   respondedAt: string | null;
 }
@@ -68,6 +70,8 @@ export interface GivenFeedbackItem {
   /** Nội dung mình viết khi đánh giá */
   myComment: string;
   givenAt: string;
+  sentimentScore?: number | null;
+  sentimentLabel?: string | null;
   /** Phản hồi text của người được đánh giá (nếu có) */
   theirResponse: string | null;
   theyRespondedAt: string | null;

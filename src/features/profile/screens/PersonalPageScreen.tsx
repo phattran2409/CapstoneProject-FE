@@ -37,7 +37,11 @@ import {
   usePaginatedUserPosts,
   useTogglePostLike,
 } from "@/features/post/hooks";
-import { useSendFriendRequest, useUserProfile } from "../hooks";
+import {
+  useSendFriendRequest,
+  useUserProfile,
+  useMyRadarChart,
+} from "../hooks";
 import {
   useGetFriendshipStatus,
   useRemoveFriend,
@@ -167,19 +171,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     loadMore: matchesLoadMore,
   } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
-  const stats = {
-    matches: 88,
-    winRate: 75,
-  };
-
-  const radarData = {
-    WinLoss: 75,
-    Perf: 85,
-    Feedback: 70,
-    Sentiment: 80,
-    Trust: 75,
-    RoleFactor: 65,
-  };
+  const { data: radarData, isLoading: radarLoading } = useMyRadarChart(isCurrentUser);
 
   // Memoize converted matches
   const listMatches = useMemo(() => {
@@ -611,7 +603,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
             {/* Analysis Tab */}
             {activeTab === "analysis" && (
-              <AnalysisTab stats={stats} radarData={radarData} />
+              <AnalysisTab radarData={radarData ?? null} isLoading={radarLoading} />
             )}
           </View>
         </ScrollView>

@@ -58,6 +58,7 @@ export type RootStackParamList = {
         eloDelta?: number;
         matchLabel?: string;
         isWin?: boolean;
+        matchId?: string;
       }
     | undefined;
   FeedbackIntro: { roomId: string };
