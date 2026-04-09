@@ -171,6 +171,17 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
           {t("givenFeedback.yourRating")}
         </Text>
         {renderStars(item.rating)}
+        {item.sentimentLabel ? (
+          <View style={styles.sentimentRow}>
+            <Text style={[styles.sentimentText, { color: theme.colors.neonGreen }]}>
+              {`Sentiment: ${item.sentimentLabel}${
+                typeof item.sentimentScore === "number"
+                  ? ` (${item.sentimentScore.toFixed(2)})`
+                  : ""
+              }`}
+            </Text>
+          </View>
+        ) : null}
         <Text style={[styles.comment, { color: theme.colors.text }]}>
           {item.myComment || "—"}
         </Text>
@@ -410,6 +421,8 @@ const styles = StyleSheet.create({
   },
   sectionHint: { fontSize: 11, fontWeight: "600", marginBottom: 4 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
+  sentimentRow: { marginBottom: 6 },
+  sentimentText: { fontSize: 12, fontWeight: "600" },
   comment: { fontSize: 14, lineHeight: 20 },
   time: { fontSize: 12, color: "#888", marginTop: 8 },
   responseBox: {

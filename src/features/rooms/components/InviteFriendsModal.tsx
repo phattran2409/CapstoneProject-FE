@@ -14,7 +14,7 @@ import { ThemedText } from '@/shared/components/themed/ThemedText';
 import { usePaginatedFriends } from '@/features/friends/hooks';
 import { useSendChatMessage } from '@/features/chat/hooks/useChatMessages';
 import { useAuthStore } from '@/features/auth';
-
+import { useToast } from '@/shared/toast';
 interface InviteFriendsModalProps {
   visible: boolean;
   roomId: string;
@@ -32,6 +32,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
 }) => {
   const { theme } = useTheme();
   const { user } = useAuthStore();
+  const toast = useToast();
 
   const {
     friends,
@@ -55,6 +56,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
       },
       {
         onSuccess: () => {
+          toast.success('Chia sẻ thành công!');
           onClose();
         },
         onError: () => {},

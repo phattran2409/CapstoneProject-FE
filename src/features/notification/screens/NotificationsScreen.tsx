@@ -4,7 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ThemedSafeAreaView, ThemedScrollView, ThemedText, ThemedView } from '@/shared/components/themed';
+import { ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
+import HorizontalScrollWithHint from '@/shared/components/HorizontalScrollWithHint';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList } from '@/app/navigation/types';
 import { BaseNotification, NotificationType } from '../types/notification.types';
@@ -55,6 +56,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     { key: 'Friendship', label: t('notifications.types.Friendship', { defaultValue: 'Bạn bè' }) },
     { key: 'Post', label: t('notifications.types.Post', { defaultValue: 'Bài viết' }) },
     { key: 'Announcement', label: t('notifications.types.Announcement', { defaultValue: 'Hệ thống' }) },
+    { key: 'Chat', label: t('notifications.types.Chat', { defaultValue: 'Chat' }) },
   ];
 
   const renderEmpty = () => {
@@ -116,9 +118,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
           },
         ]}
       >
-        <ThemedScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <HorizontalScrollWithHint
           contentContainerStyle={styles.tabsScrollContent}
         >
           {notificationTypes.map((type) => {
@@ -151,7 +151,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
               </TouchableOpacity>
             );
           })}
-        </ThemedScrollView>
+        </HorizontalScrollWithHint>
       </ThemedView>
 
       {loading && <ListSkeleton />}

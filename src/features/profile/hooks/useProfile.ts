@@ -7,6 +7,8 @@ import {
   getAchievements,
   updateNotificationSettings,
   getNotificationSettings,
+  getMyRadarChart,
+  getMyEloBreakdown,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -26,6 +28,23 @@ export const useAchievements = () => {
     queryKey: profileKeys.achievements(),
     queryFn: () => getAchievements(),
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useMyRadarChart = (enabled = true) => {
+  return useQuery({
+    queryKey: profileKeys.radarChart(),
+    queryFn: getMyRadarChart,
+    staleTime: 30 * 1000,
+    enabled,
+  });
+};
+
+export const useMyEloBreakdown = (matchId?: string) => {
+  return useQuery({
+    queryKey: profileKeys.eloBreakdown(matchId),
+    queryFn: () => getMyEloBreakdown(matchId),
+    staleTime: 15 * 1000,
   });
 };
 
@@ -57,11 +76,13 @@ export const useUpdateNotificationSettings = () => {
       matchRoom,
       friendship,
       post,
+      chat,
     }: {
       matchRoom: boolean;
       friendship: boolean;
       post: boolean;
-    }) => updateNotificationSettings(matchRoom, friendship, post),
+      chat: boolean;
+    }) => updateNotificationSettings(matchRoom, friendship, post, chat),
     onSuccess: (response) => {
       queryClient.setQueryData(
         profileKeys.notificationPreferences(),

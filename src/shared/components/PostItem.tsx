@@ -187,6 +187,7 @@ export const PostItem: React.FC<PostItemProps> = ({
 
       <InviteFriendsModal
         visible={shareVisible}
+        roomId={post.postId}
         shareMessage={shareMessage}
         onClose={() => setShareVisible(false)}
         title="Chia sẻ bài viết"

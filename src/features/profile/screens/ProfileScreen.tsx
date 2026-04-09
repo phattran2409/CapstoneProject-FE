@@ -58,6 +58,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [postNotifications, setPostNotifications] = useState(false);
   const [notificationExpanded, setNotificationExpanded] = useState(false);
   const [friendshipNotifications, setFriendshipNotifications] = useState(false);
+  const [chatNotifications, setChatNotifications] = useState(false);
   const chevronRotation = useRef(new Animated.Value(0)).current;
 
   const { data: notificationSettings } = useNotificationSettings();
@@ -70,6 +71,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       setMatchNotifications(notificationSettings.matchRoom);
       setPostNotifications(notificationSettings.post);
       setFriendshipNotifications(notificationSettings.friendship);
+      setChatNotifications(notificationSettings.chat);
     }
   }, [notificationSettings]);
 
@@ -389,6 +391,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                         matchRoom: val,
                         post: postNotifications,
                         friendship: friendshipNotifications,
+                        chat: chatNotifications,
                       });
                     }}
                     trackColor={{
@@ -406,6 +409,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     {
                       paddingVertical: theme.spacing.m,
                       paddingHorizontal: theme.spacing.m,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
                     },
                   ]}
                 >
@@ -434,6 +439,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                         matchRoom: matchNotifications,
                         post: val,
                         friendship: friendshipNotifications,
+                        chat: chatNotifications,
                       });
                     }}
                     trackColor={{
@@ -480,6 +486,54 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                         matchRoom: matchNotifications,
                         post: postNotifications,
                         friendship: val,
+                        chat: chatNotifications,
+                      });
+                    }}
+                    trackColor={{
+                      false: theme.colors.border,
+                      true: theme.colors.neonGreen,
+                    }}
+                    thumbColor={theme.colors.white}
+                  />
+                </View>
+                 {/* Chat Notification */}
+                 <View
+                  style={[
+                    styles.settingItem,
+                    {
+                      paddingVertical: theme.spacing.m,
+                      paddingHorizontal: theme.spacing.m,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.settingText,
+                      {
+                        color: theme.colors.text,
+                        fontSize: theme.fontSizes.s,
+                        marginLeft: theme.spacing.m,
+                      },
+                    ]}
+                  >
+                    {t("profile.chatNotification")}
+                  </Text>
+                  <Switch
+                    value={chatNotifications}
+                    onValueChange={(val) => {
+                      setChatNotifications(val);
+                      updateNotificationSettings({
+                        matchRoom: matchNotifications,
+                        post: postNotifications,
+                        friendship: friendshipNotifications,
+                        chat: val,
                       });
                     }}
                     trackColor={{

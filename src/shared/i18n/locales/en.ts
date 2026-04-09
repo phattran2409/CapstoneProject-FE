@@ -482,6 +482,7 @@ const en = {
     matchInvitations: "Notifications",
     matchNotification: "Match Notification",
     friendshipNotification: "Friendship Notification",
+    chatNotification: "Chat Notification",
     postNotification: "Post Notification",
     newsUpdates: "News & updates",
     application: "Application",
@@ -728,8 +729,10 @@ const en = {
     reportIssue: "Report Issue",
   },
   chat: {
-    empty: "No chats yet",
-    inviteFriends: "Start chatting",
+    noConversations: "No conversations",
+    noConversationsDescription: "No conversations yet. Start a conversation with someone.",
+    noMessages: "No messages",
+    noMessagesDescription: "No messages yet. Start a conversation with someone.",
     searchPlaceholder: "Search chat",
     title: "Chats",
     you: "You",
@@ -741,7 +744,6 @@ const en = {
     online: "Online",
     offline: "Offline",
     isTyping: "is typing",
-    noConversations: "No conversations yet",
   },
   onboarding_1: {
     skip: "Skip",

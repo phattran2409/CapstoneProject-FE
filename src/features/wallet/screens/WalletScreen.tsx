@@ -25,6 +25,7 @@ import {
 } from "@/shared/components/themed";
 import Button from "@/shared/components/Button";
 import { EmptyState } from "@/shared/components/EmptyState";
+import HorizontalScrollWithHint from "@/shared/components/HorizontalScrollWithHint";
 import { useWalletBalance, useWalletDeposit, useGetBankInfo, useWithdrawal } from "../hooks";
 import BankInfoCard from "../components/BankInfoCard";
 import WithdrawItem from "../components/WithdrawItem";
@@ -61,9 +62,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
-  const [filterScrollWidth, setFilterScrollWidth] = useState(0);
-  const [filterContentWidth, setFilterContentWidth] = useState(0);
-  const [filterScrollX, setFilterScrollX] = useState(0);
+
   const [withdrawStatus, setWithdrawStatus] = useState<string | undefined>(undefined);
   const [transactionQuery, setTransactionQuery] = useState<TransactionQuery>({
     page: 1,
@@ -409,73 +408,40 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       </ThemedView>
 
       <View style={{ paddingHorizontal: theme.spacing.l, marginTop: 12 }}>
-        <View
-          style={{
-            position: "relative",
-          }}
-          onLayout={(e) => {
-            setFilterScrollWidth(e.nativeEvent.layout.width);
-          }}
+        <HorizontalScrollWithHint
+          contentContainerStyle={{ paddingRight: theme.spacing.l }}
         >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingRight: theme.spacing.l }}
-            scrollEventThrottle={16}
-            onContentSizeChange={(w) => setFilterContentWidth(w)}
-            onScroll={(e) => {
-              setFilterScrollX(e.nativeEvent.contentOffset.x);
-            }}
-          >
-            {filterOptions.map((opt, idx) => {
-              const active = opt.key === activeFilter;
-              return (
-                <TouchableOpacity
-                  key={opt.key}
-                  onPress={() => handleFilterSelect(opt.value)}
-                  activeOpacity={0.85}
-                  style={[
-                    styles.filterPill,
-                    {
-                      marginRight: idx === filterOptions.length - 1 ? 0 : 10,
-                      backgroundColor: active
-                        ? theme.colors.neonGreen
-                        : theme.colors.surface,
-                      borderColor: active ? "transparent" : theme.colors.border,
-                    },
-                  ]}
-                >
-                  <ThemedText
-                    size="s"
-                    weight="semiBold"
-                    style={{
-                      color: active ? "#000" : theme.colors.textSecondary,
-                    }}
-                  >
-                    {opt.label}
-                  </ThemedText>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          {filterContentWidth > filterScrollWidth + filterScrollX + 8 && (
-            <View pointerEvents="none" style={styles.filterScrollHint}>
-              <View
+          {filterOptions.map((opt, idx) => {
+            const active = opt.key === activeFilter;
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                onPress={() => handleFilterSelect(opt.value)}
+                activeOpacity={0.85}
                 style={[
-                  styles.filterScrollHintInner,
-                  { backgroundColor: theme.colors.mediumGray },
+                  styles.filterPill,
+                  {
+                    marginRight: idx === filterOptions.length - 1 ? 0 : 10,
+                    backgroundColor: active
+                      ? theme.colors.neonGreen
+                      : theme.colors.surface,
+                    borderColor: active ? "transparent" : theme.colors.border,
+                  },
                 ]}
               >
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={theme.colors.background}
-                />
-              </View>
-            </View>
-          )}
-        </View>
+                <ThemedText
+                  size="s"
+                  weight="semiBold"
+                  style={{
+                    color: active ? "#000" : theme.colors.textSecondary,
+                  }}
+                >
+                  {opt.label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </HorizontalScrollWithHint>
       </View>
 
       {isWithdrawalMode && (

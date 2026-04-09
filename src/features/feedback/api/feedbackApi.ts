@@ -85,15 +85,19 @@ try {
 };
 
 export interface GetReceivedFeedbacksQuery {
-  roomId?: string;
-  criteria?: string;
-  maxAgeDays?: number;
+  fromDate?: string;
+  toDate?: string;
+  rating?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface GetGivenFeedbacksQuery {
-  roomId?: string;
-  criteria?: string;
-  maxAgeDays?: number;
+  fromDate?: string;
+  toDate?: string;
+  rating?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 function parseReceivedFeedbackItem(raw: Record<string, unknown>): ReceivedFeedbackItem | null {
@@ -111,14 +115,26 @@ function parseReceivedFeedbackItem(raw: Record<string, unknown>): ReceivedFeedba
     criteria: String(raw.criteria ?? raw.dimension ?? raw.category ?? "Overall"),
     comment: String(raw.comment ?? raw.messageText ?? ""),
     receivedAt: String(raw.receivedAt ?? raw.createdAt ?? raw.sentAt ?? ""),
+    sentimentScore:
+      raw.sentimentScore != null ? Number(raw.sentimentScore) : null,
+    sentimentLabel:
+      raw.sentimentLabel != null ? String(raw.sentimentLabel) : null,
     myResponse:
       raw.myResponse != null && raw.myResponse !== ""
         ? String(raw.myResponse)
-        : raw.responseText != null && raw.responseText !== ""
-          ? String(raw.responseText)
-          : null,
+        : raw.revieweeResponse != null && raw.revieweeResponse !== ""
+          ? String(raw.revieweeResponse)
+          : raw.responseText != null && raw.responseText !== ""
+            ? String(raw.responseText)
+            : null,
     respondedAt:
-      raw.respondedAt != null ? String(raw.respondedAt) : raw.repliedAt != null ? String(raw.repliedAt) : null,
+      raw.responseDate != null
+        ? String(raw.responseDate)
+        : raw.respondedAt != null
+          ? String(raw.respondedAt)
+          : raw.repliedAt != null
+            ? String(raw.repliedAt)
+            : null,
   };
 }
 
@@ -164,6 +180,10 @@ function parseGivenFeedbackItem(raw: Record<string, unknown>): GivenFeedbackItem
     criteria: String(raw.criteria ?? raw.dimension ?? raw.category ?? "Overall"),
     myComment: String(raw.myComment ?? raw.comment ?? raw.messageText ?? ""),
     givenAt: String(raw.givenAt ?? raw.createdAt ?? raw.sentAt ?? ""),
+    sentimentScore:
+      raw.sentimentScore != null ? Number(raw.sentimentScore) : null,
+    sentimentLabel:
+      raw.sentimentLabel != null ? String(raw.sentimentLabel) : null,
     theirResponse:
       theirResponseRaw != null && String(theirResponseRaw).trim() !== ""
         ? String(theirResponseRaw)
@@ -209,10 +229,12 @@ export const getReceivedFeedbacks = async (
     return fetchMockReceivedFeedbacks();
   }
   const params: Record<string, string | number> = {};
-  if (query?.roomId) params.roomId = query.roomId;
-  if (query?.criteria) params.criteria = query.criteria;
-  if (query?.maxAgeDays != null) params.maxAgeDays = query.maxAgeDays;
-  const raw = await apiClient.get(API_CONFIG.ENDPOINTS.FEEDBACK.RECEIVED, {
+  if (query?.fromDate) params.fromDate = query.fromDate;
+  if (query?.toDate) params.toDate = query.toDate;
+  if (query?.rating != null) params.rating = query.rating;
+  if (query?.page != null) params.page = query.page;
+  if (query?.pageSize != null) params.pageSize = query.pageSize;
+  const raw = await apiClient.get("/playerprofiles/me/feedbacks/received", {
     params,
   });
   return parseReceivedListResponse(raw);
@@ -228,10 +250,12 @@ export const getGivenFeedbacks = async (
     return fetchMockGivenFeedbacks();
   }
   const params: Record<string, string | number> = {};
-  if (query?.roomId) params.roomId = query.roomId;
-  if (query?.criteria) params.criteria = query.criteria;
-  if (query?.maxAgeDays != null) params.maxAgeDays = query.maxAgeDays;
-  const raw = await apiClient.get(API_CONFIG.ENDPOINTS.FEEDBACK.GIVEN, {
+  if (query?.fromDate) params.fromDate = query.fromDate;
+  if (query?.toDate) params.toDate = query.toDate;
+  if (query?.rating != null) params.rating = query.rating;
+  if (query?.page != null) params.page = query.page;
+  if (query?.pageSize != null) params.pageSize = query.pageSize;
+  const raw = await apiClient.get("/playerprofiles/me/feedbacks/given", {
     params,
   });
   return parseGivenListResponse(raw);

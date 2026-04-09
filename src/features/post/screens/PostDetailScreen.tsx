@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -9,7 +9,9 @@ import {
   Platform,
   Keyboard,
   Image,
+  RefreshControl,
 } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useTheme } from "@/shared/theme";
@@ -45,6 +47,7 @@ import {
 import { useAuthStore } from "@/features/auth";
 import { useToast } from "@/shared/toast";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { postKeys } from "../api";
 
 type PostDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -66,6 +69,8 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const scrollHandler = useScrollToHideTabBar();
   const { postId } = route.params;
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [pullRefreshing, setPullRefreshing] = useState(false);
 
   const { data: post, isLoading: postLoading } = usePostDetail(postId);
   const {
@@ -73,7 +78,6 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
     loading: commentsLoading,
     loadMore,
     hasMore,
-    refresh,
   } = usePaginatedComments({
     postId,
     pageSize: 20,
@@ -121,7 +125,6 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
         });
         setCommentContent("");
         Keyboard.dismiss();
-        refresh();
       } catch (error: any) {
         console.error("Error creating comment:", error);
         toast.error(
@@ -166,13 +169,11 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   };
 
   const handleEditComment = async (commentId: string, newContent: string) => {
-    await updateComment({ commentId, content: newContent });
-    refresh();
+    await updateComment({ commentId, content: newContent, postId });
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    await deleteComment(commentId);
-    refresh();
+    await deleteComment({ commentId, postId });
   };
 
   const handleLoadMoreComments = () => {
@@ -180,6 +181,21 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
       loadMore();
     }
   };
+
+  const handleRefresh = useCallback(async () => {
+    setPullRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: postKeys.detail(postId) }),
+        queryClient.refetchQueries({
+          queryKey: postKeys.comments(postId),
+          exact: false,
+        }),
+      ]);
+    } finally {
+      setPullRefreshing(false);
+    }
+  }, [queryClient, postId]);
 
   if (postLoading || !post) {
     return (
@@ -248,6 +264,14 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
           style={styles.scrollView}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={pullRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
+          }
         >
           {/* Post Header */}
           <View

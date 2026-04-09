@@ -73,7 +73,7 @@ const ChatListScreen: React.FC<ChatListScreenProps> = ({ navigation }) => {
       <EmptyState
         icon="chatbubble-outline"
         title={t("chat.noConversations")}
-        description={t("chat.noConversations")}
+        description={t("chat.noConversationsDescription")}
       />
     );
   };

@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -15,6 +22,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import EloBreakdownItem from "../components/EloBreakdownItem";
+import { useMyEloBreakdown } from "@/features/profile/hooks";
 
 type EloBreakdownScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -39,7 +47,11 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
     eloDelta = 25,
     matchLabel = "FC Dragons 3 - 1 Wolves",
     isWin = true,
+    matchId,
   } = route.params || {};
+  const { data: breakdown = [], isLoading } = useMyEloBreakdown(matchId);
+  const latest = breakdown[0];
+  const currentEloDelta = latest?.eloChange ?? eloDelta;
 
   const badgeScale = useSharedValue(0);
   const pointsScale = useSharedValue(0);
@@ -67,7 +79,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
     navigation.goBack();
   };
 
-  const isPositive = eloDelta >= 0;
+  const isPositive = currentEloDelta >= 0;
 
   return (
     <SafeAreaView
@@ -132,7 +144,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               pointsStyle,
             ]}
           >
-            {`${isPositive ? "+" : ""}${eloDelta}`}
+            {`${isPositive ? "+" : ""}${currentEloDelta}`}
           </Animated.Text>
 
           <Text
@@ -201,63 +213,81 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
             {t("eloBreakdown.detailTitle", "PHÂN TÍCH CHI TIẾT")}
           </Text>
 
-          <EloBreakdownItem
-            type="matchResult"
-            title={t("eloBreakdown.matchResult.title", "Kết quả trận đấu")}
-            description={t(
-              "eloBreakdown.matchResult.desc",
-              "Chiến thắng 3-1 thuyết phục",
-            )}
-            value="+15"
-            valueDelta={15}
-          />
+          {isLoading ? (
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          ) : (
+            <>
+              <EloBreakdownItem
+                type="matchResult"
+                title={t("eloBreakdown.matchResult.title", "Kết quả trận đấu")}
+                description={t(
+                  "eloBreakdown.matchResult.desc",
+                  "Thành phần điểm từ kết quả thắng/thua.",
+                )}
+                value={`${(latest?.k1MatchResultComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k1MatchResultComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k1MatchResultComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="teammateRating"
-            title={t("eloBreakdown.teammateRating.title", "Đánh giá đồng đội")}
-            description={t(
-              "eloBreakdown.teammateRating.desc",
-              "Được bình chọn là MVP của trận",
-            )}
-            value="+5"
-            valueDelta={5}
-          />
+              <EloBreakdownItem
+                type="teammateRating"
+                title={t("eloBreakdown.teammateRating.title", "Đánh giá đồng đội")}
+                description={t(
+                  "eloBreakdown.teammateRating.desc",
+                  "Thành phần từ feedback người chơi nhận được.",
+                )}
+                value={`${(latest?.k2FeedbackSentimentComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k2FeedbackSentimentComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k2FeedbackSentimentComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="winRate"
-            title={t("eloBreakdown.winRate.title", "Tỷ lệ thắng")}
-            description={t(
-              "eloBreakdown.winRate.desc",
-              "Thắng đối thủ có bậc Rank cao hơn",
-            )}
-            value="+3"
-            valueDelta={3}
-          />
+              <EloBreakdownItem
+                type="winRate"
+                title={t("eloBreakdown.winRate.title", "Hiệu suất")}
+                description={t(
+                  "eloBreakdown.winRate.desc",
+                  "Thành phần dựa trên performance trong trận.",
+                )}
+                value={`${(latest?.k3WinRateComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k3WinRateComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k3WinRateComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="feedbackContribution"
-            title={t(
-              "eloBreakdown.feedbackContribution.title",
-              "Đóng góp đánh giá",
-            )}
-            description={t(
-              "eloBreakdown.feedbackContribution.desc",
-              "Hoàn thành đầy đủ đánh giá sau trận đấu",
-            )}
-            value="+2"
-            valueDelta={2}
-          />
+              <EloBreakdownItem
+                type="feedbackContribution"
+                title={t("eloBreakdown.feedbackContribution.title", "Vai trò")}
+                description={t(
+                  "eloBreakdown.feedbackContribution.desc",
+                  "Thành phần từ role factor trong công thức Elo.",
+                )}
+                value={`${(latest?.k4ContributionComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k4ContributionComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k4ContributionComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="reputation"
-            title={t("eloBreakdown.reputation.title", "Uy tín")}
-            description={t(
-              "eloBreakdown.reputation.desc",
-              "Không có vi phạm, tinh thần Fair-play",
-            )}
-            value="+0"
-            valueDelta={0}
-          />
+              <EloBreakdownItem
+                type="reputation"
+                title={t("eloBreakdown.reputation.title", "Uy tín & sentiment")}
+                description={t(
+                  "eloBreakdown.reputation.desc",
+                  "Gồm trust component và sentiment component.",
+                )}
+                value={`${(
+                  latest?.k5TrustComponent ?? 0
+                ) >= 0
+                  ? "+"
+                  : ""
+                }${(
+                  latest?.k5TrustComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k5TrustComponent ?? 0}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
 

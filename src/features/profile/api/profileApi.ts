@@ -6,6 +6,38 @@ import {
   AchievementsData,
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
+export interface RadarAssessment {
+  type: string;
+  title: string;
+  description: string;
+  icon: string;
+  highlightAxis: string;
+}
+
+export interface MyRadarChartData {
+  form: number;
+  winRate: number;
+  communityScore: number;
+  trust: number;
+  contribution: number;
+  assessments: RadarAssessment[];
+  summary: string;
+  updatedAt: string;
+}
+
+export interface EloBreakdownRecord {
+  matchId: string;
+  eloBefore: number;
+  eloAfter: number;
+  eloChange: number;
+  k1MatchResultComponent: number;
+  k2FeedbackSentimentComponent: number;
+  k3WinRateComponent: number;
+  k4ContributionComponent: number;
+  k5TrustComponent: number;
+  calculationDetails: string;
+  createdAt: string;
+}
 
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<User> => {
@@ -104,17 +136,38 @@ export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
   return (response as { data?: unknown[] })?.data ?? [];
 };
 
+export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
+  const response = await apiClient.get<MyRadarChartData>(
+    `/playerprofiles/me/radar-chart`,
+  );
+  return response as unknown as MyRadarChartData;
+};
+
+export const getMyEloBreakdown = async (
+  matchId?: string,
+): Promise<EloBreakdownRecord[]> => {
+  const response = await apiClient.get<EloBreakdownRecord[]>(
+    `/playerprofiles/me/elo-breakdown`,
+    {
+      params: matchId ? { matchId } : undefined,
+    },
+  );
+  return response as unknown as EloBreakdownRecord[];
+};
+
 //Update notification settings
 export const updateNotificationSettings = async (
   matchRoom: boolean,
   friendship: boolean,
   post: boolean,
+  chat: boolean,
 ): Promise<ApiResponse> => {
   try {
     const response = await apiClient.put(`/notification-preferences`, {
       matchRoom,
       friendship,
       post,
+      chat,
     });
     console.log("response :", response);
     return response.data;
@@ -128,6 +181,7 @@ export interface NotificationPreferences {
   matchRoom: boolean;
   friendship: boolean;
   post: boolean;
+  chat: boolean;
 }
 
 export const getNotificationSettings =

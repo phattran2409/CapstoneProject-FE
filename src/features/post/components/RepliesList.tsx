@@ -46,7 +46,13 @@ export const RepliesList: React.FC<RepliesListProps> = ({
         <ReplyItem
           key={reply.commentId}
           reply={reply}
-          onLike={() => toggleLike({ commentId: reply.commentId, postId })}
+          onLike={() =>
+            toggleLike({
+              commentId: reply.commentId,
+              postId,
+              parentCommentId: commentId,
+            })
+          }
         />
       ))}
 

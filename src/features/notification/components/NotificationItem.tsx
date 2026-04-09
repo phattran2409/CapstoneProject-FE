@@ -51,6 +51,8 @@ const getNotificationIcon = (type: NotificationType, action?: string): string =>
       }
     case 'Announcement':
       return 'information-circle-outline';
+    case 'Chat':
+      return 'chatbubble-outline';
     default:
       return 'notifications-outline';
   }
@@ -66,6 +68,8 @@ const getNotificationColor = (type: NotificationType, theme: any): string => {
       return '#FF6B6B';
     case 'Announcement':
       return theme.colors.textSecondary;
+    case 'Chat':
+      return theme.colors.neonGreen;
     default:
       return theme.colors.textSecondary;
   }

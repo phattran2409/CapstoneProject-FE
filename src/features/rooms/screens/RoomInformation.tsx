@@ -589,7 +589,12 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   const handleNavigateToEloBreakdown = () => {
     if (roomActionsBlocked) return;
-    navigation?.navigate('EloBreakdown');
+    navigation?.navigate('EloBreakdown', {
+      matchId: displayRoom?.roomId,
+      matchLabel:
+        displayRoom?.roomName ||
+        `${displayRoom?.teamNames?.A ?? "Team A"} vs ${displayRoom?.teamNames?.B ?? "Team B"}`,
+    });
   };
 
   // ✅ Loading state

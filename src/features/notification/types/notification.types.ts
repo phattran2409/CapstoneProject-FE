@@ -1,4 +1,4 @@
-export type NotificationType = 'MatchRoom' | 'Friendship' | 'Post' | 'Announcement';
+export type NotificationType = 'MatchRoom' | 'Friendship' | 'Post' | 'Announcement' | 'Chat';
 export interface BaseNotification {
   notificationId: string;
   notificationType: NotificationType;

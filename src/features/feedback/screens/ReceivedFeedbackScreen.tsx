@@ -211,6 +211,17 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
         {renderStars(item.rating)}
+        {item.sentimentLabel ? (
+          <View style={styles.sentimentRow}>
+            <Text style={[styles.sentimentText, { color: theme.colors.neonGreen }]}>
+              {`Sentiment: ${item.sentimentLabel}${
+                typeof item.sentimentScore === "number"
+                  ? ` (${item.sentimentScore.toFixed(2)})`
+                  : ""
+              }`}
+            </Text>
+          </View>
+        ) : null}
         <Text style={[styles.comment, { color: theme.colors.text }]}>
           {item.comment || "—"}
         </Text>
@@ -479,6 +490,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(128,128,128,0.15)",
   },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
+  sentimentRow: { marginBottom: 6 },
+  sentimentText: { fontSize: 12, fontWeight: "600" },
   comment: { fontSize: 14, lineHeight: 20 },
   time: { fontSize: 12, color: "#888", marginTop: 8 },
   responseBox: {
