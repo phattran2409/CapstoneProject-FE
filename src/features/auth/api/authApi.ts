@@ -67,14 +67,14 @@ export const authApi = {
    * Logout
    */
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
+    await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT);
   },
 
   /**
    * Refresh access token
    */
   refreshToken: async (request: RefreshTokenRequest): Promise<RefreshTokenResponse> => {
-    const data = await apiClient.post('/auth/refresh', request);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN, request);
     return data as unknown as RefreshTokenResponse;
   },
 
@@ -82,7 +82,7 @@ export const authApi = {
    * Get current user profile
    */
   getProfile: async (): Promise<User> => {
-    const data = await apiClient.get('/auth/profile');
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
     return data as unknown as User;
   },
 
@@ -90,7 +90,7 @@ export const authApi = {
    * Update user profile
    */
   updateProfile: async (updates: Partial<User>): Promise<User> => {
-    const data = await apiClient.patch('/auth/profile', updates);
+    const data = await apiClient.patch(API_CONFIG.ENDPOINTS.AUTH.PROFILE, updates);
     return data as unknown as User;
   },
 

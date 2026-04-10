@@ -1,6 +1,7 @@
 import { apiClient } from '@/shared/api/client';
 import { BaseNotification } from '../types/notification.types';
 import { ApiResponse } from '@/shared/api';
+import { API_CONFIG } from '@/shared/constants/api';
 
 export const getNotifications = async (
   page: number = 1,
@@ -13,11 +14,10 @@ export const getNotifications = async (
   totalCount: number,
 }> => {
   try {
-    let url = `/notifications?page=${page}&pageSize=${pageSize}`;
-    if (type) {
-      url += `&type=${type}`;
-    }
-    const response = (await apiClient.get(url)) as {
+    const params: Record<string, any> = { page, pageSize };
+    if (type) params.type = type;
+
+    const response = (await apiClient.get(API_CONFIG.ENDPOINTS.NOTIFICATIONS.LIST, { params })) as {
       isSuccess: boolean;
       data: {
         notifications: BaseNotification[];
@@ -26,11 +26,11 @@ export const getNotifications = async (
       };
     };
     if (response.isSuccess && response.data) {
-      return{
+      return {
         notifications: response.data.notifications,
         totalPages: response.data.totalPages,
         totalCount: response.data.total,
-      }
+      };
     }
     throw new Error("Failed to fetch notifications");
   } catch (error) {
@@ -41,7 +41,8 @@ export const getNotifications = async (
 
 export const markAsRead = async (notificationId: string): Promise<ApiResponse> => {
   try {
-    const response = await apiClient.patch(`/notifications/${notificationId}/read`);
+    const url = API_CONFIG.ENDPOINTS.NOTIFICATIONS.MARK_READ.replace(':id', notificationId);
+    const response = await apiClient.patch(url);
     return response.data;
   } catch (error) {
     console.error("Error marking notification as read:", error);
@@ -51,11 +52,10 @@ export const markAsRead = async (notificationId: string): Promise<ApiResponse> =
 
 export const markAllAsRead = async (): Promise<ApiResponse> => {
   try {
-    const response = await apiClient.patch(`/notifications/read-all`);
+    const response = await apiClient.patch(API_CONFIG.ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ);
     return response.data;
   } catch (error) {
     console.error("Error marking all notifications as read:", error);
     throw error;
   }
 };
-
