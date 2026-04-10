@@ -3,6 +3,70 @@ import { API_CONFIG } from '../constants/api';
 import { storage } from '../utils/storage';
 import type { ApiError } from './types';
 import { useFeedbackSessionStore } from '@/features/feedback/store/feedbackSessionStore';
+import { useAppStore } from '@/store/appStore';
+
+// ─── Bilingual HTTP status error messages ────────────────────────────────────
+
+const HTTP_ERROR_MESSAGES: Record<number, { vi: string; en: string }> = {
+  400: {
+    vi: 'Yêu cầu không hợp lệ.',
+    en: 'Bad request.',
+  },
+  403: {
+    vi: 'Bạn không có quyền thực hiện thao tác này.',
+    en: 'You do not have permission to perform this action.',
+  },
+  404: {
+    vi: 'Không tìm thấy dữ liệu.',
+    en: 'Data not found.',
+  },
+  408: {
+    vi: 'Yêu cầu hết thời gian. Vui lòng thử lại.',
+    en: 'Request timeout. Please try again.',
+  },
+  429: {
+    vi: 'Quá nhiều yêu cầu. Vui lòng thử lại sau.',
+    en: 'Too many requests. Please try again later.',
+  },
+  500: {
+    vi: 'Lỗi máy chủ. Vui lòng thử lại sau.',
+    en: 'Server error. Please try again later.',
+  },
+  502: {
+    vi: 'Máy chủ tạm thời không phản hồi. Vui lòng thử lại sau.',
+    en: 'Bad gateway. Please try again later.',
+  },
+  503: {
+    vi: 'Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.',
+    en: 'Service unavailable. Please try again later.',
+  },
+  504: {
+    vi: 'Máy chủ không phản hồi kịp thời. Vui lòng thử lại sau.',
+    en: 'Gateway timeout. Please try again later.',
+  },
+};
+
+/** Trả về message lỗi HTTP theo ngôn ngữ hiện tại, hoặc null nếu không có entry. */
+const getHttpStatusMessage = (status: number): string | null => {
+  const lang = useAppStore.getState().language;
+  const entry = HTTP_ERROR_MESSAGES[status];
+  if (!entry) return null;
+  return lang === 'en' ? entry.en : entry.vi;
+};
+
+const getSessionExpiredMessage = (): string => {
+  const lang = useAppStore.getState().language;
+  return lang === 'en'
+    ? 'Session expired. Please log in again.'
+    : 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+};
+
+const getNetworkErrorMessage = (): string => {
+  const lang = useAppStore.getState().language;
+  return lang === 'en'
+    ? 'Unable to connect to server. Please check your internet connection.'
+    : 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet.';
+};
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
@@ -278,7 +342,7 @@ apiClient.interceptors.response.use(
           processQueue(error, null);
           await clearAllTokens();
           const apiError: ApiError = {
-            message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+            message: getSessionExpiredMessage(),
             status: 401,
           };
           return Promise.reject(apiError);
@@ -288,7 +352,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         await clearAllTokens();
         const apiError: ApiError = {
-          message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+          message: getSessionExpiredMessage(),
           status: 401,
         };
         return Promise.reject(apiError);
@@ -318,19 +382,15 @@ apiClient.interceptors.response.use(
         console.error('📥 API Error:', status, error.config?.url, apiError.message);
       }
 
-      switch (status) {
-        case 403:
-          apiError.message = 'Bạn không có quyền thực hiện thao tác này.';
-          break;
-        case 404:
-          apiError.message = 'Không tìm thấy dữ liệu.';
-          break;
-        case 500:
-          apiError.message = 'Lỗi máy chủ. Vui lòng thử lại sau.';
-          break;
+      // Override with fixed bilingual message for known server/client error codes.
+      // For other status codes (e.g. 400, 409, 422) the backend message is kept
+      // so that getTranslatedError() in UI layers can translate it.
+      const fixedMsg = getHttpStatusMessage(status);
+      if (fixedMsg && [400, 403, 404, 408, 429, 500, 502, 503, 504].includes(status)) {
+        apiError.message = fixedMsg;
       }
     } else if (error.request) {
-      apiError.message = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet.';
+      apiError.message = getNetworkErrorMessage();
       if (__DEV__) {
         console.error('📥 Network Error:', error.request);
       }

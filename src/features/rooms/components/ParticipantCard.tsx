@@ -5,11 +5,14 @@ import { ThemedText } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { MatchRoomParticipant } from '../types/room.types';
 import { CaptainBadge } from './CaptainBadge';
+import { TFunction } from 'i18next';
 
 interface ParticipantCardProps {
+  t: TFunction;
   participant: MatchRoomParticipant;
   teamColor: string;
   isHost: boolean;
+  isRoomHost?: boolean;
   currentUserId?: string;
   isKicking: boolean;
   onKickPlayer: (userId: string, playerName: string) => void;
@@ -20,10 +23,12 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   participant,
   teamColor,
   isHost,
+  isRoomHost = false,
   currentUserId,
   isKicking,
   onKickPlayer,
   onPress,
+  t,
 }) => {
   const { theme } = useTheme();
   const isCurrentUser = participant.userId === currentUserId;
@@ -48,6 +53,13 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
         {participant.isCaptain && (
           <View style={styles.captainBadgeWrapper}>
             <CaptainBadge compact />
+          </View>
+        )}
+
+        {/* Host badge on top-right corner */}
+        {isRoomHost && (
+          <View style={styles.hostBadgeWrapper}>
+            <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>👑</ThemedText>
           </View>
         )}
 
@@ -100,6 +112,12 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             {participant.depositPaid ? 'Paid' : 'Pending'}
           </ThemedText>
         </View>
+        {/* Host Badge */}
+        {isRoomHost && (
+          <View style={[styles.hostWrapper , { borderColor: theme.colors.neonGreen }]}>
+            <ThemedText weight="medium" style={{ color: theme.colors.neonGreen , fontSize: 11 }}>{t('roomDetail.host')}</ThemedText>
+          </View>
+        )}
 
         {/* Kick Button (Host only, not for self) */}
         {isHost && !isCurrentUser && (
@@ -158,6 +176,12 @@ const styles = StyleSheet.create({
     left: 4,
     zIndex: 1,
   },
+  hostBadgeWrapper: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 1,
+  },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,5 +191,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
+  },
+  hostWrapper: {
+    marginTop: 4,
+    width: '100%',
+    flexDirection: 'row',
+    padding: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

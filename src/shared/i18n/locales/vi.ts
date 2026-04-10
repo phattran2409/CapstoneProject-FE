@@ -245,6 +245,7 @@ const vi = {
   },
   roomDetail: {
     hostInformation: "Thông tin host",
+    host: "Chủ phòng",
     title: "Chi tiết phòng đấu",
     format: "Thể thức",
     datetime: "Thời gian",
@@ -349,6 +350,10 @@ const vi = {
     },
     yourTeam: "Đội của bạn",
     unassigned: "chờ tham gia",
+    countdown: {
+      matchStartsIn: "Thời gian bắt đầu trận đấu",
+      matchTimeRemaining: "Thời gian trận đấu còn lại",
+    },
     description: "Mô tả phòng",
     rules: "Luật chơi",
     contact: "Liên hệ",

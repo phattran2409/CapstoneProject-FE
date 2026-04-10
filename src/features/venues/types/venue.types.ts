@@ -112,6 +112,7 @@ export interface VenueFilters {
   latitude?: number | null;
   longitude?: number | null;
   radiusKm?: number | null;
+  status?: 'approved';
   /** Tìm kiếm theo tên/địa chỉ venue (nên dùng giá trị đã debounce) */
   searchName?: string | null;
 }

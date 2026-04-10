@@ -66,6 +66,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
     longitude: longitude,
     radiusKm: radiusKm,
     searchName: debouncedSearchTerm.trim() || undefined,
+    status: 'approved',
   });
 
   const handleSelectVenue = (venue: Venue) => {

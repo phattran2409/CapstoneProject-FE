@@ -7,10 +7,9 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
-import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components';
+import { MatchList, MatchDetailModal, MatchItemData, MatchroomSkeleton } from '@/shared/components';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
-import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
 import { useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
 import { PrivateRoomPasswordModal } from '../components';
@@ -269,10 +268,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ThemedView>
-
-      {/* Active Room Banner - Chỉ hiển thị khi có active room */}
-      <ActiveRoomBannerV2 />
-
       <View style={styles.flex1}>
         <ScrollView 
           style={styles.flex1}
@@ -293,9 +288,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           }
         >
           {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.neonGreen} />
-            </View>
+            <MatchroomSkeleton />
           ) : (
             <>
               {/* My rooms (Phòng đấu của tôi) */}
@@ -396,7 +389,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           )}
         </ScrollView>
       </View>
-
       {/* Footer Create Button (không overlay ScrollView) */}
       {!isEmptyMatches && (
         <View style={[styles.createButtonFooter, { paddingHorizontal: theme.spacing.l, paddingBottom: theme.spacing.l }]}>
@@ -428,7 +420,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       )}
-
       {/* Match Detail Modal */}
       <MatchDetailModal
         visible={modalVisible}

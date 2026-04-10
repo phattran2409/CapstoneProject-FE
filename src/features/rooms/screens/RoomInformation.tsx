@@ -680,29 +680,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         )} 
       </ThemedView>
 
-      {/* Countdown dưới header khi trận đang InProgress */}
-      {
-        displayRoom.status == 'InProgress' &&(
+      {/* Countdown dưới header khi trận Locked (đếm ngược đến giờ bắt đầu) hoặc InProgress (thời gian còn lại) */}
+      {(displayRoom.status === 'Locked' || displayRoom.status === 'InProgress') && (
         <MatchCountdown
           matchDate={displayRoom.matchDate}
           startTime={displayRoom.startTime}
-          endTime={displayRoom.endTime}
+          endTime={displayRoom.status === 'Locked' ? displayRoom.startTime : displayRoom.endTime}
           status={displayRoom.status}
-          variant="inline"
         />
-        )
-      }
-      {
-        displayRoom.status == 'Locked' && (
-          <MatchCountdown
-            matchDate={displayRoom.matchDate}
-            startTime={displayRoom.startTime}
-            endTime={displayRoom.startTime}
-            status={displayRoom.status}
-            variant="overlay"
-          />
-        )
-      }
+      )}
       <View 
         style={[
           styles.tabContainer,
@@ -817,6 +803,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             isSignalRConnected={isSignalRConnected}
             currentUserParticipant={currentUserParticipant}
             isHost={isHost}
+            hostId={displayRoom.hostId}
             currentUserId={user?.userId}
             isKicking={isKicking}
             onKickPlayer={handleKickPlayer}

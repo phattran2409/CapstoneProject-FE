@@ -17,6 +17,10 @@ export {
   ProfileSkeleton,
   default as ProfileSkeletonDefault,
 } from "./ProfileSkeleton";
+export {
+  MatchroomSkeleton,
+  default as MatchroomSkeletonDefault,
+} from "./MatchroomSkeleton";
 export { ListSkeleton, default as ListSkeletonDefault } from "./ListSkeleton";
 export { ChatSkeleton, default as ChatSkeletonDefault } from "./ChatSkeleton";
 export { ErrorState, default as ErrorStateDefault } from "./ErrorState";

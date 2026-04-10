@@ -248,6 +248,7 @@ const en = {
   },
   roomDetail: {
     title: "Room Details",
+    host: "Host",
     hostInformation: "Host Information",
     format: "Format",
     datetime: "Date & Time",
@@ -352,6 +353,10 @@ const en = {
     },
     yourTeam: "Your Team",
     unassigned: "Unassigned",
+    countdown: {
+      matchStartsIn: "Match starts in",
+      matchTimeRemaining: "Match time remaining",
+    },
     description: "Description",
     rules: "Rules",
     contact: "Contact",

@@ -13,6 +13,8 @@ interface TeamLineupProps {
   isSignalRConnected: boolean;
   currentUserParticipant: MatchRoomParticipant | null;
   isHost: boolean;
+  /** userId của host phòng để hiển thị badge host trên PlayerCard */
+  hostId?: string;
   currentUserId: string | undefined;
   isKicking: boolean;
   onKickPlayer: (userId: string, playerName: string) => void;
@@ -30,6 +32,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   isSignalRConnected,
   currentUserParticipant,
   isHost,
+  hostId,
   currentUserId,
   isKicking,
   onKickPlayer,
@@ -90,10 +93,12 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         >
           {displayRoom.participants.teamA.map((participant) => (
             <ParticipantCard
+              t={t}
               key={participant.participantId}
               participant={participant}
               teamColor="#4CAF50"
               isHost={canHostActOnParticipants}
+              isRoomHost={!!hostId && participant.userId === hostId}
               currentUserId={currentUserId}
               isKicking={isKicking}
               onKickPlayer={onKickPlayer}
@@ -136,10 +141,12 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         >
           {displayRoom.participants.teamB.map((participant) => (
             <ParticipantCard
+              t={t}
               key={participant.participantId}
               participant={participant}
               teamColor="#2196F3"
               isHost={canHostActOnParticipants}
+              isRoomHost={!!hostId && participant.userId === hostId}
               currentUserId={currentUserId}
               isKicking={isKicking}
               onKickPlayer={onKickPlayer}
@@ -174,10 +181,12 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           >
             {displayRoom.participants.unassigned.map((participant) => (
               <ParticipantCard
+                t={t}
                 key={participant.participantId}
                 participant={participant}
                 teamColor="#9E9E9E"
                 isHost={canHostActOnParticipants}
+                isRoomHost={!!hostId && participant.userId === hostId}
                 currentUserId={currentUserId}
                 isKicking={isKicking}
                 onKickPlayer={onKickPlayer}

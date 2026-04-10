@@ -7,10 +7,8 @@ import { API_CONFIG } from '@/shared/constants/api';
 export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueResponse> => {
   try { 
     const response = await apiClient.get<PaginatedVenueResponse>(API_CONFIG.ENDPOINTS.VENUES.LIST, { params: filters });
-    console.log('filters', filters);
     return response as unknown as PaginatedVenueResponse;
   } catch (error) {    
-    console.error('Error fetching venues:', error);
     throw error;
   }
 };
@@ -23,7 +21,6 @@ export const getVenueById = async (id: string): Promise<VenueDetail> => {
     return response.data as unknown as VenueDetail;
   
   } catch (error) {
-    console.error('Error fetching venue by id:', error);
     throw error;
   }
 };
