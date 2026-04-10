@@ -21,9 +21,14 @@ export const API_CONFIG = {
       FORGOT_PASSWORD: "/auth/forgot-password",
       CHANGE_PASSWORD: "/auth/change-password",
       RESEND_OTP: "/auth/resend-otp",
+      PROFILE: "/auth/profile",
     },
     USERS: {
+      LIST: "/users",
+      DETAIL: "/users/:id",
+      AVATAR: "/users/avatar",
       FCM_TOKEN: "/users/fcm-token",
+      MATCH_HISTORY: "/users/:id/match-history",
     },
     ROOMS: {
       LIST: "/match-rooms",
@@ -50,7 +55,7 @@ export const API_CONFIG = {
       TEAM_NAME: "/match-rooms/:id/team-name",
       /** Cập nhật privacy (Private/Public + password) */
       PRIVACY: "/match-rooms/:id/privacy",
-      /** Mẫu tạo phòng của user (GET/PUT). Đổi path nếu backend khác. */
+      /** Mẫu tạo phòng của user (GET/PUT). */
       MY_PRESET_LIST: "/match-presets/mine",
       PRESET_CREATE: "/match-presets",
       PRESET_DETAIL: "/match-presets/:id",
@@ -65,7 +70,18 @@ export const API_CONFIG = {
     VENUES: {
       LIST: "/venues",
       DETAIL: "/venues/:id",
+      /** GET danh sách đánh giá sân theo ID sân */
       REVIEWS: "/venues/:id/reviews",
+      /** POST tạo đánh giá sân (venueId trong body) */
+      ADD_REVIEW: "/venues/reviews",
+    },
+    FIELDS: {
+      /** GET lịch trống của sân theo ngày */
+      AVAILABILITY: "/fields/:fieldId/availability",
+    },
+    REVIEWS: {
+      LIST: "/reviews",
+      CREATE: "/reviews",
     },
     BOOKINGS: {
       LIST: "/bookings",
@@ -83,13 +99,69 @@ export const API_CONFIG = {
       CREATE: "/withdrawals",
       GET_MY: "/withdrawals/my",
     },
-    /** Đánh giá nhận được + phản hồi (FR-27/28). Đổi path nếu BE khác. */
+    /** Đánh giá nhận được + phản hồi (FR-27/28). */
     FEEDBACK: {
-      RECEIVED: "/match-feedbacks/received",
-      /** Đánh giá mình đã gửi + phản hồi từ người được đánh giá */
-      GIVEN: "/match-feedbacks/given",
-      REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/reply`,
+      RECEIVED: "/playerprofiles/me/feedbacks/received",
+      GIVEN: "/playerprofiles/me/feedbacks/given",
+      REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/response`,
+    },
+    MATCH_FEEDBACKS: {
+      CREATE: "/match-feedbacks",
+    },
+    PLAYER_REPORTS: {
+      CREATE: "/player-reports",
+    },
+    NOTIFICATIONS: {
+      LIST: "/notifications",
+      MARK_READ: "/notifications/:id/read",
+      MARK_ALL_READ: "/notifications/read-all",
+    },
+    NOTIFICATION_PREFERENCES: {
+      BASE: "/notification-preferences",
+    },
+    LEADERBOARD: {
+      LIST: "/playerprofiles/leaderboard",
+      MY_RANK: "/playerprofiles/my-rank",
+    },
+    PLAYER_PROFILES: {
+      RADAR_CHART: "/playerprofiles/me/radar-chart",
+      ELO_BREAKDOWN: "/playerprofiles/me/elo-breakdown",
+    },
+    ACHIEVEMENTS: {
+      ME: "/achievements/me",
+    },
+    FRIENDSHIPS: {
+      REQUESTS: "/friendships/requests",
+      FRIENDS: "/friendships/friends",
+      STATUS: "/friendships/status/:userId",
+      RESPOND: "/friendships/respond/:requesterId",
+      REQUEST: "/friendships/request/:addresseeId",
+      DETAIL: "/friendships/:userId",
+    },
+    POSTS: {
+      LIST: "/posts",
+      DETAIL: "/posts/:id",
+      LIKE: "/posts/:id/like",
+    },
+    COMMENTS: {
+      BY_POST: "/comments/:postId",
+      DETAIL: "/comments/:commentId",
+      REPLIES: "/comments/:commentId/replies",
+      LIKE: "/comments/:commentId/like",
+      REPLY_LIKE: (commentId: string, replyId: string) =>
+        `/comments/${commentId}/replies/${replyId}/like`,
+    },
+    CONTENT_REPORTS: {
+      CREATE: (contentType: string, contentId: string) =>
+        `/content-reports/${contentType}/${contentId}`,
+    },
+    CHAT: {
+      CONVERSATIONS: "/chat/conversations",
+      CONVERSATION: "/chat/conversation/:userId",
+      ROOM_MESSAGES: "/chat/room/:roomId/messages",
+      ROOM_SEND: "/chat/room/send",
+      SEND: "/chat/send",
+      READ: "/chat/read/:fromUserId",
     },
   },
 } as const;
-

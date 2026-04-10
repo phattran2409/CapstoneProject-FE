@@ -12,5 +12,12 @@ export interface Leaderboard {
 }
 
 export interface LeaderboardResponse {
+  isSuccess: boolean;
+  data: {
+    leaderboard: Leaderboard[];
+  };
+}
+
+export interface LeaderboardData {
   leaderboard: Leaderboard[];
 }

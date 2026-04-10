@@ -1,10 +1,43 @@
-import { useQuery } from "@tanstack/react-query";
-import { getGivenFeedbacks, type GetGivenFeedbacksQuery } from "../api/feedbackApi";
+import { usePagination } from "@/shared/hooks";
+import { GetGivenFeedbacks } from "../api/feedbackApi";
 import { feedbackKeys } from "../api/feedbackKeys";
+import { GivenFeedbackItem } from "../types/feedback.types";
 
-export function useGivenFeedbacks(query?: GetGivenFeedbacksQuery) {
-  return useQuery({
-    queryKey: feedbackKeys.given(query),
-    queryFn: () => getGivenFeedbacks(query),
-  });
+interface UseGivenFeedbacksOptions {
+  pageSize?: number;
+  enabled?: boolean;
 }
+
+export const useGivenFeedbacks = ({
+  pageSize = 10,
+  enabled = true,
+}: UseGivenFeedbacksOptions = {}) => {
+  const pagination = usePagination<GivenFeedbackItem>({
+    queryKey: [...feedbackKeys.given()],
+    fetchFunction: async (page, size) => {
+      const result = await GetGivenFeedbacks({ page, pageSize: size });
+      return {
+        data: result.items,
+        totalPages: result.totalPages ?? 0,
+        totalCount: result.totalCount ?? 0,
+      };
+    },
+    pageSize,
+    staleTime: 2 * 60 * 1000,
+    enabled,
+    onError: (error) => {
+      console.error("Error fetching given feedbacks:", error);
+    },
+  });
+  return {
+    givenFeedbacks: pagination.data,
+    loading: pagination.loading,
+    refreshing: pagination.refreshing,
+    loadingMore: pagination.loadingMore,
+    error: pagination.error,
+    hasMore: pagination.hasMore,
+    refresh: pagination.refresh,
+    loadMore: pagination.loadMore,
+    setGivenFeedbacks: pagination.setData,
+  };
+};

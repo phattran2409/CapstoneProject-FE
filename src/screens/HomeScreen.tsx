@@ -69,8 +69,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const toast = useToast();
   const leaderboardQuery = useLeaderboard();
   const topUsers = useMemo(
-    () => (leaderboardQuery.data?.data?.leaderboard ?? []).slice(0, 5),
-    [leaderboardQuery.data],
+    () => (leaderboardQuery.data?.leaderboard ?? []).slice(0, 5),
+    [leaderboardQuery.data?.leaderboard],
   );
 
   // Toast đăng nhập thành công: gọi ở đây vì Login unmount ngay khi chuyển sang MainTabs

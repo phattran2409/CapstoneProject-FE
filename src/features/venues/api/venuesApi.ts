@@ -1,7 +1,6 @@
 import { apiClient } from '@/shared/api/client';
 import { Venue, VenueDetail, VenueDetailResponse, VenueFilters, VenueReview, VenueBooking, PaginatedVenueResponse, FieldAvailability, FieldAvailabilityResponse } from '../types/venue.types';
 import { API_CONFIG } from '@/shared/constants/api';
-import axios from 'axios';
 
 
 // Get all venues with optional filters
@@ -9,7 +8,6 @@ export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueR
   try { 
     const response = await apiClient.get<PaginatedVenueResponse>(API_CONFIG.ENDPOINTS.VENUES.LIST, { params: filters });
     console.log('filters', filters);
-    // Interceptor returns response.data, so response is already the data
     return response as unknown as PaginatedVenueResponse;
   } catch (error) {    
     console.error('Error fetching venues:', error);
@@ -20,7 +18,8 @@ export const getVenues = async (filters?: VenueFilters): Promise<PaginatedVenueR
 // Get single venue by ID
 export const getVenueById = async (id: string): Promise<VenueDetail> => {
   try {
-    const response = await apiClient.get<VenueDetailResponse>(`/venues/${id}`);
+    const url = API_CONFIG.ENDPOINTS.VENUES.DETAIL.replace(':id', id);
+    const response = await apiClient.get<VenueDetailResponse>(url);
     return response.data as unknown as VenueDetail;
   
   } catch (error) {
@@ -29,23 +28,11 @@ export const getVenueById = async (id: string): Promise<VenueDetail> => {
   }
 };
 
-// Get venue detail by ID (full detail with operating hours, photos, etc.)
-// export const getVenueDetail = async (id: string): Promise<VenueDetail> => {
-//   try {
-//     const response = await axios.get<VenueDetailResponse>(
-//       `https://api.kickify.site/api/venues/${id}`
-//     );
-//     return response.data.data;
-//   } catch (error) {
-//     console.error('Error fetching venue detail:', error);
-//     throw error;
-//   }
-// };
-
 // Get venue reviews
 export const getVenueReviews = async (venueId: string): Promise<VenueReview[]> => {
-  const response = await apiClient.get<VenueReview[]>(`/reviews?venueId=${venueId}`);
-  // Interceptor returns response.data, so response is already the data
+  const response = await apiClient.get<VenueReview[]>(API_CONFIG.ENDPOINTS.REVIEWS.LIST, {
+    params: { venueId },
+  });
   return response as unknown as VenueReview[];
 };
 
@@ -53,18 +40,18 @@ export const getVenueReviews = async (venueId: string): Promise<VenueReview[]> =
 export const createVenueReview = async (
   review: Omit<VenueReview, 'id' | 'createdAt'>
 ): Promise<VenueReview> => {
-  const response = await apiClient.post<VenueReview>('/reviews', {
+  const response = await apiClient.post<VenueReview>(API_CONFIG.ENDPOINTS.REVIEWS.CREATE, {
     ...review,
     createdAt: new Date().toISOString(),
   });
-  // Interceptor returns response.data, so response is already the data
   return response as unknown as VenueReview;
 };
 
 // Get my bookings
 export const getMyBookings = async (): Promise<VenueBooking[]> => {
-  const response = await apiClient.get<VenueBooking[]>('/bookings?_sort=date&_order=desc');
-  // Interceptor returns response.data, so response is already the data
+  const response = await apiClient.get<VenueBooking[]>(API_CONFIG.ENDPOINTS.BOOKINGS.LIST, {
+    params: { _sort: 'date', _order: 'desc' },
+  });
   return response as unknown as VenueBooking[];
 };
 
@@ -72,31 +59,28 @@ export const getMyBookings = async (): Promise<VenueBooking[]> => {
 export const createVenueBooking = async (
   booking: Omit<VenueBooking, 'id' | 'status'>
 ): Promise<VenueBooking> => {
-  const response = await apiClient.post<VenueBooking>('/bookings', {
+  const response = await apiClient.post<VenueBooking>(API_CONFIG.ENDPOINTS.BOOKINGS.CREATE, {
     ...booking,
     status: 'pending',
   });
-  // Interceptor returns response.data, so response is already the data
   return response as unknown as VenueBooking;
 };
 
 // Cancel booking
 export const cancelBooking = async (bookingId: string): Promise<void> => {
-  await apiClient.patch(`/bookings/${bookingId}`, { status: 'cancelled' });
+  const url = API_CONFIG.ENDPOINTS.BOOKINGS.UPDATE.replace(':id', bookingId);
+  await apiClient.patch(url, { status: 'cancelled' });
 };
 
 // Get field availability (time slots)
 export const getFieldAvailability = async (fieldId: string, date: string): Promise<FieldAvailability> => {
   try {
-    const response = await axios.get<FieldAvailabilityResponse>(
-      `https://api.kickify.site/api/fields/${fieldId}/availability`,
-      { params: { date } }
-    );
-    console.log('response', response.data);
-    return response.data.data as unknown as FieldAvailability;   
+    const url = API_CONFIG.ENDPOINTS.FIELDS.AVAILABILITY.replace(':fieldId', fieldId);
+    const response = await apiClient.get<FieldAvailabilityResponse>(url, { params: { date } });
+    console.log('response', response);
+    return (response as unknown as FieldAvailabilityResponse).data as unknown as FieldAvailability;
   } catch (error) {
     console.error('Error fetching field availability:', error);
     throw error;
   }
 };
-

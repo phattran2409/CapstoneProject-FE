@@ -10,6 +10,7 @@ import type {
   SendChatMessageRoomData,
   RoomChatDetailData,
 } from "../types/chat.types";
+import { API_CONFIG } from "@/shared/constants/api";
 
 
 export interface GetConversationsParams {
@@ -24,7 +25,7 @@ export const getConversations = async (
   const { page = 1, pageSize = 20, searchTerm } = params;
 
   const res = (await apiClient.get<ChatApiResponse<ConversationListData>>(
-    "/chat/conversations",
+    API_CONFIG.ENDPOINTS.CHAT.CONVERSATIONS,
     { params: { searchTerm, page, pageSize } },
   )) as unknown as ChatApiResponse<ConversationListData>;
 
@@ -36,8 +37,9 @@ export const getConversationMessages = async (
   pageNumber = 1,
   pageSize = 50,
 ): Promise<ConversationDetailData> => {
+  const url = API_CONFIG.ENDPOINTS.CHAT.CONVERSATION.replace(':userId', otherUserId);
   const res = (await apiClient.get<ChatApiResponse<ConversationDetailData>>(
-    `/chat/conversation/${otherUserId}`,
+    url,
     { params: { pageNumber, pageSize } },
   )) as unknown as ChatApiResponse<ConversationDetailData>;
 
@@ -50,8 +52,9 @@ export const getRoomChat = async (
   pageNumber = 1,
   pageSize = 50,
 ): Promise<RoomChatDetailData> => {
+  const url = API_CONFIG.ENDPOINTS.CHAT.ROOM_MESSAGES.replace(':roomId', roomId);
   const res = (await apiClient.get<ChatApiResponse<RoomChatDetailData>>(
-    `/chat/room/${roomId}/messages`,
+    url,
     { params: { channel, pageNumber, pageSize } },
   )) as unknown as ChatApiResponse<RoomChatDetailData>;
 
@@ -62,7 +65,7 @@ export const sendChatMessageRoom = async (
   payload: SendChatRoomRequestBody,
 ): Promise<SendChatMessageRoomData> => {
   const res = (await apiClient.post<ChatApiResponse<SendChatMessageRoomData>>(
-    "/chat/room/send",
+    API_CONFIG.ENDPOINTS.CHAT.ROOM_SEND,
     payload,
   )) as unknown as ChatApiResponse<SendChatMessageRoomData>;
   return res.data;
@@ -72,7 +75,7 @@ export const sendChatMessage = async (
   payload: SendChatRequestBody,
 ): Promise<SendChatMessageData> => {
   const res = (await apiClient.post<ChatApiResponse<SendChatMessageData>>(
-    "/chat/send",
+    API_CONFIG.ENDPOINTS.CHAT.SEND,
     payload,
   )) as unknown as ChatApiResponse<SendChatMessageData>;
   return res.data;
@@ -81,9 +84,9 @@ export const sendChatMessage = async (
 export const markChatAsRead = async (
   fromUserId: string,
 ): Promise<MarkAsReadData> => {
+  const url = API_CONFIG.ENDPOINTS.CHAT.READ.replace(':fromUserId', fromUserId);
   const res = (await apiClient.post<ChatApiResponse<MarkAsReadData>>(
-    `/chat/read/${fromUserId}`,
+    url,
   )) as unknown as ChatApiResponse<MarkAsReadData>;
   return res.data;
 };
-

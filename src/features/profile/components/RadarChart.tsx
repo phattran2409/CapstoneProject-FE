@@ -52,11 +52,16 @@ const START_ANGLE = -Math.PI / 2;
 const ANGLE_STEP = (2 * Math.PI) / 5;
 
 const AXES = [
-  { label: "Form", key: "form", angle: START_ANGLE },
-  { label: "WinRate", key: "winRate", angle: START_ANGLE + ANGLE_STEP },
-  { label: "Community", key: "communityScore", angle: START_ANGLE + 2 * ANGLE_STEP },
-  { label: "Trust", key: "trust", angle: START_ANGLE + 3 * ANGLE_STEP },
-  { label: "Contribution", key: "contribution", angle: START_ANGLE + 4 * ANGLE_STEP },
+  { label: "Form", key: "form", angle: START_ANGLE, labelDx: 0 },
+  { label: "WinRate", key: "winRate", angle: START_ANGLE + ANGLE_STEP, labelDx: 0 },
+  { label: "Community", key: "communityScore", angle: START_ANGLE + 2 * ANGLE_STEP, labelDx: 0 },
+  { label: "Trust", key: "trust", angle: START_ANGLE + 3 * ANGLE_STEP, labelDx: 0 },
+  {
+    label: "Contribution",
+    key: "contribution",
+    angle: START_ANGLE + 4 * ANGLE_STEP,
+    labelDx: 18,
+  },
 ] as const;
 
 export const RadarChart: React.FC<RadarChartProps> = ({ data, size = CHART_SIZE }) => {
@@ -87,7 +92,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, size = CHART_SIZE 
   const labels = AXES.map((axis) => {
     const labelRadius = radius * 1.2;
     return {
-      x: center + labelRadius * Math.cos(axis.angle),
+      x: center + labelRadius * Math.cos(axis.angle) + (axis.labelDx ?? 0),
       y: center + labelRadius * Math.sin(axis.angle),
       label: axis.label,
     };

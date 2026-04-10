@@ -6,6 +6,8 @@ import {
   AchievementsData,
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
+import { API_CONFIG } from "@/shared/constants/api";
+
 export interface RadarAssessment {
   type: string;
   title: string;
@@ -42,10 +44,10 @@ export interface EloBreakdownRecord {
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<User> => {
   try {
-    const response = await apiClient.get<User>(`/users/${userId}`);
+    const url = API_CONFIG.ENDPOINTS.USERS.DETAIL.replace(':id', userId);
+    const response = await apiClient.get<User>(url);
     console.log("response :", response.data);
 
-    // Ensure we have valid data before returning
     if (!response.data) {
       throw new Error("Invalid response: User profile data is missing");
     }
@@ -59,7 +61,7 @@ export const getUserProfile = async (userId: string): Promise<User> => {
 
 export const getAchievements = async (): Promise<AchievementsData> => {
   try {
-    const response = await apiClient.get<AchievementsData>(`/achievements/me`);
+    const response = await apiClient.get<AchievementsData>(API_CONFIG.ENDPOINTS.ACHIEVEMENTS.ME);
     if (!response.data) {
       throw new Error("Invalid response: User achievements data is missing");
     }
@@ -75,10 +77,7 @@ export const updateMyProfile = async (
   userId: string,
   data: UpdateProfileData,
 ): Promise<User> => {
-  // Clean data: remove empty strings and null/undefined values
-  // Backend expects null for optional fields, not empty strings
   const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-    // Skip empty strings, null, and undefined
     if (value !== "" && value !== null && value !== undefined) {
       acc[key as keyof UpdateProfileData] = value;
     }
@@ -87,7 +86,8 @@ export const updateMyProfile = async (
 
   console.log("📤 Sending profile update:", cleanedData);
 
-  const response = await apiClient.put<User>(`/users/${userId}`, cleanedData);
+  const url = API_CONFIG.ENDPOINTS.USERS.DETAIL.replace(':id', userId);
+  const response = await apiClient.put<User>(url, cleanedData);
   return response.data;
 };
 
@@ -97,7 +97,7 @@ export const updateAvatar = async (
 ): Promise<ApiResponse<{ avatarUrl: string }>> => {
   const formData = new FormData();
   formData.append("file", file as any);
-  const response = await apiClient.post(`/users/avatar`, formData, {
+  const response = await apiClient.post(API_CONFIG.ENDPOINTS.USERS.AVATAR, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -112,33 +112,36 @@ export const updateAvatar = async (
 // Send friend request
 export const sendFriendRequest = async (addresseeId: string): Promise<void> => {
   try {
-    await apiClient.post(`/friendships/request/${addresseeId}`);
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.REQUEST.replace(':addresseeId', addresseeId);
+    await apiClient.post(url);
   } catch (error) {
     console.error("Error sending friend request:", error);
     throw error;
   }
 };
 
-//Remove Friend
+// Remove Friend
 export const removeFriend = async (friendId: string): Promise<void> => {
   try {
-    await apiClient.delete(`/friendships/${friendId}`);
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.DETAIL.replace(':userId', friendId);
+    await apiClient.delete(url);
   } catch (error) {
     console.error("Error removing friend:", error);
     throw error;
   }
 };
 
-// Get match history for a user (stub – implement when backend is ready)
+// Get match history for a user
 export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
   const id = userId || "me";
-  const response = await apiClient.get(`/users/${id}/match-history`);
+  const url = API_CONFIG.ENDPOINTS.USERS.MATCH_HISTORY.replace(':id', id);
+  const response = await apiClient.get(url);
   return (response as { data?: unknown[] })?.data ?? [];
 };
 
 export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
   const response = await apiClient.get<MyRadarChartData>(
-    `/playerprofiles/me/radar-chart`,
+    API_CONFIG.ENDPOINTS.PLAYER_PROFILES.RADAR_CHART,
   );
   return response as unknown as MyRadarChartData;
 };
@@ -147,7 +150,7 @@ export const getMyEloBreakdown = async (
   matchId?: string,
 ): Promise<EloBreakdownRecord[]> => {
   const response = await apiClient.get<EloBreakdownRecord[]>(
-    `/playerprofiles/me/elo-breakdown`,
+    API_CONFIG.ENDPOINTS.PLAYER_PROFILES.ELO_BREAKDOWN,
     {
       params: matchId ? { matchId } : undefined,
     },
@@ -155,7 +158,7 @@ export const getMyEloBreakdown = async (
   return response as unknown as EloBreakdownRecord[];
 };
 
-//Update notification settings
+// Update notification settings
 export const updateNotificationSettings = async (
   matchRoom: boolean,
   friendship: boolean,
@@ -163,7 +166,7 @@ export const updateNotificationSettings = async (
   chat: boolean,
 ): Promise<ApiResponse> => {
   try {
-    const response = await apiClient.put(`/notification-preferences`, {
+    const response = await apiClient.put(API_CONFIG.ENDPOINTS.NOTIFICATION_PREFERENCES.BASE, {
       matchRoom,
       friendship,
       post,
@@ -187,7 +190,7 @@ export interface NotificationPreferences {
 export const getNotificationSettings =
   async (): Promise<NotificationPreferences> => {
     const response = await apiClient.get<NotificationPreferences>(
-      `/notification-preferences`,
+      API_CONFIG.ENDPOINTS.NOTIFICATION_PREFERENCES.BASE,
     );
     if (!response.data) throw new Error("No notification preferences data");
     console.log("response :", response.data);
