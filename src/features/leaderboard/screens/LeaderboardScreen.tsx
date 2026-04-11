@@ -12,15 +12,12 @@ import { EmptyState, ErrorState, ListSkeleton, RankBadge } from '@/shared/compon
 import { Leaderboard } from '../types/leaderboard.types';
 import { getEmailUsername } from '@/shared/utils/formatters';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { RootStackParamList } from '@/app/navigation/types';
 
-type RootStackParamList = {
-  Home: undefined;
-  Leaderboard: undefined;
-  Profile: undefined;
-  PlayerProfile: { playerId: string };
-};
-
-type LeaderboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Leaderboard'>;
+type LeaderboardScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Leaderboard'
+>;
 
 interface LeaderboardScreenProps {
   navigation: LeaderboardScreenNavigationProp;
@@ -91,7 +88,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
             borderColor: isMe ? theme.colors.neonGreen : theme.colors.border,
           },
         ]}
-        onPress={() => navigation.navigate('PlayerProfile', { playerId: player.userId })}
+        onPress={() => {
+          const userId = player.userId?.trim();
+          if (!userId) return;
+          navigation.navigate('PersonalPage', { userId });
+        }}
       >
         <View style={styles.playerRow}>
           {/* Rank */}

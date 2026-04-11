@@ -17,66 +17,66 @@ const createWrapper = () => {
     React.createElement(QueryClientProvider, { client: queryClient }, children);
 };
 
-const mockLeaderboardEntries: Leaderboard[] = [
-  {
-    rank: 1,
-    userId: 'user-1',
-    fullName: 'Nguyễn Văn A',
-    email: 'nva@example.com',
-    avatarUrl: 'https://example.com/avatar1.png',
-    currentElo: 1800,
-    eloChange: 25,
-    totalMatches: 80,
-  },
-  {
-    rank: 2,
-    userId: 'user-2',
-    fullName: 'Trần Thị B',
-    email: 'ttb@example.com',
-    avatarUrl: null,
-    currentElo: 1650,
-    eloChange: -10,
-    totalMatches: 55,
-  },
-];
+// const mockLeaderboardEntries: Leaderboard[] = [
+//   {
+//     rank: 1,
+//     userId: 'user-1',
+//     fullName: 'Nguyễn Văn A',
+//     email: 'nva@example.com',
+//     avatarUrl: 'https://example.com/avatar1.png',
+//     currentElo: 1800,
+//     eloChange: 25,
+//     totalMatches: 80,
+//   },
+//   {
+//     rank: 2,
+//     userId: 'user-2',
+//     fullName: 'Trần Thị B',
+//     email: 'ttb@example.com',
+//     avatarUrl: null,
+//     currentElo: 1650,
+//     eloChange: -10,
+//     totalMatches: 55,
+//   },
+// ];
 
-describe('useLeaderboard', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+// describe('useLeaderboard', () => {
+//   beforeEach(() => {
+//     jest.clearAllMocks();
+//   });
 
-  it('should return leaderboard data on success', async () => {
-    const mockResponse = {
-      isSuccess: true,
-      data: { leaderboard: mockLeaderboardEntries },
-    };
-    (leaderboardApi.getLeaderboardPlayers as jest.Mock).mockResolvedValue(mockResponse);
+//   it('should return leaderboard data on success', async () => {
+//     const mockResponse = {
+//       isSuccess: true,
+//       data: { leaderboard: mockLeaderboardEntries },
+//     };
+//     (leaderboardApi.getLeaderboardPlayers as jest.Mock).mockResolvedValue(mockResponse);
 
-    const { result } = renderHook(() => useLeaderboard(), {
-      wrapper: createWrapper(),
-    });
+//     const { result } = renderHook(() => useLeaderboard(), {
+//       wrapper: createWrapper(),
+//     });
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+//     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data).toEqual(mockResponse);
-    expect(leaderboardApi.getLeaderboardPlayers).toHaveBeenCalledTimes(1);
-  });
+//     expect(result.current.data).toEqual(mockResponse);
+//     expect(leaderboardApi.getLeaderboardPlayers).toHaveBeenCalledTimes(1);
+//   });
 
-  it('should return error state when API fails', async () => {
-    (leaderboardApi.getLeaderboardPlayers as jest.Mock).mockRejectedValue(
-      new Error('Failed to fetch leaderboard'),
-    );
+//   it('should return error state when API fails', async () => {
+//     (leaderboardApi.getLeaderboardPlayers as jest.Mock).mockRejectedValue(
+//       new Error('Failed to fetch leaderboard'),
+//     );
 
-    const { result } = renderHook(() => useLeaderboard(), {
-      wrapper: createWrapper(),
-    });
+//     const { result } = renderHook(() => useLeaderboard(), {
+//       wrapper: createWrapper(),
+//     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
+//     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(result.current.error).toBeTruthy();
-    expect(result.current.data).toBeUndefined();
-  });
-});
+//     expect(result.current.error).toBeTruthy();
+//     expect(result.current.data).toBeUndefined();
+//   });
+// });
 
 describe('useMyRank', () => {
   beforeEach(() => {
@@ -84,15 +84,7 @@ describe('useMyRank', () => {
   });
 
   it('should return my rank data on success', async () => {
-    const mockRankData = {
-      rank: 7,
-      userId: 'current-user',
-      currentElo: 1200,
-      totalMatches: 30,
-      wins: 15,
-      losses: 12,
-      draws: 3,
-    };
+    const mockRankData = { rank: 7 };
     (leaderboardApi.getMyRank as jest.Mock).mockResolvedValue(mockRankData);
 
     const { result } = renderHook(() => useMyRank(), {

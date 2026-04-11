@@ -214,7 +214,9 @@ const ProfileDetailScreen: React.FC<ProfileDetailScreenProps> = ({
             />
             <StatCard
               icon="podium"
-              value={myRank?.data?.rank || "N/A"}
+              value={
+                myRank?.data?.rank != null ? myRank.data.rank : "N/A"
+              }
               label={t("profileDetail.rank")}
               color="#FF6B6B"
             />
