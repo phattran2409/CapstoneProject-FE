@@ -9,10 +9,11 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useRoute, useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
@@ -103,10 +104,20 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
     });
   }, [lat, lng, displayVenueName, displayAddress]);
 
-  const handleBack = async () => {
-    await useFeedbackSessionStore.getState().clearSession();
-    navigation.replace("MainTabs");
-  };
+  /** Bỏ qua đánh giá sân — vẫn vào màn cảm ơn; invalidate + clear session do FeedbackComplete xử lý khi mount. */
+  const skipFieldAndFinish = useCallback(() => {
+    navigation.replace("FeedbackComplete");
+  }, [navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        skipFieldAndFinish();
+        return true;
+      });
+      return () => sub.remove();
+    }, [skipFieldAndFinish]),
+  );
 
   const handleSubmit = useCallback(async () => {
     if (rating === 0) {
@@ -194,7 +205,7 @@ const FeedbackFieldRatingScreen: React.FC<FeedbackFieldRatingProps> = ({
     >
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
-          onPress={() => handleBack()}
+          onPress={skipFieldAndFinish}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >

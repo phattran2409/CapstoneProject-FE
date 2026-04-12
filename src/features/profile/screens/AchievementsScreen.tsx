@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -27,42 +27,44 @@ type AchievementsScreenProps = NativeStackScreenProps<
 
 type FilterType = "all" | "unlocked" | "locked";
 
-// Map API AchievementItem type → AchievementItem component's Achievement interface
-// Uses local translation map to display Vietnamese name/description
-const mapToAchievement = (
-  item: AchievementItemType,
-  language: string,
-): Achievement => {
-  const { name, description } = getAchievementTranslation(
-    item.achievementId,
-    language,
-    item.name,
-    item.description,
-  );
-  return {
-    id: item.achievementId,
-    title: name,
-    description,
-    icon: "trophy" as keyof typeof Ionicons.glyphMap,
-    isUnlocked: item.isUnlocked,
-    unlockedAt: item.earnedAt ?? undefined,
-  };
-};
-
 const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme();
-  const { t } = useTranslation();
-  const language = useAppStore((state) => state.language);
+  const { t, i18n } = useTranslation();
+  const appLanguage = useAppStore((s) => s.language);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const { data: rawData, isLoading, isError } = useAchievements();
 
-  // Map API data to AchievementItem format
-  const achievements: Achievement[] = (rawData?.achievements ?? []).map(
-    (item) => mapToAchievement(item, language),
-  );
+  /** Map cục bộ + khớp phụ theo tên EN — không phụ thuộc i18n key động (UUID) */
+  const achievements: Achievement[] = useMemo(() => {
+    const langTag =
+      [i18n.resolvedLanguage, i18n.language, appLanguage].find(
+        (x) => x != null && String(x).length > 0,
+      ) ?? "vi";
+    return (rawData?.achievements ?? []).map((item: AchievementItemType) => {
+      const { name, description } = getAchievementTranslation(
+        item.achievementId,
+        langTag,
+        item.name,
+        item.description,
+      );
+      return {
+        id: item.achievementId,
+        title: name,
+        description,
+        icon: "trophy" as keyof typeof Ionicons.glyphMap,
+        isUnlocked: item.isUnlocked,
+        unlockedAt: item.earnedAt ?? undefined,
+      };
+    });
+  }, [
+    rawData?.achievements,
+    i18n.resolvedLanguage,
+    i18n.language,
+    appLanguage,
+  ]);
 
   // Filter achievements
   const filteredAchievements = achievements.filter((achievement) => {

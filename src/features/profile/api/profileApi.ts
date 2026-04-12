@@ -4,6 +4,7 @@ import {
   UpdateProfileData,
   UserProfileResponse,
   AchievementsData,
+  AchievementItem,
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
 import { API_CONFIG } from "@/shared/constants/api";
@@ -59,13 +60,77 @@ export const getUserProfile = async (userId: string): Promise<User> => {
   }
 };
 
+function unwrapAchievementsPayload(
+  body: Record<string, unknown>,
+): Record<string, unknown> {
+  const nested = body.data ?? body.Data;
+  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    return nested as Record<string, unknown>;
+  }
+  return body;
+}
+
+function pickAchievementsArray(
+  o: Record<string, unknown> | undefined,
+): unknown[] | null {
+  if (!o) return null;
+  const a = o.achievements ?? o.Achievements ?? o.items ?? o.Items;
+  return Array.isArray(a) ? a : null;
+}
+
+/** Chuẩn hóa 1 dòng achievement (camelCase / PascalCase từ .NET) */
+function mapAchievementRow(row: Record<string, unknown>): AchievementItem {
+  return {
+    achievementId: String(
+      row.achievementId ??
+        row.AchievementId ??
+        row.id ??
+        row.Id ??
+        "",
+    ),
+    name: String(row.name ?? row.Name ?? ""),
+    description: String(row.description ?? row.Description ?? ""),
+    badgeIconUrl: String(row.badgeIconUrl ?? row.BadgeIconUrl ?? ""),
+    criteriaType: String(row.criteriaType ?? row.CriteriaType ?? ""),
+    criteriaValue: Number(row.criteriaValue ?? row.CriteriaValue ?? 0),
+    isUnlocked: Boolean(row.isUnlocked ?? row.IsUnlocked),
+    earnedAt: (row.earnedAt ?? row.EarnedAt ?? null) as string | null,
+  };
+}
+
 export const getAchievements = async (): Promise<AchievementsData> => {
   try {
-    const response = await apiClient.get<AchievementsData>(API_CONFIG.ENDPOINTS.ACHIEVEMENTS.ME);
-    if (!response.data) {
+    const body = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.ACHIEVEMENTS.ME,
+    )) as Record<string, unknown>;
+
+    const inner = unwrapAchievementsPayload(body);
+    let rawList = pickAchievementsArray(inner);
+    if (!rawList) rawList = pickAchievementsArray(body);
+    if (!Array.isArray(rawList)) {
       throw new Error("Invalid response: User achievements data is missing");
     }
-    return response.data;
+
+    const achievements = rawList.map((row) =>
+      mapAchievementRow(row as Record<string, unknown>),
+    );
+
+    const totalAchievements = Number(
+      inner.totalAchievements ??
+        inner.TotalAchievements ??
+        body.totalAchievements ??
+        body.TotalAchievements ??
+        achievements.length,
+    );
+    const unlockedCount = Number(
+      inner.unlockedCount ??
+        inner.UnlockedCount ??
+        body.unlockedCount ??
+        body.UnlockedCount ??
+        achievements.filter((a) => a.isUnlocked).length,
+    );
+
+    return { achievements, totalAchievements, unlockedCount };
   } catch (error) {
     console.error("Error fetching user achievements:", error);
     throw error;

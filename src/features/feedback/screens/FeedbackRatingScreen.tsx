@@ -7,8 +7,10 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
@@ -46,6 +48,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
 
   const session = useFeedbackSessionStore((s) => s.session);
   const savePlayerRating = useFeedbackSessionStore((s) => s.savePlayerRating);
@@ -449,99 +452,114 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         </View>
       </View>
 
-      {/* Rating Card Container with Stack Effect */}
-      <Animated.View style={[styles.cardContainer]}>
-        {/* Next Card (behind current) - for smooth transition */}
-        {currentIndex < players.length - 1 && (
-          <Animated.View style={[styles.nextCardContainer, nextCardStyle]}>
-            <SwipeableRatingCard
-              key={`next-${players[currentIndex + 1].id}`}
-              player={players[currentIndex + 1]}
-              rating={ratings[players[currentIndex + 1].id] || 0}
-              comment={comments[players[currentIndex + 1].id] || ""}
-              onRatingChange={() => {}}
-              onCommentChange={() => {}}
-              onSwipeRight={() => {}}
-              onSwipeLeft={() => {}}
-              onValidate={handleValidate}
-              isLastPlayer={currentIndex + 1 === players.length - 1}
-            />
-          </Animated.View>
-        )}
-
-        {/* Current Card (on top) */}
-        {currentPlayer && (
-          <SwipeableRatingCard
-            key={currentPlayer.id}
-            player={currentPlayer}
-            rating={ratings[currentPlayer.id] || 0}
-            comment={comments[currentPlayer.id] || ""}
-            onRatingChange={handleRatingChange}
-            onCommentChange={handleCommentChange}
-            onSwipeRight={handleSwipeRight}
-            onSwipeLeft={handleSwipeLeft}
-            onReport={handleReport}
-            onValidate={handleValidate}
-            isLastPlayer={currentIndex === players.length - 1}
-            onComplete={submitBatchAndGoToField}
-          />
-        )}
-      </Animated.View>
-
-      {/* Swipe Indicators as Buttons */}
-      <View style={styles.swipeIndicators}>
-        <TouchableOpacity
-          style={styles.swipeIndicator}
-          activeOpacity={0.8}
-          onPress={handleSwipeLeft}
-          disabled={submitBatchMutation.isPending}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 108 : 0}
+      >
+        <ScrollView
+          style={styles.keyboardScroll}
+          contentContainerStyle={styles.keyboardScrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
         >
-          <View
-            style={[
-              styles.swipeIcon,
-              { backgroundColor: theme.colors.textTertiary },
-            ]}
-          >
-            <Ionicons name="close" size={24} color="#000" />
-          </View>
-          <Text
-            style={[styles.swipeLabel, { color: theme.colors.textSecondary }]}
-          >
-            {t("feedback.rating.swipeLeft", "VUỐT TRÁI")}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.swipeIndicator}
-          activeOpacity={0.8}
-          onPress={handleSwipeRight}
-          disabled={submitBatchMutation.isPending}
-        >
-          <View
-            style={[
-              styles.swipeIcon,
-              { backgroundColor: theme.colors.primary },
-            ]}
-          >
-            {submitBatchMutation.isPending ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <Ionicons name="checkmark" size={24} color="#000" />
+          {/* Rating Card Container with Stack Effect */}
+          <Animated.View style={[styles.cardContainer]}>
+            {/* Next Card (behind current) - for smooth transition */}
+            {currentIndex < players.length - 1 && (
+              <Animated.View style={[styles.nextCardContainer, nextCardStyle]}>
+                <SwipeableRatingCard
+                  key={`next-${players[currentIndex + 1].id}`}
+                  player={players[currentIndex + 1]}
+                  rating={ratings[players[currentIndex + 1].id] || 0}
+                  comment={comments[players[currentIndex + 1].id] || ""}
+                  onRatingChange={() => {}}
+                  onCommentChange={() => {}}
+                  onSwipeRight={() => {}}
+                  onSwipeLeft={() => {}}
+                  onValidate={handleValidate}
+                  isLastPlayer={currentIndex + 1 === players.length - 1}
+                />
+              </Animated.View>
             )}
-          </View>
-          <Text style={[styles.swipeLabel, { color: theme.colors.primary }]}>
-            {t("feedback.rating.swipeRight", "VUỐT PHẢI")}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Tip */}
-      <Text style={[styles.tip, { color: theme.colors.textTertiary }]}>
-        {t(
-          "feedback.rating.tip",
-          "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
-        )}
-      </Text>
+            {/* Current Card (on top) */}
+            {currentPlayer && (
+              <SwipeableRatingCard
+                key={currentPlayer.id}
+                player={currentPlayer}
+                rating={ratings[currentPlayer.id] || 0}
+                comment={comments[currentPlayer.id] || ""}
+                onRatingChange={handleRatingChange}
+                onCommentChange={handleCommentChange}
+                onSwipeRight={handleSwipeRight}
+                onSwipeLeft={handleSwipeLeft}
+                onReport={handleReport}
+                onValidate={handleValidate}
+                isLastPlayer={currentIndex === players.length - 1}
+                onComplete={submitBatchAndGoToField}
+              />
+            )}
+          </Animated.View>
+
+          {/* Swipe Indicators as Buttons */}
+          <View style={styles.swipeIndicators}>
+            <TouchableOpacity
+              style={styles.swipeIndicator}
+              activeOpacity={0.8}
+              onPress={handleSwipeLeft}
+              disabled={submitBatchMutation.isPending}
+            >
+              <View
+                style={[
+                  styles.swipeIcon,
+                  { backgroundColor: theme.colors.textTertiary },
+                ]}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </View>
+              <Text
+                style={[styles.swipeLabel, { color: theme.colors.textSecondary }]}
+              >
+                {t("feedback.rating.swipeLeft", "VUỐT TRÁI")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.swipeIndicator}
+              activeOpacity={0.8}
+              onPress={handleSwipeRight}
+              disabled={submitBatchMutation.isPending}
+            >
+              <View
+                style={[
+                  styles.swipeIcon,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+              >
+                {submitBatchMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <Ionicons name="checkmark" size={24} color="#000" />
+                )}
+              </View>
+              <Text style={[styles.swipeLabel, { color: theme.colors.primary }]}>
+                {t("feedback.rating.swipeRight", "VUỐT PHẢI")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Tip */}
+          <Text style={[styles.tip, { color: theme.colors.textTertiary }]}>
+            {t(
+              "feedback.rating.tip",
+              "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
+            )}
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Custom Report Overlay for player */}
       {showReportModal && (
@@ -801,11 +819,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     minWidth: 40,
   },
-  cardContainer: {
+  keyboardAvoid: {
     flex: 1,
+  },
+  keyboardScroll: {
+    flex: 1,
+  },
+  keyboardScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 16,
+  },
+  cardContainer: {
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 12,
     position: "relative",
   },
   nextCardContainer: {
