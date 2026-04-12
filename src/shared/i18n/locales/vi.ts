@@ -3,6 +3,7 @@ const vi = {
     appName: "Kickify",
     success: "Thành công",
     error: "Lỗi",
+    players: "người chơi",
     language: {
       english: "Tiếng Anh",
       vietnamese: "Tiếng Việt",
@@ -15,6 +16,7 @@ const vi = {
     },
     buttons: {
       goToProfile: "Đi đến hồ sơ",
+      detail: "Chi tiết",
       showModal: "Hiển thị modal",
       close: "Đóng",
       login: "Đăng nhập",
@@ -24,7 +26,9 @@ const vi = {
       cancel: "Hủy",
       confirm: "Xác nhận",
       processing: "Đang xử lý…",
+      viewDetail: "Xem chi tiết",
       delete: "Xóa",
+      loadingMore: "Đang tải thêm...",
     },
     email: "Email",
   },
@@ -129,6 +133,23 @@ const vi = {
     manageBadge: "QUẢN LÝ",
     detailButton: "Chi tiết",
     privateLabel: "Riêng tư",
+    detailModal: {
+      title: "Chi tiết trận đấu",
+    },
+    emptyListDefault: "Không có trận đấu nào",
+  },
+  matchRoomStatus: {
+    Open: "Mở",
+    Full: "Đã đủ",
+    Locked: "Đã khóa",
+    Closed: "Đã đóng",
+    InProgress: "Đang diễn ra",
+    Completed: "Hoàn thành",
+    Reviewing: "Đang xem xét",
+    Cancelled: "Đã hủy",
+  },
+  emptyState: {
+    defaultTitle: "Không có dữ liệu",
   },
   tabs: {
     home: "Trang chủ",

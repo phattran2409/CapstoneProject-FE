@@ -45,6 +45,9 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   const { theme } = useTheme();
   const slotsPerTeam = displayRoom.totalSlots / 2;
   const canHostActOnParticipants = isHost && !roomActionsDisabled;
+  /** Kick chỉ khi phòng còn Open; host không kick được khi Locked / InProgress / … */
+  const hostCanKickParticipant =
+    canHostActOnParticipants && displayRoom.status === "Open";
 
   return (
     <View style={styles.teamLineupSection}>
@@ -97,7 +100,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               key={participant.participantId}
               participant={participant}
               teamColor="#4CAF50"
-              isHost={canHostActOnParticipants}
+              canKickPlayer={hostCanKickParticipant}
               isRoomHost={!!hostId && participant.userId === hostId}
               currentUserId={currentUserId}
               isKicking={isKicking}
@@ -145,7 +148,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               key={participant.participantId}
               participant={participant}
               teamColor="#2196F3"
-              isHost={canHostActOnParticipants}
+              canKickPlayer={hostCanKickParticipant}
               isRoomHost={!!hostId && participant.userId === hostId}
               currentUserId={currentUserId}
               isKicking={isKicking}
@@ -185,7 +188,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
                 key={participant.participantId}
                 participant={participant}
                 teamColor="#9E9E9E"
-                isHost={canHostActOnParticipants}
+                canKickPlayer={hostCanKickParticipant}
                 isRoomHost={!!hostId && participant.userId === hostId}
                 currentUserId={currentUserId}
                 isKicking={isKicking}

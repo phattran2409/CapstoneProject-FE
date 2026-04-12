@@ -58,7 +58,7 @@ export const useMatchRooms = (filters?: Omit<MatchRoomFilters, 'page' | 'pageSiz
 };
 
 export const useMyRooms = (
-  filters?: Pick<MatchRoomFilters, "availableOnly">,
+  filters?:Pick<MatchRoomFilters, 'availableOnly'>,
   options?: { enabled?: boolean },
 ) => {
   const enabled = (options?.enabled ?? true) && !!filters;

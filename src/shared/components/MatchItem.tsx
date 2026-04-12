@@ -9,9 +9,11 @@ import { useTheme } from "@/shared/theme";
 import { ThemedText } from "@/shared/components/themed";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getImageSource } from "../utils/imageSource";
+import { getMatchFormatBadgeColor } from "../utils/matchFormatColors";
+import { matchRoomStatusI18nKey } from "../utils/matchRoomStatus";
+import { MatchRoomStatusIcon } from "./MatchRoomStatusIcon";
 import { MatchRoomStatus } from "@/features/rooms";
 import { useTranslation } from "react-i18next";
-
 export interface MatchItemData {
   id: string;
   title: string;
@@ -43,59 +45,6 @@ const MatchItem: React.FC<MatchItemProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-
-  // const imageSource = match.image?.trim()
-  //   ? { uri: match.image.trim() }
-  //   : PLACEHOLDER_IMAGE;
-
-  const getStatusIcon = (status?: MatchRoomStatus) => {
-    switch (status) {
-      case "Locked":
-        return (
-          <Ionicons name="lock-closed" size={24} color={theme.colors.textSecondary} />
-        );
-      case "Closed":
-        return (
-          <Ionicons name="close-outline" size={24} color={theme.colors.textSecondary} />
-        );
-      case "Completed":
-        return (
-          <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
-        );
-      case "Cancelled":
-        return <Ionicons name="close-circle-outline" size={24} color="#ef4444" />;
-      case "Reviewing":
-        return (
-          <Ionicons name="git-compare-outline" size={24} color="#6b7280" />
-        );
-      case "InProgress":
-        return (
-          <Ionicons name="pulse" size={24} color={theme.colors.neonGreen} />
-        );
-      case "Open":
-      case "Full":
-        return (
-          <Ionicons name="time-outline" size={24} color={theme.colors.info} />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getStatusText = (status?: MatchRoomStatus) => {
-    if (!status) return "";
-    const statusMap: Record<MatchRoomStatus, string> = {
-      Open: "Mở",
-      Full: "Đã đủ",
-      Locked: "Đã khóa",
-      Closed: "Đã đóng",
-      InProgress: "Đang diễn ra",
-      Completed: "Hoàn thành",
-      Reviewing: "Đang xem xét",
-      Cancelled: "Đã hủy",
-    };
-    return statusMap[status] || "";
-  };
 
   const PrivateBadge = () =>
     match.isPrivate ? (
@@ -271,7 +220,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
         </View>
         {showStatus && match.status && (
           <View style={styles.compactStatus}>
-            {getStatusIcon(match.status)}
+            <MatchRoomStatusIcon status={match.status} />
           </View>
         )}
       </TouchableOpacity>
@@ -279,6 +228,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
   }
 
   // Default: list variant
+  const formatAccent = getMatchFormatBadgeColor(
+    match.format,
+    theme.colors.primary,
+  );
+
   return (
     <TouchableOpacity
       style={[
@@ -317,18 +271,39 @@ const MatchItem: React.FC<MatchItemProps> = ({
           {match.status && showStatus && (
             <ThemedText variant="secondary" size="s" style={styles.listStatus}>
               {match.date && " - "}
-              {getStatusText(match.status)}
+              {t(matchRoomStatusI18nKey(match.status))}
             </ThemedText>
           )}
         </View>
-        {match.format && (
-          <ThemedText variant="secondary" size="xs" style={styles.listFormat}>
-            {match.format} {match.players && `• ${match.players}`}
-          </ThemedText>
+        {(match.format || match.players) && (
+          <View style={styles.listFormatRow}>
+            {match.format ? (
+              <View
+                style={[
+                  styles.formatBadge,
+                  {
+                    backgroundColor: formatAccent + "20",
+                    borderColor: formatAccent,
+                  },
+                ]}
+              >
+                <ThemedText size="xs" weight="bold" style={{ color: formatAccent }}>
+                  {match.format}
+                </ThemedText>
+              </View>
+            ) : null}
+            {match.players ? (
+              <ThemedText variant="secondary" size="xs" style={styles.listPlayers}>
+                {match.format ? ` • ${match.players}` : match.players}
+              </ThemedText>
+            ) : null}
+          </View>
         )}
       </View>
       {showStatus && match.status && (
-        <View style={styles.listStatusIcon}>{getStatusIcon(match.status)}</View>
+        <View style={styles.listStatusIcon}>
+          <MatchRoomStatusIcon status={match.status} />
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -404,8 +379,21 @@ const styles = StyleSheet.create({
   listStatus: {
     marginLeft: 4,
   },
-  listFormat: {
+  listFormatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     marginTop: 4,
+    gap: 4,
+  },
+  formatBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  listPlayers: {
+    flexShrink: 1,
   },
   listStatusIcon: {
     marginLeft: 12,

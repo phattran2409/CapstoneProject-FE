@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { View, FlatList, StyleSheet, ListRenderItem } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed';
 import MatchItem, { MatchItemData, MatchItemProps } from './MatchItem';
@@ -40,11 +41,14 @@ const MatchList: React.FC<MatchListProps> = ({
   onMatchPress,
   showStatus = true,
   numColumns = 2,
-  emptyMessage = 'Không có trận đấu nào',
+  emptyMessage,
   containerStyle,
   listStyle,
 }) => {
+  const { t } = useTranslation();
   const { theme } = useTheme();
+  const resolvedEmptyMessage =
+    emptyMessage ?? t('matches.emptyListDefault');
 
   const renderItem: ListRenderItem<MatchItemData> = ({ item }) => (
     <MatchItem
@@ -69,7 +73,7 @@ const MatchList: React.FC<MatchListProps> = ({
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <ThemedText variant="secondary" size="m">
-        {emptyMessage}
+        {resolvedEmptyMessage}
       </ThemedText>
     </View>
   );

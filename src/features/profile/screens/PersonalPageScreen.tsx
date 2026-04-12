@@ -29,6 +29,7 @@ import {
   PostItem,
   Post,
   ProfileSkeleton,
+  MatchListSkeleton,
   ErrorState,
   EmptyState,
   LoadingMoreIndicator,
@@ -56,6 +57,7 @@ import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
 import { getImageSource } from "@/shared/utils/imageSource";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { MyRoom } from "@/features/rooms/types/room.types";
 
 type PersonalPageScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -76,7 +78,6 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
   return {
     id: String(
       room?.roomId ??
-        room?.id ??
         `${room?.roomName ?? "room"}-${room?.matchDate ?? "date"}-${room?.startTime ?? "start"}`,
     ),
     title:
@@ -86,7 +87,7 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
       "Unknown",
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: getImageSource(room.venuePhotos?.[0]?.photoUrl),
+    image: getImageSource(room.field?.venue?.primaryPhotoUrl),
     status: room.status,
     date: formatDate(room.matchDate),
     venue: room.field?.venue?.venueName,
@@ -111,7 +112,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   // Get userId from params or fallback to current user
   const userId = route.params?.userId || currentUser?.userId || "";
   const isCurrentUser = userId === currentUser?.userId;
-  console.log("isCurrentUser", isCurrentUser);
 
   // UI State
   const [activeTab, setActiveTab] = useState<TabType>("posts");
@@ -155,7 +155,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     pageSize: 10,
   });
 
-  const myRoomsQuery = useMyRooms({ availableOnly: true }, { enabled: isCurrentUser });
+  const myRoomsQuery = useMyRooms(undefined, { enabled: isCurrentUser });
   const historyRoomsQuery = useHistoryRooms(userId, {
     enabled: !isCurrentUser && !!userId,
   });
@@ -172,7 +172,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
   const { data: radarData, isLoading: radarLoading } = useMyRadarChart(isCurrentUser);
-
+  
   // Memoize converted matches
   const listMatches = useMemo(() => {
     const seen = new Set<string>();
@@ -564,7 +564,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
             {activeTab === "history" && (
               <View style={{ flex: 1 }}>
                 {/* Loading State */}
-                {matchesLoading && <ProfileSkeleton />}
+                {matchesLoading && <MatchListSkeleton />}
 
                 {/* Error State */}
                 {matchesError && (

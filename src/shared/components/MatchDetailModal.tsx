@@ -8,9 +8,10 @@ import { View, TouchableOpacity, Modal, Image, StyleSheet, ScrollView } from 're
 import { useTheme } from '@/shared/theme';
 import { ThemedText, ThemedIcon, ThemedView } from '@/shared/components/themed';
 import { MatchItemData } from './MatchItem';
-import { MatchRoomStatus } from '@/features/rooms';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { getImageSource } from '../utils/imageSource';
+import { matchRoomStatusI18nKey } from '../utils/matchRoomStatus';
+import { MatchRoomStatusIcon } from './MatchRoomStatusIcon';
+import { useTranslation } from 'react-i18next';
 
 export interface MatchDetailModalProps {
   visible: boolean;
@@ -25,46 +26,11 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   onClose,
   onViewDetail,
 }) => {
+  const { t } = useTranslation();
   const { theme } = useTheme();
-
   if (!match) return null;
 
-  const getStatusIcon = (status?: MatchRoomStatus) => {
-    switch (status) {
-      case 'Locked':
-        return <Ionicons name="lock-closed" size={24} color={theme.colors.textSecondary} />;
-      case 'Closed':
-        return <Ionicons name="close-outline" size={24} color={theme.colors.textSecondary} />;
-      case 'Completed':
-        return <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />;
-      case 'Cancelled':
-        return <Ionicons name="close-circle-outline" size={24} color="#ef4444" />;
-      case 'Reviewing':
-        return <Ionicons name="git-compare-outline" size={24} color="#6b7280" />;
-      case 'InProgress':
-        return <Ionicons name="pulse" size={24} color={theme.colors.neonGreen} />;
-      case 'Open':
-      case 'Full':
-        return <Ionicons name="time-outline" size={24} color={theme.colors.info} />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusText = (status?: MatchRoomStatus) => {
-    if (!status) return '';
-    const statusMap: Record<MatchRoomStatus, string> = {
-      Open: 'Mở',
-      Full: 'Đã đủ',
-      Locked: 'Đã khóa',
-      Closed: 'Đã đóng',
-      InProgress: 'Đang diễn ra',
-      Completed: 'Hoàn thành',
-      Reviewing: 'Đang xem xét',
-      Cancelled: 'Đã hủy',
-    };
-    return statusMap[status] || '';
-  };
+  const detailIconColor = theme.colors.textSecondary;
 
   return (
     <Modal
@@ -75,7 +41,7 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     >
       <View style={styles.modalOverlay}>
         <TouchableOpacity
-          style={styles.backdrop}
+          style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
           activeOpacity={1}
           onPress={onClose}
         />
@@ -99,13 +65,13 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             ]}
           >
             <ThemedText size="xl" weight="bold">
-              Chi tiết trận đấu
+                {t("matches.detailModal.title")}
             </ThemedText>
             <TouchableOpacity
               onPress={onClose}
               style={styles.closeButton}
             >
-              <ThemedIcon name="close" size={24} variant="secondary" />
+              <ThemedIcon name="close" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -129,9 +95,9 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               {/* Status */}
               {match.status && (
                 <View style={styles.statusContainer}>
-                  {getStatusIcon(match.status)}
+                  <MatchRoomStatusIcon status={match.status} />
                   <ThemedText size="m" weight="semiBold" style={styles.statusText}>
-                    {getStatusText(match.status)}
+                    {t(matchRoomStatusI18nKey(match.status))}
                   </ThemedText>
                 </View>
               )}
@@ -140,7 +106,11 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               <View style={styles.detailsContainer}>
                 {match.date && (
                   <View style={styles.detailRow}>
-                    <ThemedIcon name="calendar" size={20} variant="secondary" />
+                    <ThemedIcon
+                      name="calendar"
+                      size={20}
+                      color={detailIconColor}
+                    />
                     <ThemedText variant="secondary" size="m" style={styles.detailText}>
                       {match.date}
                     </ThemedText>
@@ -149,7 +119,7 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                 {match.time && (
                   <View style={styles.detailRow}>
-                    <ThemedIcon name="time" size={20} variant="secondary" />
+                    <ThemedIcon name="time" size={20} color={detailIconColor} />
                     <ThemedText variant="secondary" size="m" style={styles.detailText}>
                       {match.time}
                     </ThemedText>
@@ -158,7 +128,11 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                 {match.format && (
                   <View style={styles.detailRow}>
-                    <ThemedIcon name="people" size={20} variant="secondary" />
+                    <ThemedIcon
+                      name="people"
+                      size={20}
+                      color={detailIconColor}
+                    />
                     <ThemedText variant="secondary" size="m" style={styles.detailText}>
                       {match.format}
                     </ThemedText>
@@ -167,16 +141,24 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                 {match.players && (
                   <View style={styles.detailRow}>
-                    <ThemedIcon name="person" size={20} variant="secondary" />
+                    <ThemedIcon
+                      name="person"
+                      size={20}
+                      color={detailIconColor}
+                    />
                     <ThemedText variant="secondary" size="m" style={styles.detailText}>
-                      {match.players} người chơi
+                      {match.players} {t("common.players")}
                     </ThemedText>
                   </View>
                 )}
 
                 {match.venue && (
                   <View style={styles.detailRow}>
-                    <ThemedIcon name="location" size={20} variant="secondary" />
+                    <ThemedIcon
+                      name="location"
+                      size={20}
+                      color={detailIconColor}
+                    />
                     <ThemedText variant="secondary" size="m" style={styles.detailText}>
                       {match.venue}
                     </ThemedText>
@@ -206,7 +188,7 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               onPress={onClose}
             >
               <ThemedText size="m" weight="semiBold">
-                Đóng
+                {t("common.buttons.close")}
               </ThemedText>
             </TouchableOpacity>
             {onViewDetail && (
@@ -223,8 +205,12 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   onClose();
                 }}
               >
-                <ThemedText size="m" weight="bold" style={{ color: '#000' }}>
-                  Xem chi tiết
+                <ThemedText
+                  size="m"
+                  weight="bold"
+                  style={{ color: theme.colors.darkBlack }}
+                >
+                  {t("common.buttons.viewDetail")}
                 </ThemedText>
               </TouchableOpacity>
             )}
@@ -242,7 +228,6 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     maxHeight: '85%',

@@ -3,6 +3,7 @@ const en = {
     appName: "Kickify",
     success: "Success",
     error: "Error",
+    players: "players",
     language: {
       english: "English",
       vietnamese: "Vietnamese",
@@ -25,6 +26,8 @@ const en = {
       confirm: "Confirm",
       processing: "Processing…",
       delete: "Delete",
+      viewDetail: "View Detail",
+      loadingMore: "Loading more...",
     },
     email: "Email",
   },
@@ -129,6 +132,23 @@ const en = {
     manageBadge: "MANAGE",
     detailButton: "Details",
     privateLabel: "Private",
+    detailModal: {
+      title: "Match Details",
+    },
+    emptyListDefault: "No matches yet",
+  },
+  matchRoomStatus: {
+    Open: "Open",
+    Full: "Full",
+    Locked: "Locked",
+    Closed: "Closed",
+    InProgress: "In progress",
+    Completed: "Completed",
+    Reviewing: "Under review",
+    Cancelled: "Cancelled",
+  },
+  emptyState: {
+    defaultTitle: "No data",
   },
   tabs: {
     home: "Home",

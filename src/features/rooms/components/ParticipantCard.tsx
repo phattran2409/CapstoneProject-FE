@@ -11,7 +11,8 @@ interface ParticipantCardProps {
   t: TFunction;
   participant: MatchRoomParticipant;
   teamColor: string;
-  isHost: boolean;
+  /** Host (viewer) được phép kick người chơi này (ví dụ chỉ khi phòng Open) */
+  canKickPlayer: boolean;
   isRoomHost?: boolean;
   currentUserId?: string;
   isKicking: boolean;
@@ -22,7 +23,7 @@ interface ParticipantCardProps {
 export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   participant,
   teamColor,
-  isHost,
+  canKickPlayer,
   isRoomHost = false,
   currentUserId,
   isKicking,
@@ -120,7 +121,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
         )}
 
         {/* Kick Button (Host only, not for self) */}
-        {isHost && !isCurrentUser && (
+        {canKickPlayer && !isCurrentUser && (
           <TouchableOpacity
             onPress={() => onKickPlayer(participant.userId, participant.fullName)}
             disabled={isKicking}
