@@ -47,6 +47,11 @@ export const roomsApi = {
     const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.LIST, { params });
     return data as unknown as MatchRoomsResponse;
   },
+  
+  getMatchRoomRecommend: async (): Promise<MatchRoomsResponse> => {
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.RECOMMEND);
+    return data as unknown as MatchRoomsResponse;
+  },
 
   getMyRooms: async (
     filters?: Pick<MatchRoomFilters, "availableOnly">,

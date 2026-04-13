@@ -19,6 +19,8 @@ export interface MatchItemData {
   title: string;
   format?: string;
   players?: string;
+  hostName?: string;
+  hostAvatar?: string | null;
   image: string | any;
   date?: string;
   status?: MatchRoomStatus;
@@ -46,6 +48,12 @@ const MatchItem: React.FC<MatchItemProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
 
+  const hostAvatarUri =
+    match.hostAvatar ||
+    (match.hostName
+      ? "https://ui-avatars.com/api/?name=" + encodeURIComponent(match.hostName)
+      : undefined);
+
   const PrivateBadge = () =>
     match.isPrivate ? (
       <View
@@ -62,7 +70,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
       </View>
     ) : null;
 
-    if (variant === "card") {
+  if (variant === "card") {
     return (
       <TouchableOpacity
         style={[
@@ -95,6 +103,19 @@ const MatchItem: React.FC<MatchItemProps> = ({
             >
               {match.format} {match.players && `- (${match.players})`}
             </ThemedText>
+          )}
+          {match.hostName && (
+            <View style={styles.cardHostRow}>
+              {hostAvatarUri ? (
+                <Image
+                  source={{ uri: hostAvatarUri }}
+                  style={[styles.cardHostAvatar, { borderColor: theme.colors.border }]}
+                />
+              ) : null}
+              <ThemedText variant="secondary" size="xs" numberOfLines={1} style={styles.cardHostName}>
+                {match.hostName}
+              </ThemedText>
+            </View>
           )}
           {match.date && (
             <ThemedText variant="secondary" size="xs" style={styles.cardDate}>
@@ -346,6 +367,21 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     marginBottom: 4,
+  },
+  cardHostRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+  cardHostAvatar: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+  },
+  cardHostName: {
+    flexShrink: 1,
   },
   cardDate: {
     marginTop: 4,

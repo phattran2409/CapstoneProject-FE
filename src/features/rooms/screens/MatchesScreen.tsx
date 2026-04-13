@@ -11,7 +11,7 @@ import { MatchList, MatchDetailModal, MatchItemData, MatchroomSkeleton } from '@
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
-import { useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
+import { useMatchRoomRecommend, useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
 import { PrivateRoomPasswordModal } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
 import { FilterRoomMatch } from '../components/FilterRoomMatch';
@@ -56,14 +56,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   // Fetch match rooms from API
   // 1) Recommended matches – không dùng vị trí
   const {
-    matchRooms: recommendedRooms,
+    matchRoomRecommend: recommendedRooms,
     loading: loadingRecommended,
-  } = useMatchRooms(
-    {
-      matchFormat: filter.matchFormat,
-      date: filter.date,
-    }
-  );
+    refreshing: refreshingRecommended,
+    loadingMore: loadingMoreRecommended,
+    error: errorRecommended,
+    refresh: refreshRecommended,
+    loadMore: loadMoreRecommended,
+  } = useMatchRoomRecommend();
 
   // 2) Nearby matches – có dùng vị trí (latitude, longitude, radiusKm)
   const { 
@@ -143,7 +143,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     }
   }, [scrollHandler, hasMore, loadingMoreNearby, loadMore]);
 
-  // ✅ Hook để join room (tự động thêm vào Unassigned)
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
   const toast = useToast();
   const handleViewDetail = (matchId: string) => {
@@ -152,9 +151,16 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       ...recommendedRooms,
       ...nearbyRooms,
       ...(myRoomsData ?? []),
-    ].find((r: any) => r.roomId === matchId);
+    ].find((r: any) => String(r.roomId) === String(matchId));
 
-    const venuePhotos = (room as any)?.venuePhotos;
+    const venuePhotosFromRoom = Array.isArray((room as any)?.venuePhotos)
+      ? ((room as any).venuePhotos as VenuePhoto[])
+      : [];
+    const fallbackVenuePhotos =
+      typeof match?.image === 'string' && match.image
+        ? ([{ photoId: `fallback-${matchId}`, photoUrl: match.image, isPrimary: true }] as VenuePhoto[])
+        : [];
+    const venuePhotos = venuePhotosFromRoom.length > 0 ? venuePhotosFromRoom : fallbackVenuePhotos;
     const params = { roomId: matchId, ...(venuePhotos?.length ? { venuePhotos } : {}) };
 
     if (match?.isPrivate) {
@@ -234,7 +240,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     setFilterVisible(false);
   }
 
-
   return (
     <ThemedSafeAreaView style={{ flex: 1 , position: 'relative'}}>
       {/* Header */}
@@ -252,13 +257,13 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           {t("matches.title", "Trận đấu")}
         </ThemedText>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
+          {/* <TouchableOpacity style={styles.iconButton}>
             <Ionicons
               name="search"
               size={24}
               color={theme.colors.textSecondary}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity style={styles.iconButton} onPress={() => setFilterVisible(true)}>
             <Ionicons
               name="filter"
@@ -277,10 +282,11 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           nestedScrollEnabled={true}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing || refreshingMyRooms}
+              refreshing={refreshing || refreshingMyRooms || refreshingRecommended}
               onRefresh={() => {
                 refresh();
                 refreshMyRooms();
+                refreshRecommended();
               }}
               colors={[theme.colors.neonGreen]}
               tintColor={theme.colors.neonGreen}

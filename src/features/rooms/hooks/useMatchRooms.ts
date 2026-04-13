@@ -129,4 +129,33 @@ export const useHistoryRooms = (
   };
 };
 
+export const useMatchRoomRecommend = () => {
+  const pagination = usePagination<MatchRoom>({
+    queryKey: roomsKeys.matchRoomRecommend(),
+    fetchFunction: async (page, pageSize) => {
+      const result = await roomsApi.getMatchRoomRecommend();
+      return {
+        data: result.data.rooms,
+        totalPages: result.data.totalPages,
+        totalCount: result.data.totalCount,
+      };
+    },
+    pageSize: 10,
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+    onError: (error) => {
+      console.error("Error fetching match room recommend:", error);
+      throw error;
+    },
+  });
+  return {
+    matchRoomRecommend: pagination.data,
+    loading: pagination.loading,
+    refreshing: pagination.refreshing,
+    loadingMore: pagination.loadingMore,
+    error: pagination.error,
+    refresh: pagination.refresh,
+    loadMore: pagination.loadMore,
+  };
+};
 

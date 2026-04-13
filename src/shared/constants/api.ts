@@ -32,6 +32,7 @@ export const API_CONFIG = {
     },
     ROOMS: {
       LIST: "/match-rooms",
+      RECOMMEND: "/match-rooms/recommended",
       CREATE: "/match-rooms",
       MINE: "/match-rooms/mine",
       PLAYER_HISTORY: "/match-rooms/player/:userId",

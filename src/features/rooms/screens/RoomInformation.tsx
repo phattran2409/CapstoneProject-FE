@@ -69,11 +69,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
   
   const handleGoBack = () => {
-    // Check if there's a previous screen in the stack
     if (navigation?.canGoBack()) {
       navigation.goBack();
     } else {
-      // No stack (came from deep link), navigate to MainTabs
       nav.reset({
         index: 0,
         routes: [{ name: 'MainTabs' }],

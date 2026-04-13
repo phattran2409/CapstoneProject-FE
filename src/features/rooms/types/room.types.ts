@@ -181,6 +181,7 @@ export interface MyRoom {
   depositPerPerson: number;
   totalDepositCollected: number;
   status: MatchRoomStatus;
+  venuePhotos: VenuePhoto[] | [];
   createdAt: string;
 }
 

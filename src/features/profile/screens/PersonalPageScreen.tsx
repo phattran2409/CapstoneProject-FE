@@ -87,7 +87,7 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
       "Unknown",
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: getImageSource(room.field?.venue?.primaryPhotoUrl),
+    image: getImageSource(room.venuePhotos[0]?.photoUrl),
     status: room.status,
     date: formatDate(room.matchDate),
     venue: room.field?.venue?.venueName,
