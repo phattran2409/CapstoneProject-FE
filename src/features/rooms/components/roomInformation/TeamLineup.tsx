@@ -24,6 +24,8 @@ interface TeamLineupProps {
   onParticipantPress?: (userId: string) => void;
   /** Xem phòng từ lịch sử người chơi khác — tắt kick / ô trống join */
   roomActionsDisabled?: boolean;
+  teamAName: string;
+  teamBName: string;
 }
 
 export const TeamLineup: React.FC<TeamLineupProps> = ({
@@ -41,6 +43,8 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   onOpenPositionModal,
   onParticipantPress,
   roomActionsDisabled = false,
+  teamAName,
+  teamBName,
 }) => {
   const { theme } = useTheme();
   const slotsPerTeam = displayRoom.totalSlots / 2;
@@ -77,7 +81,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         <View style={styles.teamHeader}>
           <ThemedIcon name="shield" size={20} variant="accent" />
           <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-            {t('roomDetail.teamA')}
+           {teamAName ? teamAName : t('roomDetail.teamA')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'A' && (
             <View
@@ -124,8 +128,9 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
       <View style={styles.teamContainer}>
         <View style={styles.teamHeader}>
           <ThemedIcon name="shield" size={20} variant="accent" />
+      
           <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-            {t('roomDetail.teamB')}
+          {teamBName ? teamBName : t('roomDetail.teamB')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'B' && (
             <View

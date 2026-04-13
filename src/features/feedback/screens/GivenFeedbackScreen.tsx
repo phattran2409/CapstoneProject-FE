@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -25,6 +26,14 @@ import type { GivenFeedbackItem } from "../types/feedback.types";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "GivenFeedback">;
 
+type TimeFilter = "all" | "7d" | "30d" | "90d";
+
+const getFromDate = (timeFilter: TimeFilter): string | undefined => {
+  if (timeFilter === "all") return undefined;
+  const days = timeFilter === "7d" ? 7 : timeFilter === "30d" ? 30 : 90;
+  return new Date(Date.now() - days * 86400_000).toISOString();
+};
+
 interface Props {
   navigation: Nav;
 }
@@ -32,6 +41,13 @@ interface Props {
 const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [ratingFilter, setRatingFilter] = useState<"all" | 1 | 2 | 3 | 4 | 5>("all");
+
+  const fromDate = useMemo(() => getFromDate(timeFilter), [timeFilter]);
+  const beRating = ratingFilter === "all" ? undefined : ratingFilter;
+
   const {
     givenFeedbacks,
     loading,
@@ -40,7 +56,11 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
     error,
     refresh,
     loadMore,
-  } = useGivenFeedbacks({ pageSize: 10 });
+  } = useGivenFeedbacks({
+    pageSize: 10,
+    fromDate,
+    rating: beRating,
+  });
 
   const renderStars = (rating: number) => {
     const full = Math.round(Math.min(5, Math.max(0, rating)));
@@ -57,6 +77,58 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
       </View>
     );
   };
+
+  const renderRatingChip = (stars: number, selected: boolean, onPress: () => void) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.chip,
+        {
+          borderColor: selected ? theme.colors.neonGreen : theme.colors.border,
+          backgroundColor: selected
+            ? `${theme.colors.neonGreen}33`
+            : theme.colors.surface,
+        },
+      ]}
+    >
+      <View style={styles.ratingChipStars}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <Ionicons
+            key={n}
+            name={n <= stars ? "star" : "star-outline"}
+            size={14}
+            color={theme.colors.neonGreen}
+          />
+        ))}
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderChip = (label: string, selected: boolean, onPress: () => void) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.chip,
+        {
+          borderColor: selected ? theme.colors.neonGreen : theme.colors.border,
+          backgroundColor: selected
+            ? `${theme.colors.neonGreen}33`
+            : theme.colors.surface,
+        },
+      ]}
+    >
+      <Text
+        style={{
+          fontSize: 13,
+          color: selected ? theme.colors.neonGreen : theme.colors.textSecondary,
+          fontWeight: selected ? "700" : "500",
+        }}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
 
   const renderItem = ({ item }: { item: GivenFeedbackItem }) => {
     const hasTheirReply =
@@ -77,12 +149,12 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.name, { color: theme.colors.text }]}>
               {item.reviewerName || t("givenFeedback.anonymous")}
             </Text>
-            <Text
+            {/* <Text
               style={[styles.matchLabel, { color: theme.colors.textSecondary }]}
               numberOfLines={2}
             >
               {item.matchId}
-            </Text>
+            </Text> */}
           </View>
         </View>
         <Text style={[styles.sectionHint, { color: theme.colors.textSecondary }]}>
@@ -150,11 +222,12 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => {
     if (loading) return null;
+    const hasActiveFilter = timeFilter !== "all" || ratingFilter !== "all";
     return (
       <EmptyState
         icon="paper-plane-outline"
-        title={t("givenFeedback.emptyTitle")}
-        description={t("givenFeedback.emptyDesc")}
+        title={hasActiveFilter ? t("givenFeedback.emptyFilterTitle") : t("givenFeedback.emptyTitle")}
+        description={hasActiveFilter ? t("givenFeedback.emptyFilterDesc") : t("givenFeedback.emptyDesc")}
       />
     );
   };
@@ -174,17 +247,68 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
           {
             paddingHorizontal: theme.spacing.m,
             paddingVertical: theme.spacing.m,
+            borderBottomColor: theme.colors.border,
           },
         ]}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <ThemedText size="xl" weight="bold" variant="primary">
-          {t("givenFeedback.title")}
-        </ThemedText>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12} style={styles.headerSideSlot}>
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <ThemedText size="xl" weight="bold" variant="primary" style={{ flex: 1, textAlign: "center" }}>
+            {t("givenFeedback.title")}
+          </ThemedText>
+          <View style={styles.headerSideSlot} />
+        </View>
       </View>
+
+    
+        <View style={styles.filtersBlock}>
+          <Text
+            style={[styles.filterSectionTitle, { color: theme.colors.textSecondary }]}
+          >
+            {t("receivedFeedback.filterTime")}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}
+          >
+            {(
+              [
+                ["all", t("receivedFeedback.timeAll")] as const,
+                ["7d", t("receivedFeedback.time7d")] as const,
+                ["30d", t("receivedFeedback.time30d")] as const,
+                ["90d", t("receivedFeedback.time90d")] as const,
+              ] as const
+            ).map(([key, label]) => (
+              <View key={key}>
+                {renderChip(label, timeFilter === key, () => setTimeFilter(key))}
+              </View>
+            ))}
+          </ScrollView>
+
+          <Text
+            style={[styles.filterSectionTitle, { color: theme.colors.textSecondary }]}
+          >
+            {t("receivedFeedback.filterRating")}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}
+          >
+            {renderChip(t("receivedFeedback.ratingAll"), ratingFilter === "all", () =>
+              setRatingFilter("all"),
+            )}
+            {([1, 2, 3, 4, 5] as const).map((n) => (
+              <View key={n}>
+                {renderRatingChip(n, ratingFilter === n, () => setRatingFilter(n))}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
 
       {loading && <ListSkeleton />}
 
@@ -216,10 +340,37 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
+    borderBottomWidth: 1,
+    gap: 10,
+  },
+  headerTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+  headerSideSlot: { width: 40, alignItems: "center", justifyContent: "center" },
+  filtersBlock: { paddingBottom: 8 },
+  filterSectionTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 16,
+    marginTop: 8,
+    marginBottom: 6,
+  },
+  chipRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 4,
+  },
+  ratingChipStars: { flexDirection: "row", gap: 1, alignItems: "center" },
   listContent: {
     padding: 16,
     paddingBottom: 32,

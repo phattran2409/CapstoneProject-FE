@@ -61,7 +61,7 @@ export const useMyRooms = (
   filters?:Pick<MatchRoomFilters, 'availableOnly'>,
   options?: { enabled?: boolean },
 ) => {
-  const enabled = (options?.enabled ?? true) && !!filters;
+  const enabled = options?.enabled ?? true;
   const pagination = usePagination<MyRoom>({
     queryKey: roomsKeys.myRooms(filters),
     fetchFunction: async () => {

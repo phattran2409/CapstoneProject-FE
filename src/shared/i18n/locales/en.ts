@@ -1051,13 +1051,18 @@ const en = {
   },
   eloBreakdown: {
     title: "ELO CHANGE DETAILS",
-    rankUp: "NEW RANK PROMOTION",
-    rankDown: "RANK DEMOTION",
-    summaryWin: "Great! You just won against a higher ranked opponent.",
-    summaryLose:
-      "You lost to your opponent. Don't be discouraged, keep trying in the next match.",
+    rankUp: "ELO INCREASED",
+    rankDown: "ELO DECREASED",
+    summaryPositive: "This match is having a positive impact on your ELO.",
+    summaryNegative: "This match is having a negative impact on your ELO.",
     lastMatch: "LAST MATCH",
+    matchRoomLabel: "MATCH ROOM",
     detailTitle: "DETAILED ANALYSIS",
+    direction: {
+      positive: "This item is adding ELO points.",
+      negative: "This item is reducing ELO points.",
+      neutral: "This item currently does not change ELO.",
+    },
     matchResult: {
       title: "Match Result",
       desc: "Convincing 3-1 victory",

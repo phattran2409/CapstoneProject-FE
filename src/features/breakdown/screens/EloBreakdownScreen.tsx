@@ -22,7 +22,8 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import EloBreakdownItem from "../components/EloBreakdownItem";
-import { useMyEloBreakdown } from "@/features/profile/hooks";
+import { useEloBreakdown } from "../hooks";
+import { ErrorState } from "@/shared/components";
 
 type EloBreakdownScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -44,14 +45,30 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
   const { t } = useTranslation();
 
   const {
-    eloDelta = 25,
-    matchLabel = "FC Dragons 3 - 1 Wolves",
-    isWin = true,
+    eloDelta = 0,
+    matchLabel = "",
     matchId,
   } = route.params || {};
-  const { data: breakdown = [], isLoading } = useMyEloBreakdown(matchId);
+  const {
+    data: breakdown = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEloBreakdown(matchId);
   const latest = breakdown[0];
   const currentEloDelta = latest?.eloChange ?? eloDelta;
+  const isPositive = currentEloDelta >= 0;
+  const getDirectionText = (
+    value: number,
+    positiveText: string,
+    negativeText: string,
+    neutralText: string,
+  ) => {
+    if (value > 0) return positiveText;
+    if (value < 0) return negativeText;
+    return neutralText;
+  };
 
   const badgeScale = useSharedValue(0);
   const pointsScale = useSharedValue(0);
@@ -79,8 +96,6 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
     navigation.goBack();
   };
 
-  const isPositive = currentEloDelta >= 0;
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -99,14 +114,20 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
           {t("eloBreakdown.title", "CHI TIẾT THAY ĐỔI ELO")}
         </Text>
         <TouchableOpacity style={styles.headerIcon}>
-          <Ionicons
+          {/* <Ionicons
             name="information-circle-outline"
             size={22}
             color={theme.colors.textSecondary}
-          />
+          /> */}
         </TouchableOpacity>
       </View>
 
+      {isError ? (
+        <ErrorState
+          error={error instanceof Error ? error.message : String(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : (
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -130,8 +151,8 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               ]}
             >
               {isPositive
-                ? t("eloBreakdown.rankUp", "THĂNG HẠNG MỚI")
-                : t("eloBreakdown.rankDown", "GIẢM HẠNG")}
+                ? t("eloBreakdown.rankUp", "ELO TĂNG")
+                : t("eloBreakdown.rankDown", "ELO GIẢM")}
             </Text>
           </Animated.View>
 
@@ -155,13 +176,14 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
           >
             {isPositive
               ? t(
-                  "eloBreakdown.summaryWin",
-                  "Tuyệt vời! Bạn vừa giành chiến thắng trước đối thủ có xếp hạng cao hơn.",
+                  "eloBreakdown.summaryPositive",
+                  "Kết quả trận này đang tác động tích cực lên ELO của bạn.",
                 )
               : t(
-                  "eloBreakdown.summaryLose",
-                  "Bạn đã để thua trước đối thủ. Đừng nản, hãy tiếp tục cố gắng ở trận tiếp theo.",
-                )}
+                  "eloBreakdown.summaryNegative",
+                  "Kết quả trận này đang tác động giảm lên ELO của bạn.",
+                )
+            }
           </Text>
 
           {/* Last match card */}
@@ -184,7 +206,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
                     { color: theme.colors.textSecondary },
                   ]}
                 >
-                  {t("eloBreakdown.lastMatch", "TRẬN GẦN NHẤT")}
+                  {t("eloBreakdown.matchRoomLabel", "PHÒNG ĐẤU")}
                 </Text>
                 <Text
                   style={[
@@ -220,10 +242,23 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               <EloBreakdownItem
                 type="matchResult"
                 title={t("eloBreakdown.matchResult.title", "Kết quả trận đấu")}
-                description={t(
-                  "eloBreakdown.matchResult.desc",
-                  "Thành phần điểm từ kết quả thắng/thua.",
-                )}
+                description={
+                  getDirectionText(
+                    latest?.k1MatchResultComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
                 value={`${(latest?.k1MatchResultComponent ?? 0) >= 0 ? "+" : ""}${(
                   latest?.k1MatchResultComponent ?? 0
                 ).toFixed(2)}`}
@@ -233,10 +268,23 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               <EloBreakdownItem
                 type="teammateRating"
                 title={t("eloBreakdown.teammateRating.title", "Đánh giá đồng đội")}
-                description={t(
-                  "eloBreakdown.teammateRating.desc",
-                  "Thành phần từ feedback người chơi nhận được.",
-                )}
+                description={
+                  getDirectionText(
+                    latest?.k2FeedbackSentimentComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
                 value={`${(latest?.k2FeedbackSentimentComponent ?? 0) >= 0 ? "+" : ""}${(
                   latest?.k2FeedbackSentimentComponent ?? 0
                 ).toFixed(2)}`}
@@ -246,10 +294,23 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               <EloBreakdownItem
                 type="winRate"
                 title={t("eloBreakdown.winRate.title", "Hiệu suất")}
-                description={t(
-                  "eloBreakdown.winRate.desc",
-                  "Thành phần dựa trên performance trong trận.",
-                )}
+                description={
+                  getDirectionText(
+                    latest?.k3WinRateComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
                 value={`${(latest?.k3WinRateComponent ?? 0) >= 0 ? "+" : ""}${(
                   latest?.k3WinRateComponent ?? 0
                 ).toFixed(2)}`}
@@ -259,10 +320,23 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               <EloBreakdownItem
                 type="feedbackContribution"
                 title={t("eloBreakdown.feedbackContribution.title", "Vai trò")}
-                description={t(
-                  "eloBreakdown.feedbackContribution.desc",
-                  "Thành phần từ role factor trong công thức Elo.",
-                )}
+                description={
+                  getDirectionText(
+                    latest?.k4ContributionComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
                 value={`${(latest?.k4ContributionComponent ?? 0) >= 0 ? "+" : ""}${(
                   latest?.k4ContributionComponent ?? 0
                 ).toFixed(2)}`}
@@ -272,10 +346,23 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               <EloBreakdownItem
                 type="reputation"
                 title={t("eloBreakdown.reputation.title", "Uy tín & sentiment")}
-                description={t(
-                  "eloBreakdown.reputation.desc",
-                  "Gồm trust component và sentiment component.",
-                )}
+                description={
+                  getDirectionText(
+                    latest?.k5TrustComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
                 value={`${(
                   latest?.k5TrustComponent ?? 0
                 ) >= 0
@@ -290,6 +377,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
           )}
         </View>
       </ScrollView>
+      )}
 
       {/* Bottom button */}
       <View style={styles.footer}>

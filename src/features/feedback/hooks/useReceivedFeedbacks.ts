@@ -13,15 +13,22 @@ import { ReceivedFeedbackItem } from "../types/feedback.types";
 interface UsePaginatedReceivedFeedbacksOptions {
   pageSize?: number;
   enabled?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  rating?: number;
 }
 export const useReceivedFeedbacks = ({
   pageSize = 10,
   enabled = true,
+  fromDate,
+  toDate,
+  rating,
 }: UsePaginatedReceivedFeedbacksOptions = {}) => {
+  const filters = { fromDate, toDate, rating };
   const pagination = usePagination<ReceivedFeedbackItem>({
-    queryKey: [...feedbackKeys.received()],
+    queryKey: [...feedbackKeys.received(filters)],
     fetchFunction: async (page, size) => {
-      const result = await GetReceivedFeedbacks({ page, pageSize: size });
+      const result = await GetReceivedFeedbacks({ page, pageSize: size, fromDate, toDate, rating });
       return {
         data: result.items,
         totalPages: result.totalPages ?? 0,
@@ -32,7 +39,7 @@ export const useReceivedFeedbacks = ({
     staleTime: 2 * 60 * 1000,
     enabled,
     onError: (error) => {
-      console.error("Error fetching friends:", error);
+      console.error("Error fetching received feedbacks:", error);
     },
   });
   return {

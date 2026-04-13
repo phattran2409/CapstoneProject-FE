@@ -28,19 +28,8 @@ export interface MyRadarChartData {
   updatedAt: string;
 }
 
-export interface EloBreakdownRecord {
-  matchId: string;
-  eloBefore: number;
-  eloAfter: number;
-  eloChange: number;
-  k1MatchResultComponent: number;
-  k2FeedbackSentimentComponent: number;
-  k3WinRateComponent: number;
-  k4ContributionComponent: number;
-  k5TrustComponent: number;
-  calculationDetails: string;
-  createdAt: string;
-}
+export type { EloBreakdownRecord } from "@/features/breakdown/types/breakdown.types";
+export { getEloBreakdown as getMyEloBreakdown } from "@/features/breakdown/api/breakdownApi";
 
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<User> => {
@@ -205,22 +194,12 @@ export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
 };
 
 export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
-  const response = await apiClient.get<MyRadarChartData>(
+  // The axios interceptor returns response.data, which is { isSuccess, data: MyRadarChartData }
+  const envelope = await apiClient.get<{ isSuccess: boolean; data: MyRadarChartData }>(
     API_CONFIG.ENDPOINTS.PLAYER_PROFILES.RADAR_CHART,
-  );
-  return response as unknown as MyRadarChartData;
-};
-
-export const getMyEloBreakdown = async (
-  matchId?: string,
-): Promise<EloBreakdownRecord[]> => {
-  const response = await apiClient.get<EloBreakdownRecord[]>(
-    API_CONFIG.ENDPOINTS.PLAYER_PROFILES.ELO_BREAKDOWN,
-    {
-      params: matchId ? { matchId } : undefined,
-    },
-  );
-  return response as unknown as EloBreakdownRecord[];
+  ) as unknown as { isSuccess: boolean; data: MyRadarChartData };
+  if (!envelope?.data) throw new Error("Invalid radar chart response");
+  return envelope.data;
 };
 
 // Update notification settings

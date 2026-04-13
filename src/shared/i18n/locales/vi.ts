@@ -1072,14 +1072,18 @@ const vi = {
   },
   eloBreakdown: {
     title: "CHI TIẾT THAY ĐỔI ELO",
-    rankUp: "THĂNG HẠNG MỚI",
-    rankDown: "GIẢM HẠNG",
-    summaryWin:
-      "Tuyệt vời! Bạn vừa giành chiến thắng trước đối thủ có xếp hạng cao hơn.",
-    summaryLose:
-      "Bạn đã để thua trước đối thủ. Đừng nản, hãy tiếp tục cố gắng ở trận tiếp theo.",
+    rankUp: "ELO TĂNG",
+    rankDown: "ELO GIẢM",
+    summaryPositive: "Kết quả trận này đang tác động tích cực lên ELO của bạn.",
+    summaryNegative: "Kết quả trận này đang tác động giảm lên ELO của bạn.",
     lastMatch: "TRẬN GẦN NHẤT",
+    matchRoomLabel: "PHÒNG ĐẤU",
     detailTitle: "PHÂN TÍCH CHI TIẾT",
+    direction: {
+      positive: "Mục này đang cộng điểm ELO.",
+      negative: "Mục này đang trừ điểm ELO.",
+      neutral: "Mục này hiện chưa làm thay đổi ELO.",
+    },
     matchResult: {
       title: "Kết quả trận đấu",
       desc: "Chiến thắng 3-1 thuyết phục",

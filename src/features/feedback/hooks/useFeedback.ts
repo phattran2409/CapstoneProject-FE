@@ -6,7 +6,9 @@ import { roomsApi } from "@/features/rooms/api/roomsApi";
 import type { MatchRoomFullInfo } from "@/features/rooms/types/room.types";
 import { venuesKeys } from "@/features/venues/api/venuesKeys";
 import { profileKeys } from "@/features/profile/api/profileKeys";
-import { getMyEloBreakdown, getMyRadarChart } from "@/features/profile/api/profileApi";
+import { getMyRadarChart } from "@/features/profile/api/profileApi";
+import { breakdownKeys } from "@/features/breakdown/api/breakdownKeys";
+import { getEloBreakdown } from "@/features/breakdown/api/breakdownApi";
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
@@ -25,8 +27,8 @@ const triggerPostMatchAiPolling = async (
     const baselineBreakdownCount =
       (
         await queryClient.fetchQuery({
-          queryKey: profileKeys.eloBreakdown(matchId),
-          queryFn: () => getMyEloBreakdown(matchId),
+          queryKey: breakdownKeys.eloBreakdown(matchId),
+          queryFn: () => getEloBreakdown({ matchId }),
           staleTime: 0,
         })
       )?.length ?? 0;
@@ -40,8 +42,8 @@ const triggerPostMatchAiPolling = async (
           staleTime: 0,
         }),
         queryClient.fetchQuery({
-          queryKey: profileKeys.eloBreakdown(matchId),
-          queryFn: () => getMyEloBreakdown(matchId),
+          queryKey: breakdownKeys.eloBreakdown(matchId),
+          queryFn: () => getEloBreakdown({ matchId }),
           staleTime: 0,
         }),
       ]);
@@ -53,10 +55,10 @@ const triggerPostMatchAiPolling = async (
       if (radarChanged || breakdownChanged) {
         void queryClient.invalidateQueries({ queryKey: profileKeys.radarChart() });
         void queryClient.invalidateQueries({
-          queryKey: profileKeys.eloBreakdown(matchId),
+          queryKey: breakdownKeys.eloBreakdown(matchId),
         });
         void queryClient.invalidateQueries({
-          queryKey: profileKeys.eloBreakdown(undefined),
+          queryKey: breakdownKeys.eloBreakdown(undefined),
         });
         break;
       }

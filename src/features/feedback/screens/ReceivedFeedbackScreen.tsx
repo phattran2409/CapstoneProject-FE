@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -35,6 +35,12 @@ type Nav = NativeStackNavigationProp<RootStackParamList, "ReceivedFeedback">;
 
 type TimeFilter = "all" | "7d" | "30d" | "90d";
 
+const getFromDate = (timeFilter: TimeFilter): string | undefined => {
+  if (timeFilter === "all") return undefined;
+  const days = timeFilter === "7d" ? 7 : timeFilter === "30d" ? 30 : 90;
+  return new Date(Date.now() - days * 86400_000).toISOString();
+};
+
 interface Props {
   navigation: Nav;
 }
@@ -43,6 +49,12 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const toast = useToast();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [ratingFilter, setRatingFilter] = useState<"all" | 1 | 2 | 3 | 4 | 5>("all");
+
+  const fromDate = useMemo(() => getFromDate(timeFilter), [timeFilter]);
+  const beRating = ratingFilter === "all" ? undefined : ratingFilter;
+
   const {
     receivedFeedbacks,
     loading,
@@ -51,42 +63,13 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
     error,
     refresh,
     loadMore,
-  } = useReceivedFeedbacks({ pageSize: 10 });
+  } = useReceivedFeedbacks({
+    pageSize: 10,
+    fromDate,
+    rating: beRating,
+  });
   const { mutate: sendReply, isPending: isSending } = useReplyToReceivedFeedback();
-
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
-  const [ratingFilter, setRatingFilter] = useState<"all" | 1 | 2 | 3 | 4 | 5>("all");
-  const [matchSearchQuery, setMatchSearchQuery] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
-
-  const filteredItems = useMemo(() => {
-    let list = [...receivedFeedbacks];
-    const q = matchSearchQuery.trim().toLowerCase();
-    if (q) {
-      list = list.filter((i) => {
-        const name = (i.reviewerName || "").toLowerCase();
-        const matchId = (i.matchId || "").toLowerCase();
-        return name.includes(q) || matchId.includes(q);
-      });
-    }
-    if (ratingFilter !== "all") {
-      list = list.filter(
-        (i) => Math.round(Math.min(5, Math.max(0, i.rating))) === ratingFilter,
-      );
-    }
-    if (timeFilter !== "all") {
-      const days = timeFilter === "7d" ? 7 : timeFilter === "30d" ? 30 : 90;
-      const cut = Date.now() - days * 86400_000;
-      list = list.filter((i) => {
-        const ts = new Date(i.createdAt).getTime();
-        return !Number.isNaN(ts) && ts >= cut;
-      });
-    }
-    return list.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  }, [receivedFeedbacks, matchSearchQuery, ratingFilter, timeFilter]);
 
   const setDraft = useCallback((id: string, text: string) => {
     setDrafts((d) => ({ ...d, [id]: text }));
@@ -211,12 +194,12 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.reviewer, { color: theme.colors.text }]}>
               {item.reviewerName || t("receivedFeedback.anonymous")}
             </Text>
-            <Text
+            {/* <Text
               style={[styles.matchLabel, { color: theme.colors.textSecondary }]}
               numberOfLines={2}
             >
               {item.matchId}
-            </Text>
+            </Text> */}
           </View>
         </View>
         {renderStars(item.rating)}
@@ -311,23 +294,12 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => {
     if (loading) return null;
+    const hasActiveFilter = timeFilter !== "all" || ratingFilter !== "all";
     return (
       <EmptyState
         icon="chatbox-ellipses-outline"
-        title={
-          receivedFeedbacks.length === 0
-            ? t("receivedFeedback.emptyTitle")
-            : matchSearchQuery.trim()
-              ? t("receivedFeedback.emptySearchTitle")
-              : t("receivedFeedback.emptyFilterTitle")
-        }
-        description={
-          receivedFeedbacks.length === 0
-            ? t("receivedFeedback.emptyDesc")
-            : matchSearchQuery.trim()
-              ? t("receivedFeedback.emptySearchDesc")
-              : t("receivedFeedback.emptyFilterDesc")
-        }
+        title={hasActiveFilter ? t("receivedFeedback.emptyFilterTitle") : t("receivedFeedback.emptyTitle")}
+        description={hasActiveFilter ? t("receivedFeedback.emptyFilterDesc") : t("receivedFeedback.emptyDesc")}
       />
     );
   };
@@ -405,7 +377,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         </View> */}
       </View>
 
-      {!loading && !error && receivedFeedbacks.length > 0 && (
+  
         <View style={styles.filtersBlock}>
           <Text
             style={[styles.filterSectionTitle, { color: theme.colors.textSecondary }]}
@@ -451,7 +423,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             ))}
           </ScrollView>
         </View>
-      )}
+      
 
       {loading && <ListSkeleton />}
 
@@ -459,7 +431,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
 
       {!loading && !error && (
         <FlatList
-          data={filteredItems}
+          data={receivedFeedbacks}
           keyExtractor={(i) => i.feedbackId}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
