@@ -65,6 +65,8 @@ export const API_CONFIG = {
       /** Chuyển quyền host sang người chơi khác */
       TRANSFER_HOST: "/match-rooms/:id/transfer-host",
       RESPONSE_TRANSFER_HOST: "/match-rooms/:id/transfer-host/respond",
+      /** Mời bạn bè vào phòng */
+      INVITE_FRIEND: "/match-rooms/:id/invite-friend",
       /** Legacy resource (không phải match-rooms) */
       LEGACY_ROOM: "/rooms/:id",
     },

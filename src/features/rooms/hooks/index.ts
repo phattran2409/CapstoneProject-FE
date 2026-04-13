@@ -17,3 +17,4 @@ export {
 } from './useMatchRoomCreatePreset';
 export { useUpdateRoomInfo } from './useUpdateRoomInfo';
 export { useTransferHost } from './useTransferHost';
+export { useInviteFriend } from './useInviteFriend';

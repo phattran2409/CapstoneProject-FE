@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -15,12 +15,16 @@ import { usePaginatedFriends } from '@/features/friends/hooks';
 import { useSendChatMessage } from '@/features/chat/hooks/useChatMessages';
 import { useAuthStore } from '@/features/auth';
 import { useToast } from '@/shared/toast';
+import { useTranslation } from 'react-i18next';
+import { useInviteFriend } from '../hooks/useInviteFriend';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 interface InviteFriendsModalProps {
   visible: boolean;
   roomId: string;
   shareMessage: string;
   onClose: () => void;
   title?: string;
+  inviteToRoom?: boolean;
 }
 
 const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
@@ -29,10 +33,13 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
   shareMessage,
   onClose,
   title,
+  inviteToRoom = false,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const toast = useToast();
+  const [sendingFriendId, setSendingFriendId] = useState<string | null>(null);
 
   const {
     friends,
@@ -42,26 +49,40 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
     enabled: visible,
   });
 
-  const { mutate: sendChatMessage, isPending: isSendingMessage } = useSendChatMessage();
+  const { mutateAsync: sendChatMessage, isPending: isSendingMessage } = useSendChatMessage();
+  const { mutateAsync: inviteFriendToRoom, isPending: isInvitingFriend } = useInviteFriend();
 
-  const handleSendToFriend = (receiverId: string) => {
+  const handleSendToFriend = async (receiverId: string) => {
     if (!user?.userId) return;
     const inviteMessage = `${shareMessage}\n\n[ROOM_ID:${roomId}]`;
-    sendChatMessage(
-      {
+    setSendingFriendId(receiverId);
+    try {
+      if (inviteToRoom) {
+        await inviteFriendToRoom({
+          roomId,
+          friendUserId: receiverId,
+        });
+      }
+      await sendChatMessage({
         senderId: user.userId,
         receiverId,
         messageText: inviteMessage,
         messageType: 'Text',
-      },
-      {
-        onSuccess: () => {
-          toast.success('Chia sẻ thành công!');
-          onClose();
-        },
-        onError: () => {},
-      }
-    );
+      });
+
+      toast.success(
+        inviteToRoom ? t('roomDetail.inviteFriendSuccess') : t('roomDetail.shareSuccess')
+      );
+      onClose();
+    } catch (error: any) {
+      toast.error(
+        t('roomDetail.notifications.error'),
+        getTranslatedError(error?.message, error?.code) ||
+          t('roomDetail.inviteFriendError')
+      );
+    } finally {
+      setSendingFriendId(null);
+    }
   };
 
   const primaryColor = theme.colors.neonGreen ?? theme.colors.primary;
@@ -92,7 +113,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
             ]}
           >
             <ThemedText size="xl" weight="bold">
-              {title ?? 'Mời bạn bè vào phòng'}
+              {title ?? t('roomDetail.inviteModalTitle')}
             </ThemedText>
             <TouchableOpacity onPress={onClose} style={styles.inviteClose}>
               <Ionicons name="close" size={24} color={theme.colors.text} />
@@ -113,7 +134,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
                   size="m"
                   style={styles.inviteEmpty}
                 >
-                  Chưa có bạn bè. Thêm bạn để mời.
+                  {t('roomDetail.inviteNoFriends')}
                 </ThemedText>
               ) : (
                 friends.map((friend) => (
@@ -146,15 +167,19 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
                         { backgroundColor: primaryColor },
                       ]}
                       onPress={() => handleSendToFriend(friend.userId)}
-                      disabled={isSendingMessage}
+                      disabled={isSendingMessage || isInvitingFriend}
                     >
-                      <ThemedText
-                        size="s"
-                        weight="bold"
-                        style={{ color: '#000' }}
-                      >
-                        Gửi
-                      </ThemedText>
+                      {sendingFriendId === friend.userId && (isSendingMessage || isInvitingFriend) ? (
+                        <ActivityIndicator size="small" color="#000" />
+                      ) : (
+                        <ThemedText
+                          size="s"
+                          weight="bold"
+                          style={{ color: '#000' }}
+                        >
+                          {t('roomDetail.inviteSend')}
+                        </ThemedText>
+                      )}
                     </TouchableOpacity>
                   </View>
                 ))

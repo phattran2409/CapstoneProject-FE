@@ -393,6 +393,15 @@ export const roomsApi = {
   },
 
   /**
+   * Mời một người bạn vào phòng
+   * POST /match-rooms/:id/invite-friend
+   */
+  inviteFriend: async (roomId: string, friendUserId: string): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.INVITE_FRIEND.replace(':id', roomId);
+    await apiClient.post(url, { friendUserId });
+  },
+
+  /**
    * Legacy: lấy mẫu tạo phòng đơn của user hiện tại (GET). 404 → null.
    */
   getCreateRoomPreset: async (): Promise<MatchRoomCreatePresetDto | null> => {

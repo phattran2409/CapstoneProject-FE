@@ -855,6 +855,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         visible={inviteFriendsVisible}
         roomId={displayRoom.roomId}
         shareMessage={shareMessage}
+        inviteToRoom
         onClose={() => setInviteFriendsVisible(false)}
       />
 
