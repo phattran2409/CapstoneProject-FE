@@ -194,10 +194,12 @@ export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
 };
 
 export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
-  const response = await apiClient.get<MyRadarChartData>(
+  // The axios interceptor returns response.data, which is { isSuccess, data: MyRadarChartData }
+  const envelope = await apiClient.get<{ isSuccess: boolean; data: MyRadarChartData }>(
     API_CONFIG.ENDPOINTS.PLAYER_PROFILES.RADAR_CHART,
-  );
-  return response as unknown as MyRadarChartData;
+  ) as unknown as { isSuccess: boolean; data: MyRadarChartData };
+  if (!envelope?.data) throw new Error("Invalid radar chart response");
+  return envelope.data;
 };
 
 // Update notification settings

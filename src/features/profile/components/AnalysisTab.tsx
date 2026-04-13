@@ -15,9 +15,11 @@ interface AnalysisTabProps {
     contribution: number;
     summary?: string;
     assessments?: Array<{
+      type?: string;       // "strength" | "improvement"
       title: string;
       description: string;
-      type?: string;
+      icon?: string;       // BE icon key: "shield", "message-circle", etc.
+      highlightAxis?: string;
     }>;
   } | null;
   isLoading?: boolean;
@@ -30,18 +32,7 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  const assessments = (radarData?.assessments ?? []).map((assessment) => ({
-    title: assessment.title,
-    description: assessment.description,
-    icon:
-      assessment.type === "warning"
-        ? ("bar-chart" as const)
-        : ("star" as const),
-    iconColor:
-      assessment.type === "warning"
-        ? theme.colors.textSecondary
-        : theme.colors.neonGreen,
-  }));
+  const assessments = radarData?.assessments ?? [];
 
   return (
     <View style={[styles.container, { paddingHorizontal: theme.spacing.m }]}>
@@ -161,7 +152,7 @@ ví dụ trả về
             title={assessment.title}
             description={assessment.description}
             icon={assessment.icon}
-            iconColor={assessment.iconColor}
+            type={assessment.type}
           />
         ))}
 

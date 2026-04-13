@@ -121,7 +121,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     () => displayRoom?.venuePhotos?.length ? displayRoom.venuePhotos! : (venuePhotosFromParams ?? []),
     [displayRoom?.venuePhotos, venuePhotosFromParams],
   );
-
   // ==================== Deposit progress (realtime) ====================
   const depositTargetTotal = useMemo(() => {
     if (!displayRoom) return 0;
@@ -552,23 +551,44 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       ? me.teamAssignment
       : 'A';
 
+    // Lấy tên đội từ formations (ưu tiên) rồi đến teamNames
+    const teamAName =
+      displayRoom.formations?.teamA?.teamName ||
+      displayRoom.teamNames?.A ||
+      t('roomDetail.teamA', 'Đội A');
+    const teamBName =
+      displayRoom.formations?.teamB?.teamName ||
+      displayRoom.teamNames?.B ||
+      t('roomDetail.teamB', 'Đội B');
+
+    // Lookup position từ formations assignments theo playerId
+    const formationAssignments =
+      myTeam === 'A'
+        ? (displayRoom.formations?.teamA?.assignments ?? [])
+        : (displayRoom.formations?.teamB?.assignments ?? []);
+
     // Đồng đội cùng đội, không bao gồm bản thân
     const teamPool =
       myTeam === 'A' ? displayRoom.participants.teamA : displayRoom.participants.teamB;
     const teammates = teamPool
       .filter((p) => p.userId !== user.userId)
-      .map((p) => ({
-        userId: p.userId,
-        fullName: p.fullName,
-        avatarUrl: p.avatarUrl,
-        position: p.position,
-        teamAssignment: p.teamAssignment as 'A' | 'B',
-      }));
+      .map((p) => {
+        const formationSlot = formationAssignments.find(
+          (a) => a.playerId === p.userId,
+        );
+        return {
+          userId: p.userId,
+          fullName: p.fullName,
+          avatarUrl: p.avatarUrl,
+          position: formationSlot?.position ?? p.position,
+          teamAssignment: p.teamAssignment as 'A' | 'B',
+        };
+      });
 
     await startSession({
       roomId: displayRoom.roomId,
-      teamAName: displayRoom.teamNames?.A ?? 'Đội A',
-      teamBName: displayRoom.teamNames?.B ?? 'Đội B',
+      teamAName,
+      teamBName,
       venue: {
         venueId: displayRoom.field.venue.venueId,
         fieldId: displayRoom.fieldId,
@@ -593,7 +613,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       matchId: displayRoom?.roomId,
       matchLabel:
         displayRoom?.roomName ||
-        `${displayRoom?.teamNames?.A ?? "Team A"} vs ${displayRoom?.teamNames?.B ?? "Team B"}`,
+        `${displayRoom?.teamNames?.A ?? t('roomDetail.teamA', 'Team A')} vs ${displayRoom?.teamNames?.B ?? t('roomDetail.teamB', 'Team B')}`,
     });
   };
 
@@ -641,6 +661,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   )} ${displayRoom.startTime} - ${displayRoom.endTime}\nVenue: ${
     displayRoom.field.venue.venueName
   }\n\nJoin here: ${shareUrl}`;
+
+  const teamAName =
+  displayRoom.formations?.teamA?.teamName ||
+  displayRoom.teamNames?.A ||
+  'Đội A';
+const teamBName =
+  displayRoom.formations?.teamB?.teamName ||
+  displayRoom.teamNames?.B ||
+  'Đội B';
 
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
@@ -799,6 +828,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           {/* Team Lineup Section */}
           <TeamLineup
             displayRoom={displayRoom}
+            teamAName={teamAName || 'Đội A'}
+            teamBName={teamBName || 'Đội B'}
             t={t}
             isSignalRConnected={isSignalRConnected}
             currentUserParticipant={currentUserParticipant}
