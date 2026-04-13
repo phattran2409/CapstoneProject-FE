@@ -22,7 +22,8 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import EloBreakdownItem from "../components/EloBreakdownItem";
-import { useMyEloBreakdown } from "@/features/profile/hooks";
+import { useEloBreakdown } from "../hooks";
+import { ErrorState } from "@/shared/components";
 
 type EloBreakdownScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -44,14 +45,20 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
   const { t } = useTranslation();
 
   const {
-    eloDelta = 25,
+    eloDelta = 0,
     matchLabel = "FC Dragons 3 - 1 Wolves",
-    isWin = true,
     matchId,
   } = route.params || {};
-  const { data: breakdown = [], isLoading } = useMyEloBreakdown(matchId);
+  const {
+    data: breakdown = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEloBreakdown(matchId);
   const latest = breakdown[0];
   const currentEloDelta = latest?.eloChange ?? eloDelta;
+  const isPositive = currentEloDelta >= 0;
 
   const badgeScale = useSharedValue(0);
   const pointsScale = useSharedValue(0);
@@ -79,8 +86,6 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
     navigation.goBack();
   };
 
-  const isPositive = currentEloDelta >= 0;
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -107,6 +112,12 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
         </TouchableOpacity>
       </View>
 
+      {isError ? (
+        <ErrorState
+          error={error instanceof Error ? error.message : String(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : (
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -290,6 +301,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
           )}
         </View>
       </ScrollView>
+      )}
 
       {/* Bottom button */}
       <View style={styles.footer}>

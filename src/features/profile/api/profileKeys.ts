@@ -13,6 +13,4 @@ export const profileKeys = {
     [...profileKeys.all, "removeFriend", userId] as const,
   achievements: () => [...profileKeys.all, "achievements"] as const,
   radarChart: () => [...profileKeys.all, "radar-chart"] as const,
-  eloBreakdown: (matchId?: string) =>
-    [...profileKeys.all, "elo-breakdown", matchId ?? "all"] as const,
 };

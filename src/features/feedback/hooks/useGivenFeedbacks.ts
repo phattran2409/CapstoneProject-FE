@@ -6,16 +6,23 @@ import { GivenFeedbackItem } from "../types/feedback.types";
 interface UseGivenFeedbacksOptions {
   pageSize?: number;
   enabled?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  rating?: number;
 }
 
 export const useGivenFeedbacks = ({
   pageSize = 10,
   enabled = true,
+  fromDate,
+  toDate,
+  rating,
 }: UseGivenFeedbacksOptions = {}) => {
+  const filters = { fromDate, toDate, rating };
   const pagination = usePagination<GivenFeedbackItem>({
-    queryKey: [...feedbackKeys.given()],
+    queryKey: [...feedbackKeys.given(filters)],
     fetchFunction: async (page, size) => {
-      const result = await GetGivenFeedbacks({ page, pageSize: size });
+      const result = await GetGivenFeedbacks({ page, pageSize: size, fromDate, toDate, rating });
       return {
         data: result.items,
         totalPages: result.totalPages ?? 0,

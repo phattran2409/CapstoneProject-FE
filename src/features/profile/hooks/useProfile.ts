@@ -8,7 +8,6 @@ import {
   updateNotificationSettings,
   getNotificationSettings,
   getMyRadarChart,
-  getMyEloBreakdown,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -40,13 +39,7 @@ export const useMyRadarChart = (enabled = true) => {
   });
 };
 
-export const useMyEloBreakdown = (matchId?: string) => {
-  return useQuery({
-    queryKey: profileKeys.eloBreakdown(matchId),
-    queryFn: () => getMyEloBreakdown(matchId),
-    staleTime: 15 * 1000,
-  });
-};
+export { useEloBreakdown, useEloBreakdown as useMyEloBreakdown } from "@/features/breakdown/hooks/useEloBreakdown";
 
 // Update my profile
 export const useUpdateProfile = () => {

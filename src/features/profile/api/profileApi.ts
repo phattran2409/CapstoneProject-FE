@@ -28,19 +28,8 @@ export interface MyRadarChartData {
   updatedAt: string;
 }
 
-export interface EloBreakdownRecord {
-  matchId: string;
-  eloBefore: number;
-  eloAfter: number;
-  eloChange: number;
-  k1MatchResultComponent: number;
-  k2FeedbackSentimentComponent: number;
-  k3WinRateComponent: number;
-  k4ContributionComponent: number;
-  k5TrustComponent: number;
-  calculationDetails: string;
-  createdAt: string;
-}
+export type { EloBreakdownRecord } from "@/features/breakdown/types/breakdown.types";
+export { getEloBreakdown as getMyEloBreakdown } from "@/features/breakdown/api/breakdownApi";
 
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<User> => {
@@ -209,18 +198,6 @@ export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
     API_CONFIG.ENDPOINTS.PLAYER_PROFILES.RADAR_CHART,
   );
   return response as unknown as MyRadarChartData;
-};
-
-export const getMyEloBreakdown = async (
-  matchId?: string,
-): Promise<EloBreakdownRecord[]> => {
-  const response = await apiClient.get<EloBreakdownRecord[]>(
-    API_CONFIG.ENDPOINTS.PLAYER_PROFILES.ELO_BREAKDOWN,
-    {
-      params: matchId ? { matchId } : undefined,
-    },
-  );
-  return response as unknown as EloBreakdownRecord[];
 };
 
 // Update notification settings
