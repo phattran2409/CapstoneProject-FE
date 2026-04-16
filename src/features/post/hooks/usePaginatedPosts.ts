@@ -54,7 +54,7 @@ export const usePaginatedPosts = ({
 
 export const usePaginatedUserPosts = ({
   userId,
-  pageSize = 10,
+  pageSize,
   enabled = true,
 }: UsePaginatedUserPostsOptions) => {
   const pagination = usePagination<Post>({
@@ -68,7 +68,7 @@ export const usePaginatedUserPosts = ({
       };
     },
     pageSize,
-    staleTime: 2 * 60 * 1000, // 2 minutes for user posts
+    staleTime: 2 * 60 * 1000, 
     enabled: enabled && !!userId,
     onError: (error) => {
       console.error("Error fetching user posts:", error);
@@ -81,6 +81,8 @@ export const usePaginatedUserPosts = ({
     refreshing: pagination.refreshing,
     loadingMore: pagination.loadingMore,
     error: pagination.error,
+    page: pagination.page,
+    totalPages: pagination.totalPages,
     hasMore: pagination.hasMore,
     refresh: pagination.refresh,
     loadMore: pagination.loadMore,

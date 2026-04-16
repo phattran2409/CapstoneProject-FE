@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -30,6 +31,7 @@ import {
 import type { ReceivedFeedbackItem } from "../types/feedback.types";
 import { RECEIVED_FEEDBACK_REPLY_MAX_LENGTH } from "../types/feedback.types";
 import { useToast } from "@/shared/toast";
+import { getImageAvatar } from "@/shared/utils/imageSource";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "ReceivedFeedback">;
 
@@ -190,16 +192,11 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         ]}
       >
         <View style={styles.cardHeader}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Image source={getImageAvatar({uri : item.reviewerAvatarUrl || ""})} style={{ width: 32, height: 32, borderRadius: 16 }} />
             <Text style={[styles.reviewer, { color: theme.colors.text }]}>
               {item.reviewerName || t("receivedFeedback.anonymous")}
             </Text>
-            {/* <Text
-              style={[styles.matchLabel, { color: theme.colors.textSecondary }]}
-              numberOfLines={2}
-            >
-              {item.matchId}
-            </Text> */}
           </View>
         </View>
         {renderStars(item.rating)}

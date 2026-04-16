@@ -107,6 +107,7 @@ export const API_CONFIG = {
       RECEIVED: "/playerprofiles/me/feedbacks/received",
       GIVEN: "/playerprofiles/me/feedbacks/given",
       REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/response`,
+      GENERATE_SUGGESTION_COMMENT: "/match-feedbacks/generate-suggestions",
     },
     MATCH_FEEDBACKS: {
       CREATE: "/match-feedbacks",

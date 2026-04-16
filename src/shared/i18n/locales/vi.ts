@@ -172,6 +172,8 @@ const vi = {
       winRate: "Tỷ lệ thắng",
       eloRating: "Điểm ELO",
     },
+    outsideTop: "Ngoài top {{count}}",
+    you: "Bạn",
   },
   rank: {
     tiers: {
@@ -244,6 +246,39 @@ const vi = {
     fieldsTapHint: "Nhấn để xem chi tiết & đặt sân",
     viewDetail: "Xem chi tiết",
   },
+  venueDetail: {
+    title: "Chi tiết sân",
+    loading: "Đang tải thông tin sân...",
+    loadError: "Không thể tải thông tin sân",
+    todayHours: "Hôm nay",
+    ownerButton: "Chủ sân",
+    directions: "Chỉ đường",
+    tabs: {
+      info: "Thông tin",
+      fields: "Danh sách sân ({{count}})",
+      hours: "Giờ mở cửa",
+    },
+    description: "Mô tả",
+    amenities: "Tiện ích",
+    location: "Vị trí",
+    openMap: "Nhấn để mở bản đồ",
+    reviewsTitle: "Đánh giá từ người chơi",
+    noReviews: "Chưa có đánh giá cho sân này",
+    ownerResponse: "Phản hồi từ chủ sân",
+    bookThisField: "Đặt sân này",
+    noFields: "Chưa có thông tin về sân",
+    today: "Hôm nay",
+    noHours: "Chưa có thông tin giờ mở cửa",
+    bookNow: "Đặt sân ngay",
+    ownerInfo: "Thông tin chủ sân",
+    ownerUnknown: "Chưa rõ chủ sân",
+    ownerNoPhone: "Chưa có số điện thoại",
+    ownerNoBio: "Chủ sân chưa cập nhật giới thiệu",
+    perHour: "/giờ",
+    surfaceType: "Mặt sân",
+    peakSurcharge: "Phụ thu giờ cao điểm",
+    viewVenueDetail: "Xem chi tiết sân",
+  },
   fieldsModal: {
     title: "Danh sách sân",
     fields: "Các sân",
@@ -263,6 +298,8 @@ const vi = {
       booked: "Đã đặt",
       maintenance: "Bảo trì",
     },
+    slotTooCloseTitle: "Không thể chọn khung giờ",
+    slotTooCloseMessage: "Bạn cần phải chọn slot giờ trước ít nhất 30 phút.",
   },
   roomDetail: {
     hostInformation: "Thông tin host",
@@ -974,6 +1011,29 @@ const vi = {
       user: "Không thể gửi báo cáo người dùng. Vui lòng thử lại.",
     },
   },
+  positionSelectionModal: {
+    title: "Chọn vị trí",
+    description: "Chọn vị trí bạn muốn thi đấu để vào đội.",
+    loading: "Đang gán vị trí...",
+    positions: {
+      gk: {
+        fullLabel: "Thủ môn",
+        description: "Thủ môn - Bảo vệ khung thành",
+      },
+      df: {
+        fullLabel: "Hậu vệ",
+        description: "Hậu vệ - Phòng ngự",
+      },
+      mf: {
+        fullLabel: "Tiền vệ",
+        description: "Tiền vệ - Kết nối các tuyến",
+      },
+      fw: {
+        fullLabel: "Tiền đạo",
+        description: "Tiền đạo - Tấn công ghi bàn",
+      },
+    },
+  },
   filterRoomMatch: {
     title: "Lọc phòng đấu",
     matchDateLabel: "Ngày thi đấu",
@@ -1116,6 +1176,22 @@ const vi = {
     transactionId: "Mã giao dịch",
     paymentMethod: "Phương thức",
     status: "Trạng thái",
+  },
+  dateTime: {
+    justNow: "Vừa xong",
+    minutesAgo: "{{count}} phút trước",
+    hoursAgo: "{{count}} giờ trước",
+    daysAgo: "{{count}} ngày trước",
+    today: "Hôm nay",
+    dayNames: {
+      sunday: "Chủ nhật",
+      monday: "Thứ 2",
+      tuesday: "Thứ 3",
+      wednesday: "Thứ 4",
+      thursday: "Thứ 5",
+      friday: "Thứ 6",
+      saturday: "Thứ 7",
+    },
   },
 };
 

@@ -31,6 +31,8 @@ export interface MatchListProps {
   containerStyle?: any;
   /** Custom style cho list */
   listStyle?: any;
+  /** Callback khi scroll đến cuối danh sách */
+  onEndReachedCallback?: () => void;
 }
 
 const MatchList: React.FC<MatchListProps> = ({
@@ -44,6 +46,7 @@ const MatchList: React.FC<MatchListProps> = ({
   emptyMessage,
   containerStyle,
   listStyle,
+  onEndReachedCallback,
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
@@ -150,6 +153,7 @@ const MatchList: React.FC<MatchListProps> = ({
         keyExtractor={(item) => item.id}
         scrollEnabled={false}
         contentContainerStyle={[styles.verticalContent, listStyle]}
+        onEndReached={onEndReachedCallback}
         ListEmptyComponent={renderEmpty}
       />
     </View>

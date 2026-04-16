@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { ThemedText, ThemedCard, ThemedIcon } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
@@ -18,6 +19,7 @@ interface VenueTabContentProps {
   selectedImageIndex: number;
   onImageIndexChange: (index: number) => void;
   t: (key: string, defaultValue?: string | object) => string;
+  onViewVenueDetail: () => void;
 }
 
 const formatMatchFormat = (format: string) => {
@@ -32,6 +34,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
   selectedImageIndex,
   onImageIndexChange,
   t,
+  onViewVenueDetail,
 }) => {
   const { theme } = useTheme();
 
@@ -182,6 +185,16 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
             </ThemedText>
           </ThemedCard>
         )}
+
+        <TouchableOpacity
+          style={[styles.viewVenueButton, { backgroundColor: theme.colors.neonGreen }]}
+          onPress={onViewVenueDetail}
+        >
+          <ThemedIcon name="eye" size={18} color={theme.colors.darkBlack} />
+          <ThemedText size="m" weight="bold" style={{ color: theme.colors.darkBlack }}>
+            {t('venueDetail.viewVenueDetail')}
+          </ThemedText>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -241,5 +254,13 @@ const styles = StyleSheet.create({
   venueLocationCard: {
     padding: 16,
     borderRadius: 16,
+  },
+  viewVenueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 12,
   },
 });

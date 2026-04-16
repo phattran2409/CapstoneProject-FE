@@ -39,9 +39,9 @@ export const TeamScreenHeader: React.FC<Props> = ({
           },
         ]}
       >
-        <ThemedText size="xs" weight="bold" style={styles.chatBadgeText}>
+        {/* <ThemedText size="xs" weight="bold" style={styles.chatBadgeText}>
           5
-        </ThemedText>
+        </ThemedText> */}
       </View>
     </TouchableOpacity>
   </ThemedView>

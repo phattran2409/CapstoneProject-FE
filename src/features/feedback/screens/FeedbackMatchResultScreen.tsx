@@ -23,7 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFeedbackSessionStore, type MatchResult } from "../store/feedbackSessionStore";
-import { useVoteMatchResult } from "../hooks/useFeedback";
+import { useGenerateSuggestionComment, useVoteMatchResult } from "../hooks/useFeedback";
 import { useToast } from "@/shared/toast";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
@@ -82,7 +82,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
       });
       await setMatchResult(selectedResult);
       navigation.replace("FeedbackRating");
-    } catch (error: any) {
+    } catch (error: any) {  
       const detail =
         getTranslatedError(error?.message) ||
         t(
@@ -144,7 +144,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
               "Chọn kết quả cuối cùng của trận đấu để cập nhật bảng xếp hạng.",
             )}
           </Text>
-
           {/* Team Cards */}
           <View style={styles.teamsRow}>
             {/* Team A */}
@@ -307,7 +306,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
               </View>
             </TouchableOpacity>
           </View>
-
           {/* Draw Option */}
           <TouchableOpacity
             activeOpacity={0.9}
@@ -353,9 +351,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
               )}
             </View>
           </TouchableOpacity>
-
-    
-
           {/* Continue Button */}
           <TouchableOpacity
             activeOpacity={0.9}
@@ -384,7 +379,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
               </Text>
             )}
           </TouchableOpacity>
-
           {/* Footer Note */}
           <Text
             style={[

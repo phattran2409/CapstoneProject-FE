@@ -174,6 +174,8 @@ const en = {
       winRate: "Win Rate",
       eloRating: "ELO Rating",
     },
+    outsideTop: "Outside top {{count}}",
+    you: "You",
   },
   rank: {
     tiers: {
@@ -246,6 +248,39 @@ const en = {
     fieldsTapHint: "Tap to view details & book a field",
     viewDetail: "View details",
   },
+  venueDetail: {
+    title: "Venue details",
+    loading: "Loading venue details...",
+    loadError: "Unable to load venue details",
+    todayHours: "Today",
+    ownerButton: "Venue owner",
+    directions: "Directions",
+    tabs: {
+      info: "Info",
+      fields: "Fields list ({{count}})",
+      hours: "Opening hours",
+    },
+    description: "Description",
+    amenities: "Amenities",
+    location: "Location",
+    openMap: "Tap to open map",
+    reviewsTitle: "Player reviews",
+    noReviews: "No reviews for this venue yet",
+    ownerResponse: "Owner response",
+    bookThisField: "Book this field",
+    noFields: "No field information available",
+    today: "Today",
+    noHours: "No opening hours available",
+    bookNow: "Book now",
+    ownerInfo: "Venue owner information",
+    ownerUnknown: "Unknown owner",
+    ownerNoPhone: "No phone number",
+    ownerNoBio: "Owner has not added a bio",
+    perHour: "/hour",
+    surfaceType: "Surface",
+    peakSurcharge: "Peak hour surcharge",
+    viewVenueDetail: "View venue detail",
+  },
   fieldsModal: {
     title: "Fields",
     fields: "Fields",
@@ -265,6 +300,8 @@ const en = {
       booked: "Booked",
       maintenance: "Under maintenance",
     },
+    slotTooCloseTitle: "Cannot select this time slot",
+    slotTooCloseMessage: "You need to select a time slot at least 30 minutes in advance.",
   },
   roomDetail: {
     title: "Room Details",
@@ -953,6 +990,29 @@ const en = {
       user: "Failed to submit user report. Please try again.",
     },
   },
+  positionSelectionModal: {
+    title: "Select Position",
+    description: "Choose your preferred position to join the team.",
+    loading: "Assigning position...",
+    positions: {
+      gk: {
+        fullLabel: "Goalkeeper",
+        description: "Goalkeeper - Protects the goal",
+      },
+      df: {
+        fullLabel: "Defender",
+        description: "Defender - Focuses on defense",
+      },
+      mf: {
+        fullLabel: "Midfielder",
+        description: "Midfielder - Connects all lines",
+      },
+      fw: {
+        fullLabel: "Forward",
+        description: "Forward - Attacks and scores",
+      },
+    },
+  },
   filterRoomMatch: {
     title: "Filter matches",
     matchDateLabel: "Match date",
@@ -1095,6 +1155,22 @@ const en = {
     transactionId: "Transaction ID",
     paymentMethod: "Payment Method",
     status: "Status",
+  },
+  dateTime: {
+    justNow: "Just now",
+    minutesAgo: "{{count}} minutes ago",
+    hoursAgo: "{{count}} hours ago",
+    daysAgo: "{{count}} days ago",
+    today: "Today",
+    dayNames: {
+      sunday: "Sunday",
+      monday: "Monday",
+      tuesday: "Tuesday",
+      wednesday: "Wednesday",
+      thursday: "Thursday",
+      friday: "Friday",
+      saturday: "Saturday",
+    },
   },
 };
 
