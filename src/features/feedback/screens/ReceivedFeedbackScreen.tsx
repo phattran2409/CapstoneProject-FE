@@ -198,6 +198,12 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
               {item.reviewerName || t("receivedFeedback.anonymous")}
             </Text>
           </View>
+          <View>
+            <TouchableOpacity style={[styles.viewDetailBtn, { borderColor: theme.colors.neonGreen, backgroundColor: `${theme.colors.neonGreen}18` }]} onPress={() => navigation.navigate("RoomInformation", { roomId: item.matchId })}>
+              <Ionicons name="calendar-outline" size={24} color={theme.colors.neonGreen + "5A"} />
+              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>{t("common.buttons.viewMatchDetail")}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         {renderStars(item.rating)}
         {item.sentimentLabel ? (
@@ -506,7 +512,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 14,
   },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8 },
+  cardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   reviewer: { fontSize: 16, fontWeight: "700" },
   matchLabel: { fontSize: 13, marginTop: 2 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
@@ -538,6 +544,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
+  },
+  viewDetailBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6
   },
 });
 

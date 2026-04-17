@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { FeedbackVenueVariables, GenerateSuggesionVars, GenerateSuggestionResponse, SubmitMatchFeedbacksRequest } from "../types/feedback.types";
+import type {
+  FeedbackVenueVariables,
+  GenerateSuggesionVars,
+  GenerateSuggestionResponse,
+  ReportType,
+  SubmitMatchFeedbacksRequest,
+} from "../types/feedback.types";
 import { submitMatchFeedbacksBatch, reportPlayer, voteMatchResult, feedbackVenue, GetSuggestionComment } from "../api";
 import { roomsKeys } from "@/features/rooms/api/roomsKeys";
 import { roomsApi } from "@/features/rooms/api/roomsApi";
@@ -159,7 +165,7 @@ export const useFeedbackVenue = () => {
 
 export interface ReportPlayerVariables {
   reportedUserId: string;
-  reportType: string;
+  reportType: ReportType;
   description: string;
   matchId: string;
 }

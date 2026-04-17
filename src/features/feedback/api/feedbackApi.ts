@@ -9,6 +9,7 @@ import type {
   GivenFeedbackResponse,
   ReceivedFeedbackListData,
   GenerateSuggestionResponse,
+  ReportType,
 } from "../types/feedback.types";
 
 
@@ -41,7 +42,7 @@ export const submitMatchFeedbacksBatch = async (
 
 export const reportPlayer = async (
   reportedUserId: string,
-  reportType: string,
+  reportType: ReportType,
   description: string,
   matchId: string,
 ) => {

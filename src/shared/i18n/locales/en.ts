@@ -27,6 +27,7 @@ const en = {
       processing: "Processing…",
       delete: "Delete",
       viewDetail: "View Detail",
+      viewMatchDetail: "View Room Detail",
       loadingMore: "Loading more...",
     },
     email: "Email",

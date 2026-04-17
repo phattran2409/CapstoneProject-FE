@@ -27,6 +27,7 @@ const vi = {
       confirm: "Xác nhận",
       processing: "Đang xử lý…",
       viewDetail: "Xem chi tiết",
+      viewMatchDetail: "Xem chi tiết phòng",
       delete: "Xóa",
       loadingMore: "Đang tải thêm...",
     },

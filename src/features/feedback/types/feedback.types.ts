@@ -26,6 +26,14 @@ export interface SubmitMatchFeedbacksRequest {
   feedbacks: MatchFeedbackBatchItem[];
 }
 
+export enum ReportType {
+  InappropriateBehavior = "InappropriateBehavior",
+  Harassment = "Harassment",
+  Spamming = "Spamming",
+  FakeAccount = "FakeAccount",
+  Scamming = "Scamming",
+}
+
 /**
  * ID dimension/template feedback từ backend — thay bằng GUID thật khi BE cung cấp.
  */
