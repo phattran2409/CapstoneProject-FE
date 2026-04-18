@@ -19,6 +19,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   EmptyState,
   ErrorState,
+  ExpandableText,
   ListSkeleton,
   LoadingMoreIndicator,
 } from "@/shared/components";
@@ -192,16 +193,44 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         ]}
       >
         <View style={styles.cardHeader}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Image source={getImageAvatar({uri : item.reviewerAvatarUrl || ""})} style={{ width: 32, height: 32, borderRadius: 16 }} />
-            <Text style={[styles.reviewer, { color: theme.colors.text }]}>
+          <View style={styles.cardHeaderLeft}>
+            <Image
+              source={getImageAvatar({ uri: item.reviewerAvatarUrl || "" })}
+              style={styles.cardAvatar}
+            />
+            <Text
+              style={[styles.reviewer, { color: theme.colors.text }]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
               {item.reviewerName || t("receivedFeedback.anonymous")}
             </Text>
           </View>
-          <View>
-            <TouchableOpacity style={[styles.viewDetailBtn, { borderColor: theme.colors.neonGreen, backgroundColor: `${theme.colors.neonGreen}18` }]} onPress={() => navigation.navigate("RoomInformation", { roomId: item.matchId })}>
-              <Ionicons name="calendar-outline" size={24} color={theme.colors.neonGreen + "5A"} />
-              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>{t("common.buttons.viewMatchDetail")}</Text>
+          <View style={styles.cardHeaderAction}>
+            <TouchableOpacity
+              style={[
+                styles.viewDetailBtn,
+                {
+                  borderColor: theme.colors.neonGreen,
+                  backgroundColor: `${theme.colors.neonGreen}18`,
+                },
+              ]}
+              onPress={() =>
+                navigation.navigate("RoomInformation", { roomId: item.matchId })
+              }
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={theme.colors.neonGreen + "5A"}
+              />
+              <Text
+                style={styles.viewDetailBtnLabel}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {t("common.buttons.viewMatchDetail")}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -217,9 +246,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </View>
         ) : null}
-        <Text style={[styles.comment, { color: theme.colors.text }]}>
-          {item.comment || "—"}
-        </Text>
+        <ExpandableText text={item.comment || "—"} maxLines={3} textStyle={[styles.comment, { color: theme.colors.text }]} />
         <Text style={[styles.time, { color: theme.colors.textSecondary }]}>
           {item.createdAt
             ? getRelativeTime(item.createdAt)
@@ -239,7 +266,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.responseLabel, { color: theme.colors.neonGreen }]}>
               {t("receivedFeedback.yourResponse")}
             </Text>
-            <Text style={{ color: theme.colors.text }}>{item.revieweeResponse}</Text>
+            <ExpandableText text={item.revieweeResponse || "—"} maxLines={3} textStyle={{ color: theme.colors.text }} />
             {item.responseDate ? (
               <Text style={[styles.time, { marginTop: 6 }]}>
                 {getRelativeTime(item.responseDate)}
@@ -512,8 +539,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 14,
   },
-  cardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  reviewer: { fontSize: 16, fontWeight: "700" },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 8,
+  },
+  cardHeaderLeft: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cardHeaderAction: {
+    flexShrink: 0,
+  },
+  cardAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    flexShrink: 0,
+  },
+  reviewer: {
+    fontSize: 16,
+    fontWeight: "700",
+    flex: 1,
+    minWidth: 0,
+  },
   matchLabel: { fontSize: 13, marginTop: 2 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
   sentimentRow: { marginBottom: 6 },
@@ -552,7 +606,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 6
+    paddingVertical: 6,
+    flexShrink: 0,
+  },
+  viewDetailBtnLabel: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+    flexShrink: 1,
+    textAlign: "center",
   },
 });
 

@@ -4,6 +4,7 @@ import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedView, ThemedText } from "./themed";
+import { ExpandableText } from "./ExpandableText";
 import { PostMediaGrid } from "./PostMediaGrid";
 import { PostActions } from "./PostActions";
 import { Post } from "@/features/post/types/post.types";
@@ -148,9 +149,18 @@ export const PostItem: React.FC<PostItemProps> = ({
         onPress={() => onPress?.(post.postId)}
         style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
       >
-        <ThemedText variant="secondary" size="m" style={styles.postContent}>
-          {post.content}
-        </ThemedText>
+        <ExpandableText
+          text={post.content}
+          maxLines={4}
+          textStyle={[
+            styles.postContent,
+            {
+              color: theme.colors.textSecondary,
+              fontSize: theme.fontSizes.m,
+              fontWeight: theme.fontWeights.regular,
+            },
+          ]}
+        />
       </TouchableOpacity>
 
       {/* Post Media (Images/Videos) */}

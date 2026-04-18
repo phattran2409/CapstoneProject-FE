@@ -25,6 +25,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTranslation } from "react-i18next";
 import { useGenerateSuggestionComment } from "../hooks/useFeedback";
 import { getPlayerPositionMeta } from "@/shared/constants/playerPositions";
+import { ExpandableText } from "@/shared/components/ExpandableText";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -321,9 +322,13 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
           </View>
 
           {/* Player Name */}
-          <Text style={[styles.playerName, { color: theme.colors.text }]}>
-            {player.name}
-          </Text>
+          <ExpandableText
+            text={player.name}
+            maxLines={2}
+            textStyle={[styles.playerName, { color: theme.colors.text }]}
+            containerStyle={{ alignSelf: "stretch", paddingHorizontal: 8 }}
+            linkStyle={{ textAlign: "center", alignSelf: "center" }}
+          />
 
           {/* Player Role */}
           <View

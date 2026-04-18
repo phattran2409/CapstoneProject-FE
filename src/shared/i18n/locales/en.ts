@@ -31,6 +31,10 @@ const en = {
       loadingMore: "Loading more...",
     },
     email: "Email",
+    expandableText: {
+      readMore: "Read more",
+      readLess: "Show less",
+    },
   },
   validation: {
     required: "This field is required",
@@ -127,6 +131,9 @@ const en = {
   },
   matches: {
     title: "Matches",
+    screenExplainerTitle: "Suggested vs nearby",
+    screenExplainer:
+      "Suggested matches are not based on your location. “Recent matches” uses your location and radius (filter icon).",
     noMatches: "No matches yet",
     passwordInvalid: "Incorrect password. Please try again.",
     myRoomsTitle: "My Match Rooms",
@@ -161,6 +168,8 @@ const en = {
   },
   leaderboard: {
     title: "ELO Leaderboard",
+    refreshHint:
+      "The leaderboard refreshes on a daily schedule. Points from your latest match may show after the next update — pull down to refresh.",
     searchPlaceholder: "Search players...",
     noResults: "No players found",
     empty: "No players yet",
@@ -177,6 +186,7 @@ const en = {
     },
     outsideTop: "Outside top {{count}}",
     you: "You",
+    myRank: "Your current rank",
   },
   rank: {
     tiers: {
@@ -191,6 +201,8 @@ const en = {
   createRoom: {
     title: "Create Room",
     duration: "Duration",
+    screenExplainerTitle: "Create room",
+    screenExplainer: "Select venue and time slot to automatically fill date & time",
     description: "Description",
     descriptionPlaceholder: "Enter description",
     minutes: "Minutes",
@@ -224,6 +236,8 @@ const en = {
       openButton: "Open create-room preset",
       saveButton: "Save preset only",
       applyButton: "Apply to create form",
+      bookingHint:
+        "Presets only save format and room details. Match time, deposits, and when an unfilled room may close are set on the real Create Room screen.",
       savedTitle: "Saved",
       savedMessage: "Your create-room preset was saved.",
       validationName: "Enter a room name to save or apply a preset.",
@@ -335,6 +349,15 @@ const en = {
     depositPerPerson: "Deposit / Person",
     totalDepositCollected: "Total collected",
     depositProgress: "fund progress",
+    openRoomPolicyTitle: "Room is open",
+    openRoomPolicyHint:
+      "Fill all slots and have everyone pay the deposit to hold the booking. If the room is still missing players or deposits by the system cutoff for this match, it may be cancelled and deposits refunded.",
+    depositOpenHint:
+      "Each paid deposit adds to the total; when every slot is filled and paid, the room is confirmed.",
+    statusActions: {
+      reviewingHint:
+        "You have about a day after the match to vote on the result and send feedback. If everyone votes early, we finalize immediately.",
+    },
     tryAgain: "Try Again",
     roomNotFound: "Room not found",
     teamsTab: "Teams",
@@ -469,6 +492,8 @@ const en = {
     paid: "Paid",
     paying: "Processing...",
     tapToAssign: "Tap to assign",
+    depositHint:
+      "This is taken from your wallet as a deposit. When everyone has joined and paid, the room is confirmed; when the match starts, the amount is transferred to the venue owner for the booking.",
   },
   profileHeader: {
     chooseAvatarTitle: "Choose profile photo",
@@ -904,15 +929,18 @@ const en = {
       title: "Help the system balance the match",
       description:
         "Fairly evaluate teammates to help us organize more balanced and exciting matches for you.",
+      reviewWindowHint:
+        "You need to vote on the result and submit feedback in the window after the match (usually about a day). After it closes, you cannot submit anymore.",
       startButton: "Start evaluation",
     },
     rating: {
       title: "Rate Teammate",
       subtitle: "SUNDAY MATCH",
+      subtitleFallback: "Your match",
       progress: "PROGRESS",
-      swipeLeft: "SWIPE LEFT",
-      swipeRight: "SWIPE RIGHT",
-      tip: "Tip: Honest ratings help the system balance teams better.",
+      swipeLeft: "Skip",
+      swipeRight: "Save & next",
+      tip: "Pick stars, then Save & next (or swipe right). Skip if you do not want to rate someone. Selected ratings are sent when you finish the list.",
     },
     report: {
       title: "Report Player",

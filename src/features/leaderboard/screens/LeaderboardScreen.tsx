@@ -180,7 +180,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
     return (
       <View style={{ marginTop: 16 }}>
         <ThemedText variant="secondary" size="s" weight="semiBold" style={{ marginBottom: 8 }}>
-          {t('leaderboard.myRank', { defaultValue: 'Your current rank' })}
+          {t('leaderboard.myRank')}
         </ThemedText>
         <ThemedView
           style={[
@@ -254,6 +254,13 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
           </ThemedText>
           <View style={{ width: 24 }} />
         </ThemedView>
+        <ThemedText
+          variant="secondary"
+          size="xs"
+          style={{ marginTop: -8, marginBottom: 4, paddingHorizontal: 4, lineHeight: 18 }}
+        >
+          {t('leaderboard.refreshHint')}
+        </ThemedText>
       </ThemedView>
 
       {leaderboardQuery.isLoading && <ListSkeleton />}

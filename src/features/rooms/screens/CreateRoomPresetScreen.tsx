@@ -428,6 +428,14 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
           </ThemedText>
         )}
 
+        <ThemedText
+          variant="secondary"
+          size="xs"
+          style={{ marginBottom: 16, lineHeight: 18 }}
+        >
+          {t("createRoom.preset.bookingHint")}
+        </ThemedText>
+
         {/* Match Format */}
         <View style={styles.section}>
           <ThemedText

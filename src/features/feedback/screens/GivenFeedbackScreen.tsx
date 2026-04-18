@@ -17,6 +17,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   EmptyState,
   ErrorState,
+  ExpandableText,
   ListSkeleton,
   LoadingMoreIndicator,
 } from "@/shared/components";
@@ -148,13 +149,20 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         ]}
       >
         <View style={styles.cardHeader}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Image source={getImageAvatar({uri : item.revieweeAvatarUrl || ""})} style={{ width: 32, height: 32, borderRadius: 16 }} />
-            <Text style={[styles.name, { color: theme.colors.text }]}>
+          <View style={styles.cardHeaderLeft}>
+            <Image
+              source={getImageAvatar({ uri: item.revieweeAvatarUrl || "" })}
+              style={styles.cardAvatar}
+            />
+            <Text
+              style={[styles.name, { color: theme.colors.text }]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
               {item.revieweeName || t("givenFeedback.anonymous")}
             </Text>
           </View>
-          <View>
+          <View style={styles.cardHeaderAction}>
             <TouchableOpacity
               style={[
                 styles.viewDetailBtn,
@@ -172,7 +180,11 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
                 size={24}
                 color={theme.colors.neonGreen + "5A"}
               />
-              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>
+              <Text
+                style={styles.viewDetailBtnLabel}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
                 {t("common.buttons.viewMatchDetail")}
               </Text>
             </TouchableOpacity>
@@ -215,7 +227,11 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.responseLabel, { color: theme.colors.neonGreen }]}>
               {t("givenFeedback.theirReply")}
             </Text>
-            <Text style={{ color: theme.colors.text }}>{item.revieweeResponse}</Text>
+            <ExpandableText
+              text={item.revieweeResponse!}
+              maxLines={4}
+              textStyle={{ color: theme.colors.text, fontSize: 14, lineHeight: 20 }}
+            />
             {item.responseDate ? (
               <Text style={[styles.time, { marginTop: 6 }]}>
                 {getRelativeTime(item.responseDate)}
@@ -405,7 +421,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: 8,
     marginBottom: 8,
+  },
+  cardHeaderLeft: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cardHeaderAction: {
+    flexShrink: 0,
+  },
+  cardAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    flexShrink: 0,
   },
   viewDetailBtn: {
     borderWidth: 1,
@@ -416,8 +449,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: 4,
+    flexShrink: 0,
   },
-  name: { fontSize: 16, fontWeight: "700" },
+  viewDetailBtnLabel: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+    flexShrink: 1,
+    textAlign: "center",
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "700",
+    flex: 1,
+    minWidth: 0,
+  },
   matchLabel: { fontSize: 13, marginTop: 2 },
   sectionHint: { fontSize: 11, fontWeight: "600", marginBottom: 4 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },

@@ -33,6 +33,7 @@ import {
 } from "../types/feedback.types";
 import { useAuthStore } from "@/features/auth";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { formatDate } from "@/shared/utils/formatters";
 
 type FeedbackRatingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -70,6 +71,15 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     })),
     [session?.teammates],
   );
+
+  const matchSubtitle = useMemo(() => {
+    if (!session?.matchDate) {
+      return t("feedback.rating.subtitleFallback", "Trận đấu của bạn");
+    }
+    const dateLabel = formatDate(session.matchDate, "short");
+    const timePart = session.startTime?.trim().substring(0, 5);
+    return timePart ? `${dateLabel} · ${timePart}` : dateLabel;
+  }, [session?.matchDate, session?.startTime, t]);
 
   const replaceWithFieldRating = useCallback(() => {
     navigation.replace("FeedbackFieldRating", {
@@ -433,7 +443,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
               { color: theme.colors.textSecondary },
             ]}
           >
-            {t("feedback.rating.subtitle", "TRẬN ĐẤU CHỦ NHẬT")}
+            {matchSubtitle}
           </Text>
         </View>
 
@@ -580,7 +590,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
           <Text style={[styles.tip, { color: theme.colors.textTertiary }]}>
             {t(
               "feedback.rating.tip",
-              "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
+              "Chọn số sao rồi bấm nút xác nhận (hoặc vuốt phải). Bỏ qua người này nếu bạn không muốn chấm. Các đánh giá đã chọn sẽ được gửi khi bạn hoàn tất danh sách.",
             )}
           </Text>
         </ScrollView>

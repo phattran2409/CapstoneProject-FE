@@ -131,7 +131,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
         <View style={styles.content}>
           {/* Title */}
           <Text style={[styles.title, { color: theme.colors.text }]}>
-            {t("feedback.result.title", "Ai là người chiến thắng?")}
+            {t("feedback.result.title", "Đội nào đã chiến thắng?")}
           </Text>
           <Text
             style={[

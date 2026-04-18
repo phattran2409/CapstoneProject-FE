@@ -174,13 +174,21 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
           </Text>
 
           {/* Description */}
-          <Text
+          {/* <Text
             style={[styles.description, { color: theme.colors.textSecondary }]}
           >
             {t(
               "feedback.intro.description",
               "Đánh giá đồng đội một cách công tâm để giúp chúng tôi tổ chức những trận đấu cân sức và hấp dẫn hơn cho bạn.",
             )}
+          </Text> */}
+          <Text
+            style={[
+              styles.reviewWindowHint,
+              { color: theme.colors.textSecondary },
+            ]}
+          >
+            {t("feedback.intro.reviewWindowHint")}
           </Text>
 
           {/* Start Button */}
@@ -316,7 +324,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     lineHeight: 24,
-    marginBottom: 48,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  reviewWindowHint: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 40,
     paddingHorizontal: 16,
   },
   startButton: {

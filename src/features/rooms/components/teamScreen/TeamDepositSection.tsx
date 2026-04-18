@@ -41,6 +41,13 @@ export const TeamDepositSection: React.FC<Props> = ({
           {(depositPerPerson ?? 0).toLocaleString("vi-VN")}đ
         </ThemedText>
       </View>
+      <ThemedText
+        variant="secondary"
+        size="xs"
+        style={{ marginTop: 10, lineHeight: 18 }}
+      >
+        {t("teamScreen.depositHint")}
+      </ThemedText>
 
       <View style={styles.paymentButtons}>
         <TouchableOpacity

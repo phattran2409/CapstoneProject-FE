@@ -67,3 +67,5 @@ export { default as ReportModal } from "./ReportModal";
 export type { ReportModalProps, ReportType } from "./ReportModal";
 export { default as HorizontalScrollWithHint } from "./HorizontalScrollWithHint";
 export type { HorizontalScrollWithHintProps } from "./HorizontalScrollWithHint";
+export { ExpandableText, default as ExpandableTextDefault } from "./ExpandableText";
+export type { ExpandableTextProps } from "./ExpandableText";
