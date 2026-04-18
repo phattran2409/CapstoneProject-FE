@@ -7,6 +7,7 @@ import { Venue, Field, TimeSlot, FieldAvailability } from '../types/venue.types'
 import { getFieldAvailability } from '../api/venuesApi';
 import { formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
 import { formatCurrency } from '@/shared/utils/formatters';
+import Alert from '@/shared/components/Alert';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -31,6 +32,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
   const { t } = useTranslation();
   const [selectedTimeKey, setSelectedTimeKey] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [showSlotTooCloseAlert, setShowSlotTooCloseAlert] = useState(false);
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
   const [availabilityCache, setAvailabilityCache] = useState<AvailabilityCache>({});
   const [loadingFields, setLoadingFields] = useState<Record<string, boolean>>({});
@@ -70,6 +72,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     if (!visible) {
       setSelectedTimeKey(null);
       setSelectedSlot(null);
+      setShowSlotTooCloseAlert(false);
       setExpandedFieldId(null);
       setShowBookedSlotsByFieldId({});
       setAvailabilityCache({});
@@ -113,12 +116,37 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     }
   }, [expandedFieldId, fetchFieldAvailability]);
 
+  const isSlotTooCloseToNow = useCallback(
+    (slot: TimeSlot): boolean => {
+      const startHour = Number(slot.startTime.slice(0, 2));
+      const startMinute = Number(slot.startTime.slice(3, 5));
+
+      if (Number.isNaN(startHour) || Number.isNaN(startMinute)) {
+        return false;
+      }
+
+      const slotDateTime = new Date(`${selectedDate}T00:00:00`);
+      slotDateTime.setHours(startHour, startMinute, 0, 0);
+
+      const diffMs = slotDateTime.getTime() - Date.now();
+      const diffMinutes = diffMs / (1000 * 60);
+
+      return diffMinutes < 30;
+    },
+    [selectedDate],
+  );
+
   // Handle time slot selection
   const handleSelectTimeSlot = useCallback((fieldId: string, slot: TimeSlot, index: number) => {
+    if (isSlotTooCloseToNow(slot)) {
+      setShowSlotTooCloseAlert(true);
+      return;
+    }
+
     const key = `${fieldId}-${index}`;
     setSelectedTimeKey(key);
     setSelectedSlot(slot);
-  }, []);
+  }, [isSlotTooCloseToNow]);
 
   // Handle book button press - pass selectedDate (YYYY-MM-DD) so CreateRoom can use it
   const handleBookField = useCallback((field: Field) => {
@@ -515,6 +543,17 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
           )}
         </View>
       </View>
+      <Alert
+        visible={showSlotTooCloseAlert}
+        type="info"
+        title={t('fieldsModal.slotTooCloseTitle', 'Không thể chọn khung giờ')}
+        message={t(
+          'fieldsModal.slotTooCloseMessage',
+          'Bạn cần phải chọn slot giờ trước ít nhất 30 phút.',
+        )}
+        confirmText={t('common.buttons.close', 'Đóng')}
+        onClose={() => setShowSlotTooCloseAlert(false)}
+      />
     </Modal>
   );
 };

@@ -12,6 +12,7 @@ import { Button } from "@/shared/components";
 import type { Theme } from "@/shared/theme";
 import { CaptainBadge } from "@/features/rooms/components";
 import { teamScreenStyles as styles } from "./teamScreenStyles";
+import { getImageAvatar, getImageSource } from "@/shared/utils/imageSource";
 
 type Props = {
   theme: Theme;
@@ -51,7 +52,8 @@ export const TeamLineupSection: React.FC<Props> = ({
   selectedPlayerId,
   setSelectedPlayerId,
   onSaveFormation,
-}) => (
+}) => {
+  return (
   <>
     {myAssignedSlotLabel && (
       <ThemedView
@@ -296,23 +298,10 @@ export const TeamLineupSection: React.FC<Props> = ({
                 activeOpacity={0.7}
               >
                 <View style={styles.playerRowLeft}>
-                  {player.avatar ? (
                     <Image
-                      source={player.avatar}
+                      source={getImageAvatar(player.avatar)}
                       style={styles.playerAvatar}
                     />
-                  ) : (
-                    <View
-                      style={[
-                        styles.playerAvatarPlaceholder,
-                        { backgroundColor: theme.colors.border },
-                      ]}
-                    >
-                      <ThemedText size="s" weight="bold">
-                        {player.name?.charAt(0) || "?"}
-                      </ThemedText>
-                    </View>
-                  )}
                   <View>
                     <View style={styles.playerNameRow}>
                       <ThemedText
@@ -351,4 +340,5 @@ export const TeamLineupSection: React.FC<Props> = ({
       </View>
     )}
   </>
-);
+  );
+};

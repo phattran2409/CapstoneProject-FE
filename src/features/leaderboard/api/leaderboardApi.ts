@@ -4,8 +4,14 @@ import {
   LeaderboardResponse,
   MyRankData,
 } from './../types/leaderboard.types';
+import { LEADERBOARD_PAGE_SIZE } from '../constants';
 import { apiClient } from '@/shared/api/client';
 import { API_CONFIG } from '@/shared/constants/api';
+
+export type GetLeaderboardParams = {
+  page?: number;
+  pageSize?: number;
+};
 
 /** Chuẩn hóa 1 dòng leaderboard (.NET PascalCase → camelCase) */
 function mapLeaderboardRow(row: Record<string, unknown>): Leaderboard {
@@ -25,11 +31,15 @@ function mapLeaderboardRow(row: Record<string, unknown>): Leaderboard {
 }
 
 // Get player leaderboard
-export const getLeaderboardPlayers = async (): Promise<LeaderboardData> => {
+export const getLeaderboardPlayers = async (
+  params: GetLeaderboardParams = {},
+): Promise<LeaderboardData> => {
   try {
-    const body = (await apiClient.get(
-      API_CONFIG.ENDPOINTS.LEADERBOARD.LIST,
-    )) as LeaderboardResponse & {
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? LEADERBOARD_PAGE_SIZE;
+    const body = (await apiClient.get(API_CONFIG.ENDPOINTS.LEADERBOARD.LIST, {
+      params: { page, pageSize },
+    })) as LeaderboardResponse & {
       Data?: { leaderboard?: Leaderboard[]; Leaderboard?: Leaderboard[] };
     };
 

@@ -1,15 +1,18 @@
-
 import { leaderboardKeys } from '../api/leaderboardKeys';
 import { getLeaderboardPlayers, getMyRank } from '../api/leaderboardApi';
-import { Leaderboard } from '../types/leaderboard.types';
-import { usePagination } from '@/shared/hooks/usePagination';
+import { LEADERBOARD_PAGE_SIZE } from '../constants';
 import { useQuery } from '@tanstack/react-query';
 
+export type UseLeaderboardOptions = {
+  /** Mặc định 50 — khớp với LEADERBOARD_PAGE_SIZE. */
+  pageSize?: number;
+};
 
-export const useLeaderboard = () => {
+export const useLeaderboard = (options: UseLeaderboardOptions = {}) => {
+  const pageSize = options.pageSize ?? LEADERBOARD_PAGE_SIZE;
   return useQuery({
-    queryKey: leaderboardKeys.list(),
-    queryFn: getLeaderboardPlayers,
+    queryKey: leaderboardKeys.list(1, pageSize),
+    queryFn: () => getLeaderboardPlayers({ page: 1, pageSize }),
     staleTime: 2 * 60 * 1000,
     enabled: true,
   });

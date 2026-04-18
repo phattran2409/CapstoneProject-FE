@@ -26,6 +26,14 @@ export interface SubmitMatchFeedbacksRequest {
   feedbacks: MatchFeedbackBatchItem[];
 }
 
+export enum ReportType {
+  InappropriateBehavior = "InappropriateBehavior",
+  Harassment = "Harassment",
+  Spamming = "Spamming",
+  FakeAccount = "FakeAccount",
+  Scamming = "Scamming",
+}
+
 /**
  * ID dimension/template feedback từ backend — thay bằng GUID thật khi BE cung cấp.
  */
@@ -81,9 +89,9 @@ export interface GivenFeedbackResponse {
 export interface GivenFeedbackItem {
   feedbackId: string;
   matchId: string;
-  reviewerId: string;
-  reviewerName: string;
-  reviewerAvatarUrl: string | null;
+  revieweeId: string;
+  revieweeName: string;
+  revieweeAvatarUrl: string | null;
   rating: number;
   comment: string;
   sentimentScore: number | null;
@@ -100,3 +108,16 @@ export interface GivenFeedbackListData {
 }
 
 export const RECEIVED_FEEDBACK_REPLY_MAX_LENGTH = 200;
+
+export type GenerateSuggesionVars = {
+  starRating : number;
+  count : number, 
+  role: string
+}
+
+export interface GenerateSuggestionResponse {
+  starRating : number;
+  suggestions: string[];
+  source: string;
+  modelUsed: string;
+}

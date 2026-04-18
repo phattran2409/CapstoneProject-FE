@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Modal,
@@ -9,13 +9,17 @@ import {
   Pressable,
 } from 'react-native';
 import { useTheme } from '@/shared/theme';
-import { useTranslation } from 'react-i18next';
 import { ThemedText, ThemedIcon } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { TeamAssignment } from '../types/room.types';
+import { TFunction } from 'i18next';
+import {
+  PLAYER_POSITION_META,
+  type PlayerPositionCode,
+} from '@/shared/constants/playerPositions';
 
 // Position types
-export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
+export type PlayerPosition = PlayerPositionCode;
 
 interface PositionOption {
   id: PlayerPosition;
@@ -26,42 +30,8 @@ interface PositionOption {
   description: string;
 }
 
-const POSITIONS: PositionOption[] = [
-  {
-    id: 'GK',
-    label: 'GK',
-    fullLabel: 'Goalkeeper',
-    icon: 'hand-left',
-    color: '#FFB300', // Amber
-    description: 'Thủ môn - Bảo vệ khung thành',
-  },
-  {
-    id: 'DF',
-    label: 'DF',
-    fullLabel: 'Defender',
-    icon: 'shield',
-    color: '#2196F3', // Blue
-    description: 'Hậu vệ - Phòng ngự',
-  },
-  {
-    id: 'MF',
-    label: 'MF',
-    fullLabel: 'Midfielder',
-    icon: 'sync',
-    color: '#4CAF50', // Green
-    description: 'Tiền vệ - Kết nối các tuyến',
-  },
-  {
-    id: 'FW',
-    label: 'FW',
-    fullLabel: 'Forward',
-    icon: 'flash',
-    color: '#F44336', // Red
-    description: 'Tiền đạo - Tấn công ghi bàn',
-  },
-];
-
 interface PositionSelectionModalProps {
+  t: TFunction;
   visible: boolean;
   onClose: () => void;
   onSelectPosition: (position: PlayerPosition) => void;
@@ -72,6 +42,7 @@ interface PositionSelectionModalProps {
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
+  t,
   visible,
   onClose,
   onSelectPosition,
@@ -79,7 +50,6 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
-  const { t } = useTranslation();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
@@ -118,7 +88,45 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
 
   const teamLabel = teamAssignment === 'A' ? 'Team A' : 'Team B';
   const teamColor = teamAssignment === 'A' ? '#4CAF50' : '#2196F3';
-
+  
+  const positions: PositionOption[] = useMemo(
+    () => [
+      {
+        id: PLAYER_POSITION_META.GK.id,
+        label: PLAYER_POSITION_META.GK.label,
+        fullLabel: t('positionSelectionModal.positions.gk.fullLabel'),
+        icon: PLAYER_POSITION_META.GK.icon,
+        color: PLAYER_POSITION_META.GK.color,
+        description: t('positionSelectionModal.positions.gk.description'),
+      },
+      {
+        id: PLAYER_POSITION_META.DF.id,
+        label: PLAYER_POSITION_META.DF.label,
+        fullLabel: t('positionSelectionModal.positions.df.fullLabel'),
+        icon: PLAYER_POSITION_META.DF.icon,
+        color: PLAYER_POSITION_META.DF.color,
+        description: t('positionSelectionModal.positions.df.description'),
+      },
+      {
+        id: PLAYER_POSITION_META.MF.id,
+        label: PLAYER_POSITION_META.MF.label,
+        fullLabel: t('positionSelectionModal.positions.mf.fullLabel'),
+        icon: PLAYER_POSITION_META.MF.icon,
+        color: PLAYER_POSITION_META.MF.color,
+        description: t('positionSelectionModal.positions.mf.description'),
+      },
+      {
+        id: PLAYER_POSITION_META.FW.id,
+        label: PLAYER_POSITION_META.FW.label,
+        fullLabel: t('positionSelectionModal.positions.fw.fullLabel'),
+        icon: PLAYER_POSITION_META.FW.icon,
+        color: PLAYER_POSITION_META.FW.color,
+        description: t('positionSelectionModal.positions.fw.description'),
+      },
+    ],
+    [t],
+  );    
+  
   const handleSelectPosition = (position: PlayerPosition) => {
     if (!isLoading) {
       onSelectPosition(position);
@@ -164,7 +172,7 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <ThemedText size="xl" weight="bold">
-              Chọn vị trí
+              {t('positionSelectionModal.title')}
             </ThemedText>
             <View style={[styles.teamBadge, { backgroundColor: teamColor + '20' }]}>
               <ThemedText size="s" weight="bold" style={{ color: teamColor }}>
@@ -179,12 +187,12 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
 
         {/* Description */}
         <ThemedText variant="secondary" size="s" style={styles.description}>
-          Chọn vị trí bạn muốn chơi trong trận đấu này
+            {t('positionSelectionModal.description')}
         </ThemedText>
 
         {/* Position Grid */}
         <View style={styles.positionGrid}>
-          {POSITIONS.map((position) => (
+          {positions.map((position) => (
             <TouchableOpacity
               key={position.id}
               style={[
@@ -239,7 +247,7 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
             <View style={[styles.loadingContainer, { backgroundColor: theme.colors.surface }]}>
               <ThemedIcon name="hourglass" size={24} variant="accent" />
               <ThemedText size="s" weight="medium" style={{ marginLeft: 8 }}>
-                Đang tham gia...
+                {t('positionSelectionModal.loading')}
               </ThemedText>
             </View>
           </View>
@@ -252,7 +260,7 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
           disabled={isLoading}
         >
           <ThemedText variant="secondary" weight="medium">
-            Hủy
+            {t('common.buttons.cancel')}
           </ThemedText>
         </TouchableOpacity>
       </Animated.View>

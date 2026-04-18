@@ -58,24 +58,6 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}
             <ThemedText size="m">{displayRoom.rules}</ThemedText>
           </View>
         )}
-
-        {displayRoom.field.venue.contactPhone && (
-          <View style={styles.hostContact}>
-            <View
-              style={[
-                styles.hostContactItem,
-                { backgroundColor: theme.colors.neonGreen + '10' },
-              ]}
-            >
-              <ThemedText variant="secondary" size="xs" style={styles.contactLabel}>
-                {t('roomDetail.contact')}
-              </ThemedText>
-              <ThemedText size="s" weight="medium">
-                {displayRoom.field.venue.contactPhone}
-              </ThemedText>
-            </View>
-          </View>
-        )}
       </ThemedCard>
     </View>
   );

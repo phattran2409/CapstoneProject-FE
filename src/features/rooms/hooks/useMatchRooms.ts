@@ -64,8 +64,8 @@ export const useMyRooms = (
   const enabled = options?.enabled ?? true;
   const pagination = usePagination<MyRoom>({
     queryKey: roomsKeys.myRooms(filters),
-    fetchFunction: async () => {
-      const result = await roomsApi.getMyRooms(filters);
+    fetchFunction: async (page , pageSize) => {
+      const result = await roomsApi.getMyRooms({page,pageSize, ...filters});
       return {
         data: result.data.rooms,
         totalPages: result.data.totalPages,

@@ -29,6 +29,7 @@ import { useSubmitMatchFeedbacksBatch, useReportPlayer } from "../hooks";
 import {
   DEFAULT_PLAYER_FEEDBACK_ID,
   type MatchFeedbackBatchItem,
+  ReportType,
 } from "../types/feedback.types";
 import { useAuthStore } from "@/features/auth";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
@@ -107,7 +108,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   );
   const [showReportModal, setShowReportModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
-  const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType | null>(null);
   const [reportDescription, setReportDescription] = useState("");
   const [reportError, setReportError] = useState<string | null>(null);
 
@@ -318,8 +319,32 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     setShowReportModal(true);
   };
 
+  const reportTypeOptions: ReportType[] = [
+    ReportType.InappropriateBehavior,
+    ReportType.Harassment,
+    ReportType.Spamming,
+    ReportType.FakeAccount,
+    ReportType.Scamming,
+  ];
+
+  const reportTypeTranslationKeys: Record<ReportType, string> = {
+    [ReportType.InappropriateBehavior]: "inappropriate_behavior",
+    [ReportType.Harassment]: "harassment",
+    [ReportType.Spamming]: "spamming",
+    [ReportType.FakeAccount]: "fake_account",
+    [ReportType.Scamming]: "scamming",
+  };
+
+  const reportTypeFallbackLabels: Record<ReportType, string> = {
+    [ReportType.InappropriateBehavior]: "Hành vi không phù hợp",
+    [ReportType.Harassment]: "Quấy rối",
+    [ReportType.Spamming]: "Spam",
+    [ReportType.FakeAccount]: "Tài khoản giả mạo",
+    [ReportType.Scamming]: "Lừa đảo",
+  };
+
   const handleReportSubmit = async (
-    reportType: string,
+    reportType: ReportType,
     description: string,
   ) => {
     if (!session || !currentPlayer) {
@@ -586,7 +611,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
             </Text>
 
             <ScrollView style={styles.reportReasons}>
-              {["inappropriate_behavior", "harassment", "toxic_behavior", "AFK", "other"].map(
+              {reportTypeOptions.map(
                 (type) => (
                   <TouchableOpacity
                     key={type}
@@ -620,7 +645,10 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
                         },
                       ]}
                     >
-                      {t(`reportModal.reasons.user.${type}`)}
+                      {t(
+                        `reportModal.reasons.user.${reportTypeTranslationKeys[type]}`,
+                        reportTypeFallbackLabels[type],
+                      )}
                     </Text>
                     {selectedReportType === type && (
                       <Ionicons

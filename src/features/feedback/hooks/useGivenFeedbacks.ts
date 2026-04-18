@@ -1,37 +1,41 @@
-import { usePagination } from "@/shared/hooks";
 import { GetGivenFeedbacks } from "../api/feedbackApi";
 import { feedbackKeys } from "../api/feedbackKeys";
 import { GivenFeedbackItem } from "../types/feedback.types";
 
-interface UseGivenFeedbacksOptions {
-  pageSize?: number;
-  enabled?: boolean;
-  fromDate?: string;
-  toDate?: string;
-  rating?: number;
-}
+import {
+  FeedbackListPaginationOptions,
+  useFeedbackListPagination,
+} from "./useFeedbackListPagination";
 
 export const useGivenFeedbacks = ({
-  pageSize = 10,
+  pageSize,
   enabled = true,
   fromDate,
   toDate,
   rating,
-}: UseGivenFeedbacksOptions = {}) => {
-  const filters = { fromDate, toDate, rating };
-  const pagination = usePagination<GivenFeedbackItem>({
-    queryKey: [...feedbackKeys.given(filters)],
-    fetchFunction: async (page, size) => {
-      const result = await GetGivenFeedbacks({ page, pageSize: size, fromDate, toDate, rating });
+}: FeedbackListPaginationOptions = {}) => {
+  const pagination = useFeedbackListPagination<GivenFeedbackItem>({
+    pageSize,
+    enabled,
+    fromDate,
+    toDate,
+    rating,
+    queryKey: (filters) => feedbackKeys.given(filters),
+    fetchFunction: async ({ page, pageSize: size, filters }) => {
+      const result = await GetGivenFeedbacks({
+        page,
+        pageSize: size,
+        fromDate: filters.fromDate,
+        toDate: filters.toDate,
+        rating: filters.rating,
+      });
       return {
         data: result.items,
-        totalPages: result.totalPages ?? 0,
-        totalCount: result.totalCount ?? 0,
+        totalPages: result.totalPages,
+        totalCount: result.totalCount,
       };
     },
-    pageSize,
     staleTime: 2 * 60 * 1000,
-    enabled,
     onError: (error) => {
       console.error("Error fetching given feedbacks:", error);
     },

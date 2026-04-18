@@ -8,6 +8,8 @@ import type {
   GivenFeedbackListData,
   GivenFeedbackResponse,
   ReceivedFeedbackListData,
+  GenerateSuggestionResponse,
+  ReportType,
 } from "../types/feedback.types";
 
 
@@ -40,7 +42,7 @@ export const submitMatchFeedbacksBatch = async (
 
 export const reportPlayer = async (
   reportedUserId: string,
-  reportType: string,
+  reportType: ReportType,
   description: string,
   matchId: string,
 ) => {
@@ -77,15 +79,7 @@ export const feedbackVenue = async (
   }
 };
 
-export interface GetReceivedFeedbacksQuery {
-  fromDate?: string;
-  toDate?: string;
-  rating?: number;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface GetGivenFeedbacksQuery {
+export interface GetFeedbacksQuery {
   fromDate?: string;
   toDate?: string;
   rating?: number;
@@ -94,7 +88,7 @@ export interface GetGivenFeedbacksQuery {
 }
 
 export const GetReceivedFeedbacks = async (
-  getReceivedFeedbacksQuery: GetReceivedFeedbacksQuery,
+  getReceivedFeedbacksQuery: GetFeedbacksQuery,
 ): Promise<ReceivedFeedbackListData> => {
   try {
     const response = (await apiClient.get(API_CONFIG.ENDPOINTS.FEEDBACK.RECEIVED, { params: getReceivedFeedbacksQuery })) as ReceivedFeedbackResponse;
@@ -113,7 +107,7 @@ export const GetReceivedFeedbacks = async (
 };
 
 export const GetGivenFeedbacks = async (
-  getGivenFeedbacksQuery: GetGivenFeedbacksQuery,
+  getGivenFeedbacksQuery: GetFeedbacksQuery,
 ): Promise<GivenFeedbackListData> => {
   try {
     const response = (await apiClient.get(API_CONFIG.ENDPOINTS.FEEDBACK.GIVEN, { params: getGivenFeedbacksQuery })) as GivenFeedbackResponse;
@@ -140,6 +134,16 @@ export const responseFeedback = async (
     return response;
   } catch (error) {
     console.error("Error responding to feedback:", error);
+    throw error;
+  }
+};
+
+export const GetSuggestionComment = async (starRating: number, count: number, role: string) => {
+  try {
+    const response = await apiClient.post<GenerateSuggestionResponse>(API_CONFIG.ENDPOINTS.FEEDBACK.GENERATE_SUGGESTION_COMMENT, { starRating, count, role });
+    return response;
+  } catch (error) {
+    console.error("Error generating suggestion comment:", error);
     throw error;
   }
 };

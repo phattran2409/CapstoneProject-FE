@@ -1,43 +1,36 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   GetReceivedFeedbacks,
   responseFeedback,
-  type GetReceivedFeedbacksQuery,
 } from "../api/feedbackApi";
 import { feedbackKeys } from "../api/feedbackKeys";
-import { Friend } from "@/features/friends/types/friends.types";
-import { usePagination } from "@/shared/hooks";
 import { ReceivedFeedbackItem } from "../types/feedback.types";
+import { FeedbackListPaginationOptions, useFeedbackListPagination } from "./useFeedbackListPagination";
 
-
-interface UsePaginatedReceivedFeedbacksOptions {
-  pageSize?: number;
-  enabled?: boolean;
-  fromDate?: string;
-  toDate?: string;
-  rating?: number;
-}
-export const useReceivedFeedbacks = ({
-  pageSize = 10,
-  enabled = true,
-  fromDate,
-  toDate,
-  rating,
-}: UsePaginatedReceivedFeedbacksOptions = {}) => {
-  const filters = { fromDate, toDate, rating };
-  const pagination = usePagination<ReceivedFeedbackItem>({
-    queryKey: [...feedbackKeys.received(filters)],
-    fetchFunction: async (page, size) => {
-      const result = await GetReceivedFeedbacks({ page, pageSize: size, fromDate, toDate, rating });
+export const useReceivedFeedbacks = (options: FeedbackListPaginationOptions = {}) => {
+  const { pageSize = 10, enabled = true, fromDate, toDate, rating } = options;
+  const pagination = useFeedbackListPagination<ReceivedFeedbackItem>({
+    pageSize,
+    enabled,
+    fromDate,
+    toDate,
+    rating,
+    queryKey: (filters) => feedbackKeys.received(filters),
+    fetchFunction: async ({ page, pageSize: size, filters }) => {
+      const result = await GetReceivedFeedbacks({
+        page,
+        pageSize: size,
+        fromDate: filters.fromDate,
+        toDate: filters.toDate,
+        rating: filters.rating,
+      });
       return {
         data: result.items,
-        totalPages: result.totalPages ?? 0,
-        totalCount: result.totalCount ?? 0,
+        totalPages: result.totalPages,
+        totalCount: result.totalCount,
       };
     },
-    pageSize,
     staleTime: 2 * 60 * 1000,
-    enabled,
     onError: (error) => {
       console.error("Error fetching received feedbacks:", error);
     },

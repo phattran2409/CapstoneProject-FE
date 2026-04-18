@@ -32,7 +32,7 @@ export const darkTheme: Theme = {
     darkBlack: '#121212',
     mediumGray: '#909090',
     softWhite: '#F6F2F2',
-    
+    blueSky: '#0EA5E9',
     // Additional
     white: '#FFFFFF',
     black: '#000000',

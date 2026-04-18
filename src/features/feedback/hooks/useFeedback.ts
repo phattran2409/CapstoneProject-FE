@@ -1,6 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { FeedbackVenueVariables, SubmitMatchFeedbacksRequest } from "../types/feedback.types";
-import { submitMatchFeedbacksBatch, reportPlayer, voteMatchResult, feedbackVenue } from "../api";
+import type {
+  FeedbackVenueVariables,
+  GenerateSuggesionVars,
+  GenerateSuggestionResponse,
+  ReportType,
+  SubmitMatchFeedbacksRequest,
+} from "../types/feedback.types";
+import { submitMatchFeedbacksBatch, reportPlayer, voteMatchResult, feedbackVenue, GetSuggestionComment } from "../api";
 import { roomsKeys } from "@/features/rooms/api/roomsKeys";
 import { roomsApi } from "@/features/rooms/api/roomsApi";
 import type { MatchRoomFullInfo } from "@/features/rooms/types/room.types";
@@ -159,7 +165,7 @@ export const useFeedbackVenue = () => {
 
 export interface ReportPlayerVariables {
   reportedUserId: string;
-  reportType: string;
+  reportType: ReportType;
   description: string;
   matchId: string;
 }
@@ -195,6 +201,23 @@ export const useVoteMatchResult = () => {
       });
       void queryClient.invalidateQueries({ queryKey: roomsKeys.matchRooms() });
       void queryClient.invalidateQueries({ queryKey: roomsKeys.myRooms() });
+    },
+  });
+};
+
+
+export const useGenerateSuggestionComment = () => {
+  return useMutation({
+    mutationFn: async (
+      vars: GenerateSuggesionVars,
+    ): Promise<GenerateSuggestionResponse> => {
+      const response = await GetSuggestionComment(
+        vars.starRating,
+        vars.count,
+        vars.role,
+      );
+      const payload = (response as any)?.data ?? response;
+      return payload as GenerateSuggestionResponse;
     },
   });
 };

@@ -9,6 +9,7 @@ import { useLeaderboard, useMyRank } from '@/features/leaderboard/hooks/useLeade
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useUserProfile } from '@/features/profile/hooks';
 import { EmptyState, ErrorState, ListSkeleton, RankBadge } from '@/shared/components';
+import { LEADERBOARD_PAGE_SIZE } from '../constants';
 import { Leaderboard } from '../types/leaderboard.types';
 import { getEmailUsername } from '@/shared/utils/formatters';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
@@ -31,17 +32,17 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
   const myUser = useAuthStore((s) => s.user);
   const { data: myProfile } = useUserProfile(myUserId || '');
 
-  const leaderboardQuery = useLeaderboard();
+  const leaderboardQuery = useLeaderboard( { pageSize: LEADERBOARD_PAGE_SIZE } );
   const myRankQuery = useMyRank();
 
   const leaderboard = useMemo(() => {
     const items = leaderboardQuery.data?.leaderboard ?? [];
-    // Product requirement: list size is implicitly 20
-    return items.slice(0, 20);
+    return items;
   }, [leaderboardQuery.data]);
 
   const myRank = myRankQuery.data?.rank;
-  const isMyRankOutsideTop = typeof myRank === 'number' && myRank > 20;
+  const isMyRankOutsideTop =
+    typeof myRank === 'number' && myRank > LEADERBOARD_PAGE_SIZE;
 
   const getRankColor = useCallback((rank: number) => {
     switch (rank) {
@@ -226,7 +227,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                 </ThemedText>
               )}
               <ThemedText variant="secondary" size="xs" style={{ marginTop: 4 }}>
-                {t('leaderboard.outsideTop', { defaultValue: 'Outside top 20' })}
+                {t('leaderboard.outsideTop', {
+                  count: LEADERBOARD_PAGE_SIZE,
+                  defaultValue: `Outside top ${LEADERBOARD_PAGE_SIZE}`,
+                })}
               </ThemedText>
             </View>
           </View>

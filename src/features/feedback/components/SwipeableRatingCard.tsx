@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   Dimensions,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { useTheme } from "@/shared/theme";
 import Animated, {
@@ -22,6 +23,8 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTranslation } from "react-i18next";
+import { useGenerateSuggestionComment } from "../hooks/useFeedback";
+import { getPlayerPositionMeta } from "@/shared/constants/playerPositions";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -68,6 +71,16 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const generateSuggestionMutation = useGenerateSuggestionComment();
+  const roleMeta = getPlayerPositionMeta(player.role);
+  const roleColor = roleMeta?.color ?? theme.colors.textSecondary;
+
+  React.useEffect(() => {
+    const generatedComment =
+      generateSuggestionMutation.data?.suggestions?.[0]?.trim() ?? "";
+    if (!generatedComment) return;
+    onCommentChange(generatedComment);
+  }, [generateSuggestionMutation.data, onCommentChange]);
 
   // Reset animation when player changes
   React.useEffect(() => {
@@ -186,6 +199,16 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
     return { opacity };
   });
 
+  const onGenerateComment = async () => {
+    if (!rating || generateSuggestionMutation.isPending || !player.role) return;
+
+    await generateSuggestionMutation.mutateAsync({
+      starRating: rating,
+      count: 1,
+      role: player.role,
+    });
+  };
+
   const renderStars = () => {
     return (
       <View style={styles.starsContainer}>
@@ -303,17 +326,25 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
           </Text>
 
           {/* Player Role */}
-          <Text
-            style={[styles.playerRole, { color: theme.colors.textSecondary }]}
+          <View
+            style={[
+              styles.playerRoleBadge,
+              {
+                borderColor: roleColor,
+                backgroundColor: `${roleColor}20`,
+              },
+            ]}
           >
-            {player.role}
-          </Text>
+            <Text style={[styles.playerRole, { color: roleColor }]}>
+              {roleMeta?.label ?? player.role}
+            </Text>
+          </View>
 
           {/* Rating Instruction */}
           <Text
             style={[styles.ratingInstruction, { color: theme.colors.primary }]}
           >
-            CHẠM ĐỂ ĐÁNH GIÁ
+            {t("feedback.rating.touchToRate", "CHẠM ĐỂ ĐÁNH GIÁ")}
           </Text>
 
           {/* Stars */}
@@ -329,14 +360,48 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
                 borderColor: theme.colors.border,
               },
             ]}
-            placeholder={`Nhận xét ngắn về trận đấu của ${player.name.split(" ").pop()}...\n(không bắt buộc)`}
+            placeholder={t("feedback.rating.commentPlaceholder", `Nhận xét ngắn về trận đấu của ${player.name.split(" ").pop()}...\n(không bắt buộc)`)}
             placeholderTextColor={theme.colors.textTertiary}
             value={comment}
             onChangeText={onCommentChange}
             multiline
             maxLength={200}
           />
-
+          {/* //button auto generate comment */}
+          <TouchableOpacity
+            style={[
+              styles.generateCommentButton,
+              {
+                borderColor: theme.colors.neonGreen,
+                backgroundColor: theme.colors.neonGreen + "1A",
+                opacity: !rating || generateSuggestionMutation.isPending ? 0.6 : 1,
+              },
+            ]}
+            onPress={() => {
+              void onGenerateComment();
+            }}
+            disabled={!rating || generateSuggestionMutation.isPending}
+          >
+            {generateSuggestionMutation.isPending ? (
+              <ActivityIndicator size="small" color={theme.colors.neonGreen} />
+            ) : (
+              <Ionicons
+                name="chatbox-ellipses-outline"
+                size={24}
+                color={theme.colors.neonGreen}
+              />
+            )}
+            <Text
+              style={[
+                styles.generateCommentButtonText,
+                { color: theme.colors.neonGreen },
+              ]}
+            >
+              {generateSuggestionMutation.isPending
+                ? t("common.loading", "Đang tạo...")
+                : t("feedback.rating.generateComment", "Tự động tạo nhận xét")}
+            </Text>
+          </TouchableOpacity>
           {/* Report Button */}
           {onReport && (
             <TouchableOpacity
@@ -451,9 +516,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   playerRole: {
-    fontSize: 14,
-    marginBottom: 16,
+    fontSize: 12,
+    fontWeight: "700",
     textAlign: "center",
+  },
+  playerRoleBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginBottom: 16,
   },
   ratingInstruction: {
     fontSize: 14,
@@ -503,6 +575,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   reportButtonText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  generateCommentButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 16,
+  },
+  generateCommentButtonText: {
     fontSize: 12,
     fontWeight: "500",
   },

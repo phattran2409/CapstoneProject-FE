@@ -30,10 +30,32 @@ export interface VenueDetail {
   fields: VenueFieldDetail[];
   operatingHours: OperatingHour[];
   photos: VenuePhoto[];
+  reviews: VenueReview[];
+  owner: owner | null;
   walletBalance: number;
   createdAt: string;
 }
+export interface VenueReview {
+  reviewId: string;
+  userId: string;
+  userFullName: string;
+  userName: string;
+  userAvatarUrl?: string;
+  rating: number;
+  comment: string;
+  ownerResponse: string | null;
+  responseDate: string | null;
+  createdAt: string;
+}
 
+export interface owner {
+  userId: string;
+  fullName: string;
+  phone: string;
+  avatarUrl: string;
+  bio: string | null;
+  role: "VenueOwner";
+}
 /**
  * Field detail trong VenueDetail response
  */

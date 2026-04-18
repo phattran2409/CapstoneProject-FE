@@ -54,14 +54,15 @@ export const roomsApi = {
   },
 
   getMyRooms: async (
-    filters?: Pick<MatchRoomFilters, "availableOnly">,
+    filters?: Pick<MatchRoomFilters, "availableOnly" | "page" | "pageSize">,
   ): Promise<MyRoomsResponse> => {
     const params = {
       ...(filters?.availableOnly !== undefined
         ? { availableOnly: filters.availableOnly }
         : {}),
+      page: filters?.page || 1,
+      pageSize: filters?.pageSize || 10,
     };
-
     const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.MINE, { params });
     return data as unknown as MyRoomsResponse;
   },

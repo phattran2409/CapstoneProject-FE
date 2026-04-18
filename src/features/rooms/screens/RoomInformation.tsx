@@ -858,6 +858,11 @@ const teamBName =
               selectedImageIndex={selectedImageIndex}
               onImageIndexChange={setSelectedImageIndex}
               t={t as (key: string, defaultValue?: string | object) => string}
+              onViewVenueDetail={() =>
+                navigation?.navigate('VenueDetail', {
+                  venueId: displayRoom.field.venue.venueId,
+                })
+              }
             />
           )}
         </View>
@@ -942,6 +947,7 @@ const teamBName =
 
       {/* Position Selection Modal */}
       <PositionSelectionModal
+        t={t}
         visible={showPositionModal}
         onClose={handleClosePositionModal}
         onSelectPosition={handlePositionSelected}

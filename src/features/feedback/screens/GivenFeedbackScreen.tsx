@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,6 +24,7 @@ import { ThemedText } from "@/shared/components/themed/ThemedText";
 import { getRelativeTime } from "@/shared/utils/dateUtils";
 import { useGivenFeedbacks } from "../hooks/useGivenFeedbacks";
 import type { GivenFeedbackItem } from "../types/feedback.types";
+import { getImageAvatar } from "@/shared/utils/imageSource";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "GivenFeedback">;
 
@@ -57,10 +59,11 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
     refresh,
     loadMore,
   } = useGivenFeedbacks({
-    pageSize: 10,
+    pageSize: 5,
     fromDate,
     rating: beRating,
   });
+  
 
   const renderStars = (rating: number) => {
     const full = Math.round(Math.min(5, Math.max(0, rating)));
@@ -145,16 +148,34 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         ]}
       >
         <View style={styles.cardHeader}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Image source={getImageAvatar({uri : item.revieweeAvatarUrl || ""})} style={{ width: 32, height: 32, borderRadius: 16 }} />
             <Text style={[styles.name, { color: theme.colors.text }]}>
-              {item.reviewerName || t("givenFeedback.anonymous")}
+              {item.revieweeName || t("givenFeedback.anonymous")}
             </Text>
-            {/* <Text
-              style={[styles.matchLabel, { color: theme.colors.textSecondary }]}
-              numberOfLines={2}
+          </View>
+          <View>
+            <TouchableOpacity
+              style={[
+                styles.viewDetailBtn,
+                {
+                  borderColor: theme.colors.neonGreen,
+                  backgroundColor: `${theme.colors.neonGreen}18`,
+                },
+              ]}
+              onPress={() =>
+                navigation.navigate("RoomInformation", { roomId: item.matchId })
+              }
             >
-              {item.matchId}
-            </Text> */}
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={theme.colors.neonGreen + "5A"}
+              />
+              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>
+                {t("common.buttons.viewMatchDetail")}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
         <Text style={[styles.sectionHint, { color: theme.colors.textSecondary }]}>
@@ -380,7 +401,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 14,
   },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8 },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  viewDetailBtn: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 4,
+  },
   name: { fontSize: 16, fontWeight: "700" },
   matchLabel: { fontSize: 13, marginTop: 2 },
   sectionHint: { fontSize: 11, fontWeight: "600", marginBottom: 4 },

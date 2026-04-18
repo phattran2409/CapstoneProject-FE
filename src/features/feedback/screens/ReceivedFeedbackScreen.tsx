@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -30,6 +31,7 @@ import {
 import type { ReceivedFeedbackItem } from "../types/feedback.types";
 import { RECEIVED_FEEDBACK_REPLY_MAX_LENGTH } from "../types/feedback.types";
 import { useToast } from "@/shared/toast";
+import { getImageAvatar } from "@/shared/utils/imageSource";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "ReceivedFeedback">;
 
@@ -190,16 +192,17 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         ]}
       >
         <View style={styles.cardHeader}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Image source={getImageAvatar({uri : item.reviewerAvatarUrl || ""})} style={{ width: 32, height: 32, borderRadius: 16 }} />
             <Text style={[styles.reviewer, { color: theme.colors.text }]}>
               {item.reviewerName || t("receivedFeedback.anonymous")}
             </Text>
-            {/* <Text
-              style={[styles.matchLabel, { color: theme.colors.textSecondary }]}
-              numberOfLines={2}
-            >
-              {item.matchId}
-            </Text> */}
+          </View>
+          <View>
+            <TouchableOpacity style={[styles.viewDetailBtn, { borderColor: theme.colors.neonGreen, backgroundColor: `${theme.colors.neonGreen}18` }]} onPress={() => navigation.navigate("RoomInformation", { roomId: item.matchId })}>
+              <Ionicons name="calendar-outline" size={24} color={theme.colors.neonGreen + "5A"} />
+              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>{t("common.buttons.viewMatchDetail")}</Text>
+            </TouchableOpacity>
           </View>
         </View>
         {renderStars(item.rating)}
@@ -509,7 +512,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 14,
   },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8 },
+  cardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   reviewer: { fontSize: 16, fontWeight: "700" },
   matchLabel: { fontSize: 13, marginTop: 2 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
@@ -541,6 +544,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
+  },
+  viewDetailBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6
   },
 });
 
