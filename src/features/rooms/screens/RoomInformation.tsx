@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { View, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -47,6 +47,7 @@ import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 import { useFeedbackSessionStore } from '@/features/feedback';
 import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { styles } from './styles/RoomInformation.styles';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -84,7 +85,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { mutate: updateParticipant, isPending: isUpdatingParticipant } = useUpdateParticipant();
   const { mutate: leaveMatchRoom, isPending: isLeaving } = useLeaveMatchRoom();
   const { mutate: kickPlayer, isPending: isKicking } = useKickPlayer();
-  // const { mutate: cancelRoom, isPending: isCancelling } = useCancelRoom();
 
   const { user } = useAuthStore();
   
@@ -98,6 +98,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     showConfirm,
     hideAlert,
   } = useAlert();
+  
   const [roomData, setRoomData] = useState<MatchRoomFullInfo | null>(null);
   
   // ✅ Sync room data from React Query
@@ -196,6 +197,36 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         break;
     }
   }, [toast, t]);
+
+  /** Toast khi BE báo chênh Elo: isSkillImbalanced === true (hai đội lệch trình độ đáng kể). */
+  const prevSkillImbalanceFlagRef = useRef<boolean | undefined>(undefined);
+  const skillImbalanceRoomIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!displayRoom) return;
+    if (skillImbalanceRoomIdRef.current !== displayRoom.roomId) {
+      skillImbalanceRoomIdRef.current = displayRoom.roomId;
+      prevSkillImbalanceFlagRef.current = undefined;
+    }
+    const isImbalanced = displayRoom.isSkillImbalanced === true;
+    if (isImbalanced && prevSkillImbalanceFlagRef.current !== true) {
+      toast.warning(
+        t('roomDetail.skillImbalancedTitle'),
+        t('roomDetail.skillImbalancedMessage', {
+          teamA: Math.round(displayRoom.teamAAverageElo ?? 0),
+          teamB: Math.round(displayRoom.teamBAverageElo ?? 0),
+        }),
+      );
+    }
+    prevSkillImbalanceFlagRef.current = displayRoom.isSkillImbalanced;
+  }, [
+    displayRoom?.roomId,
+    displayRoom?.isSkillImbalanced,
+    displayRoom?.teamAAverageElo,
+    displayRoom?.teamBAverageElo,
+    toast,
+    t,
+  ]);
 
   /**
    * Callback khi bị kick - điều hướng về trang trước
@@ -393,9 +424,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const handlePositionSelected = (position: PlayerPosition) => {
     if (roomActionsBlocked) return;
     if (!pendingTeamAssignment || !displayRoom) return;
-
-    // Gọi PUT /participants/me để cập nhật team và position
-    // Server sẽ broadcast ParticipantUpdated event qua SignalR
     updateParticipant(
       { 
         roomId: displayRoom.roomId, 
@@ -481,7 +509,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   };
   // ✅ Handle leave room
   const handleLeaveRoom = () => {
-    console.log('handleLeaveRoom');
     if (roomActionsBlocked) return;
 
     showConfirm(
@@ -660,10 +687,11 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     displayRoom.field.venue.venueName
   }\n\nJoin here: ${shareUrl}`;
 
-  const teamAName =
+const teamAName =
   displayRoom.formations?.teamA?.teamName ||
   displayRoom.teamNames?.A ||
   'Đội A';
+
 const teamBName =
   displayRoom.formations?.teamB?.teamName ||
   displayRoom.teamNames?.B ||
@@ -740,7 +768,7 @@ const teamBName =
             {t('roomDetail.teamsTab')}
           </ThemedText>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           onPress={() => setActiveTab('host')}
           style={[
@@ -972,129 +1000,5 @@ const teamBName =
     </ThemedSafeAreaView>
   );
 };
-const styles = StyleSheet.create({
-  safeArea: {
-    paddingVertical: 40,
-  },
-  floatingDepositBadge: {
-    position: 'absolute',
-    top: 8,
-    alignSelf: 'center',
-    zIndex: 9999,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    minWidth: 220,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  floatingDepositHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  floatingDepositProgressTrack: {
-    height: 6,
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginTop: 6,
-  },
-  floatingDepositProgressFill: {
-    height: 6,
-    borderRadius: 999,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  errorText: {
-    marginBottom: 16,
-  },
-  retryButton: {
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  notFoundContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  roomInfoSection: {
-    marginBottom: 24,
-  },
-  joinButtonContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-  },
-  joinButton: {
-    borderRadius: 16,
-    paddingVertical: 16,
-    marginTop: 16,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  joinButtonText: {
-    textAlign: 'center',
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 export default RoomInformationScreen;

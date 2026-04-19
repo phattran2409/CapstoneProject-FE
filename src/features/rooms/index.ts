@@ -21,6 +21,9 @@ export {
   useUpdateRoomInfo,
 } from './hooks';
 
+// ============ Utils (shared labels) ============
+export { formatMatchFormatVsLabel } from './utils/matchFormatVsLabel';
+
 // ============ Types ============
 export type {
   RoomFilters,

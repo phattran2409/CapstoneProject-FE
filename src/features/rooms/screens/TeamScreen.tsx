@@ -434,7 +434,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ navigation, route }) => {
     <ThemedSafeAreaView style={styles.safeArea}>
       <TeamScreenHeader
         theme={theme}
-        title={t("roomDetail.title")}
+        title={t("teamScreen.title")}
         onBack={() => navigation?.goBack()}
         onOpenChat={handleShowChat}
       />

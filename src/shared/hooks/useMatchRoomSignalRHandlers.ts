@@ -191,7 +191,6 @@ export const useMatchRoomSignalRHandlers = (
         });
       }
 
-      // Invalidate queries để đồng bộ với server
       queryClient.invalidateQueries({
         queryKey: roomsKeys.detail(roomId),
       });

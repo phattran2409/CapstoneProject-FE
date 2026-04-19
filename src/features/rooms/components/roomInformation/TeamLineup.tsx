@@ -92,6 +92,11 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               </ThemedText>
             </View>
           )}
+          <ThemedText variant="secondary" size="xs" weight="medium" style={styles.teamAvgElo}>
+            {t('roomDetail.teamAverageElo', {
+              value: Math.round(displayRoom.teamAAverageElo ?? 0),
+            })}
+          </ThemedText>
         </View>
         <ScrollView
           horizontal
@@ -137,10 +142,15 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.neonGreen + '30' }]}
             >
               <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                Your Team
+                {t('roomDetail.yourTeam')}
               </ThemedText>
             </View>
           )}
+          <ThemedText variant="secondary" size="xs" weight="medium" style={styles.teamAvgElo}>
+            {t('roomDetail.teamAverageElo', {
+              value: Math.round(displayRoom.teamBAverageElo ?? 0),
+            })}
+          </ThemedText>
         </View>
         <ScrollView
           horizontal
@@ -236,9 +246,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   teamName: {
     marginLeft: 4,
+    flexShrink: 1,
+  },
+  teamAvgElo: {
+    marginLeft: 'auto',
   },
   selectedTeamBadge: {
     paddingHorizontal: 8,

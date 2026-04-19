@@ -29,6 +29,7 @@ const vi = {
       viewDetail: "Xem chi tiết",
       viewMatchDetail: "Xem chi tiết phòng",
       delete: "Xóa",
+      report: "Báo cáo",
       loadingMore: "Đang tải thêm...",
     },
     email: "Email",
@@ -138,6 +139,11 @@ const vi = {
       title: "Chi tiết trận đấu",
     },
     emptyListDefault: "Không có trận đấu nào",
+    myMatchOutcome: {
+      win: "Thắng",
+      loss: "Thua",
+      draw: "Hoà",
+    },
   },
   matchRoomStatus: {
     Open: "Mở",
@@ -414,6 +420,10 @@ const vi = {
       rulesTooLong: "Luật chơi không được vượt quá 1000 ký tự",
     },
     yourTeam: "Đội của bạn",
+    teamAverageElo: "TB Elo: {{value}}",
+    skillImbalancedTitle: "Chênh lệch trình độ",
+    skillImbalancedMessage:
+      "Elo TB đội A ({{teamA}}) và đội B ({{teamB}}) chênh lệch đáng kể. Cân nhắc đổi đội để cân bằng trận.",
     unassigned: "chờ tham gia",
     countdown: {
       matchStartsIn: "Thời gian bắt đầu trận đấu",
@@ -435,6 +445,7 @@ const vi = {
     transferAcceptedDesc: "{{newHostName}} đã trở thành host của phòng",
   },
   teamScreen: {
+    title: "Chi tiết đội nhóm",
     formationUpdated: "Đội hình đã được cập nhật",
     formationUpdatedDesc: "Captain đã đổi đội hình thành {{name}}",
     selectPlayerFirst: "Vui lòng chọn cầu thủ ở bên dưới",
@@ -468,6 +479,12 @@ const vi = {
     paid: "Đã thanh toán",
     paying: "Đang thanh toán...",
     tapToAssign: "Bấm để gán",
+    paymentMethodTitle: "Hình thức thanh toán",
+    paymentMethodSubtitle: "Chọn cách bạn muốn thanh toán tiền sân",
+    payWithWallet: "Ví trong app",
+    payWithWalletDesc: "Trừ từ số dư ví của bạn",
+    directPayment: "Thanh toán trực tiếp",
+    directPaymentDesc: "Chuyển khoản hoặc hình thức khác (sắp có)",
   },
   profileHeader: {
     chooseAvatarTitle: "Chọn ảnh đại diện",
@@ -990,6 +1007,9 @@ const vi = {
         inappropriate_behavior: "Hành vi không phù hợp",
         harassment: "Quấy rối hoặc bắt nạt",
         toxic_behavior: "Hành vi độc hại",
+        spam: "Spam hoặc quảng cáo",
+        fake_account: "Tài khoản giả mạo",
+        scam: "Lừa đảo",
         AFK: "Không tham gia trận đấu",
         other: "Lý do khác",
       },
@@ -1193,6 +1213,11 @@ const vi = {
       friday: "Thứ 6",
       saturday: "Thứ 7",
     },
+  },
+  sentiment: {
+    positive: "Tích cực",
+    negative: "Tiêu cực",
+    neutral: "Trung lập",
   },
 };
 

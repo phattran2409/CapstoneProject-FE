@@ -25,6 +25,7 @@ import { getRelativeTime } from "@/shared/utils/dateUtils";
 import { useGivenFeedbacks } from "../hooks/useGivenFeedbacks";
 import type { GivenFeedbackItem } from "../types/feedback.types";
 import { getImageAvatar } from "@/shared/utils/imageSource";
+import { BadgesSentiment } from "../components/BadgesSentiment";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "GivenFeedback">;
 
@@ -172,7 +173,7 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
                 size={24}
                 color={theme.colors.neonGreen + "5A"}
               />
-              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>
+              <Text style={{ color: theme.colors.neonGreen, fontSize: 12, fontWeight: "600" }}>
                 {t("common.buttons.viewMatchDetail")}
               </Text>
             </TouchableOpacity>
@@ -184,13 +185,14 @@ const GivenFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         {renderStars(item.rating)}
         {item.sentimentLabel ? (
           <View style={styles.sentimentRow}>
-            <Text style={[styles.sentimentText, { color: theme.colors.neonGreen }]}>
-              {`Sentiment: ${item.sentimentLabel}${
-                typeof item.sentimentScore === "number"
-                  ? ` (${item.sentimentScore.toFixed(2)})`
-                  : ""
-              }`}
-            </Text>
+            <BadgesSentiment sentimentLabel={item.sentimentLabel} t={t} />
+            {typeof item.sentimentScore === "number" ? (
+              <Text
+                style={[styles.sentimentScore, { color: theme.colors.textSecondary }]}
+              >
+                {` (${item.sentimentScore.toFixed(2)})`}
+              </Text>
+            ) : null}
           </View>
         ) : null}
         <Text style={[styles.comment, { color: theme.colors.text }]}>
@@ -421,8 +423,14 @@ const styles = StyleSheet.create({
   matchLabel: { fontSize: 13, marginTop: 2 },
   sectionHint: { fontSize: 11, fontWeight: "600", marginBottom: 4 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
-  sentimentRow: { marginBottom: 6 },
-  sentimentText: { fontSize: 12, fontWeight: "600" },
+  sentimentRow: {
+    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  sentimentScore: { fontSize: 12, fontWeight: "600" },
   comment: { fontSize: 14, lineHeight: 20 },
   time: { fontSize: 12, color: "#888", marginTop: 8 },
   responseBox: {

@@ -29,6 +29,7 @@ const en = {
       viewDetail: "View Detail",
       viewMatchDetail: "View Room Detail",
       loadingMore: "Loading more...",
+      report: "Report",
     },
     email: "Email",
   },
@@ -137,6 +138,11 @@ const en = {
       title: "Match Details",
     },
     emptyListDefault: "No matches yet",
+    myMatchOutcome: {
+      win: "Win",
+      loss: "Loss",
+      draw: "Draw",
+    },
   },
   matchRoomStatus: {
     Open: "Open",
@@ -416,6 +422,10 @@ const en = {
       rulesTooLong: "Rules cannot exceed 1000 characters",
     },
     yourTeam: "Your Team",
+    teamAverageElo: "Avg Elo: {{value}}",
+    skillImbalancedTitle: "Skill gap",
+    skillImbalancedMessage:
+      "Team A ({{teamA}}) vs Team B ({{teamB}}) average Elo differs significantly. Consider rebalancing teams.",
     unassigned: "Unassigned",
     countdown: {
       matchStartsIn: "Match starts in",
@@ -436,6 +446,7 @@ const en = {
     transferAcceptedDesc: "{{newHostName}} is now the host of the room",
   },
   teamScreen: {
+    title: "Team Details",
     formationUpdated: "Formation updated",
     formationUpdatedDesc: "Captain changed formation to {{name}}",
     selectPlayerFirst: "Please select a player below",
@@ -469,6 +480,12 @@ const en = {
     paid: "Paid",
     paying: "Processing...",
     tapToAssign: "Tap to assign",
+    paymentMethodTitle: "Payment method",
+    paymentMethodSubtitle: "Choose how you want to pay the deposit",
+    payWithWallet: "Wallet",
+    payWithWalletDesc: "Deduct from your in-app balance",
+    directPayment: "Direct payment",
+    directPaymentDesc: "Bank transfer or other methods (coming soon)",
   },
   profileHeader: {
     chooseAvatarTitle: "Choose profile photo",
@@ -969,6 +986,9 @@ const en = {
         inappropriate_behavior: "Inappropriate behavior",
         harassment: "Harassment or bullying",
         toxic_behavior: "Toxic behavior",
+        spam: "Spam or advertising",
+        fake_account: "Fake account",
+        scam: "Scam",
         AFK: "Not Participating in the match",
         other: "Other reason",
       },
@@ -1172,6 +1192,11 @@ const en = {
       friday: "Friday",
       saturday: "Saturday",
     },
+  },
+  sentiment: {
+    positive: "Positive",
+    negative: "Negative",
+    neutral: "Neutral",
   },
 };
 

@@ -13,6 +13,7 @@ export interface Venue {
   primaryPhotoUrl?: string;
   createdAt: string;
 }
+type FieldType = 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
 
 /**
  * VenueDetail - Chi tiết venue từ API GET /api/venues/:id
@@ -62,7 +63,7 @@ export interface owner {
 export interface VenueFieldDetail {
   fieldId: string;
   fieldName: string;
-  fieldType: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | string;
+  fieldType: FieldType;
   surfaceType: string | null;
   hourlyRate: number;
   peakHourSurcharge: number;
@@ -97,7 +98,7 @@ export interface VenueDetailResponse {
 export interface Field {
   fieldId: string;
   fieldName: string;
-  fieldType: string;
+  fieldType: FieldType;
   // maxPlayers?: number;
   hourlyRate: number;
   description?: string;

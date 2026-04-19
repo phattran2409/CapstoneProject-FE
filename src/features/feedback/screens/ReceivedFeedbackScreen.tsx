@@ -21,6 +21,7 @@ import {
   ErrorState,
   ListSkeleton,
   LoadingMoreIndicator,
+  ReportModal,
 } from "@/shared/components";
 import { ThemedText } from "@/shared/components/themed/ThemedText";
 import { getRelativeTime } from "@/shared/utils/dateUtils";
@@ -29,9 +30,34 @@ import {
   useReplyToReceivedFeedback,
 } from "../hooks/useReceivedFeedbacks";
 import type { ReceivedFeedbackItem } from "../types/feedback.types";
-import { RECEIVED_FEEDBACK_REPLY_MAX_LENGTH } from "../types/feedback.types";
+import {
+  RECEIVED_FEEDBACK_REPLY_MAX_LENGTH,
+  ReportType,
+} from "../types/feedback.types";
 import { useToast } from "@/shared/toast";
 import { getImageAvatar } from "@/shared/utils/imageSource";
+import { useReportPlayer } from "../hooks";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { BadgesSentiment } from "../components/BadgesSentiment";
+
+/** Khóa lý do trong `ReportModal` (type=user) → enum gửi API */
+function mapUserReasonToReportType(reason: string): ReportType {
+  switch (reason) {
+    case "inappropriate_behavior":
+      return ReportType.InappropriateBehavior;
+    case "harassment":
+      return ReportType.Harassment;
+    case "spam":
+      return ReportType.Spamming;
+    case "fake_account":
+      return ReportType.FakeAccount;
+    case "scam":
+      return ReportType.Scamming;
+    case "other":
+    default:
+      return ReportType.InappropriateBehavior;
+  }
+}
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "ReceivedFeedback">;
 
@@ -53,10 +79,14 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
   const toast = useToast();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [ratingFilter, setRatingFilter] = useState<"all" | 1 | 2 | 3 | 4 | 5>("all");
-
+  const [reportModalVisible, setReportModalVisible] = useState({
+    visible: false,
+    userId: "",
+    matchId: "",
+  });
   const fromDate = useMemo(() => getFromDate(timeFilter), [timeFilter]);
   const beRating = ratingFilter === "all" ? undefined : ratingFilter;
-
+  
   const {
     receivedFeedbacks,
     loading,
@@ -70,6 +100,12 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
     fromDate,
     rating: beRating,
   });
+  
+  const {
+    mutateAsync: reportPlayerAsync,
+    isPending: isReportingFeedback,
+  } = useReportPlayer();
+
   const { mutate: sendReply, isPending: isSending } = useReplyToReceivedFeedback();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
@@ -122,6 +158,13 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         ))}
       </View>
     );
+  };
+  const handleReportModalVisible = (
+    visible: boolean,
+    userId = "",
+    matchId = "",
+  ) => {
+    setReportModalVisible({ visible, userId, matchId });
   };
 
   const renderRatingChip = (stars: number, selected: boolean, onPress: () => void) => (
@@ -201,20 +244,21 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
           <View>
             <TouchableOpacity style={[styles.viewDetailBtn, { borderColor: theme.colors.neonGreen, backgroundColor: `${theme.colors.neonGreen}18` }]} onPress={() => navigation.navigate("RoomInformation", { roomId: item.matchId })}>
               <Ionicons name="calendar-outline" size={24} color={theme.colors.neonGreen + "5A"} />
-              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>{t("common.buttons.viewMatchDetail")}</Text>
+              <Text style={{ color: theme.colors.neonGreen, fontSize: 12, fontWeight: "600" }}>{t("common.buttons.viewMatchDetail")}</Text>
             </TouchableOpacity>
           </View>
         </View>
         {renderStars(item.rating)}
         {item.sentimentLabel ? (
           <View style={styles.sentimentRow}>
-            <Text style={[styles.sentimentText, { color: theme.colors.neonGreen }]}>
-              {`Sentiment: ${item.sentimentLabel}${
-                typeof item.sentimentScore === "number"
-                  ? ` (${item.sentimentScore.toFixed(2)})`
-                  : ""
-              }`}
-            </Text>
+            <BadgesSentiment sentimentLabel={item.sentimentLabel} t={t} />
+            {typeof item.sentimentScore === "number" ? (
+              <Text
+                style={[styles.sentimentScore, { color: theme.colors.textSecondary }]}
+              >
+                {` (${item.sentimentScore.toFixed(2)})`}
+              </Text>
+            ) : null}
           </View>
         ) : null}
         <Text style={[styles.comment, { color: theme.colors.text }]}>
@@ -269,25 +313,37 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>
                 {draft.length}/{RECEIVED_FEEDBACK_REPLY_MAX_LENGTH}
               </Text>
-              <TouchableOpacity
-                style={[
-                  styles.sendBtn,
-                  {
-                    backgroundColor: theme.colors.neonGreen,
-                    opacity: isSending ? 0.6 : 1,
-                  },
-                ]}
-                onPress={() => handleSendReply(item)}
-                disabled={isSending}
-              >
-                {isSending ? (
-                  <ActivityIndicator size="small" color="#000" />
-                ) : (
-                  <Text style={{ fontWeight: "700", color: "#000" }}>
-                    {t("receivedFeedback.sendReply")}
+              <View style={styles.footerCtn}>
+                <TouchableOpacity style={[styles.reportBtn, { borderColor: theme.colors.error, backgroundColor: `${theme.colors.error}18` }]}
+                onPress={() =>
+                  handleReportModalVisible(true, item.reviewerId, item.matchId)
+                }
+                >
+                  <Ionicons name="warning-outline" size={24} color={theme.colors.error} />
+                  <Text style={{ fontSize: 12, color: theme.colors.error }}>
+                    {t("common.buttons.report")}
                   </Text>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.sendBtn,
+                    {
+                      backgroundColor: theme.colors.neonGreen,
+                      opacity: isSending ? 0.6 : 1,
+                    },
+                  ]}
+                  onPress={() => handleSendReply(item)}
+                  disabled={isSending}
+                >
+                  {isSending ? (
+                    <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                    <Text style={{ fontWeight: "700", color: "#000" }}>
+                      {t("receivedFeedback.sendReply")}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         )}
@@ -348,39 +404,8 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
-        {/* <View
-          style={[
-            styles.headerSearchRow,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          <Ionicons name="search" size={18} color={theme.colors.textSecondary} />
-          <TextInput
-            style={[styles.headerSearchInput, { color: theme.colors.text }]}
-            placeholder={t("receivedFeedback.matchSearchPlaceholder")}
-            placeholderTextColor={theme.colors.textSecondary}
-            value={matchSearchQuery}
-            onChangeText={setMatchSearchQuery}
-            returnKeyType="search"
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-          {matchSearchQuery.length > 0 ? (
-            <TouchableOpacity onPress={() => setMatchSearchQuery("")} hitSlop={8}>
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
-          ) : null}
-        </View> */}
       </View>
 
-  
         <View style={styles.filtersBlock}>
           <Text
             style={[styles.filterSectionTitle, { color: theme.colors.textSecondary }]}
@@ -451,6 +476,43 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
           windowSize={10}
         />
       )}
+      <ReportModal
+        visible={reportModalVisible.visible}
+        type="user"
+        isLoading={isReportingFeedback}
+        onClose={() => handleReportModalVisible(false, "", "")}
+        onSubmit={async (reason, customReason) => {
+          const { userId, matchId } = reportModalVisible;
+          if (!userId || !matchId) {
+            toast.error(
+              t("feedback.report.sessionMissing", "Thiếu thông tin"),
+              t(
+                "feedback.report.sessionMissingMessage",
+                "Không thể gửi báo cáo.",
+              ),
+            );
+            return;
+          }
+          const reportType = mapUserReasonToReportType(reason);
+          const description = (customReason?.trim() || reason).trim();
+          try {
+            await reportPlayerAsync({
+              reportedUserId: userId,
+              reportType,
+              description,
+              matchId,
+            });
+            toast.success(t("reportModal.success.user"));
+            handleReportModalVisible(false, "", "");
+          } catch (error: unknown) {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            toast.error(
+              getTranslatedError(message) || t("reportModal.error.user"),
+            );
+          }
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -516,8 +578,14 @@ const styles = StyleSheet.create({
   reviewer: { fontSize: 16, fontWeight: "700" },
   matchLabel: { fontSize: 13, marginTop: 2 },
   starsRow: { flexDirection: "row", gap: 2, marginBottom: 8 },
-  sentimentRow: { marginBottom: 6 },
-  sentimentText: { fontSize: 12, fontWeight: "600" },
+  sentimentRow: {
+    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  sentimentScore: { fontSize: 12, fontWeight: "600" },
   comment: { fontSize: 14, lineHeight: 20 },
   time: { fontSize: 12, color: "#888", marginTop: 8 },
   responseBox: {
@@ -546,6 +614,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   viewDetailBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6
+  },
+  footerCtn :  {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  reportBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

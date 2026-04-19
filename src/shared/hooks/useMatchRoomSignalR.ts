@@ -125,7 +125,6 @@ export interface UserJoinedPayload {
   filledSlots: number;
   totalSlots: number;
   joinedAt: string;
-  // Legacy fields (for backward compatibility)
   teamId?: string;
   teamName?: string;
 }
@@ -140,6 +139,7 @@ export interface UserLeftPayload {
   userName: string;
   filledSlots: number;
   totalSlots: number;
+  totalDepositCollected?: number;
   isRoomDeleted: boolean;
   newHostId?: string | null;
   leftAt: string;
@@ -183,9 +183,9 @@ export interface PlayerKickedPayload {
   kickedUserName: string;
   kickedBy: string;
   reason?: string;
-  // Extended fields from latest documentation
   filledSlots?: number;
   totalSlots?: number;
+  totalDepositCollected?: number;
   kickedAt?: string;
 }
 

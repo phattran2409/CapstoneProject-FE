@@ -23,12 +23,12 @@ import { RoomFormData, roomSchema } from '../validation/roomSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { roomsApi } from '../api/roomsApi';
-import { matchFormatToUi } from '../utils/matchRoomCreatePresetMap';
 import { useToast } from '@/shared/toast/useToast';
 import { formatDate, formatTime } from '@/shared/utils';
 import { PresetListBottomSheet } from '../components/PresetListBottomSheet';
-import { RoomPresetItem } from '../types/room.types';
+import { MatchFormat, RoomPresetItem } from '../types/room.types';
 import { useCreateMatchPreset } from '../hooks/useMatchPresetActions';
+import { formatMatchFormatVsLabel, MATCH_FORMAT_VS_LABEL } from '../utils/matchFormatVsLabel';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -38,15 +38,13 @@ interface CreateRoomScreenProps {
   route?: CreateRoomScreenRouteProp;
 }
 
-type MatchFormat = '5vs5' | '7vs7' | '11vs11';
-
 const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const toast = useToast();
   const { user } = useAuthStore();
   const { visible, alertOptions, showInfo, showSuccess, showDanger, hideAlert } = useAlert();
-  const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('5vs5');
+  const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('FiveVsFive');
   const [durationMinutes, setDurationMinutes] = useState<number>(60);
   const {
     control,
@@ -82,20 +80,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   // ✅ Use React Query mutation
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
   const { mutate: createMatchPreset, isPending: isCreatingPreset } = useCreateMatchPreset();
-  const { setActiveRoom } = useActiveRoomStore();
   
-  const FormatMatch = (format: MatchFormat): 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | undefined => {
-    switch (format) {
-      case '5vs5':
-        return 'FiveVsFive';
-      case '7vs7':
-        return 'SevenVsSeven';
-      case '11vs11':
-        return 'ElevenVsEleven';
-      default:
-        return undefined;
-    }
-  }
 
   // Update data when returning from VenueSelection / VenueDetail (TimeSlot + date from field)
   React.useEffect(() => {
@@ -104,6 +89,9 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     }
     if (route?.params?.selectedField) {
       setSelectedField(route.params.selectedField);
+    }
+    if (route?.params?.selectedField?.fieldType) {
+      setSelectedFormat(route.params.selectedField.fieldType);
     }
     if (route?.params?.selectedTimeSlot) {
       setSelectedTimeSlot(route.params.selectedTimeSlot);
@@ -124,7 +112,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     void (async () => {
       const p = await roomsApi.getCreateRoomPreset();
       if (!p) return;
-      setSelectedFormat(matchFormatToUi(p.matchFormat));
+      setSelectedFormat(p.matchFormat);
       setDurationMinutes(p.durationMinutes);
       reset({ roomName: p.roomName, description: p.description || '', rules: p.rules || '' });
       setIsPrivate(p.visibility === 'Private');
@@ -164,7 +152,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         matchDate: datetime.toISOString(),
         startTime: startTimeStr,
         durationMinutes,
-        matchFormat: FormatMatch(selectedFormat) ?? (selectedFormat as string),
+        matchFormat: selectedFormat,
         roomName: data.roomName,
         description: data.description || '',
         rules: data.rules || '',
@@ -233,7 +221,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
 
   const handleSelectPreset = useCallback((preset: RoomPresetItem) => {
     reset({ roomName: preset.roomName, description: preset.description || '', rules: preset.rules || '' });
-    setSelectedFormat(matchFormatToUi(preset.matchFormat));
+    setSelectedFormat(preset.matchFormat);
     setDurationMinutes(preset.durationMinutes);
     setIsPrivate(preset.visibility === 'Private');
     setPassword(preset.password ?? '');
@@ -291,7 +279,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       {
         fieldId: selectedField.fieldId,
         roomName: formData.roomName.trim(),
-        matchFormat: FormatMatch(selectedFormat) ?? selectedFormat,
+        matchFormat: selectedFormat,
         visibility: isPrivate ? 'Private' : 'Public',
         startTime,
         durationMinutes,
@@ -518,14 +506,14 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               {t('createRoom.selectFormat')}
             </ThemedText>
             <View style={styles.formatRow}>
-              {["5vs5", "7vs7" , "11vs11"].map((format) => (
+              {['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'].map((format) => (
                 <TouchableOpacity
                   key={format}
                   style={[styles.formatButton, { backgroundColor: selectedFormat === format ? theme.colors.neonGreen : theme.colors.surface }]}
                   onPress={() => setSelectedFormat(format as MatchFormat)}
                 >
                   <ThemedText size="l" weight="bold" style={[styles.formatButtonText, { color: selectedFormat === format ? '#000' : theme.colors.textSecondary }]}>
-                    {format}
+                    {formatMatchFormatVsLabel(format as MatchFormat)}
                   </ThemedText>
                 </TouchableOpacity>
               ))}
@@ -568,7 +556,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 borderWidth: 1, 
                 borderColor: theme.colors.border 
               }]}
-              onPress={() => navigation?.navigate('VenueSelection', { matchFormat: FormatMatch(selectedFormat) })}
+              onPress={() => navigation?.navigate('VenueSelection', { matchFormat: selectedFormat })}
             >
               {selectedVenue ? (
                 <View style={styles.venueContent}>

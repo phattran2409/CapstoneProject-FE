@@ -143,6 +143,9 @@ export interface MatchRoomFullInfo {
     A?: string | null;
     B?: string | null;
   };
+  teamAAverageElo: number;
+  teamBAverageElo: number;
+  isSkillImbalanced: boolean;
   createdAt: string;
   hasLeftFeedback?: boolean;
 }
@@ -180,6 +183,7 @@ export interface MyRoom {
   filledSlots: number;
   depositPerPerson: number;
   totalDepositCollected: number;
+  myMatchOutcome? : string;
   status: MatchRoomStatus;
   venuePhotos: VenuePhoto[] | [];
   createdAt: string;

@@ -8,6 +8,7 @@ import { getFieldAvailability } from '../api/venuesApi';
 import { formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
 import { formatCurrency } from '@/shared/utils/formatters';
 import Alert from '@/shared/components/Alert';
+import { formatMatchFormatVsLabel } from '@/features/rooms';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -97,10 +98,8 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     
     try {
       const availability = await getFieldAvailability(fieldId, selectedDate);
-      console.log('availability', availability);
       setAvailabilityCache(prev => ({ ...prev, [cacheKey]: availability }));
     } catch (error) {
-      console.error('Failed to fetch availability for field:', fieldId, error);
     } finally {
       setLoadingFields(prev => ({ ...prev, [fieldId]: false }));
     }
@@ -115,6 +114,12 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
       fetchFieldAvailability(fieldId);
     }
   }, [expandedFieldId, fetchFieldAvailability]);
+
+  // Auto-refetch slot list when date changes for the currently expanded field.
+  useEffect(() => {
+    if (!expandedFieldId) return;
+    fetchFieldAvailability(expandedFieldId);
+  }, [selectedDate, expandedFieldId, fetchFieldAvailability]);
 
   const isSlotTooCloseToNow = useCallback(
     (slot: TimeSlot): boolean => {
@@ -178,21 +183,15 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
 
   if (!venue) return null;
 
-  // const formatPrice = (price: number) => {
-  //   return new Intl.NumberFormat('vi-VN', {
-  //     style: 'currency',
-  //     currency: 'VND',
-  //   }).format(price);
-  // };
 
-  const getFieldTypeColor = (fieldType: string) : {color: string, shortNameType: string} => {
+  const getFieldTypeColor = (fieldType: string): { color: string; shortNameType: string } => {
     switch (fieldType) {
       case 'FiveVsFive':
-        return { color: '#10B981', shortNameType: '5 vs 5' };
+        return { color: '#10B981', shortNameType: formatMatchFormatVsLabel(fieldType) };
       case 'SevenVsSeven':
-        return { color: '#3B82F6', shortNameType: '7 vs 7' };
+        return { color: '#3B82F6', shortNameType: formatMatchFormatVsLabel(fieldType) };
       case 'ElevenVsEleven':
-        return { color: '#8B5CF6', shortNameType: '11 vs 11' };
+        return { color: '#8B5CF6', shortNameType: formatMatchFormatVsLabel(fieldType) };
       default:
         return { color: theme.colors.neonGreen, shortNameType: fieldType };
     }

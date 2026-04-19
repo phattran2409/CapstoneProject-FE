@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { RootStackParamList } from '@/app/navigation/types';
 import { useVenueDetail, VenueDetail, VenueFieldDetail, OperatingHour, Field, TimeSlot } from '@/features/venues';
+import { formatMatchFormatVsLabel } from '@/features/rooms';
 import { FieldsModal, VenueOwnerModal, VenueReviewsSection } from '../components';
 import { ErrorState } from '@/shared/components';
 import { formatCurrency } from '@/shared/utils/formatters';
@@ -33,22 +34,6 @@ interface VenueDetailScreenProps {
   navigation?: VenueDetailScreenNavigationProp;
   route: VenueDetailScreenRouteProp;
 }
-
-// Helper function to format field type
-const formatFieldType = (fieldType: string): string => {
-  switch (fieldType) {
-    case 'FiveVsFive':
-      return '5 vs 5';
-    case 'SevenVsSeven':
-      return '7 vs 7';
-    case 'ElevenVsEleven':
-      return '11 vs 11';
-    default:
-      return fieldType;
-  }
-};
-
-
 
 // Convert VenueFieldDetail to Field for FieldsModal compatibility
 const convertToField = (venueField: VenueFieldDetail): Field => ({
@@ -423,7 +408,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                         </Text>
                         <View style={[styles.fieldTypeBadge, { backgroundColor: theme.colors.neonGreen + '20' }]}>
                           <Text style={[styles.fieldTypeText, { color: theme.colors.neonGreen }]}>
-                            {formatFieldType(field.fieldType)}
+                            {formatMatchFormatVsLabel(field.fieldType)}
                           </Text>
                         </View>
                       </View>

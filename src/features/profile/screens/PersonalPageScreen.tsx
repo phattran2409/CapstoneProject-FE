@@ -89,6 +89,7 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
     players: `${room.filledSlots}/${room.totalSlots}`,
     image: getImageSource(room.venuePhotos[0]?.photoUrl),
     status: room.status,
+    myMatchOutCome: room.myMatchOutcome,
     date: formatDate(room.matchDate),
     venue: room.field?.venue?.venueName,
     time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,

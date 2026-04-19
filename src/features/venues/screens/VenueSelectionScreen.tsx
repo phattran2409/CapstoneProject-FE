@@ -14,6 +14,7 @@ import { EmptyState, LoadingMoreIndicator } from '@/shared/components';
 import { useDebounce } from '@/shared/hooks';
 import Toast from 'react-native-toast-message';
 import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
+import { formatMatchFormatVsLabel } from '@/features/rooms';
 
 /** Filter theo fieldType của API: FiveVsFive, SevenVsSeven, ElevenVsEleven */
 type FieldTypeFilter = '' | 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
@@ -147,11 +148,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
 
   // Render Venue Item
   const renderVenueItem = useCallback(({ item: venue }: { item: Venue }) => {
-    // Get available formats from fields
     const availableFormats = [...new Set(venue.fields?.map(f => f.fieldType) || [])];
-    // Get minimum price from fields
-    // const minPrice = venue.fields?.length ? Math.min(...venue.fields.map(f => f.pricePerHour)) : 0;
-    // Get image source
     const imageSource = venue.primaryPhotoUrl 
       ? { uri: venue.primaryPhotoUrl } 
       : require('@assets/images/icon.png');
@@ -256,7 +253,6 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
       </TouchableOpacity>
     );
   }, [theme, t]);
-  // Render Footer - Loading More Indicator
   const renderFooter = useCallback(() => {
     if (!loadingMore) return null;
     return (
@@ -268,12 +264,6 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   const renderEmptyList = useCallback(() => {
     if (loading) return null;
     return (
-      // <View style={styles.emptyState}>
-      //   <Ionicons name="location-outline" size={64} color={theme.colors.textSecondary} />
-      //   <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-      //     {t('venueSelection.noResults')}
-      //   </Text>
-      // </View>
       <EmptyState
         title={t('venueSelection.noResults')}
         description={t('venueSelection.noResultsDescription')}
@@ -364,7 +354,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => setSelectedFilter('FiveVsFive')}
           >
             <Text style={[styles.filterText, { color: selectedFilter === 'FiveVsFive' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
-              5 vs 5
+              {formatMatchFormatVsLabel('FiveVsFive')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -380,7 +370,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => setSelectedFilter('SevenVsSeven')}
           >
             <Text style={[styles.filterText, { color: selectedFilter === 'SevenVsSeven' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
-              7 vs 7
+              {formatMatchFormatVsLabel('SevenVsSeven')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -396,7 +386,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => setSelectedFilter('ElevenVsEleven')}
           >
             <Text style={[styles.filterText, { color: selectedFilter === 'ElevenVsEleven' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
-              11 vs 11
+              {formatMatchFormatVsLabel('ElevenVsEleven')}
             </Text>
           </TouchableOpacity>
         </View>

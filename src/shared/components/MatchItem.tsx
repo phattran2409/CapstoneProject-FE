@@ -14,6 +14,9 @@ import { matchRoomStatusI18nKey } from "../utils/matchRoomStatus";
 import { MatchRoomStatusIcon } from "./MatchRoomStatusIcon";
 import { MatchRoomStatus } from "@/features/rooms";
 import { useTranslation } from "react-i18next";
+
+type MyMatchOutcomeKind = "win" | "loss" | "draw";
+
 export interface MatchItemData {
   id: string;
   title: string;
@@ -26,6 +29,7 @@ export interface MatchItemData {
   status?: MatchRoomStatus;
   venue?: string;
   time?: string;
+  myMatchOutCome?: string;
   /** Hiển thị badge "Riêng tư" khi true */
   isPrivate?: boolean;
 }
@@ -36,6 +40,8 @@ export interface MatchItemProps {
   onPress?: (matchId: string) => void;
   showStatus?: boolean;
 }
+
+
 
 // const PLACEHOLDER_IMAGE = require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png');
 
@@ -70,6 +76,68 @@ const MatchItem: React.FC<MatchItemProps> = ({
       </View>
     ) : null;
 
+  const outcomeRaw = match.myMatchOutCome?.trim()?.toLowerCase();
+  const outcomeKind: MyMatchOutcomeKind | null =
+    outcomeRaw === "win" || outcomeRaw === "loss" || outcomeRaw === "draw"
+      ? outcomeRaw
+      : null;
+  const outcomePalette: Record<
+    MyMatchOutcomeKind,
+    { bg: string; border: string; text: string }
+  > = {
+    win: {
+      bg: `${theme.colors.success}`,
+      border: theme.colors.success,
+      text: theme.colors.success,
+    },
+    loss: {
+      bg: `${theme.colors.error}`,
+      border: theme.colors.error,
+      text: theme.colors.error,
+    },
+    draw: {
+      bg: `${theme.colors.warning}`,
+      border: theme.colors.warning,
+      text: theme.colors.warning,
+    },
+  };
+
+  const MyMatchOutComeBadge = () => {
+    if (!match.myMatchOutCome?.trim()) return null;
+    const kind = outcomeKind;
+    const colors = kind ? outcomePalette[kind] : null;
+    const text = kind ? t(`matches.myMatchOutcome.${kind}`, kind) : null;
+    return (
+      <View
+        style={[
+          styles.myMatchOutComeBadge,
+          colors
+            ? {
+                backgroundColor: colors.bg + "58",
+                borderColor: colors.border,
+                borderWidth: 1,
+              }
+            : {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                borderWidth: 1,
+              },
+        ]}
+      >
+        <ThemedText
+          size="xs"
+          weight="semiBold"
+          style={[
+            styles.myMatchOutComeBadgeText,
+            colors ? { color: colors.text } : { color: theme.colors.textSecondary },
+          ]}
+        >
+          {text}
+        </ThemedText>
+      </View>
+    );
+  };
+
   if (variant === "card") {
     return (
       <TouchableOpacity
@@ -90,6 +158,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
             resizeMode="cover"
           />
           <PrivateBadge />
+          {match.myMatchOutCome?.trim() ? (
+            <View style={styles.matchOutcomeBadgeOnImage}>
+              <MyMatchOutComeBadge />
+            </View>
+          ) : null}
         </View>
         <View style={styles.cardContent}>
           <ThemedText size="l" weight="bold" style={styles.cardTitle}>
@@ -228,6 +301,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
             resizeMode="cover"
           />
           <PrivateBadge />
+          {match.myMatchOutCome?.trim() ? (
+            <View style={styles.matchOutcomeBadgeOnImage}>
+              <MyMatchOutComeBadge />
+            </View>
+          ) : null}
         </View>
         <View style={styles.compactContent}>
           <ThemedText size="m" weight="semiBold" numberOfLines={1}>
@@ -273,6 +351,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
           resizeMode="cover"
         />
         <PrivateBadge />
+        {match.myMatchOutCome?.trim() ? (
+          <View style={styles.matchOutcomeBadgeOnImage}>
+            <MyMatchOutComeBadge />
+          </View>
+        ) : null}
       </View>
       <View style={styles.listContent}>
         <ThemedText
@@ -505,6 +588,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  matchOutcomeBadgeOnImage: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    maxWidth: "85%",
+  },
+  myMatchOutComeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  myMatchOutComeBadgeText: {
+    fontSize: 12,
   },
 });
 
