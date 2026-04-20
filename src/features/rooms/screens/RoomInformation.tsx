@@ -39,14 +39,15 @@ import {
   HostTransferRequestDialog,
 } from '../components';
 import type { HostTransferRequestPayload } from '../components/HostTransferRequestDialog';
-import { useResponseTransferHost, useTransferHost } from '../hooks/useTransferHost';
+import { useResponseTransferHost } from '../hooks/useTransferHost';
 import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusActionBar';
-import { useMatchRoomSignalR, useMatchRoomSignalRHandlers, useAlert, HostTransferRejectedPayload, HostTransferredPayload } from '@/shared/hooks';
+import { useMatchRoomSignalR, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 import { useFeedbackSessionStore } from '@/features/feedback';
 import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { useGoBackOrResetToMainTabs, useRoomInformationSignalRHandlers } from '../hooks';
 import { styles } from './styles/RoomInformation.styles';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
@@ -68,17 +69,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   /** Mở phòng từ lịch sử profile người khác — chỉ xem, không thao tác phòng */
   const roomActionsBlocked = viewAsOthersMatchHistory;
   const nav = useNavigation<RoomInformationScreenNavigationProp>();
-  
-  const handleGoBack = () => {
-    if (navigation?.canGoBack()) {
-      navigation.goBack();
-    } else {
-      nav.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      });
-    }
-  };
+  const handleGoBack = useGoBackOrResetToMainTabs({ navigation, nav });
   
   // ✅ Use React Query hooks - sử dụng useMatchRoomDetail cho MatchRoomFullInfo
   const { data: room, isLoading, error, refetch } = useMatchRoomDetail(roomId);
@@ -163,6 +154,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
+  const [showOpenRoomPolicyBanner, setShowOpenRoomPolicyBanner] = useState(true);
   
   // ✅ Position selection modal state
   const [showPositionModal, setShowPositionModal] = useState(false);
@@ -177,26 +169,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   
   // ✅ Toast hook for notifications
   const toast = useToast();
-  /**
-   * Callback hiển thị notification - sử dụng Toast thay vì Alert
-   */
-  const showNotification = useCallback((message: string, type?: 'success' | 'info' | 'warning' | 'error') => {
-    switch (type) {
-      case 'success':
-        toast.success(t('roomDetail.notifications.success'), message);
-        break;
-      case 'error':
-        toast.error(t('roomDetail.notifications.error'), message);
-        break;
-      case 'warning':
-        toast.warning(t('roomDetail.notifications.warning'), message);
-        break;
-      case 'info':
-      default:
-        toast.info(t('roomDetail.notifications.info'), message);
-        break;
-    }
-  }, [toast, t]);
 
   /** Toast khi BE báo chênh Elo: isSkillImbalanced === true (hai đội lệch trình độ đáng kể). */
   const prevSkillImbalanceFlagRef = useRef<boolean | undefined>(undefined);
@@ -228,103 +200,20 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     t,
   ]);
 
-  /**
-   * Callback khi bị kick - điều hướng về trang trước
-   */
-  const handleKickedFromRoom = useCallback((payload: any) => {
-    if (payload.kickedUserId === user?.userId) {
-      showDanger(
-        t('roomDetail.kicked'),
-        payload.reason || t('roomDetail.kickedReason'),
-        () => {
-          if (navigation?.canGoBack()) {
-            navigation.goBack();
-          } else {
-            nav.reset({
-              index: 0,
-              routes: [{ name: 'MainTabs' }],
-            });
-          }
-        },
-      );
-    }
-  }, [user?.userId, navigation, nav, showDanger, t]);
+  const signalRHandlers = useRoomInformationSignalRHandlers({
+    roomId,
+    currentUserId: user?.userId,
+    goBackOrResetToMainTabs: handleGoBack,
+    refetch,
+    setRoomData,
+    setTransferRequest,
+    showDanger,
+    showInfo,
+    showSuccess,
+    toast,
+    t,
+  });
 
-  /**
-   * Callback khi room bị xóa - điều hướng về trang trước
-   */
-  const handleRoomDeleted = useCallback(() => {
-    showInfo(
-      t('roomDetail.roomDeleted'),
-      t('roomDetail.roomDeletedReason'),
-      () => {
-        if (navigation?.canGoBack()) {
-          navigation.goBack();
-        } else {
-          nav.reset({
-            index: 0,
-            routes: [{ name: 'MainTabs' }],
-          });
-        }
-      },
-      false,
-    );
-  }, [navigation, nav, showInfo, t]);
-
-  /**
-   * Callback khi host thay đổi
-   */
-  const handleHostChanged = useCallback((newHostId: string) => {
-    // Refetch để lấy thông tin host mới đầy đủ
-    refetch();
-    
-    // Nếu user hiện tại trở thành host
-    if (newHostId === user?.userId) {
-      showSuccess(
-        t('roomDetail.hostChanged'),
-        t('roomDetail.hostChangedDesc'),
-      );
-    }
-  }, [user?.userId, refetch, showSuccess, t]);
-
-  /**
-   * Callback khi nhận yêu cầu chuyển host qua SignalR
-   */
-  const handleHostTransferRequested = useCallback(
-    (payload: HostTransferRequestPayload) => {
-      setTransferRequest(payload);
-    },
-    [],
-  );
-
-  /**
-   * Callback khi nhận yêu cầu chuyển host qua SignalR
-   */
-  const handleHostTransferRejected = useCallback(
-    (payload: HostTransferRejectedPayload) => {
-      setTransferRequest(null);
-      toast.error(
-        t('roomDetail.transferRejected'),
-        t('roomDetail.transferRejectedDesc', { targetUserName: payload.targetUserName }),
-      );
-    },
-    [ toast, t],
-  );
-  
-  /**
-   * Callback khi host chuyển quyền host thành công
-   */
-  const handleHostTransferred = useCallback(
-    (payload: HostTransferredPayload) => {
-      setTransferRequest(null);
-      refetch();
-      toast.success(
-        t('roomDetail.transferAccepted'),
-        t('roomDetail.transferAcceptedDesc', { newHostName: payload.newHostName }),
-      );
-    },
-      [refetch, toast, t],
-  );
   const handleAcceptTransfer = useCallback(() => {
     if (!transferRequest) return;
     acceptTransfer(
@@ -369,20 +258,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       },
     );
   }, [transferRequest , toast, t]);
-
-  // ✅ Tạo SignalR handlers
-  const signalRHandlers = useMatchRoomSignalRHandlers({
-    roomId,
-    currentUserId: user?.userId,
-    setRoomData,
-    showNotification,
-    onKicked: handleKickedFromRoom,
-    onRoomDeleted: handleRoomDeleted,
-    onHostChanged: handleHostChanged,
-    onHostTransferRequested: handleHostTransferRequested,
-    onHostTransferRejected: handleHostTransferRejected,
-    onHostTransferred: handleHostTransferred,
-  });
 
   // ✅ Kết nối SignalR với handlers
   const { isConnected: isSignalRConnected, connectionState } = useMatchRoomSignalR(signalRHandlers);
@@ -735,7 +610,6 @@ const teamBName =
         )} 
       </ThemedView>
 
-      {/* Countdown dưới header khi trận Locked (đếm ngược đến giờ bắt đầu) hoặc InProgress (thời gian còn lại) */}
       {(displayRoom.status === 'Locked' || displayRoom.status === 'InProgress') && (
         <MatchCountdown
           matchDate={displayRoom.matchDate}
@@ -812,7 +686,7 @@ const teamBName =
           {/* Teams Tab Content */}
           {activeTab === 'teams' && (
           <>
-          {displayRoom.status === 'Open' && (
+          {displayRoom.status === 'Open' && showOpenRoomPolicyBanner && (
             <ThemedView
               style={[
                 styles.openRoomPolicyBanner,
@@ -823,6 +697,14 @@ const teamBName =
                 },
               ]}
             >
+              <TouchableOpacity
+                onPress={() => setShowOpenRoomPolicyBanner(false)}
+                style={styles.openRoomPolicyCloseButton}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.buttons.close', 'Đóng')}
+              >
+                <Ionicons name="close" size={18} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
               <View style={styles.openRoomPolicyBannerIcon}>
                 <Ionicons name="information-circle" size={26} color={theme.colors.neonGreen} />
               </View>

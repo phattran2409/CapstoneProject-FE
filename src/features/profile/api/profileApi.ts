@@ -202,6 +202,11 @@ export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
   return envelope.data;
 };
 
+export const getUserRadarChart = async (userId: string): Promise<MyRadarChartData> => {
+  const url = API_CONFIG.ENDPOINTS.PLAYER_PROFILES.USER_RADAR_CHART.replace(':userId', userId);
+  const response = await apiClient.get<MyRadarChartData>(url);
+  return response.data;
+};
 // Update notification settings
 export const updateNotificationSettings = async (
   matchRoom: boolean,

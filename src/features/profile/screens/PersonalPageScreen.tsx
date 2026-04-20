@@ -52,7 +52,7 @@ import {
   useMyRooms,
   useHistoryRooms,
 } from "@/features/rooms/hooks/useMatchRooms";
-import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
+import { useUpdateProfile, useUpdateAvatar, useUserRadarChart } from "../hooks/useProfile";
 import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
 import { getImageSource } from "@/shared/utils/imageSource";
@@ -172,7 +172,14 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     loadMore: matchesLoadMore,
   } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
-  const { data: radarData, isLoading: radarLoading } = useMyRadarChart(isCurrentUser);
+  const myRadarQuery = useMyRadarChart(isCurrentUser);
+  const userRadarQuery = useUserRadarChart(
+    userId,
+    !isCurrentUser,
+  );
+  const { data: analysisRadarData, isLoading: analysisRadarLoading } = isCurrentUser
+    ? myRadarQuery
+    : userRadarQuery;
   
   // Memoize converted matches
   const listMatches = useMemo(() => {
@@ -604,7 +611,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
             {/* Analysis Tab */}
             {activeTab === "analysis" && (
-              <AnalysisTab radarData={radarData ?? null} isLoading={radarLoading} />
+              <AnalysisTab
+                radarData={analysisRadarData ?? null}
+                isLoading={analysisRadarLoading}
+              />
             )}
           </View>
         </ScrollView>

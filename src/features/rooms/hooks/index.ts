@@ -18,3 +18,5 @@ export {
 export { useUpdateRoomInfo } from './useUpdateRoomInfo';
 export { useTransferHost } from './useTransferHost';
 export { useInviteFriend } from './useInviteFriend';
+export { useGoBackOrResetToMainTabs } from './useGoBackOrResetToMainTabs';
+export { useRoomInformationSignalRHandlers } from './useRoomInformationSignalRHandlers';

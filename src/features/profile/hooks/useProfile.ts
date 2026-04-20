@@ -8,6 +8,7 @@ import {
   updateNotificationSettings,
   getNotificationSettings,
   getMyRadarChart,
+  getUserRadarChart,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -36,6 +37,15 @@ export const useMyRadarChart = (enabled = true) => {
     queryFn: getMyRadarChart,
     staleTime: 30 * 1000,
     enabled,
+  });
+};
+
+export const useUserRadarChart = (userId: string, enabled = true) => {
+  return useQuery({
+    queryKey: profileKeys.userRadarChart(userId),
+    queryFn: () => getUserRadarChart(userId),
+    staleTime: 30 * 1000,
+    enabled: !!userId && enabled,
   });
 };
 

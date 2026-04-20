@@ -129,6 +129,7 @@ export const API_CONFIG = {
     },
     PLAYER_PROFILES: {
       RADAR_CHART: "/playerprofiles/me/radar-chart",
+      USER_RADAR_CHART: "/playerprofiles/:userId/radar-chart",
       ELO_BREAKDOWN: "/playerprofiles/me/elo-breakdown",
     },
     ACHIEVEMENTS: {

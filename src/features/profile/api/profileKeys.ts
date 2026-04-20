@@ -13,4 +13,5 @@ export const profileKeys = {
     [...profileKeys.all, "removeFriend", userId] as const,
   achievements: () => [...profileKeys.all, "achievements"] as const,
   radarChart: () => [...profileKeys.all, "radar-chart"] as const,
+  userRadarChart: (userId: string) => [...profileKeys.all, "user-radar-chart", userId] as const,
 };
