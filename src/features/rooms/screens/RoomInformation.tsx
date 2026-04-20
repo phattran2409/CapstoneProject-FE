@@ -133,7 +133,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     if (!depositTargetTotal) return 0;
     return Math.max(0, Math.min(1, depositCollected / depositTargetTotal));
   }, [depositCollected, depositTargetTotal]);
-  
+
   // ✅ Check if user is the host
   const isHost = displayRoom?.hostId === user?.userId;
 
@@ -812,6 +812,34 @@ const teamBName =
           {/* Teams Tab Content */}
           {activeTab === 'teams' && (
           <>
+          {displayRoom.status === 'Open' && (
+            <ThemedView
+              style={[
+                styles.openRoomPolicyBanner,
+                {
+                  backgroundColor: theme.colors.neonGreen + '16',
+                  borderColor: theme.colors.neonGreen + '55',
+                  borderLeftColor: theme.colors.neonGreen,
+                },
+              ]}
+            >
+              <View style={styles.openRoomPolicyBannerIcon}>
+                <Ionicons name="information-circle" size={26} color={theme.colors.neonGreen} />
+              </View>
+              <View style={styles.openRoomPolicyBannerText}>
+                <ThemedText
+                  size="m"
+                  weight="bold"
+                  style={{ color: theme.colors.neonGreen, marginBottom: 6 }}
+                >
+                  {t('roomDetail.openRoomPolicyTitle')}
+                </ThemedText>
+                <ThemedText variant="secondary" size="s" style={{ lineHeight: 20 }}>
+                  {t('roomDetail.openRoomPolicyHint')}
+                </ThemedText>
+              </View>
+            </ThemedView>
+          )}
           {/* Room Info Section */}
           <View style={styles.roomInfoSection}>
             <RoomInfoCard
@@ -846,7 +874,17 @@ const teamBName =
               icon="trophy"
               label={t('roomDetail.totalDepositCollected')}
               value={formatCurrency(depositCollected) || '0 VND'}
-              subtitle={depositTargetTotal > 0 ? `${Math.round(depositProgress * 100)}% ${t('roomDetail.depositProgress')}` : undefined}
+              subtitle={
+                depositTargetTotal > 0
+                  ? `${Math.round(depositProgress * 100)}% ${t('roomDetail.depositProgress')}${
+                      displayRoom.status === 'Open'
+                        ? `\n${t('roomDetail.depositOpenHint')}`
+                        : ''
+                    }`
+                  : displayRoom.status === 'Open'
+                    ? t('roomDetail.depositOpenHint')
+                    : undefined
+              }
             />
             
           </View>

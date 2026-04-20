@@ -29,6 +29,7 @@ import { PresetListBottomSheet } from '../components/PresetListBottomSheet';
 import { MatchFormat, RoomPresetItem } from '../types/room.types';
 import { useCreateMatchPreset } from '../hooks/useMatchPresetActions';
 import { formatMatchFormatVsLabel, MATCH_FORMAT_VS_LABEL } from '../utils/matchFormatVsLabel';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -331,6 +332,12 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     safeArea: {
       paddingVertical: 40,
     },
+    iconButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -487,6 +494,26 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           <ThemedText size="xxl" weight="bold" style={{ flexShrink: 1 }}>
             {t('createRoom.title')}
           </ThemedText>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() =>
+              showInfo(
+                t('createRoom.screenExplainerTitle' , "Tạo phòng đấu"),
+                t('createRoom.screenExplainer' , "Chọn sân và khung giờ để tự động điền ngày & giờ"),
+                undefined,
+                false,
+                0,
+              )
+            }
+            accessibilityRole="button"
+            accessibilityLabel={t('matches.screenExplainerTitle')}
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity
           onPress={() => setPresetSheetVisible(true)}
@@ -712,11 +739,6 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               </View>
             </View>
           </View>
-          {!selectedTimeSlot && (
-            <ThemedText variant="muted" size="s" style={{ marginTop: 4 }}>
-              Chọn sân (venue) và khung giờ để tự động điền ngày & giờ
-            </ThemedText>
-          )}
 
           {/* Room Settings */}
           <View style={styles.section}>

@@ -87,6 +87,13 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
 
     return (
       <View style={containerStyle}>
+        <ThemedText
+          variant="secondary"
+          size="s"
+          style={{ marginTop: 12, marginBottom: 4, textAlign: 'center', paddingHorizontal: 8 }}
+        >
+          {t('roomDetail.statusActions.reviewingHint')}
+        </ThemedText>
         <TouchableOpacity
           style={[
             actionStyles.joinButton,

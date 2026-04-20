@@ -33,6 +33,10 @@ const vi = {
       loadingMore: "Đang tải thêm...",
     },
     email: "Email",
+    expandableText: {
+      readMore: "Xem thêm",
+      readLess: "Thu gọn",
+    },
   },
   validation: {
     required: "Trường này là bắt buộc",
@@ -129,6 +133,9 @@ const vi = {
   },
   matches: {
     title: "Trận đấu",
+    screenExplainerTitle: "Danh sách trận đấu",
+    screenExplainer:
+      "Danh sách gợi ý là những trận đấu có sự tham gia của bạn bè của bạn. Danh sách trận gần đây dùng vị trí và bán kính bạn đã chọn.",
     noMatches: "Chưa có trận đấu nào",
     passwordInvalid: "Mật khẩu không đúng. Vui lòng thử lại.",
     myRoomsTitle: "Phòng đấu của tôi",
@@ -165,6 +172,8 @@ const vi = {
   },
   leaderboard: {
     title: "Bảng xếp hạng ELO",
+    refreshHint:
+      "Bảng xếp hạng được cập nhật theo ngày. Điểm sau trận có thể hiện sau lần làm mới tiếp theo.",
     searchPlaceholder: "Tìm kiếm người chơi...",
     noResults: "Không tìm thấy người chơi",
     empty: "Chưa có người chơi nào",
@@ -181,6 +190,7 @@ const vi = {
     },
     outsideTop: "Ngoài top {{count}}",
     you: "Bạn",
+    myRank: "Hạng hiện tại của bạn",
   },
   rank: {
     tiers: {
@@ -195,6 +205,8 @@ const vi = {
   createRoom: {
     title: "Tạo Phòng Đấu",
     duration: "Thời Lượng",
+    screenExplainerTitle: "Tạo phòng đấu",
+    screenExplainer: "Chọn sân và khung giờ để tự động điền ngày & giờ",
     minutes: "Phút",
     description: "Mô tả",
     descriptionPlaceholder: "Nhập mô tả",
@@ -228,6 +240,8 @@ const vi = {
       openButton: "Mở mẫu tạo phòng",
       saveButton: "Chỉ lưu mẫu",
       applyButton: "Áp dụng cho form tạo phòng",
+      bookingHint:
+        "Mẫu tạo phòng giúp bạn lưu lại thông tin phòng đấu để sử dụng lại sau này.",
       savedTitle: "Đã lưu",
       savedMessage: "Đã lưu mẫu tạo phòng.",
       validationName: "Vui lòng nhập tên phòng để lưu hoặc áp dụng mẫu.",
@@ -339,6 +353,15 @@ const vi = {
     depositPerPerson: "Tiền cọc / người",
     totalDepositCollected: "Tổng tiền đã thu",
     depositProgress: "quỹ trận đấu",
+    openRoomPolicyTitle: "Phòng đang mở",
+    openRoomPolicyHint:
+      "Rủ đủ người và mọi người đóng cọc để giữ slot. Nếu phòng chưa đủ người hoặc chưa đủ cọc đến thời điểm hệ thống cho phép theo lịch trận, phòng có thể bị hủy và hoàn cọc.",
+    depositOpenHint:
+      "Mỗi người đóng cọc sẽ cộng dồn vào tổng; khi đủ chỗ và mọi người đã cọc, phòng được xác nhận.",
+    statusActions: {
+      reviewingHint:
+        "Bạn có khoảng một ngày sau khi trận kết thúc để bỏ phiếu kết quả và gửi đánh giá. Nếu mọi người bỏ phiếu sớm, hệ thống sẽ chốt luôn.",
+    },
     tryAgain: "Thử lại",
     roomNotFound: "Không tìm thấy phòng",
     teamsTab: "Đội hình",
@@ -485,6 +508,8 @@ const vi = {
     payWithWalletDesc: "Trừ từ số dư ví của bạn",
     directPayment: "Thanh toán trực tiếp",
     directPaymentDesc: "Chuyển khoản hoặc hình thức khác (sắp có)",
+    depositHint:
+      "Tiền trừ từ ví của bạn làm cọc. Khi đủ người và mọi người đã cọc, phòng được xác nhận; khi trận bắt đầu, khoản này được chuyển cho chủ sân theo lịch đặt.",
   },
   profileHeader: {
     chooseAvatarTitle: "Chọn ảnh đại diện",
@@ -923,15 +948,18 @@ const vi = {
       title: "Giúp hệ thống cân bằng trận đấu của bạn",
       description:
         "Đánh giá đồng đội một cách công tâm để giúp chúng tôi tổ chức những trận đấu cân sức và hấp dẫn hơn cho bạn.",
+      reviewWindowHint:
+        "Bạn nên bỏ phiếu kết quả và gửi đánh giá trong khoảng thời gian một ngày sau trận. Sau khi khung thời gian đóng, bạn không thể gửi thêm đánh giá.",
       startButton: "Bắt đầu đánh giá",
     },
     rating: {
       title: "Đánh giá Đồng đội",
       subtitle: "TRẬN ĐẤU CHỦ NHẬT",
+      subtitleFallback: "Trận đấu của bạn",
       progress: "TIẾN TRÌNH",
-      swipeLeft: "VUỐT TRÁI",
-      swipeRight: "VUỐT PHẢI",
-      tip: "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
+      swipeLeft: "Bỏ qua",
+      swipeRight: "Lưu & tiếp",
+      tip: "Chọn số sao rồi bấm Lưu & tiếp (hoặc vuốt phải). Bỏ qua nếu không muốn chấm người đó. Các đánh giá đã chọn được gửi khi bạn xong cả danh sách.",
     },
     field: {
       title: "Đánh giá Sân bóng",
@@ -971,7 +999,7 @@ const vi = {
     },
     result: {
       headerTitle: "Xác nhận Kết quả",
-      title: "Ai là người chiến thắng?",
+      title: "Đội nào đã chiến thắng?",
       subtitle:
         "Chọn kết quả cuối cùng của trận đấu để cập nhật bảng xếp hạng.",
       winner: "WINNER",

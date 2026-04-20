@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +20,8 @@ import { OptionFilter } from '@/features/venues';
 import { useToast } from '@/shared/toast';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { toMatchItemData } from '../utils/matchItemMapper';
+import { useAlert } from '@/shared/hooks';
+import Alert from '@/shared/components/Alert';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -37,6 +39,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const { visible: alertVisible, alertOptions, showInfo, hideAlert } = useAlert();
   const [pendingJoinParams, setPendingJoinParams] = useState<{
     roomId: string;
     params: { roomId: string; venuePhotos?: VenuePhoto[] };
@@ -253,9 +256,31 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           },
         ]}
       >
+        <View style={styles.headerLeft}>
         <ThemedText size="xxl" weight="bold" variant="primary">
           {t("matches.title", "Trận đấu")}
         </ThemedText>
+        <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() =>
+              showInfo(
+                t('matches.screenExplainerTitle'),
+                t('matches.screenExplainer'),
+                undefined,
+                false,
+                0,
+              )
+            }
+            accessibilityRole="button"
+            accessibilityLabel={t('matches.screenExplainerTitle')}
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
         <View style={styles.headerRight}>
           {/* <TouchableOpacity style={styles.iconButton}>
             <Ionicons
@@ -264,6 +289,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity> */}
+       
           <TouchableOpacity style={styles.iconButton} onPress={() => setFilterVisible(true)}>
             <Ionicons
               name="filter"
@@ -450,6 +476,23 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       {/* Filter Room Match Modal */}
       <FilterRoomMatch visible={filterVisible} onApply={handleFilter} onClose={handleCloseFilter} theme={theme} />
       <OptionFilter visible={optionFilterVisible} initialRadiusKm={radiusKm} onApply={handleApplyRadiusFilter} onClose={handleCloseOptionFilter} />
+
+      {alertOptions && (
+        <Alert
+          visible={alertVisible}
+          type={alertOptions.type}
+          title={alertOptions.title}
+          message={alertOptions.message}
+          confirmText={alertOptions.confirmText}
+          cancelText={alertOptions.cancelText}
+          onConfirm={alertOptions.onConfirm}
+          onCancel={alertOptions.onCancel}
+          onClose={alertOptions.onClose ?? hideAlert}
+          showCloseButton={alertOptions.showCloseButton}
+          autoClose={alertOptions.autoClose}
+          autoCloseDelay={alertOptions.autoCloseDelay}
+        />
+      )}
     </ThemedSafeAreaView>
   );
 };
@@ -464,6 +507,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   headerRight: {
