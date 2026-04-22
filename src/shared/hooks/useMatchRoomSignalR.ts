@@ -37,7 +37,9 @@ const MATCH_ROOM_HUB_EVENTS = {
   // Host transfer events
   HostTransferRequested: "HostTransferRequested",
   HostTransferRejected: "HostTransferRejected",
-  HostTransferred : "HostTransferred"
+  HostTransferred : "HostTransferred",
+  // Auto-close countdown event
+  AutoCloseCountdownTick: "AutoCloseCountdownTick",
 } as const;
 
 /**
@@ -83,9 +85,11 @@ export interface UseMatchRoomSignalROptions {
 
   // Host transfer events
   onHostTransferRequested?: (payload: HostTransferRequestedPayload) => void;
-  // 
   onHostTransferRejected?: (payload: HostTransferRejectedPayload) => void;
-  onHostTransferred?: (payload: HostTransferredPayload) => void; 
+  onHostTransferred?: (payload: HostTransferredPayload) => void;
+
+  // Auto-close countdown event
+  onAutoCloseCountdownTick?: (payload: AutoCloseCountdownTickPayload) => void;
 }
 
 // ==================== Payload Types ====================
@@ -312,6 +316,22 @@ export interface HostTransferredPayload {
   newHostName: string;
   transferredAt: string;
 }
+/**
+ * Payload khi server phát event đếm ngược auto-close
+ * Server gửi mỗi 60 giây trong 5 phút cuối trước khi room bị auto-close.
+ */
+export interface AutoCloseCountdownTickPayload {
+  roomId: string;
+  /** Số giây còn lại đến lúc auto-close */
+  secondsRemaining: number;
+  /** Thời điểm room sẽ bị close (UTC ISO string) */
+  closesAtUtc: string;
+  /** Lý do: hiện tại chỉ có "DynamicAutoClose" */
+  reason: string;
+  /** Thời điểm server phát event (UTC ISO string) */
+  tickAt: string;
+}
+
 /**
  * Hook quản lý kết nối SignalR cho Match Room
  *
@@ -578,6 +598,19 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
             optionsRef.current.onHostTransferred?.(payload);
           },
         );
+
+        // Auto-close countdown tick (5 phút cuối trước khi room bị auto-close)
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.AutoCloseCountdownTick, (raw: any) => {
+          const payload: AutoCloseCountdownTickPayload = {
+            roomId: raw?.RoomId ?? raw?.roomId ?? "",
+            secondsRemaining: raw?.SecondsRemaining ?? raw?.secondsRemaining ?? 0,
+            closesAtUtc: raw?.ClosesAtUtc ?? raw?.closesAtUtc ?? "",
+            reason: raw?.Reason ?? raw?.reason ?? "",
+            tickAt: raw?.TickAt ?? raw?.tickAt ?? "",
+          };
+          console.log("⏳ AutoCloseCountdownTick:", payload);
+          optionsRef.current.onAutoCloseCountdownTick?.(payload);
+        });
 
         // Error from server
         hubConnection.on(MATCH_ROOM_HUB_EVENTS.Error, (payload: any) => {

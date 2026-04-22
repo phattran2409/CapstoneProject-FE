@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RadarChart from "@/features/profile/components/RadarChart";
 import { AIAssessmentCard } from "./AIAssessmentCard";
 
@@ -58,9 +59,7 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
             },
           ]}
         >
-          {t("personalPage.analysis.title", {
-            defaultValue: "Biểu đồ Hồ sơ Thi đấu",
-          })}
+          {t("personalPage.analysis.title")}
         </Text>
       </View>
 
@@ -95,26 +94,37 @@ ví dụ trả về
 
         <RadarChart data={radarData ?? undefined} />
       </View>
-
+    <View style={[styles.summaryContainer,
+      { backgroundColor: theme.colors.surface,
+        borderRadius: theme.radius.m,
+        padding: theme.spacing.m,
+        marginBottom: theme.spacing.m,
+      }]}>
+      <View style={{ flexDirection: "row"}}>
+        <FontAwesome name="lightbulb-o" size={20} color={theme.colors.neonGreen} />
+        <Text style={{ color: theme.colors.neonGreen, marginLeft: theme.spacing.s, fontWeight: "700" }}>
+          {t("personalPage.analysis.summary")}
+        </Text>
+      </View>
       {radarData?.summary ? (
         <Text
           style={{
             color: theme.colors.textSecondary,
             marginBottom: theme.spacing.m,
+            paddingHorizontal: theme.spacing.m,
+            paddingVertical: theme.spacing.s,
             lineHeight: 20,
           }}
         >
           {radarData.summary}
         </Text>
-      ) : null}
-
+        ) : null}
+    </View>
       {isLoading ? (
         <Text style={{ color: theme.colors.textSecondary }}>
-          {t("personalPage.analysis.loadingHint", {
-            defaultValue: "Đang cập nhật phân tích AI...",
-          })}
+          {t("personalPage.analysis.loadingHint")}
         </Text>
-      ) : null}
+      ) : null} 
 
       {/* AI Assessment Section */}
       <View style={styles.assessmentSection}>
@@ -128,7 +138,7 @@ ví dụ trả về
             },
           ]}
         >
-          <Ionicons name="settings" size={20} color={theme.colors.neonGreen} />
+        <Ionicons name="settings" size={20} color={theme.colors.neonGreen} />
           <Text
             style={[
               styles.assessmentTitle,
@@ -140,9 +150,7 @@ ví dụ trả về
               },
             ]}
           >
-            {t("personalPage.analysis.aiAssessment", {
-              defaultValue: "Đánh giá & Phân tích AI",
-            })}
+            {t("personalPage.analysis.aiAssessment")}
           </Text>
         </View>
 
@@ -158,9 +166,7 @@ ví dụ trả về
 
         {!isLoading && assessments.length === 0 ? (
           <Text style={{ color: theme.colors.textSecondary }}>
-            {t("personalPage.analysis.noAssessment", {
-              defaultValue: "Chưa có đánh giá AI mới.",
-            })}
+            {t("personalPage.analysis.noAssessment")}
           </Text>
         ) : null}
       </View>
@@ -209,5 +215,9 @@ const styles = StyleSheet.create({
   },
   assessmentTitle: {
     fontWeight: "700",
+  },
+  summaryContainer: {
+    
+    marginBottom: 24,
   },
 });

@@ -443,14 +443,18 @@ const vi = {
       rulesTooLong: "Luật chơi không được vượt quá 1000 ký tự",
     },
     yourTeam: "Đội của bạn",
-    teamAverageElo: "TB Elo: {{value}}",
+    teamAverageElo: "TB ELO: {{value}}",
     skillImbalancedTitle: "Chênh lệch trình độ",
     skillImbalancedMessage:
-      "Elo TB đội A ({{teamA}}) và đội B ({{teamB}}) chênh lệch đáng kể. Cân nhắc đổi đội để cân bằng trận.",
+      "ELO TB đội A ({{teamA}}) và đội B ({{teamB}}) chênh lệch đáng kể. Cân nhắc đổi đội để cân bằng trận.",
     unassigned: "chờ tham gia",
     countdown: {
       matchStartsIn: "Thời gian bắt đầu trận đấu",
       matchTimeRemaining: "Thời gian trận đấu còn lại",
+    },
+    autoClose: {
+      label: "Phòng sẽ tự đóng sau",
+      hint: "Hoàn tất tham gia trước khi hết thời gian",
     },
     description: "Mô tả phòng",
     rules: "Luật chơi",
@@ -621,12 +625,12 @@ const vi = {
       "Xem phòng đấu gần sân, vào hoặc rời phòng, trò chuyện trong phòng trước trận.",
       "Xác nhận tham gia và đóng phần tiền cọc sân khi chủ phòng bật thu quỹ.",
       "Đội trưởng chỉnh đội hình để cả đội nắm rõ vị trí.",
-      "Xem bảng Elo và chi tiết thay đổi điểm sau trận; xem lịch sử trận trên trang cá nhân.",
+      "Xem bảng ELO và chi tiết thay đổi điểm sau trận; xem lịch sử trận trên trang cá nhân.",
       "Kết bạn, chấp nhận lời mời, chia sẻ link phòng, chat riêng một-một.",
       "Bảng tin: đăng bài, bình luận, thích và nhận thông báo tương tác.",
-      "Sau trận: chấm sao và nhận xét đồng đội; xem feedback nhận được, phản hồi ngắn, và feedback đã gửi cùng phản hồi từ người được chấm.",
+      "Sau trận: chấm sao và nhận xét đồng đội; xem đánh giá nhận được, phản hồi ngắn, và đánh giá đã gửi cùng phản hồi từ người được chấm.",
       "Mở khóa thành tích và xem thống kê hồ sơ theo thời gian.",
-      "Cảnh báo khi chênh Elo giữa hai đội quá lớn hoặc khi bạn đang giữ slot phòng đang hoạt động.",
+      "Cảnh báo khi chênh ELO giữa hai đội quá lớn hoặc khi bạn đang giữ slot phòng đang hoạt động.",
     ],
     sectionHostTitle: "Dành cho chủ phòng",
     hostFeatures: [
@@ -638,15 +642,13 @@ const vi = {
     ],
     sectionPlatformTitle: "Nền tảng & công bằng",
     platformFeatures: [
-      "Điểm xếp hạng phản ánh kết quả trận, kỳ vọng theo chênh lệch kỹ năng, feedback đồng đội và tín hiệu hành vi theo thời gian.",
+      "Điểm xếp hạng phản ánh kết quả trận, kỳ vọng theo chênh lệch kỹ năng, đánh giá đồng đội và tín hiệu hành vi theo thời gian.",
       "Nội dung nhận xét có thể được phân tích cảm xúc để khuyến khích văn hóa chơi tích cực.",
-      "Tín hiệu tin cậy (báo cáo, điểm danh, thói quen feedback) hỗ trợ cộng đồng thi đấu lành mạnh.",
+      "Tín hiệu tin cậy (báo cáo, điểm danh, thói quen đánh giá) hỗ trợ cộng đồng thi đấu lành mạnh.",
     ],
     sectionTermsTitle: "Điều khoản sử dụng",
     sectionTermsBody:
       "Khi dùng {{appName}} bạn cam kết cung cấp thông tin tài khoản trung thực, tuân thủ nội quy sân và chủ phòng, và tôn trọng người chơi khác. Lạm dụng, quấy rối, gian lận hoặc thao túng thanh toán/xếp hạng có thể bị cảnh báo, tạm khóa hoặc chấm dứt tài khoản theo quyết định của đơn vị vận hành.",
-    sectionTermsBody2:
-      "Tính năng được triển khai theo giai đoạn; một số mục phụ thuộc cấu hình backend và có thể chưa có trên mọi bản build. Chi tiết xử lý dữ liệu xem chính sách bảo mật khi được công bố trong app.",
     footerMeta:
       "Kickify · AI-Driven Team Formation and Player Evaluation System",
   },
@@ -685,6 +687,13 @@ const vi = {
       goals: "Bàn thắng",
       winRate: "Tỷ lệ thắng",
       age: "Tuổi",
+    }, 
+    analysis: {
+      title: "Phân tích hồ sơ trận đấu",
+      loadingHint: "Đang cập nhật phân tích AI...",
+      aiAssessment: "Đánh giá & phân tích AI",
+      noAssessment: "Chưa có đánh giá AI mới.",
+      summary: "Tổng Kết",
     },
     editForm: {
       title: "Chỉnh sửa hồ sơ",

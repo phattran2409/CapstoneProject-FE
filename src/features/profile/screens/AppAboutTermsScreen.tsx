@@ -186,14 +186,6 @@ const AppAboutTermsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={[styles.body, { color: theme.colors.textSecondary }]}>
             {t("appIntro.sectionTermsBody", { appName: t("common.appName") })}
           </Text>
-          <Text
-            style={[
-              styles.body,
-              { color: theme.colors.textSecondary, marginTop: 12 },
-            ]}
-          >
-            {t("appIntro.sectionTermsBody2")}
-          </Text>
         </View>
 
         <Text style={[styles.footerMeta, { color: theme.colors.textSecondary }]}>

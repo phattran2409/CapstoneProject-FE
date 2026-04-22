@@ -445,7 +445,7 @@ const en = {
       rulesTooLong: "Rules cannot exceed 1000 characters",
     },
     yourTeam: "Your Team",
-    teamAverageElo: "Avg Elo: {{value}}",
+    teamAverageElo: "Avg ELO: {{value}}",
     skillImbalancedTitle: "Skill gap",
     skillImbalancedMessage:
       "Team A ({{teamA}}) vs Team B ({{teamB}}) average Elo differs significantly. Consider rebalancing teams.",
@@ -453,6 +453,10 @@ const en = {
     countdown: {
       matchStartsIn: "Match starts in",
       matchTimeRemaining: "Match time remaining",
+    },
+    autoClose: {
+      label: "Room closes in",
+      hint: "Complete joining before time runs out",
     },
     description: "Description",
     rules: "Rules",
@@ -646,8 +650,6 @@ const en = {
     sectionTermsTitle: "Terms of use",
     sectionTermsBody:
       "By using {{appName}} you agree to provide accurate account information, follow venue and host rules, and treat other players respectfully. Misuse, harassment, fraud, or attempts to manipulate ratings or payments may lead to warnings, suspension, or account termination at the operator’s discretion.",
-    sectionTermsBody2:
-      "Features roll out gradually; some items above depend on backend configuration and may not be available in every build. For data handling details, refer to the privacy policy when it is published in-app.",
     footerMeta:
       "Kickify · AI-Driven Team Formation and Player Evaluation System",
   },
@@ -678,6 +680,13 @@ const en = {
   },
   personalPage: {
     achievements: "Achievements",
+    analysis: {
+      title: "Competition Profile Chart",
+      loadingHint: "Updating AI analysis...",
+      aiAssessment: "AI Assessment & Analysis",
+      noAssessment: "No new AI assessment yet.",
+      summary: "Summary",
+    },
     title: "Personal Page",
     editProfile: "Edit Personal Page",
     addFriend: "Add Friend",

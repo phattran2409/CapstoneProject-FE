@@ -56,7 +56,9 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
         description,
         icon: "trophy" as keyof typeof Ionicons.glyphMap,
         isUnlocked: item.isUnlocked,
+        status: item.status,
         unlockedAt: item.earnedAt ?? undefined,
+        progress: item.progressPercent,
       };
     });
   }, [
@@ -66,17 +68,22 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
     appLanguage,
   ]);
 
-  // Filter achievements
+  // "unlocked" bao gồm cả Claimable (đã đủ điều kiện, chưa claim)
   const filteredAchievements = achievements.filter((achievement) => {
-    if (activeFilter === "unlocked") return achievement.isUnlocked;
-    if (activeFilter === "locked") return !achievement.isUnlocked;
+    if (activeFilter === "unlocked")
+      return achievement.isUnlocked || achievement.status === "Claimable";
+    if (activeFilter === "locked")
+      return !achievement.isUnlocked && achievement.status !== "Claimable";
     return true;
   });
 
-  // Use stats directly from API response
+  // Tính stats: Claimable tính vào unlocked để hiển thị chính xác
   const totalAchievements = rawData?.totalAchievements ?? achievements.length;
   const unlockedCount =
-    rawData?.unlockedCount ?? achievements.filter((a) => a.isUnlocked).length;
+    rawData?.unlockedCount ??
+    achievements.filter(
+      (a) => a.isUnlocked || a.status === "Claimable",
+    ).length;
   const completionRate =
     totalAchievements > 0
       ? Math.round((unlockedCount / totalAchievements) * 100)

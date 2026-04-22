@@ -4,6 +4,7 @@ import {
   HostTransferRejectedPayload,
   HostTransferredPayload,
   useMatchRoomSignalRHandlers,
+  AutoCloseCountdownTickPayload,
 } from '@/shared/hooks';
 import { MatchRoomFullInfo } from '@/features/rooms';
 import type { HostTransferRequestPayload } from '../components/HostTransferRequestDialog';
@@ -30,6 +31,7 @@ interface UseRoomInformationSignalRHandlersParams {
     info: (title: string, message?: string) => void;
   };
   t: TFunction;
+  onAutoCloseCountdownTick?: (payload: AutoCloseCountdownTickPayload) => void;
 }
 
 export const useRoomInformationSignalRHandlers = ({
@@ -44,6 +46,7 @@ export const useRoomInformationSignalRHandlers = ({
   showSuccess,
   toast,
   t,
+  onAutoCloseCountdownTick,
 }: UseRoomInformationSignalRHandlersParams) => {
   const showNotification = useCallback(
     (message: string, type?: 'success' | 'info' | 'warning' | 'error') => {
@@ -137,5 +140,6 @@ export const useRoomInformationSignalRHandlers = ({
     onHostTransferRequested: handleHostTransferRequested,
     onHostTransferRejected: handleHostTransferRejected,
     onHostTransferred: handleHostTransferred,
+    onAutoCloseCountdownTick,
   });
 };

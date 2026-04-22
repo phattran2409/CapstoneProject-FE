@@ -49,73 +49,50 @@ export const getUserProfile = async (userId: string): Promise<User> => {
   }
 };
 
-function unwrapAchievementsPayload(
-  body: Record<string, unknown>,
-): Record<string, unknown> {
-  const nested = body.data ?? body.Data;
-  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
-    return nested as Record<string, unknown>;
-  }
-  return body;
+interface AchievementsApiResponse {
+  isSuccess: boolean;
+  data?: {
+    achievements?: Array<Record<string, unknown>>;
+    totalAchievements?: number;
+    unlockedCount?: number;
+  };
 }
 
-function pickAchievementsArray(
-  o: Record<string, unknown> | undefined,
-): unknown[] | null {
-  if (!o) return null;
-  const a = o.achievements ?? o.Achievements ?? o.items ?? o.Items;
-  return Array.isArray(a) ? a : null;
-}
-
-/** Chuẩn hóa 1 dòng achievement (camelCase / PascalCase từ .NET) */
+/** Chuẩn hóa 1 dòng achievement theo response backend hiện tại */
 function mapAchievementRow(row: Record<string, unknown>): AchievementItem {
   return {
-    achievementId: String(
-      row.achievementId ??
-        row.AchievementId ??
-        row.id ??
-        row.Id ??
-        "",
-    ),
-    name: String(row.name ?? row.Name ?? ""),
-    description: String(row.description ?? row.Description ?? ""),
-    badgeIconUrl: String(row.badgeIconUrl ?? row.BadgeIconUrl ?? ""),
-    criteriaType: String(row.criteriaType ?? row.CriteriaType ?? ""),
-    criteriaValue: Number(row.criteriaValue ?? row.CriteriaValue ?? 0),
-    isUnlocked: Boolean(row.isUnlocked ?? row.IsUnlocked),
-    earnedAt: (row.earnedAt ?? row.EarnedAt ?? null) as string | null,
+    achievementId: String(row.achievementId ?? ""),
+    name: String(row.name ?? ""),
+    description: row.description == null ? "" : String(row.description),
+    badgeIconUrl: row.badgeIconUrl == null ? "" : String(row.badgeIconUrl),
+    criteriaType: String(row.criteriaType ?? ""),
+    targetValue: Number(row.targetValue ?? 0),
+    currentProgress: Number(row.currentProgress ?? 0),
+    progressPercent: Number(row.progressPercent ?? 0),
+    status: String(row.status ?? ""),
+    isUnlocked: Boolean(row.isUnlocked),
+    earnedAt: row.earnedAt == null ? null : String(row.earnedAt),
   };
 }
 
 export const getAchievements = async (): Promise<AchievementsData> => {
   try {
-    const body = (await apiClient.get(
+    const response = (await apiClient.get(
       API_CONFIG.ENDPOINTS.ACHIEVEMENTS.ME,
-    )) as Record<string, unknown>;
+    )) as AchievementsApiResponse;
 
-    const inner = unwrapAchievementsPayload(body);
-    let rawList = pickAchievementsArray(inner);
-    if (!rawList) rawList = pickAchievementsArray(body);
-    if (!Array.isArray(rawList)) {
+    if (!response?.isSuccess || !response.data) {
       throw new Error("Invalid response: User achievements data is missing");
     }
 
-    const achievements = rawList.map((row) =>
-      mapAchievementRow(row as Record<string, unknown>),
-    );
+    const rawList = response.data.achievements ?? [];
+    const achievements = rawList.map(mapAchievementRow);
 
     const totalAchievements = Number(
-      inner.totalAchievements ??
-        inner.TotalAchievements ??
-        body.totalAchievements ??
-        body.TotalAchievements ??
-        achievements.length,
+      response.data.totalAchievements ?? achievements.length,
     );
     const unlockedCount = Number(
-      inner.unlockedCount ??
-        inner.UnlockedCount ??
-        body.unlockedCount ??
-        body.UnlockedCount ??
+      response.data.unlockedCount ??
         achievements.filter((a) => a.isUnlocked).length,
     );
 

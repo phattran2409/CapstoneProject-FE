@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, AppState, AppStateStatus } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -33,6 +33,7 @@ import {
   VenueTabContent,
   TeamLineup,
   MatchCountdown,
+  AutoCloseCountdown,
   type PlayerPosition,
   InviteFriendsModal,
   TransferHostModal,
@@ -49,6 +50,7 @@ import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbac
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { useGoBackOrResetToMainTabs, useRoomInformationSignalRHandlers } from '../hooks';
 import { styles } from './styles/RoomInformation.styles';
+import { Text } from 'react-native-svg';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -165,6 +167,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [transferRequest, setTransferRequest] = useState<HostTransferRequestPayload | null>(null);
   const { mutate: acceptTransfer, isPending: isAcceptingTransfer } = useResponseTransferHost();
 
+  // ✅ Auto-close countdown state (nhận từ SignalR AutoCloseCountdownTick)
+  const [autoCloseSeconds, setAutoCloseSeconds] = useState<number | null>(null);
+  const [autoCloseTickAt, setAutoCloseTickAt] = useState<string>('');
+
+  const handleAutoCloseCountdownTick = useCallback((payload: { secondsRemaining: number; tickAt: string; roomId: string; closesAtUtc: string; reason: string }) => {
+    setAutoCloseSeconds(payload.secondsRemaining);
+    setAutoCloseTickAt(payload.tickAt);
+  }, []);
+
   // ==================== SignalR Integration ====================
   
   // ✅ Toast hook for notifications
@@ -212,6 +223,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     showSuccess,
     toast,
     t,
+    onAutoCloseCountdownTick: handleAutoCloseCountdownTick,
   });
 
   const handleAcceptTransfer = useCallback(() => {
@@ -266,6 +278,25 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   useEffect(() => {
     console.log('🔌 SignalR Connection State:', connectionState, 'Connected:', isSignalRConnected);
   }, [connectionState, isSignalRConnected]);
+
+  // Ẩn auto-close countdown khi room không còn Open
+  useEffect(() => {
+    if (displayRoom?.status && displayRoom.status !== 'Open') {
+      setAutoCloseSeconds(null);
+    }
+  }, [displayRoom?.status]);
+
+  // AppState: khi app resume từ background → refetch để tránh lệch state do miss socket event
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        refetch();
+        // Reset countdown — chờ tick SignalR mới, tránh hiển thị giá trị cũ/sai
+        setAutoCloseSeconds(null);
+      }
+    });
+    return () => subscription.remove();
+  }, [refetch]);
 
   // ✅ Handle open position selection modal
   const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
@@ -618,6 +649,13 @@ const teamBName =
           status={displayRoom.status}
         />
       )}
+
+      {displayRoom.status === 'Open' && autoCloseSeconds !== null && autoCloseSeconds > 0 && (
+        <AutoCloseCountdown
+          secondsRemaining={autoCloseSeconds}
+          tickAt={autoCloseTickAt}
+        />
+      )}
       <View 
         style={[
           styles.tabContainer,
@@ -686,6 +724,7 @@ const teamBName =
           {/* Teams Tab Content */}
           {activeTab === 'teams' && (
           <>
+          {/* Open Room Policy Banner */}
           {displayRoom.status === 'Open' && showOpenRoomPolicyBanner && (
             <ThemedView
               style={[
@@ -698,12 +737,20 @@ const teamBName =
               ]}
             >
               <TouchableOpacity
-                onPress={() => setShowOpenRoomPolicyBanner(false)}
-                style={styles.openRoomPolicyCloseButton}
+                onPress={() => {
+                  setShowOpenRoomPolicyBanner(false);
+                }}
+                style={[styles.openRoomPolicyCloseButton, {
+                  backgroundColor: theme.colors.error + '16',
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: theme.colors.error + '90',
+                }]}
                 accessibilityRole="button"
-                accessibilityLabel={t('common.buttons.close', 'Đóng')}
+                accessibilityLabel={t('common.buttons.close')}
               >
-                <Ionicons name="close" size={18} color={theme.colors.textSecondary} />
+                <Ionicons name="close" style={{fontWeight: "300"}} size={18} color={theme.colors.error + '90'} />
+                <ThemedText size="s" weight="medium" style={{ color: theme.colors.error + '90'}}>{t('common.buttons.close')}</ThemedText>
               </TouchableOpacity>
               <View style={styles.openRoomPolicyBannerIcon}>
                 <Ionicons name="information-circle" size={26} color={theme.colors.neonGreen} />

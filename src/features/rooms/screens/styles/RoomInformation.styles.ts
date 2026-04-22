@@ -138,11 +138,12 @@ export const styles = StyleSheet.create({
   openRoomPolicyCloseButton: {
     position: 'absolute',
     top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
+    right: 20,
+    width: 60,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row', 
   },
   openRoomPolicyBannerIcon: {
     paddingTop: 2,

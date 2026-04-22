@@ -5,6 +5,8 @@ import type { ApiError } from './types';
 import { useFeedbackSessionStore } from '@/features/feedback/store/feedbackSessionStore';
 import { useAppStore } from '@/store/appStore';
 
+const API_DEBUG_LOGS_ENABLED = __DEV__ && process.env.EXPO_PUBLIC_ENABLE_API_LOGS === 'true';
+
 // ─── Bilingual HTTP status error messages ────────────────────────────────────
 
 const HTTP_ERROR_MESSAGES: Record<number, { vi: string; en: string }> = {
@@ -282,14 +284,14 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    if (__DEV__) {
+    if (API_DEBUG_LOGS_ENABLED) {
       console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
     }
     
     return config;
   },
   (error: AxiosError) => {
-    if (__DEV__) {
+    if (API_DEBUG_LOGS_ENABLED) {
       console.error('📤 Request Error:', error);
     }
     return Promise.reject(error);
@@ -299,7 +301,7 @@ apiClient.interceptors.request.use(
 // Response interceptor with token refresh handling
 apiClient.interceptors.response.use(
   (response) => {
-    if (__DEV__) {
+    if (API_DEBUG_LOGS_ENABLED) {
       console.log('📥 API Response:', response.config.method?.toUpperCase(), response.config.url, response.status);
     }
     
@@ -376,10 +378,9 @@ apiClient.interceptors.response.use(
       apiError.details = data;
       if (data?.userId != null) apiError.userId = String(data.userId);
       
-      console.log('🔍 API Error:', data);
-
-      if (__DEV__) {
-        console.error('📥 API Error:', status, error.config?.url, apiError.message);
+      if (API_DEBUG_LOGS_ENABLED) {
+        // console.log('🔍 API Error:', data);
+        // console.error('📥 API Error:', status, error.config?.url, apiError.message);
       }
 
       // Override with fixed bilingual message for known server/client error codes.
@@ -391,12 +392,12 @@ apiClient.interceptors.response.use(
       }
     } else if (error.request) {
       apiError.message = getNetworkErrorMessage();
-      if (__DEV__) {
+      if (API_DEBUG_LOGS_ENABLED) {
         console.error('📥 Network Error:', error.request);
       }
     } else {
       apiError.message = error.message;
-      if (__DEV__) {
+      if (API_DEBUG_LOGS_ENABLED) {
         console.error('📥 Error:', error.message);
       }
     }

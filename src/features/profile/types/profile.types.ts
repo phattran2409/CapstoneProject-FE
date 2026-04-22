@@ -63,7 +63,10 @@ export interface AchievementItem {
   description: string;
   badgeIconUrl: string;
   criteriaType: string;
-  criteriaValue: number;
+  targetValue: number;
+  currentProgress: number;
+  progressPercent: number;
+  status: string;
   isUnlocked: boolean;
   earnedAt: string | null;
 }

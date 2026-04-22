@@ -25,6 +25,7 @@ import type {
   HostTransferRequestedPayload,
   HostTransferRejectedPayload,
   HostTransferredPayload,
+  AutoCloseCountdownTickPayload,
 } from "./useMatchRoomSignalR";
 
 export interface UseMatchRoomSignalRHandlersOptions {
@@ -64,7 +65,11 @@ export interface UseMatchRoomSignalRHandlersOptions {
   // Host transfer callbacks
   onHostTransferRequested?: (payload: HostTransferRequestedPayload) => void;
   onHostTransferRejected?: (payload: HostTransferRejectedPayload) => void;
-  onHostTransferred?: (payload: HostTransferredPayload) => void; 
+  onHostTransferred?: (payload: HostTransferredPayload) => void;
+
+  // Auto-close countdown callback
+  onAutoCloseCountdownTick?: (payload: AutoCloseCountdownTickPayload) => void;
+
   // Toast/Alert notifications
   showNotification?: (
     message: string,
@@ -116,6 +121,7 @@ export const useMatchRoomSignalRHandlers = (
     onHostTransferRequested: onHostTransferRequestedCallback,
     onHostTransferRejected: onHostTransferRejectedCallback,
     onHostTransferred: onHostTransferredCallback,
+    onAutoCloseCountdownTick: onAutoCloseCountdownTickCallback,
   } = options;
 
   const queryClient = useQueryClient();
@@ -868,6 +874,20 @@ export const useMatchRoomSignalRHandlers = (
     },
     [roomId, currentUserId, onHostTransferredCallback],
   );
+
+  /**
+   * Handler khi server phát event đếm ngược auto-close.
+   * Forward payload trực tiếp lên UI layer — UI tự quyết định hiển thị.
+   */
+  const onAutoCloseCountdownTick = useCallback(
+    (payload: AutoCloseCountdownTickPayload) => {
+      console.log("⏳ Handler - AutoCloseCountdownTick:", payload);
+      if (payload.roomId !== roomId) return;
+      onAutoCloseCountdownTickCallback?.(payload);
+    },
+    [roomId, onAutoCloseCountdownTickCallback],
+  );
+
   return {
     roomId,
     onUserJoinedRoom,
@@ -886,5 +906,6 @@ export const useMatchRoomSignalRHandlers = (
     onHostTransferRequested, 
     onHostTransferRejected,
     onHostTransferred,
+    onAutoCloseCountdownTick,
   };
 };

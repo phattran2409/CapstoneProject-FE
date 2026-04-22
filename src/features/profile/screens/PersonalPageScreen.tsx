@@ -181,6 +181,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     ? myRadarQuery
     : userRadarQuery;
   
+  console.log("analysisRadarData", analysisRadarData);
   // Memoize converted matches
   const listMatches = useMemo(() => {
     const seen = new Set<string>();

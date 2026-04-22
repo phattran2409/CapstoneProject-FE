@@ -58,7 +58,7 @@ export const AIAssessmentCard: React.FC<AIAssessmentCardProps> = ({
         },
       ]}
     >
-      <View style={styles.header}>
+    <View style={styles.header}>
         <Ionicons name={resolvedIcon} size={20} color={finalIconColor} />
         <Text
           style={[
