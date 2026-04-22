@@ -149,7 +149,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
               </ThemedText>
             </View>
             <ThemedText size="xl" weight="bold">
-              {displayRoom.durationMinutes} min
+              {displayRoom.durationMinutes} {t('roomDetail.minutes')}
             </ThemedText>
           </ThemedCard>
         </View>

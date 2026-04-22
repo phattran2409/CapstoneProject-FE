@@ -22,6 +22,7 @@ import type {
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
+import { DepositResponse } from '@/features/wallet/types/wallet.types';
 
 /**
  * Rooms API functions
@@ -223,6 +224,15 @@ export const roomsApi = {
       },
     );
     return data;
+  },
+
+  directPayment: async (roomId: string): Promise<DepositResponse> => {
+    const data = await apiClient.post(
+      API_CONFIG.ENDPOINTS.ROOMS.DIRECT_PAYMENT.replace(':roomId', roomId),
+    );
+    const body = data as unknown as ApiResponse<DepositResponse>;
+    if (body?.isSuccess) return body.data as DepositResponse;
+    return data as unknown as DepositResponse;
   },
 
   // ==================== Match Room SignalR API ====================

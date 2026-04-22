@@ -83,7 +83,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               <ThemedIcon name={isJoining ? "hourglass" : "add"} size={32} variant="accent" />
             </View>
             <ThemedText variant="secondary" size="s" weight="medium">
-              {isJoining ? 'Joining...' : t('roomDetail.emptySlot')}
+              {isJoining ? t('common.processing', 'Joining...') : t('roomDetail.emptySlot')}
             </ThemedText>
           </View>
         </TouchableOpacity>
@@ -127,7 +127,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               style={[styles.kickButton, { backgroundColor: '#EF4444' }]}
               onPress={(e) => {
                 e.stopPropagation();
-                onKickPlayer(player.userId, player.fullName || 'Player');
+                onKickPlayer(player.userId, player.fullName || t('roomDetail.player', 'Player'));
               }}
               disabled={isKicking}
             >
@@ -190,7 +190,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               style={styles.playerNameText}
               numberOfLines={1}
             >
-              {player.fullName || 'Unknown'}
+              {player.fullName || t('roomDetail.unknown', 'Unknown')}
             </ThemedText>
           </View>
         </View>

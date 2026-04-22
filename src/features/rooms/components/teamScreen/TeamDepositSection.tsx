@@ -17,8 +17,7 @@ type Props = {
   isProcessingPayment: boolean;
   hasPaidDeposit: boolean;
   onProcessPayment: () => void;
-  /** Direct / non-wallet payment — wire when API is ready */
-  onDirectPayment?: () => void;
+  onDirectPayment: () => void;
 };
 
 export const TeamDepositSection: React.FC<Props> = ({
@@ -46,7 +45,7 @@ export const TeamDepositSection: React.FC<Props> = ({
 
   const handleDirectPayment = () => {
     closePaymentChoices();
-    onDirectPayment?.();
+    onDirectPayment();
   };
 
   const accent = theme.colors.neonGreen ?? theme.colors.primary;

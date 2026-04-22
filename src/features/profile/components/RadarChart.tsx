@@ -2,6 +2,7 @@ import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import Svg, { Polygon, Circle, Line, Text as SvgText, G } from "react-native-svg";
 import { useTheme } from "@/shared/theme";
+import { useTranslation } from "react-i18next";
 
 interface BackendRadarData {
   form: number;
@@ -52,20 +53,22 @@ const START_ANGLE = -Math.PI / 2;
 const ANGLE_STEP = (2 * Math.PI) / 5;
 
 const AXES = [
-  { label: "Form", key: "form", angle: START_ANGLE, labelDx: 0 },
-  { label: "WinRate", key: "winRate", angle: START_ANGLE + ANGLE_STEP, labelDx: 0 },
-  { label: "Community", key: "communityScore", angle: START_ANGLE + 2 * ANGLE_STEP, labelDx: 0 },
-  { label: "Trust", key: "trust", angle: START_ANGLE + 3 * ANGLE_STEP, labelDx: 0 },
+  { i18nKey: "form", key: "form", angle: START_ANGLE, labelDx: 0, defaultLabel: "Form" },
+  { i18nKey: "winRate", key: "winRate", angle: START_ANGLE + ANGLE_STEP, labelDx: -10, defaultLabel: "WinRate" },
+  { i18nKey: "community", key: "communityScore", angle: START_ANGLE + 2 * ANGLE_STEP, labelDx: 0, defaultLabel: "Community" },
+  { i18nKey: "trust", key: "trust", angle: START_ANGLE + 3 * ANGLE_STEP, labelDx: 0, defaultLabel: "Trust" },
   {
-    label: "Contribution",
+    i18nKey: "contribution",
     key: "contribution",
     angle: START_ANGLE + 4 * ANGLE_STEP,
     labelDx: 18,
+    defaultLabel: "Contribution",
   },
 ] as const;
 
 export const RadarChart: React.FC<RadarChartProps> = ({ data, size = CHART_SIZE }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const center = size / 2;
   const radius = size * 0.38;
   const radarData = transformRadarData(data || MOCK_DATA);
@@ -94,7 +97,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, size = CHART_SIZE 
     return {
       x: center + labelRadius * Math.cos(axis.angle) + (axis.labelDx ?? 0),
       y: center + labelRadius * Math.sin(axis.angle),
-      label: axis.label,
+      label: t(`personalPage.analysis.radar.${axis.i18nKey}`, axis.defaultLabel),
     };
   });
 

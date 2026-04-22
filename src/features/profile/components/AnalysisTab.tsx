@@ -92,7 +92,7 @@ ví dụ trả về
   "contribution": 0.6
 } */}
 
-        <RadarChart data={radarData ?? undefined} />
+    <RadarChart data={radarData ?? undefined} />
       </View>
     <View style={[styles.summaryContainer,
       { backgroundColor: theme.colors.surface,

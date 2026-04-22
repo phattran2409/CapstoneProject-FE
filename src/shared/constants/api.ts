@@ -69,6 +69,7 @@ export const API_CONFIG = {
       INVITE_FRIEND: "/match-rooms/:id/invite-friend",
       /** Legacy resource (không phải match-rooms) */
       LEGACY_ROOM: "/rooms/:id",
+      DIRECT_PAYMENT: "/bookings/:roomId/payment/vnpay",
     },
     VENUES: {
       LIST: "/venues",

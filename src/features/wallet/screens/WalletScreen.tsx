@@ -292,11 +292,11 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   ];
   const withdrawalStatusTabs: Array<{ key: string; label: string; value?: string }> = [
     { key: "all", label: t("wallet.withdrawStatus.all", { defaultValue: "Tất cả" }), value: undefined },
-    { key: "pending", label: "Pending", value: "Pending" },
-    { key: "processing", label: "Processing", value: "Processing" },
-    { key: "completed", label: "Completed", value: "Completed" },
-    { key: "rejected", label: "Rejected", value: "Rejected" },
-    { key: "cancelled", label: "Cancelled", value: "Cancelled" },
+    { key: "pending", label: t("wallet.withdrawStatus.pending", { defaultValue: "Đang chờ" }), value: "Pending" },
+    { key: "processing", label: t("wallet.withdrawStatus.processing", { defaultValue: "Đang xử lý" }), value: "Processing" },
+    { key: "completed", label: t("wallet.withdrawStatus.completed", { defaultValue: "Hoàn thành" }), value: "Completed" },
+    { key: "rejected", label: t("wallet.withdrawStatus.rejected", { defaultValue: "Từ chối" }), value: "Rejected" },
+    { key: "cancelled", label: t("wallet.withdrawStatus.cancelled", { defaultValue: "Đã hủy" }), value: "Cancelled" },
   ];
 
 

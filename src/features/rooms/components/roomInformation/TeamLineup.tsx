@@ -71,7 +71,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
             ]}
           />
           <ThemedText variant="secondary" size="xs">
-            {isSignalRConnected ? 'Live' : 'Offline'}
+            {isSignalRConnected ? t('roomDetail.live') : t('roomDetail.offline', 'Offline')}
           </ThemedText>
         </View>
       </View>

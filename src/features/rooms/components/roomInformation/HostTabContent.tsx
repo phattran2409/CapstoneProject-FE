@@ -33,7 +33,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}
               {host.fullName}
             </ThemedText>
             <ThemedText variant="secondary" size="s">
-              Host ID: {host.userId.slice(0, 8)}...
+              {t('roomDetail.hostId')}{host.userId.slice(0, 8)}...
             </ThemedText>
           </View>
         </View>

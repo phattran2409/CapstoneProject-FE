@@ -21,6 +21,7 @@ import {
   type MatchRoomFullInfo,
   type MatchRoomParticipant,
   type TeamAssignment,
+  formatMatchFormatVsLabel,
 } from '@/features/rooms';
 import { useAuthStore } from '@/features/auth';
 import SplashScreen from '@/features/splash/screens/SplashScreen';
@@ -595,22 +596,23 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   }
 
   const shareUrl = `kickify://room/${displayRoom.roomId}`;
-  const shareMessage = `Join my football match!\n\nFormat: ${displayRoom.matchFormat}\nDate: ${formatDate(
-    displayRoom.matchDate,
-    'short',
-  )} ${displayRoom.startTime} - ${displayRoom.endTime}\nVenue: ${
-    displayRoom.field.venue.venueName
-  }\n\nJoin here: ${shareUrl}`;
+  const shareMessage = t('roomDetail.shareMessage', {
+    format: displayRoom.matchFormat,
+    date: formatDate(displayRoom.matchDate, 'short'),
+    time: `${displayRoom.startTime} - ${displayRoom.endTime}`,
+    venue: displayRoom.field.venue.venueName,
+    url: shareUrl,
+  });
 
 const teamAName =
   displayRoom.formations?.teamA?.teamName ||
   displayRoom.teamNames?.A ||
-  'Đội A';
+  t('roomDetail.teamA', 'Đội A');
 
 const teamBName =
   displayRoom.formations?.teamB?.teamName ||
   displayRoom.teamNames?.B ||
-  'Đội B';
+  t('roomDetail.teamB', 'Đội B');
 
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
@@ -793,7 +795,7 @@ const teamBName =
             <RoomInfoCard
               icon="people"
               label={t('roomDetail.format')}
-              value={displayRoom.matchFormat === 'FiveVsFive' ? '5v5' : displayRoom.matchFormat === 'SevenVsSeven' ? '7v7' : displayRoom.matchFormat}
+              value={formatMatchFormatVsLabel(displayRoom.matchFormat)}
               valueSize="xl"
               valueWeight="bold"
             />
@@ -840,8 +842,8 @@ const teamBName =
           {/* Team Lineup Section */}
           <TeamLineup
             displayRoom={displayRoom}
-            teamAName={teamAName || 'Đội A'}
-            teamBName={teamBName || 'Đội B'}
+            teamAName={teamAName || t('roomDetail.teamA', 'Đội A')}
+            teamBName={teamBName || t('roomDetail.teamB', 'Đội B')}
             t={t}
             isSignalRConnected={isSignalRConnected}
             currentUserParticipant={currentUserParticipant}
