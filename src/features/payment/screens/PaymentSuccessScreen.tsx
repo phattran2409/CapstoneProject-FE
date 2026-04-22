@@ -161,7 +161,7 @@ const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
         >
           {[
             {
-              label: 'Mã giao dịch',
+              label: t("payment.transactionId", { defaultValue: "Mã giao dịch" }),
               value: txnRef,
             },
             {

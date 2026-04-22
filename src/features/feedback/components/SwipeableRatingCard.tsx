@@ -8,6 +8,9 @@ import {
   Dimensions,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  ScrollView,
+  Pressable,
 } from "react-native";
 import { useTheme } from "@/shared/theme";
 import Animated, {
@@ -75,6 +78,17 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
   const generateSuggestionMutation = useGenerateSuggestionComment();
   const roleMeta = getPlayerPositionMeta(player.role);
   const roleColor = roleMeta?.color ?? theme.colors.textSecondary;
+  const [sentimentModalVisible, setSentimentModalVisible] = React.useState(false);
+  const [selectedSentiment, setSelectedSentiment] = React.useState<string | null>(null);
+
+  // Sentiment levels mapped to star ratings (kept same logic as before)
+  const sentimentLevels = [
+    { key: "veryPositive", starRating: 5 },
+    { key: "positive",     starRating: 4 },
+    { key: "neutral",      starRating: 3 },
+    { key: "negative",     starRating: 2 },
+    { key: "veryNegative", starRating: 1 },
+  ] as const;
 
   React.useEffect(() => {
     const generatedComment =
@@ -200,14 +214,20 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
     return { opacity };
   });
 
-  const onGenerateComment = async () => {
-    if (!rating || generateSuggestionMutation.isPending || !player.role) return;
+  const onGenerateComment = async (starRating: number) => {
+    if (!starRating || generateSuggestionMutation.isPending || !player.role) return;
 
     await generateSuggestionMutation.mutateAsync({
-      starRating: rating,
+      starRating,
       count: 1,
       role: player.role,
     });
+  };
+
+  const onSelectSentiment = async (key: string, starRating: number) => {
+    setSelectedSentiment(key);
+    setSentimentModalVisible(false);
+    await onGenerateComment(starRating);
   };
 
   const renderStars = () => {
@@ -365,48 +385,115 @@ const SwipeableRatingCard: React.FC<SwipeableRatingCardProps> = ({
                 borderColor: theme.colors.border,
               },
             ]}
-            placeholder={t("feedback.rating.commentPlaceholder", `Nhận xét ngắn về trận đấu của ${player.name.split(" ").pop()}...\n(không bắt buộc)`)}
+            placeholder={t("feedback.rating.commentPlaceholder", "Nhận xét ngắn... (không bắt buộc)")}
             placeholderTextColor={theme.colors.textTertiary}
             value={comment}
             onChangeText={onCommentChange}
             multiline
             maxLength={200}
           />
-          {/* //button auto generate comment */}
+
+          {/* Sentiment Dropdown */}
+          <Text style={[styles.sentimentLabel, { color: theme.colors.textSecondary }]}>
+            {t("feedback.rating.sentimentLabel", "Tạo nhận xét theo mức độ")}
+          </Text>
           <TouchableOpacity
             style={[
-              styles.generateCommentButton,
+              styles.sentimentSelector,
               {
                 borderColor: theme.colors.neonGreen,
                 backgroundColor: theme.colors.neonGreen + "1A",
-                opacity: !rating || generateSuggestionMutation.isPending ? 0.6 : 1,
+                opacity: generateSuggestionMutation.isPending ? 0.6 : 1,
               },
             ]}
-            onPress={() => {
-              void onGenerateComment();
-            }}
-            disabled={!rating || generateSuggestionMutation.isPending}
+            onPress={() => { if (!generateSuggestionMutation.isPending) setSentimentModalVisible(true); }}
+            activeOpacity={0.75}
+            disabled={generateSuggestionMutation.isPending}
           >
             {generateSuggestionMutation.isPending ? (
               <ActivityIndicator size="small" color={theme.colors.neonGreen} />
             ) : (
-              <Ionicons
-                name="chatbox-ellipses-outline"
-                size={24}
-                color={theme.colors.neonGreen}
-              />
+              <Ionicons name="chatbox-ellipses-outline" size={20} color={theme.colors.neonGreen} />
             )}
-            <Text
-              style={[
-                styles.generateCommentButtonText,
-                { color: theme.colors.neonGreen },
-              ]}
-            >
+            <Text style={[styles.sentimentSelectorText, { color: theme.colors.neonGreen }]}>
               {generateSuggestionMutation.isPending
                 ? t("common.loading", "Đang tạo...")
-                : t("feedback.rating.generateComment", "Tự động tạo nhận xét")}
+                : selectedSentiment
+                  ? t(`feedback.rating.sentimentLevels.${selectedSentiment}`, selectedSentiment)
+                  : t("feedback.rating.sentimentPlaceholder", "Chọn mức độ nhận xét...")}
             </Text>
+            <Ionicons
+              name={sentimentModalVisible ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={theme.colors.neonGreen}
+              style={{ marginLeft: "auto" }}
+            />
           </TouchableOpacity>
+
+          {/* Sentiment Modal */}
+          <Modal
+            visible={sentimentModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSentimentModalVisible(false)}
+          >
+            <Pressable
+              style={styles.modalBackdrop}
+              onPress={() => setSentimentModalVisible(false)}
+            >
+              <Pressable
+                style={[
+                  styles.modalSheet,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                  {t("feedback.rating.sentimentLabel", "Tạo nhận xét theo mức độ")}
+                </Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {sentimentLevels.map(({ key, starRating }) => (
+                    <TouchableOpacity
+                      key={key}
+                      style={[
+                        styles.sentimentOption,
+                        {
+                          backgroundColor:
+                            selectedSentiment === key
+                              ? theme.colors.neonGreen + "22"
+                              : "transparent",
+                          borderColor:
+                            selectedSentiment === key
+                              ? theme.colors.neonGreen
+                              : theme.colors.border,
+                        },
+                      ]}
+                      onPress={() => { void onSelectSentiment(key, starRating); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.sentimentOptionText,
+                          {
+                            color:
+                              selectedSentiment === key
+                                ? theme.colors.neonGreen
+                                : theme.colors.text,
+                            fontWeight: selectedSentiment === key ? "700" : "400",
+                          },
+                        ]}
+                      >
+                        {t(`feedback.rating.sentimentLevels.${key}`, key)}
+                      </Text>
+                      {selectedSentiment === key && (
+                        <Ionicons name="checkmark" size={18} color={theme.colors.neonGreen} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </Pressable>
+            </Pressable>
+          </Modal>
           {/* Report Button */}
           {onReport && (
             <TouchableOpacity
@@ -595,6 +682,59 @@ const styles = StyleSheet.create({
   generateCommentButtonText: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  sentimentLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 6,
+    alignSelf: "flex-start",
+  },
+  sentimentSelector: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  sentimentSelectorText: {
+    fontSize: 13,
+    fontWeight: "500",
+    flex: 1,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 32,
+    maxHeight: 400,
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  sentimentOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  sentimentOptionText: {
+    fontSize: 14,
   },
 });
 

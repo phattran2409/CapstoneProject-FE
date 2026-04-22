@@ -86,7 +86,7 @@ export const PositionSelectionModal: React.FC<PositionSelectionModalProps> = ({
     }
   }, [visible]);
 
-  const teamLabel = teamAssignment === 'A' ? 'Team A' : 'Team B';
+  const teamLabel = teamAssignment === 'A' ? t('roomDetail.teamA', 'Team A') : t('roomDetail.teamB', 'Team B');
   const teamColor = teamAssignment === 'A' ? '#4CAF50' : '#2196F3';
   
   const positions: PositionOption[] = useMemo(

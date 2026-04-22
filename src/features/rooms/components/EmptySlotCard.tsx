@@ -42,7 +42,7 @@ export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({
     }).start();
   };
 
-  const teamLabel = teamAssignment === 'A' ? 'Team A' : teamAssignment === 'B' ? 'Team B' : 'Team';
+  const teamLabel = teamAssignment === 'A' ? t('roomDetail.teamA', 'Team A') : teamAssignment === 'B' ? t('roomDetail.teamB', 'Team B') : t('roomDetail.team', 'Team');
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -84,7 +84,7 @@ export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({
             weight="medium"
             style={styles.text}
           >
-            {isJoining ? 'Đang xử lý...' : `Tham gia`}
+            {isJoining ? t('common.processing', 'Đang xử lý...') : t('roomDetail.join', 'Tham gia')}
           </ThemedText>
 
           {/* Team Badge */}

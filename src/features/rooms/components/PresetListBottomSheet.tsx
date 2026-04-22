@@ -207,7 +207,7 @@ const PresetListBottomSheet: React.FC<PresetListBottomSheetProps> = ({
           {/* Sheet header */}
           <View style={[styles.sheetHeader, { borderBottomColor: theme.colors.border }]}>
             <ThemedText size="xl" weight="bold">
-              Match Presets
+              {t('createRoom.preset.sheetTitle', 'Match Presets')}
             </ThemedText>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={22} color={theme.colors.text} />
