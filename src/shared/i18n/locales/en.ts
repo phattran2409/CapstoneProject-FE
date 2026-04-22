@@ -326,6 +326,8 @@ const en = {
   },
   roomDetail: {
     title: "Room Details",
+    processing: "Processing...",
+    join: "Join",
     host: "Host",
     hostInformation: "Host Information",
     format: "Format",
@@ -339,6 +341,8 @@ const en = {
     joinButton: "Join Match",
     status: "Status",
     teamName: "Team Name",
+    paid: "Paid",
+    pending: "Pending",
     teamJoinButton: {
       join: "Join Team",
       joinFirst: "Join a team first",

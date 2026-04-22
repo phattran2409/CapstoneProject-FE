@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { View, TouchableOpacity, AppState, AppStateStatus } from 'react-native';
+import { View, TouchableOpacity, AppState, AppStateStatus, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
@@ -157,6 +157,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   const [showOpenRoomPolicyBanner, setShowOpenRoomPolicyBanner] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // ✅ Position selection modal state
   const [showPositionModal, setShowPositionModal] = useState(false);
@@ -298,10 +299,18 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     return () => subscription.remove();
   }, [refetch]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
   // ✅ Handle open position selection modal
   const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
     if (roomActionsBlocked) return;
-
     if (!user) {
       showInfo(t('roomDetail.loginRequired'), t('roomDetail.loginRequiredDesc'));
       return;
@@ -719,7 +728,17 @@ const teamBName =
         </TouchableOpacity>
       </View>
 
-      <ThemedScrollView showsVerticalScrollIndicator={false}>
+      <ThemedScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.neonGreen]}
+            tintColor={theme.colors.neonGreen}
+          />
+        }
+      >
         <View style={styles.contentContainer}>
           {/* Teams Tab Content */}
           {activeTab === 'teams' && (

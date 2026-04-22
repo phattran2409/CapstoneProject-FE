@@ -110,7 +110,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             variant="secondary"
             style={{ marginLeft: 2 }}
           >
-            {participant.depositPaid ? 'Paid' : 'Pending'}
+            {participant.depositPaid ? t('roomDetail.paid') : t('roomDetail.pending')}
           </ThemedText>
         </View>
         {/* Host Badge */}

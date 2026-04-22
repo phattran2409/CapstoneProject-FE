@@ -3,6 +3,7 @@ import { View, Image, StyleSheet } from 'react-native';
 import { ThemedText, ThemedCard } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
 import type { MatchRoomFullInfo } from '@/features/rooms';
+import { getImageAvatar } from '@/shared/utils/imageSource';
 
 interface HostTabContentProps {
   t: (key: string) => string;
@@ -24,11 +25,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}
       <ThemedCard style={styles.hostCard}>
         <View style={styles.hostHeader}>
           <Image
-            source={{
-              uri:
-                host.avatarUrl ||
-                'https://ui-avatars.com/api/?name=' + encodeURIComponent(host.fullName),
-            }}
+            source={getImageAvatar({uri: host.avatarUrl ?? ''})}
             style={styles.hostAvatar}
           />
           <View style={styles.hostInfo}>

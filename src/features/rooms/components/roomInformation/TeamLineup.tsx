@@ -132,16 +132,16 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
       {/* Team B */}
       <View style={styles.teamContainer}>
         <View style={styles.teamHeader}>
-          <ThemedIcon name="shield" size={20} variant="accent" />
+          <ThemedIcon name="shield" size={20} color={theme.colors.blueSky} />
       
-          <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
+          <ThemedText size="m" weight="bold" style={[styles.teamName, { color: theme.colors.blueSky }]}>
           {teamBName ? teamBName : t('roomDetail.teamB')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'B' && (
             <View
-              style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.neonGreen + '30' }]}
+              style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.blueSky + '30' }]}
             >
-              <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
+              <ThemedText size="xs" weight="bold" style={{ color: theme.colors.blueSky }}>
                 {t('roomDetail.yourTeam')}
               </ThemedText>
             </View>
@@ -174,7 +174,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           {displayRoom.participants.teamB.length < slotsPerTeam && (
             <EmptySlotCard
               teamAssignment="B"
-              teamColor="#2196F3"
+              teamColor={theme.colors.blueSky}
               isJoining={isUpdatingParticipant && pendingTeamAssignment === 'B'}
               disabled={roomActionsDisabled}
               onPress={() => onOpenPositionModal('B')}

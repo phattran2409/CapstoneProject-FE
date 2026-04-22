@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed';
 import MatchItem, { MatchItemData, MatchItemProps } from './MatchItem';
+import { truncate } from '../utils/formatters';
 
 export interface MatchListProps {
   /** Danh sách matches */

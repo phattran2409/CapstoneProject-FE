@@ -323,6 +323,10 @@ const vi = {
     slotTooCloseMessage: "Bạn cần phải chọn slot giờ trước ít nhất 30 phút.",
   },
   roomDetail: {
+    processing: "Đang xử lý...",
+    join: "Tham gia",
+    paid: "Đã thanh toán",
+    pending: "Chờ ...",
     hostInformation: "Thông tin host",
     host: "Chủ phòng",
     title: "Chi tiết phòng đấu",
