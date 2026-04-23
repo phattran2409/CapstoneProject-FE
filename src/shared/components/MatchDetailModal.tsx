@@ -30,7 +30,12 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const { theme } = useTheme();
   if (!match) return null;
 
-  const detailIconColor = theme.colors.textSecondary;
+  const detailIconColor = theme.colors.neonGreen;
+  
+  const detailRowStyle = {
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+  };
 
   return (
     <Modal
@@ -88,78 +93,80 @@ const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
             {/* Match Info */}
             <View style={styles.matchInfo}>
-              <ThemedText size="xxl" weight="bold" style={styles.matchTitle}>
-                {match.title}
-              </ThemedText>
+              <View style={styles.titleRow}>
+                <ThemedText size="xxl" weight="bold" style={styles.matchTitle}>
+                  {match.title}
+                </ThemedText>
 
-              {/* Status */}
-              {match.status && (
-                <View style={styles.statusContainer}>
-                  <MatchRoomStatusIcon status={match.status} />
-                  <ThemedText size="m" weight="semiBold" style={styles.statusText}>
-                    {t(matchRoomStatusI18nKey(match.status))}
-                  </ThemedText>
-                </View>
-              )}
+                {/* Status */}
+                {match.status && (
+                  <View style={styles.statusContainer}>
+                    <MatchRoomStatusIcon status={match.status} />
+                    <ThemedText size="m" weight="semiBold" style={styles.statusText}>
+                      {t(matchRoomStatusI18nKey(match.status))}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
 
               {/* Details */}
               <View style={styles.detailsContainer}>
                 {match.date && (
-                  <View style={styles.detailRow}>
+                  <View style={[styles.detailRow, detailRowStyle]}>
                     <ThemedIcon
                       name="calendar"
                       size={20}
                       color={detailIconColor}
                     />
-                    <ThemedText variant="secondary" size="m" style={styles.detailText}>
+                    <ThemedText variant="primary" size="m" style={styles.detailText}>
                       {match.date}
                     </ThemedText>
                   </View>
                 )}
 
                 {match.time && (
-                  <View style={styles.detailRow}>
+                  <View style={[styles.detailRow, detailRowStyle]}>
                     <ThemedIcon name="time" size={20} color={detailIconColor} />
-                    <ThemedText variant="secondary" size="m" style={styles.detailText}>
+                    <ThemedText variant="primary" size="m" style={styles.detailText}>
                       {match.time}
                     </ThemedText>
                   </View>
                 )}
 
                 {match.format && (
-                  <View style={styles.detailRow}>
+                  <View style={[styles.detailRow, detailRowStyle]}>
                     <ThemedIcon
                       name="people"
                       size={20}
                       color={detailIconColor}
                     />
-                    <ThemedText variant="secondary" size="m" style={styles.detailText}>
+                    <ThemedText variant="primary" size="m" style={styles.detailText}>
                       {match.format}
                     </ThemedText>
                   </View>
                 )}
 
                 {match.players && (
-                  <View style={styles.detailRow}>
+                  <View style={[styles.detailRow, detailRowStyle]}>
                     <ThemedIcon
                       name="person"
                       size={20}
                       color={detailIconColor}
                     />
-                    <ThemedText variant="secondary" size="m" style={styles.detailText}>
+                    <ThemedText variant="primary" size="m" style={styles.detailText}>
                       {match.players} {t("common.players")}
                     </ThemedText>
                   </View>
                 )}
 
                 {match.venue && (
-                  <View style={styles.detailRow}>
+                  <View style={[styles.detailRow, detailRowStyle]}>
                     <ThemedIcon
                       name="location"
                       size={20}
                       color={detailIconColor}
                     />
-                    <ThemedText variant="secondary" size="m" style={styles.detailText}>
+                    <ThemedText variant="primary" size="m" style={styles.detailText}>
                       {match.venue}
                     </ThemedText>
                   </View>
@@ -259,8 +266,14 @@ const styles = StyleSheet.create({
   matchInfo: {
     gap: 16,
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
   matchTitle: {
-    marginBottom: 8,
+    flex: 1,
   },
   statusContainer: {
     flexDirection: 'row',
@@ -278,9 +291,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
   },
   detailText: {
     marginLeft: 4,
+    marginRight: 12,
   },
   modalFooter: {
     flexDirection: 'row',

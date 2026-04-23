@@ -52,6 +52,7 @@ import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { useGoBackOrResetToMainTabs, useRoomInformationSignalRHandlers } from '../hooks';
 import { styles } from './styles/RoomInformation.styles';
 import { Text } from 'react-native-svg';
+import { getRoomAutoClosePolicy } from '../utils/roomAutoClosePolicy';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -63,7 +64,7 @@ interface RoomInformationScreenProps {
 // ==================== Main Screen Component ====================
 const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     roomId,
     venuePhotos: venuePhotosFromParams,
@@ -122,6 +123,26 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   }, [displayRoom]);
 
   const depositCollected = displayRoom?.totalDepositCollected || 0;
+  const roomAutoClosePolicy = useMemo(() => {
+    if (!displayRoom) return null;
+    return getRoomAutoClosePolicy(
+      displayRoom.createdAt,
+      displayRoom.matchDate,
+      displayRoom.startTime,
+    );
+  }, [displayRoom]);
+
+  const roomAutoCloseDeadlineLabel = useMemo(() => {
+    if (!roomAutoClosePolicy) return "";
+    return new Intl.DateTimeFormat(i18n.language || "vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(roomAutoClosePolicy.deadline);
+  }, [i18n.language, roomAutoClosePolicy]);
 
   const depositProgress = useMemo(() => {
     if (!depositTargetTotal) return 0;
@@ -785,7 +806,12 @@ const teamBName =
                   {t('roomDetail.openRoomPolicyTitle')}
                 </ThemedText>
                 <ThemedText variant="secondary" size="s" style={{ lineHeight: 20 }}>
-                  {t('roomDetail.openRoomPolicyHint')}
+                  {t('roomDetail.openRoomPolicyHint', {
+                    cutoff: roomAutoCloseDeadlineLabel,
+                    rule: roomAutoClosePolicy
+                      ? t(`roomDetail.openRoomPolicyRule.${roomAutoClosePolicy.rule}`)
+                      : "",
+                  })}
                 </ThemedText>
               </View>
             </ThemedView>

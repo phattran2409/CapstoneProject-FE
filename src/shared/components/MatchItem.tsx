@@ -581,6 +581,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginTop: 6,
+    marginRight: 20,
   },
   thirdDetailButton: {
     marginTop: 14,

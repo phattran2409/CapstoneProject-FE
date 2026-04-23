@@ -361,7 +361,12 @@ const en = {
     depositProgress: "fund progress",
     openRoomPolicyTitle: "Room is open",
     openRoomPolicyHint:
-      "Fill all slots and have everyone pay the deposit to hold the booking. If the room is still missing players or deposits by the system cutoff for this match, it may be cancelled and deposits refunded.",
+      "Fill all slots and have everyone pay the deposit to hold the booking. Current cutoff is {{cutoff}} ({{rule}}). If players or deposits are still missing at cutoff, the room is cancelled and deposits are refunded so the slot is released back to the venue owner.",
+    openRoomPolicyRule: {
+      "24h_after_creation": "deadline is 24 hours after room creation",
+      "2h_before_kickoff": "deadline is 2 hours before kickoff",
+      "15m_grace": "late booking gets only a 15-minute grace window",
+    },
     depositOpenHint:
       "Each paid deposit adds to the total; when every slot is filled and paid, the room is confirmed.",
     statusActions: {

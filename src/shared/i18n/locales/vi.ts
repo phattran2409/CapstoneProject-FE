@@ -360,7 +360,12 @@ const vi = {
     depositProgress: "quỹ trận đấu",
     openRoomPolicyTitle: "Phòng đang mở",
     openRoomPolicyHint:
-      "Rủ đủ người và mọi người đóng cọc để giữ slot. Nếu phòng chưa đủ người hoặc chưa đủ cọc đến thời điểm hệ thống cho phép theo lịch trận, phòng có thể bị hủy và hoàn cọc.",
+      "Rủ đủ người và mọi người đóng cọc để giữ slot. Hạn chốt hiện tại là {{cutoff}} ({{rule}}). Nếu phòng chưa đủ người hoặc chưa đủ cọc khi đến hạn, hệ thống sẽ hủy phòng và hoàn cọc để trả slot cho chủ sân.",
+    openRoomPolicyRule: {
+      "24h_after_creation": "chốt sau 24 giờ từ lúc tạo phòng",
+      "2h_before_kickoff": "chốt trước giờ bóng lăn 2 tiếng",
+      "15m_grace": "đặt sát giờ nên chỉ có 15 phút gia ân",
+    },
     depositOpenHint:
       "Mỗi người đóng cọc sẽ cộng dồn vào tổng; khi đủ chỗ và mọi người đã cọc, phòng được xác nhận.",
     statusActions: {
