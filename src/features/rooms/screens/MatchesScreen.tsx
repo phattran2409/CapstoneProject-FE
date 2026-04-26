@@ -12,7 +12,7 @@ import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
 import { useMatchRoomRecommend, useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
-import { PrivateRoomPasswordModal } from '../components';
+import { AIRecommendationModal, PrivateRoomPasswordModal, type MatchRecommendation } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
 import { FilterRoomMatch } from '../components/FilterRoomMatch';
 import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
@@ -38,6 +38,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [aiQuery, setAiQuery] = useState('');
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const { visible: alertVisible, alertOptions, showInfo, hideAlert } = useAlert();
   const [pendingJoinParams, setPendingJoinParams] = useState<{
@@ -118,6 +120,33 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     () => [...myRoomsMatches, ...featuredMatches, ...listMatches],
     [myRoomsMatches, featuredMatches, listMatches]
   );
+
+  const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
+    return allMatches
+      .filter((match) => !!match.id)
+      .map((match) => {
+        const [startTime, endTime] = match.time?.split(' - ') ?? [match.time ?? '', undefined];
+        const [filledSlots, totalSlots] = match.players?.split('/').map((value) => Number(value)) ?? [];
+        const missingPlayers =
+          Number.isFinite(totalSlots) && Number.isFinite(filledSlots)
+            ? Math.max(totalSlots - filledSlots, 0)
+            : undefined;
+
+        return {
+          id: match.id,
+          title: match.title,
+          address: match.venue,
+          startTime: startTime || match.date || t('roomDetail.unknown'),
+          endTime,
+          format: match.format ?? t('roomDetail.unknown'),
+          missingPlayers,
+          matchReason: t('aiRecommendation.match.cardReason', {
+            date: match.date ?? t('roomDetail.unknown'),
+            venue: match.venue ?? t('roomDetail.unknown'),
+          }),
+        };
+      });
+  }, [allMatches, t]);
   
   const isEmptyMatches =
     !isLoading &&
@@ -289,7 +318,20 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity> */}
-       
+
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setAiModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t('aiRecommendation.match.title')}
+          >
+            <Ionicons
+              name="sparkles"
+              size={24}
+              color={theme.colors.neonGreen}
+            />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.iconButton} onPress={() => setFilterVisible(true)}>
             <Ionicons
               name="filter"
@@ -476,6 +518,24 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       {/* Filter Room Match Modal */}
       <FilterRoomMatch visible={filterVisible} onApply={handleFilter} onClose={handleCloseFilter} theme={theme} />
       <OptionFilter visible={optionFilterVisible} initialRadiusKm={radiusKm} onApply={handleApplyRadiusFilter} onClose={handleCloseOptionFilter} />
+
+      <AIRecommendationModal
+        visible={aiModalVisible}
+        mode="match"
+        query={aiQuery}
+        isLoading={loadingRecommended || loadingNearby}
+        matchRecommendations={aiMatchRecommendations}
+        onClose={() => setAiModalVisible(false)}
+        onChangeQuery={setAiQuery}
+        onSubmitQuery={() => {
+          refreshRecommended();
+          refresh();
+        }}
+        onJoinMatch={(recommendation) => {
+          setAiModalVisible(false);
+          handleViewDetail(recommendation.id);
+        }}
+      />
 
       {alertOptions && (
         <Alert
