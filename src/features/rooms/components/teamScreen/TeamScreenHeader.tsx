@@ -30,19 +30,6 @@ export const TeamScreenHeader: React.FC<Props> = ({
     </View>
     <TouchableOpacity onPress={onOpenChat} style={styles.chatButton}>
       <ThemedIcon name="chatbubbles" size={24} variant="secondary" />
-      <View
-        style={[
-          styles.chatBadge,
-          {
-            backgroundColor: theme.colors.neonGreen,
-            borderColor: theme.colors.background,
-          },
-        ]}
-      >
-        {/* <ThemedText size="xs" weight="bold" style={styles.chatBadgeText}>
-          5
-        </ThemedText> */}
-      </View>
     </TouchableOpacity>
   </ThemedView>
 );

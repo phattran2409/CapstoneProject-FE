@@ -298,6 +298,7 @@ const styles = StyleSheet.create({
   detailText: {
     marginLeft: 4,
     marginRight: 12,
+    paddingRight: 12,
   },
   modalFooter: {
     flexDirection: 'row',

@@ -131,7 +131,7 @@ export const FriendCard: React.FC<{
           
             </View>
             <Text style={[styles.sentAt, { color: theme.colors.textTertiary }]}>
-              Bạn bè kể từ - {getRelativeTime(friend.friendsSince)}
+              {t("friends.friendsSince")} {getRelativeTime(friend.friendsSince)}
             </Text>
           </View>
 

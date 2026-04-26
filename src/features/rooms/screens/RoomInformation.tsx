@@ -178,7 +178,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
-  const [showOpenRoomPolicyBanner, setShowOpenRoomPolicyBanner] = useState(true);
+  const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // ✅ Position selection modal state
@@ -767,7 +767,7 @@ const teamBName =
           {activeTab === 'teams' && (
           <>
           {/* Open Room Policy Banner */}
-          {displayRoom.status === 'Open' && showOpenRoomPolicyBanner && (
+          {displayRoom.status === 'Open' && (
             <ThemedView
               style={[
                 styles.openRoomPolicyBanner,
@@ -778,41 +778,53 @@ const teamBName =
                 },
               ]}
             >
-              <TouchableOpacity
-                onPress={() => {
-                  setShowOpenRoomPolicyBanner(false);
-                }}
-                style={[styles.openRoomPolicyCloseButton, {
-                  backgroundColor: theme.colors.error + '16',
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: theme.colors.error + '90',
-                }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.buttons.close')}
-              >
-                <Ionicons name="close" style={{fontWeight: "300"}} size={18} color={theme.colors.error + '90'} />
-                <ThemedText size="s" weight="medium" style={{ color: theme.colors.error + '90'}}>{t('common.buttons.close')}</ThemedText>
-              </TouchableOpacity>
-              <View style={styles.openRoomPolicyBannerIcon}>
-                <Ionicons name="information-circle" size={26} color={theme.colors.neonGreen} />
-              </View>
               <View style={styles.openRoomPolicyBannerText}>
-                <ThemedText
-                  size="m"
-                  weight="bold"
-                  style={{ color: theme.colors.neonGreen, marginBottom: 6 }}
+                <TouchableOpacity
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                  onPress={() => setIsOpenRoomPolicyExpanded((prev) => !prev)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Chính sách của trận đấu"
                 >
-                  {t('roomDetail.openRoomPolicyTitle')}
-                </ThemedText>
-                <ThemedText variant="secondary" size="s" style={{ lineHeight: 20 }}>
-                  {t('roomDetail.openRoomPolicyHint', {
-                    cutoff: roomAutoCloseDeadlineLabel,
-                    rule: roomAutoClosePolicy
-                      ? t(`roomDetail.openRoomPolicyRule.${roomAutoClosePolicy.rule}`)
-                      : "",
-                  })}
-                </ThemedText>
+                  <View
+                    style={[
+                      {
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        borderWidth: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      },
+                      {
+                        borderColor: theme.colors.neonGreen + "90",
+                        backgroundColor: theme.colors.neonGreen + "16",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={isOpenRoomPolicyExpanded ? "chevron-up" : "chevron-down"}
+                      size={14}
+                      color={theme.colors.neonGreen}
+                    />
+                  </View>
+                  <ThemedText
+                    size="m"
+                    weight="bold"
+                    style={{ color: theme.colors.neonGreen }}
+                  >
+                    {t('roomDetail.openRoomPolicyTitle')}
+                  </ThemedText>
+                </TouchableOpacity>
+                {isOpenRoomPolicyExpanded && (
+                  <ThemedText variant="primary" size="s" style={{ lineHeight: 20, marginTop: 8 }}>
+                    {t('roomDetail.openRoomPolicyHint', {
+                      cutoff: roomAutoCloseDeadlineLabel,
+                      rule: roomAutoClosePolicy
+                        ? t(`roomDetail.openRoomPolicyRule.${roomAutoClosePolicy.rule}`)
+                        : "",
+                    })}
+                  </ThemedText>
+                )}
               </View>
             </ThemedView>
           )}
@@ -864,7 +876,6 @@ const teamBName =
             />
             
           </View>
-
           {/* Team Lineup Section */}
           <TeamLineup
             displayRoom={displayRoom}
