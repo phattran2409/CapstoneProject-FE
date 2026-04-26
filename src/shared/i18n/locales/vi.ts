@@ -1144,6 +1144,32 @@ const vi = {
     resetButton: "Đặt lại",
     applyButton: "Áp dụng",
   },
+  aiRecommendation: {
+    searching: "AI đang tìm gợi ý phù hợp nhất...",
+    match: {
+      title: "AI Gợi ý Trận đấu",
+      placeholder: "Nhập yêu cầu của bạn (VD: Tìm sân 5 gần Cầu Giấy tối nay)...",
+      summary: "Đã tìm thấy {{count}} Trận đấu phù hợp nhất...",
+      empty: "Nhập vị trí, thời gian hoặc loại sân để AI gợi ý trận đấu.",
+      unknownVenue: "Chưa rõ địa điểm",
+      distance: "Cách {{distance}}",
+      missingPlayers: "Đang thiếu {{count}} người",
+      cardReason: "Phù hợp với lịch {{date}} tại {{venue}}.",
+      joinNow: "Tham gia ngay",
+    },
+    player: {
+      title: "AI Gợi ý Cầu thủ",
+      placeholder: "Nhập yêu cầu của bạn (VD: Cần tiền vệ ELO 1400+ đá tối nay)...",
+      summary: "Đã tìm thấy {{count}} cầu thủ phù hợp nhất...",
+      empty: "Nhập vị trí chơi, ELO, chuỗi thắng hoặc đánh giá cộng đồng để AI gợi ý cầu thủ.",
+      elo: "ELO",
+      winStreak: "Chuỗi thắng",
+      winStreakValue: "{{count}} trận",
+      rating: "Đánh giá",
+      community: "Cộng đồng",
+      inviteNow: "Mời tham gia",
+    },
+  },
   achievements: {
     title: "Thành tựu",
     stats: {

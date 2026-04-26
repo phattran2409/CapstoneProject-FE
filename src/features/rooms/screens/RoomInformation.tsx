@@ -39,6 +39,8 @@ import {
   InviteFriendsModal,
   TransferHostModal,
   HostTransferRequestDialog,
+  AIRecommendationModal,
+  type MatchRecommendation,
 } from '../components';
 import type { HostTransferRequestPayload } from '../components/HostTransferRequestDialog';
 import { useResponseTransferHost } from '../hooks/useTransferHost';
@@ -53,6 +55,7 @@ import { useGoBackOrResetToMainTabs, useRoomInformationSignalRHandlers } from '.
 import { styles } from './styles/RoomInformation.styles';
 import { Text } from 'react-native-svg';
 import { getRoomAutoClosePolicy } from '../utils/roomAutoClosePolicy';
+import { mockPlayerRecommendations } from '../components/AIRecommendationModal';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -177,6 +180,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [activeTab, setActiveTab] = useState<'teams' | 'host' | 'venue'>('teams');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [aiQuery, setAiQuery] = useState('');
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -579,6 +584,43 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     });
   };
 
+  const teamAName =
+    displayRoom?.formations?.teamA?.teamName ||
+    displayRoom?.teamNames?.A ||
+    t('roomDetail.teamA', 'Đội A');
+
+  const teamBName =
+    displayRoom?.formations?.teamB?.teamName ||
+    displayRoom?.teamNames?.B ||
+    t('roomDetail.teamB', 'Đội B');
+
+  const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
+    if (!displayRoom) return [];
+
+    const missingPlayers = Math.max((displayRoom.totalSlots ?? 0) - (displayRoom.filledSlots ?? 0), 0);
+    return [
+      {
+        id: displayRoom.roomId,
+        title: displayRoom.roomName || `${teamAName} vs ${teamBName}`,
+        venueName: displayRoom.field.venue.venueName,
+        address: displayRoom.field.venue.address,
+        startTime: displayRoom.startTime,
+        endTime: displayRoom.endTime,
+        format: formatMatchFormatVsLabel(displayRoom.matchFormat),
+        missingPlayers,
+        matchReason: t('aiRecommendation.match.cardReason', {
+          date: formatDate(displayRoom.matchDate, 'short'),
+          venue: displayRoom.field.venue.venueName,
+        }),
+      },
+    ];
+  }, [
+    displayRoom,
+    t,
+    teamAName,
+    teamBName,
+  ]);
+
   // ✅ Loading state
   if (isLoading) {
     return (
@@ -625,16 +667,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     url: shareUrl,
   });
 
-const teamAName =
-  displayRoom.formations?.teamA?.teamName ||
-  displayRoom.teamNames?.A ||
-  t('roomDetail.teamA', 'Đội A');
-
-const teamBName =
-  displayRoom.formations?.teamB?.teamName ||
-  displayRoom.teamNames?.B ||
-  t('roomDetail.teamB', 'Đội B');
-
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -663,12 +695,20 @@ const teamBName =
         </View>
         {displayRoom.status === 'Open' && !roomActionsBlocked && (isHost || currentUserParticipant) && (
         <View style={styles.headerRight}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TouchableOpacity
-            onPress={() => setShowMenuModal(true)}
-            style={styles.menuButton}
-          >
-            <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+              onPress={() => setAiModalVisible(true)}
+              style={styles.menuButton}
+            >
+              <Ionicons name="sparkles" size={24} color={theme.colors.neonGreen}/>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowMenuModal(true)}
+              style={styles.menuButton}
+            >
+              <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary}/>
+            </TouchableOpacity> 
+          </View>
         </View>
         )} 
       </ThemedView>
@@ -1021,6 +1061,18 @@ const teamBName =
         onNavigateToEloBreakdown={handleNavigateToEloBreakdown}
         currentUserId={user?.userId ?? null}
         isViewingOthersMatchHistory={viewAsOthersMatchHistory}
+      />
+
+      <AIRecommendationModal
+        visible={aiModalVisible}
+        mode="player"
+        query={aiQuery}
+        matchRecommendations={aiMatchRecommendations}
+        playerRecommendations={mockPlayerRecommendations}
+        onClose={() => setAiModalVisible(false)}
+        onChangeQuery={setAiQuery}
+        onSubmitQuery={() => {}}
+        onJoinMatch={() => setAiModalVisible(false)}
       />
     </ThemedSafeAreaView>
   );

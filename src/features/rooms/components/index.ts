@@ -10,6 +10,12 @@ export { TransferHostModal } from './TransferHostModal';
 export { HostTransferRequestDialog } from './HostTransferRequestDialog';
 export { CaptainBadge } from './CaptainBadge';
 export {
+  AIRecommendationModal,
+  type AIRecommendationMode,
+  type MatchRecommendation,
+  type PlayerRecommendation,
+} from './AIRecommendationModal';
+export {
   RoomInfoCard,
   HostTabContent,
   VenueTabContent,

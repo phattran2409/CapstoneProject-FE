@@ -1123,6 +1123,32 @@ const en = {
     resetButton: "Reset",
     applyButton: "Apply",
   },
+  aiRecommendation: {
+    searching: "AI is finding the best recommendations...",
+    match: {
+      title: "AI Match Room Suggestions",
+      placeholder: "Enter your request (e.g. Find a 5v5 field near Cau Giay tonight)...",
+      summary: "Found {{count}} best matching rooms...",
+      empty: "Enter a location, time, or field type so AI can suggest match rooms.",
+      unknownVenue: "Unknown venue",
+      distance: "{{distance}} away",
+      missingPlayers: "Missing {{count}} players",
+      cardReason: "Matches the {{date}} schedule at {{venue}}.",
+      joinNow: "Join now",
+    },
+    player: {
+      title: "AI Player Suggestions",
+      placeholder: "Enter your request (e.g. Need a midfielder with 1400+ ELO tonight)...",
+      summary: "Found {{count}} best matching players...",
+      empty: "Enter position, ELO, win streak, or community score so AI can suggest players.",
+      elo: "ELO",
+      winStreak: "Win streak",
+      winStreakValue: "{{count}} wins",
+      rating: "Rating",
+      community: "Community",
+      inviteNow: "Invite player",
+    },
+  },
   achievements: {
     title: "Achievements",
     stats: {
