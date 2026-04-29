@@ -31,6 +31,7 @@ const vi = {
       delete: "Xóa",
       report: "Báo cáo",
       loadingMore: "Đang tải thêm...",
+      skip: "Bỏ qua",
     },
     email: "Email",
     expandableText: {
@@ -1050,6 +1051,20 @@ const vi = {
       ratingRequiredMessage: "Vui lòng chọn số sao đánh giá trước khi gửi.",
       allPlayersRequired:
         "Vui lòng đánh giá tất cả người chơi trước khi hoàn thành.",
+    },
+    opponent: {
+      title: "Đánh giá Đối thủ",
+      subtitle: "Tùy chọn — Chọn người bạn muốn đánh giá",
+      listHint:
+        'Nhấn "Đánh giá" để chấm điểm từng người. Bạn có thể bỏ qua hoàn toàn bước này.',
+      rate: "Đánh giá",
+      rated: "Đã đánh giá",
+      empty: "Không có thành viên đội đối phương.",
+      ratingLabel: "Chấm điểm",
+      commentLabel: "Nhận xét (tùy chọn)",
+      commentPlaceholder: "Nhận xét về cầu thủ này...",
+      submitWithCount: "Gửi {{count}} đánh giá",
+      continue: "Tiếp tục",
     },
     result: {
       headerTitle: "Xác nhận Kết quả",

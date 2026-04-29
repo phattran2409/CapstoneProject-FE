@@ -81,26 +81,33 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     return timePart ? `${dateLabel} · ${timePart}` : dateLabel;
   }, [session?.matchDate, session?.startTime, t]);
 
-  const replaceWithFieldRating = useCallback(() => {
-    navigation.replace("FeedbackFieldRating", {
-      venueId: session?.venue?.venueId,
-    });
-  }, [navigation, session?.venue?.venueId]);
+  const replaceWithNextStep = useCallback(() => {
+    const opponents = session?.opponents ?? [];
+    if (opponents.length > 0) {
+      navigation.replace("FeedbackOpponentRating");
+    } else {
+      navigation.replace("FeedbackFieldRating", {
+        venueId: session?.venue?.venueId,
+      });
+    }
+  }, [navigation, session?.opponents, session?.venue?.venueId]);
 
-  /** Không có đồng đội → bỏ qua bước đánh giá người */
+  /** Không có đồng đội → bỏ qua bước đánh giá đồng đội */
   useEffect(() => {
     if (!session || players.length > 0) return;
     let cancelled = false;
     void (async () => {
-      await setStep("fieldRating");
+      const opponents = session.opponents ?? [];
+      const nextStep = opponents.length > 0 ? "opponentRating" : "fieldRating";
+      await setStep(nextStep as any);
       if (!cancelled) {
-        replaceWithFieldRating();
+        replaceWithNextStep();
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [session, players.length, setStep, replaceWithFieldRating]);
+  }, [session, players.length, setStep, replaceWithNextStep]);
 
   // Khôi phục index từ store (resume khi tắt app giữa chừng)
   const [currentIndex, setCurrentIndex] = useState(
@@ -220,9 +227,12 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       }))
       .filter((f) => f.rating > 0);
 
+    const opponents = liveSession.opponents ?? [];
+    const nextStep = opponents.length > 0 ? "opponentRating" : "fieldRating";
+
     if (feedbacks.length === 0) {
-      await setStep("fieldRating");
-      replaceWithFieldRating();
+      await setStep(nextStep as any);
+      replaceWithNextStep();
       return;
     }
 
@@ -232,8 +242,8 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         reviewerId: user.userId,
         feedbacks,
       });
-      await setStep("fieldRating");
-      replaceWithFieldRating();
+      await setStep(nextStep as any);
+      replaceWithNextStep();
     } catch (error: any) {
       toast.error(
         t("feedback.rating.submitErrorTitle", "Gửi đánh giá thất bại"),
@@ -251,7 +261,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     ratings,
     submitBatchMutation,
     setStep,
-    replaceWithFieldRating,
+    replaceWithNextStep,
     toast,
     t,
   ]);

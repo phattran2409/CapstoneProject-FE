@@ -30,6 +30,7 @@ const en = {
       viewMatchDetail: "View Match Detail",
       loadingMore: "Loading more...",
       report: "Report",
+      skip: "Skip",
     },
     email: "Email",
     expandableText: {
@@ -1029,6 +1030,20 @@ const en = {
       ratingRequired: "Rating Required",
       ratingRequiredMessage: "Please select a star rating before submitting.",
       allPlayersRequired: "Please rate all players before completing.",
+    },
+    opponent: {
+      title: "Rate Opponents",
+      subtitle: "Optional — Select the players you want to rate",
+      listHint:
+        'Tap "Rate" to score each player. You can skip this step entirely.',
+      rate: "Rate",
+      rated: "Rated",
+      empty: "No opponents found.",
+      ratingLabel: "Star rating",
+      commentLabel: "Comment (optional)",
+      commentPlaceholder: "Comment on this player...",
+      submitWithCount: "Submit {{count}} rating(s)",
+      continue: "Continue",
     },
     result: {
       headerTitle: "Confirm Result",

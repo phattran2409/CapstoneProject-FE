@@ -492,10 +492,17 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
           return;
         case 'matchResult':
-          navigation?.navigate('FeedbackMatchResult');
+          if (feedbackSession.isHost) {
+            navigation?.navigate('FeedbackMatchResult');
+          } else {
+            navigation?.navigate('FeedbackRating');
+          }
           return;
         case 'playerRating':
           navigation?.navigate('FeedbackRating');
+          return;
+        case 'opponentRating':
+          navigation?.navigate('FeedbackOpponentRating');
           return;
         case 'fieldRating':
           navigation?.navigate('FeedbackFieldRating', {
@@ -552,8 +559,29 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         };
       });
 
+    // Đội đối phương để đánh giá tùy chọn
+    const opponentPool =
+      myTeam === 'A' ? displayRoom.participants.teamB : displayRoom.participants.teamA;
+    const opponentFormationAssignments =
+      myTeam === 'A'
+        ? (displayRoom.formations?.teamB?.assignments ?? [])
+        : (displayRoom.formations?.teamA?.assignments ?? []);
+    const opponents = opponentPool.map((p) => {
+      const formationSlot = opponentFormationAssignments.find(
+        (a) => a.playerId === p.userId,
+      );
+      return {
+        userId: p.userId,
+        fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
+        position: formationSlot?.position ?? p.position,
+        teamAssignment: p.teamAssignment as 'A' | 'B',
+      };
+    });
+
     await startSession({
       roomId: displayRoom.roomId,
+      isHost,
       teamAName,
       teamBName,
       venue: {
@@ -570,6 +598,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       startTime: displayRoom.startTime,
       myTeam,
       teammates,
+      opponents,
     });
     navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });  
   };
