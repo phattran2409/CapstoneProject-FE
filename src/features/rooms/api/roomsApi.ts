@@ -19,6 +19,8 @@ import type {
   MatchRoomCreatePresetDto,
   UpdateMatchPresetDto,
   CreateMatchPresetDto,
+  CheckInRequest,
+  CheckInResponse,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -410,6 +412,22 @@ export const roomsApi = {
   inviteFriend: async (roomId: string, friendUserId: string): Promise<void> => {
     const url = API_CONFIG.ENDPOINTS.ROOMS.INVITE_FRIEND.replace(':id', roomId);
     await apiClient.post(url, { friendUserId });
+  },
+
+  /**
+   * GPS check-in tại sân
+   * POST /match-rooms/:id/check-in
+   * Payload: { Latitude, Longitude }
+   */
+  checkIn: async (roomId: string, payload: CheckInRequest): Promise<CheckInResponse> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.CHECK_IN.replace(':id', roomId);
+    const data = await apiClient.post(url, {
+      Latitude: payload.latitude,
+      Longitude: payload.longitude,
+    });
+    const body = data as unknown as ApiResponse<CheckInResponse>;
+    if (body?.isSuccess) return body.data as CheckInResponse;
+    return data as unknown as CheckInResponse;
   },
 
   /**

@@ -35,6 +35,7 @@ import {
   TeamLineup,
   MatchCountdown,
   AutoCloseCountdown,
+  CheckInButton,
   type PlayerPosition,
   InviteFriendsModal,
   TransferHostModal,
@@ -151,6 +152,31 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     if (!depositTargetTotal) return 0;
     return Math.max(0, Math.min(1, depositCollected / depositTargetTotal));
   }, [depositCollected, depositTargetTotal]);
+
+  /**
+   * Cửa sổ check-in mở khi:
+   * - Room đang Locked hoặc InProgress (MatchCountdown đang hiện), hoặc
+   * - Room vẫn Open nhưng còn <= 30 phút đến giờ bắt đầu (cùng logic parse của MatchCountdown)
+   */
+  const isCheckInWindowOpen = useMemo(() => {
+    if (!displayRoom) return false;
+    const { status, matchDate, startTime } = displayRoom;
+
+    // Trận đang diễn ra → luôn cho check-in (dù đến muộn)
+    if (status === 'InProgress') return true;
+
+    // Chỉ mở cửa sổ check-in cho Open hoặc Locked khi còn ≤ 30 phút đến giờ bắt đầu
+    if (status !== 'Open' && status !== 'Locked') return false;
+
+    // Parse matchDate + startTime — giống parseTimeToDate trong MatchCountdown
+    const date = new Date(matchDate);
+    const [hh, mm] = (startTime ?? '').split(':').map(Number);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
+    date.setHours(hh, mm, 0, 0);
+    const msToStart = date.getTime() - Date.now();
+    return msToStart > 0 && msToStart <= 30 * 60 * 1000; // ≤ 30 phút trước kickoff
+  }, [displayRoom]);
+
 
   // ✅ Check if user is the host
   const isHost = displayRoom?.hostId === user?.userId;
@@ -964,6 +990,26 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             onParticipantPress={(userId) => navigation?.navigate('PersonalPage', { userId })}
             roomActionsDisabled={roomActionsBlocked}
           />
+
+          {/* GPS Check-in – hiện khi cửa sổ 30 phút trước trận hoặc đang Locked/InProgress */}
+          {isCheckInWindowOpen &&
+            currentUserParticipant &&
+            !roomActionsBlocked && (
+              <View style={{ paddingHorizontal: 4, marginTop: 4 }}>
+                <ThemedText
+                  size="m"
+                  weight="bold"
+                  style={{ marginBottom: 4 }}
+                >
+                  {t('checkIn.sectionTitle')}
+                </ThemedText>
+                <CheckInButton
+                  roomId={displayRoom.roomId}
+                  hasCheckedIn={!!currentUserParticipant.checkInTime}
+                  distanceFromVenueMeters={currentUserParticipant.distanceFromVenueMeters}
+                />
+              </View>
+            )}
             </>
           )}
 

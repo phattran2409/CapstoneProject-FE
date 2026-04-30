@@ -374,6 +374,13 @@ const vi = {
     statusActions: {
       reviewingHint:
         "Bạn có khoảng một ngày sau khi trận kết thúc để bỏ phiếu kết quả và gửi đánh giá. Nếu mọi người bỏ phiếu sớm, hệ thống sẽ chốt luôn.",
+      reviewingInProgress: "Đang đánh giá",
+      hasLeftFeedback: "Bạn đã đánh giá trận đấu",
+      reviewing: "Đánh giá trận đấu",
+      matchFinishedReadOnly: "Trận đấu đã xong",
+      historyViewReadOnly: "Đang xem trận từ lịch sử người chơi khác",
+      completed: "Xem thay đổi Elo",
+      cancelled: "Phòng đã bị hủy",
     },
     tryAgain: "Thử lại",
     roomNotFound: "Không tìm thấy trận",
@@ -542,8 +549,39 @@ const vi = {
       directPaymentError: "Không thể mở link thanh toán trực tiếp từ cổng VNPay",
     },
   },
+  checkIn: {
+    button: "Điểm danh tại sân",
+    buttonLabel: "Điểm danh GPS tại sân",
+    loading: "Đang lấy vị trí...",
+    checkedIn: "Đã điểm danh",
+    checkedInWithDistance: "Đã điểm danh ({{distance}}m từ sân)",
+    alreadyCheckedIn: "Bạn đã điểm danh trước đó rồi.",
+    success: "Điểm danh thành công! Khoảng cách: {{distance}}m",
+    modalTitle: "Điểm danh tại sân",
+    modalBody:
+      "Hệ thống sẽ dùng vị trí GPS của bạn để xác nhận bạn đang ở gần sân (trong vòng 300m). Điều này giúp bảo vệ bạn nếu có tranh chấp về việc có mặt hay không.",
+    modalNote:
+      "Đây là tính năng tùy chọn. Bạn có thể bỏ qua nếu không muốn.",
+    confirmButton: "Lấy vị trí & Điểm danh",
+    skipButton: "Bỏ qua, không điểm danh",
+    sectionTitle: "Điểm danh",
+    hint: "Điểm danh mở trước {{minutes}} phút khi trận bắt đầu. Bạn cần ở trong vòng 300m so với sân. Tính năng này là tùy chọn — giúp xác nhận bạn đã có mặt nếu có tranh chấp sau này.",
+    errors: {
+      locationPermissionDenied:
+        "Cần quyền truy cập vị trí để điểm danh. Vui lòng cấp quyền trong Cài đặt.",
+      locationUnavailable:
+        "Không thể lấy vị trí hiện tại. Vui lòng bật GPS và thử lại.",
+      tooFar:
+        "Bạn đang ở quá xa sân ({{distance}}m). Cần trong vòng 300m để điểm danh. Vui lòng di chuyển lại gần sân.",
+      venueLocationMissing:
+        "Sân chưa có thông tin tọa độ. Không thể điểm danh GPS lúc này.",
+      roomCancelled: "Trận đã bị hủy, không thể điểm danh.",
+      generic: "Điểm danh thất bại. Vui lòng thử lại.",
+    },
+  },
   profileHeader: {
     chooseAvatarTitle: "Chọn ảnh đại diện",
+
     chooseAvatarMessage: "Bạn muốn chọn ảnh từ đâu?",
     takePhoto: "Chụp ảnh",
     chooseFromLibrary: "Chọn từ thư viện",
