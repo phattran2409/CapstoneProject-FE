@@ -11,6 +11,7 @@ import { MatchList, MatchDetailModal, MatchItemData, MatchroomSkeleton } from '@
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
+import * as Location from 'expo-location';
 import { useMatchRoomRecommend, useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
 import { AIRecommendationModal, PrivateRoomPasswordModal, type MatchRecommendation } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
@@ -22,6 +23,7 @@ import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { toMatchItemData } from '../utils/matchItemMapper';
 import { useAlert } from '@/shared/hooks';
 import Alert from '@/shared/components/Alert';
+import { useSuggestAI } from '../hooks';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -41,6 +43,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const [aiModalVisible, setAiModalVisible] = useState(false);
   const [aiQuery, setAiQuery] = useState('');
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [aiSuggestedRooms, setAiSuggestedRooms] = useState<MatchRoom[]>([]);
+  const [isResolvingAiLocation, setIsResolvingAiLocation] = useState(false);
   const { visible: alertVisible, alertOptions, showInfo, hideAlert } = useAlert();
   const [pendingJoinParams, setPendingJoinParams] = useState<{
     roomId: string;
@@ -95,6 +99,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     refreshing: refreshingMyRooms,
     refresh: refreshMyRooms,
   } = useMyRooms({ availableOnly: true });
+  // suggest room AI 
+  const { mutate: suggestRooms, isPending: isSuggestingRooms } = useSuggestAI();
 
   // If only "my rooms" has data and match lists are still loading, we still render UI.
   const isLoading =
@@ -121,32 +127,34 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     [myRoomsMatches, featuredMatches, listMatches]
   );
 
-  const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
-    return allMatches
-      .filter((match) => !!match.id)
-      .map((match) => {
-        const [startTime, endTime] = match.time?.split(' - ') ?? [match.time ?? '', undefined];
-        const [filledSlots, totalSlots] = match.players?.split('/').map((value) => Number(value)) ?? [];
-        const missingPlayers =
-          Number.isFinite(totalSlots) && Number.isFinite(filledSlots)
-            ? Math.max(totalSlots - filledSlots, 0)
-            : undefined;
+  // const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
+  //   const sourceMatches = aiSuggestedRooms.length > 0 ? aiSuggestedRooms.map(toMatchItemData) : allMatches;
 
-        return {
-          id: match.id,
-          title: match.title,
-          address: match.venue,
-          startTime: startTime || match.date || t('roomDetail.unknown'),
-          endTime,
-          format: match.format ?? t('roomDetail.unknown'),
-          missingPlayers,
-          matchReason: t('aiRecommendation.match.cardReason', {
-            date: match.date ?? t('roomDetail.unknown'),
-            venue: match.venue ?? t('roomDetail.unknown'),
-          }),
-        };
-      });
-  }, [allMatches, t]);
+  //   return sourceMatches
+  //     .filter((match) => !!match.id)
+  //     .map((match) => {
+  //       const [startTime, endTime] = match.time?.split(' - ') ?? [match.time ?? '', undefined];
+  //       const [filledSlots, totalSlots] = match.players?.split('/').map((value) => Number(value)) ?? [];
+  //       const missingPlayers =
+  //         Number.isFinite(totalSlots) && Number.isFinite(filledSlots)
+  //           ? Math.max(totalSlots - filledSlots, 0)
+  //           : undefined;
+
+  //       return {
+  //         id: match.id,
+  //         title: match.title,
+  //         address: match.venue,
+  //         startTime: startTime || match.date || t('roomDetail.unknown'),
+  //         endTime,
+  //         format: match.format ?? t('roomDetail.unknown'),
+  //         missingPlayers,
+  //         matchReason: t('aiRecommendation.match.cardReason', {
+  //           date: match.date ?? t('roomDetail.unknown'),
+  //           venue: match.venue ?? t('roomDetail.unknown'),
+  //         }),
+  //       };
+  //     });
+  // }, [aiSuggestedRooms, allMatches, t]);
   
   const isEmptyMatches =
     !isLoading &&
@@ -177,12 +185,15 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
   const toast = useToast();
-  const handleViewDetail = (matchId: string) => {
+  const handleViewDetail = (matchId: string, sourceRooms?: MatchRoom[]) => {
     const match = allMatches.find((m) => m.id === matchId);
-    const room = [
+    const pool = sourceRooms ?? [
       ...recommendedRooms,
       ...nearbyRooms,
       ...(myRoomsData ?? []),
+    ];
+    const room = [
+      ...pool,
     ].find((r: any) => String(r.roomId) === String(matchId));
 
     const venuePhotosFromRoom = Array.isArray((room as any)?.venuePhotos)
@@ -271,6 +282,64 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const handleCloseFilter = () => {
     setFilterVisible(false);
   }
+
+  const handleSubmitAiQuery = useCallback(async () => {
+    const trimmedQuery = aiQuery.trim();
+    if (!trimmedQuery) return;
+
+    setIsResolvingAiLocation(true);
+    try {
+      let lat = latitude;
+      let lng = longitude;
+
+      if (lat == null || lng == null) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          toast.info(
+            t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
+            t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc theo bán kính.'),
+          );
+          return;
+        }
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        lat = location.coords.latitude;
+        lng = location.coords.longitude;
+      }
+
+      suggestRooms(
+        {
+          query: trimmedQuery,
+          latitude: lat,
+          longitude: lng,
+          page: 1,
+          pageSize: 10,
+        },
+        {
+          onSuccess: (response) => {
+            setAiSuggestedRooms(response.data.rooms || []);
+          },
+          onError: (error: any) => {
+            console.log('Error suggest rooms:', error);
+            toast.error(
+              t('common.error', 'Lỗi'),
+              getTranslatedError(error?.message, error?.code) ||
+                t('aiRecommendation.searching'),
+            );
+            setAiSuggestedRooms([]);
+          },
+        },
+      );
+    } catch (error: any) {
+      toast.error(
+        t('common.error', 'Lỗi'),
+        getTranslatedError(error?.message, error?.code) || t('venueSelection.locationError'),
+      );
+    } finally {
+      setIsResolvingAiLocation(false);
+    }
+  }, [aiQuery, latitude, longitude, suggestRooms, t, toast]);
 
   return (
     <ThemedSafeAreaView style={{ flex: 1 , position: 'relative'}}>
@@ -481,17 +550,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         visible={aiModalVisible}
         mode="match"
         query={aiQuery}
-        isLoading={loadingRecommended || loadingNearby}
-        matchRecommendations={aiMatchRecommendations}
+        isLoading={isSuggestingRooms || isResolvingAiLocation || locationLoading}
+        matchRecommendations={aiSuggestedRooms}
         onClose={() => setAiModalVisible(false)}
         onChangeQuery={setAiQuery}
-        onSubmitQuery={() => {
-          refreshRecommended();
-          refresh();
-        }}
+        onSubmitQuery={handleSubmitAiQuery}
         onJoinMatch={(recommendation) => {
           setAiModalVisible(false);
-          handleViewDetail(recommendation.id);
+          handleViewDetail(recommendation.roomId, aiSuggestedRooms);
         }}
       />
 

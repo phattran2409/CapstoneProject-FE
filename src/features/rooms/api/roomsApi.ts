@@ -19,6 +19,9 @@ import type {
   MatchRoomCreatePresetDto,
   UpdateMatchPresetDto,
   CreateMatchPresetDto,
+  SuggestPlayersRequest,
+  SuggestPlayersResponse,
+  SuggestRoomsRequest,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -410,6 +413,28 @@ export const roomsApi = {
   inviteFriend: async (roomId: string, friendUserId: string): Promise<void> => {
     const url = API_CONFIG.ENDPOINTS.ROOMS.INVITE_FRIEND.replace(':id', roomId);
     await apiClient.post(url, { friendUserId });
+  },
+
+  suggestPlayers: async (payload: SuggestPlayersRequest): Promise<SuggestPlayersResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AI.SUGGEST_PLAYERS, {
+      query: payload.query,
+      roomId: payload.roomId,
+      page: payload.page ?? 1,
+      pageSize: payload.pageSize ?? 10,
+    });
+    return data as unknown as SuggestPlayersResponse;
+  },
+
+  suggestRooms: async (payload: SuggestRoomsRequest): Promise<MatchRoomsResponse> => {
+    console.log('payload', payload);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AI.SUGGEST_ROOMS, {
+      query: payload.query,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      page: payload.page ?? 1,
+      pageSize: payload.pageSize ?? 10,
+    });
+    return data as unknown as MatchRoomsResponse;
   },
 
   /**

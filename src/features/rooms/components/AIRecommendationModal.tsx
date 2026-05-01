@@ -15,6 +15,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { ThemedText } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
+import { MatchRoom, SuggestedPlayerProfile } from '../types/room.types';
+import { formatMatchFormatVsLabel } from '../utils/matchFormatVsLabel';
 
 export type AIRecommendationMode = 'match' | 'player';
 
@@ -34,74 +36,19 @@ export interface MatchRecommendation {
   matchReason?: string;
 }
 
-export interface PlayerRecommendation {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-  position: string;
-  elo: number;
-  winStreak?: number;
-  rating?: number;
-  communityScore?: number;
-  distanceKm?: number;
-  matchReason?: string;
-  actionLabel?: string;
-}
-
-export const mockPlayerRecommendations: PlayerRecommendation[] = [
-  {
-    id: 'p1',
-    name: 'Nguyễn Văn A',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
-    position: 'Tiền đạo',
-    elo: 1500,
-    winStreak: 3,
-    rating: 4.8,
-    communityScore: 95,
-    distanceKm: 2.5,
-    matchReason: 'Thường xuyên ghi bàn, phù hợp với lối đá tấn công',
-    actionLabel: 'Mời ngay',
-  },
-  {
-    id: 'p2',
-    name: 'Trần Bình',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
-    position: 'Tiền vệ',
-    elo: 1420,
-    winStreak: 1,
-    rating: 4.5,
-    communityScore: 88,
-    distanceKm: 5.1,
-    matchReason: 'Kỹ năng kiến tạo xuất sắc, nhãn quan chiến thuật tốt',
-    actionLabel: 'Mời ngay',
-  },
-  {
-    id: 'p3',
-    name: 'Lê Hoàng',
-    position: 'Hậu vệ',
-    elo: 1380,
-    winStreak: 0,
-    rating: 4.2,
-    communityScore: 75,
-    distanceKm: 1.2,
-    matchReason: 'Phòng ngự chắc chắn, thể lực bền bỉ',
-    actionLabel: 'Mời ngay',
-  },
-];
-
 interface AIRecommendationModalProps {
   visible: boolean;
   mode: AIRecommendationMode;
   query?: string;
   isLoading?: boolean;
-  matchRecommendations?: MatchRecommendation[];
-  playerRecommendations?: PlayerRecommendation[];
+  matchRecommendations?: MatchRoom[];
+  playerRecommendations?: SuggestedPlayerProfile[];
   onClose: () => void;
   onChangeQuery?: (value: string) => void;
   onSubmitQuery?: () => void;
-  onJoinMatch?: (recommendation: MatchRecommendation) => void;
-  onSecondaryMatchAction?: (recommendation: MatchRecommendation) => void;
-  onInvitePlayer?: (recommendation: PlayerRecommendation) => void;
+  onJoinMatch?: (recommendation: MatchRoom) => void;
+  onSecondaryMatchAction?: (recommendation: MatchRoom) => void;
+  onInvitePlayer?: (recommendation: SuggestedPlayerProfile) => void;
 }
 
 const formatDistance = (distanceKm?: number) => {
@@ -148,9 +95,9 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
     ? t('aiRecommendation.match.empty')
     : t('aiRecommendation.player.empty');
 
-  const renderMatchCard = (item: MatchRecommendation) => (
+  const renderMatchCard = (item: MatchRoom) => (
     <View
-      key={item.id}
+      key={item.roomId}
       style={[
         styles.card,
         styles.featuredCard,
@@ -165,12 +112,12 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
         <View style={styles.cardHeader}>
           <View style={styles.cardTitleBlock}>
             <ThemedText size="l" weight="bold" numberOfLines={1}>
-              {item.title}
+              {item.roomName}
             </ThemedText>
             <View style={styles.metaRow}>
               <Ionicons name="location" size={15} color={theme.colors.textSecondary} />
               <ThemedText variant="secondary" size="s" numberOfLines={1} style={styles.flexText}>
-                {item.address || item.venueName || t('aiRecommendation.match.unknownVenue')}
+                {item.venueAddress || item.venueName || t('aiRecommendation.match.unknownVenue')}
               </ThemedText>
             </View>
           </View>
@@ -185,7 +132,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
           >
             <Ionicons name="football" size={12} color={accentColor} />
             <ThemedText size="xs" weight="bold" style={{ color: accentColor }}>
-              {item.format}
+              {formatMatchFormatVsLabel(item.matchFormat)}
             </ThemedText>
           </View>
         </View>
@@ -198,33 +145,17 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
                 {item.endTime ? `${item.startTime} - ${item.endTime}` : item.startTime}
               </ThemedText>
             </View>
-            {formatDistance(item.distanceKm) ? (
-              <View style={styles.inlineInfo}>
-                <Ionicons name="git-compare" size={17} color={accentColor} />
-                <ThemedText size="m" weight="semiBold">
-                  {t('aiRecommendation.match.distance', {
-                    distance: formatDistance(item.distanceKm),
-                  })}
-                </ThemedText>
-              </View>
-            ) : null}
           </View>
           <View style={styles.metaRow}>
             <Ionicons name="people" size={17} color={theme.colors.textSecondary} />
             <ThemedText variant="secondary" size="s">
-              {item.missingText ??
+              {item.filledSlots ??
                 t('aiRecommendation.match.missingPlayers', {
-                  count: item.missingPlayers ?? 0,
+                  count: Math.max(item.totalSlots - item.filledSlots, 0),
                 })}
             </ThemedText>
           </View>
         </View>
-
-        {item.matchReason ? (
-          <ThemedText variant="secondary" size="xs" style={styles.reasonText}>
-            {item.matchReason}
-          </ThemedText>
-        ) : null}
 
         <TouchableOpacity
           activeOpacity={0.85}
@@ -233,11 +164,11 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
         >
           <Ionicons name="add-circle" size={22} color={theme.colors.black} />
           <ThemedText size="m" weight="bold" style={{ color: theme.colors.black }}>
-            {item.actionLabel ?? t('aiRecommendation.match.joinNow')}
+            {t('aiRecommendation.match.joinNow')}
           </ThemedText>
         </TouchableOpacity>
 
-        {item.secondaryActionLabel ? (
+        {/* {item.secondaryActionLabel ? (
           <TouchableOpacity
             activeOpacity={0.85}
             style={[
@@ -254,14 +185,14 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
               {item.secondaryActionLabel}
             </ThemedText>
           </TouchableOpacity>
-        ) : null}
+        ) : null} */}
       </View>
     </View>
   );
 
-  const renderPlayerCard = (item: PlayerRecommendation) => (
+  const renderPlayerCard = (item: SuggestedPlayerProfile) => (
     <View
-      key={item.id}
+      key={item.userId} 
       style={[
         styles.card,
         {
@@ -272,8 +203,8 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
     >
       <View style={styles.playerHeader}>
         <View style={styles.playerIdentity}>
-          {item.avatarUrl ? (
-            <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+          {item.userAvatarUrl ? (
+            <Image source={{ uri: item.userAvatarUrl }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatarFallback, { backgroundColor: `${accentColor}1F` }]}>
               <Ionicons name="person" size={24} color={accentColor} />
@@ -281,19 +212,8 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
           )}
           <View style={styles.cardTitleBlock}>
             <ThemedText size="l" weight="bold" numberOfLines={1}>
-              {item.name}
+              {item.userFullName}
             </ThemedText>
-            <View style={styles.metaRow}>
-              <Ionicons name="locate" size={15} color={theme.colors.textSecondary} />
-              <ThemedText variant="secondary" size="s" numberOfLines={1}>
-                {item.position}
-                {formatDistance(item.distanceKm)
-                  ? ` • ${t('aiRecommendation.match.distance', {
-                      distance: formatDistance(item.distanceKm),
-                    })}`
-                  : ''}
-              </ThemedText>
-            </View>
           </View>
         </View>
         <View
@@ -306,7 +226,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
           ]}
         >
           <ThemedText size="xs" weight="bold" style={{ color: accentColor }}>
-            {item.position}
+            {item.preferredPositions}
           </ThemedText>
         </View>
       </View>
@@ -315,7 +235,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
         <MetricItem
           icon="flash"
           label={t('aiRecommendation.player.elo')}
-          value={item.elo.toString()}
+          value={item.currentElo.toString()}
         />
         <MetricItem
           icon="trending-up"
@@ -325,22 +245,11 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
           })}
         />
         <MetricItem
-          icon="star"
-          label={t('aiRecommendation.player.rating')}
-          value={typeof item.rating === 'number' ? item.rating.toFixed(1) : '--'}
-        />
-        <MetricItem
           icon="heart"
           label={t('aiRecommendation.player.community')}
-          value={formatCommunityScore(item.communityScore)}
+          value={formatCommunityScore(item.trustScore)}
         />
       </View>
-
-      {item.matchReason ? (
-        <ThemedText variant="secondary" size="xs" style={styles.reasonText}>
-          {item.matchReason}
-        </ThemedText>
-      ) : null}
 
       <TouchableOpacity
         activeOpacity={0.85}
@@ -349,7 +258,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
       >
         <Ionicons name="person-add" size={20} color={theme.colors.black} />
         <ThemedText size="m" weight="bold" style={{ color: theme.colors.black }}>
-          {item.actionLabel ?? t('aiRecommendation.player.inviteNow')}
+          {t('aiRecommendation.player.inviteNow')}
         </ThemedText>
       </TouchableOpacity>
     </View>
@@ -478,7 +387,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
                 </View>
               ) : null}
               {isMatchMode
-                ? matchRecommendations.map(renderMatchCard)
+                ? matchRecommendations.map((item) => renderMatchCard(item))
                 : playerRecommendations.map(renderPlayerCard)}
             </ScrollView>
           </View>

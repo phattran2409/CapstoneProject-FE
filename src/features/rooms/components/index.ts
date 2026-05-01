@@ -13,7 +13,6 @@ export {
   AIRecommendationModal,
   type AIRecommendationMode,
   type MatchRecommendation,
-  type PlayerRecommendation,
 } from './AIRecommendationModal';
 export {
   RoomInfoCard,

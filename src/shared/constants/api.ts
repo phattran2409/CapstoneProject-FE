@@ -1,11 +1,32 @@
+const DEFAULT_API_BASE_URL = "https://api.kickify.site/api";
+
+const normalizeUrl = (url: string): string => url.replace(/\/+$/, "");
+
+const resolvedApiBaseUrl = normalizeUrl(
+  process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL,
+);
+
+const apiOrigin = resolvedApiBaseUrl.endsWith("/api")
+  ? resolvedApiBaseUrl.slice(0, -4)
+  : resolvedApiBaseUrl;
+
+const resolvedChatHubUrl = normalizeUrl(
+  process.env.EXPO_PUBLIC_SIGNALR_CHAT_HUB_URL?.trim() || `${apiOrigin}/hubs/chat`,
+);
+
+const resolvedMatchRoomHubUrl = normalizeUrl(
+  process.env.EXPO_PUBLIC_SIGNALR_MATCH_ROOM_HUB_URL?.trim() ||
+    `${apiOrigin}/hubs/matchroom`,
+);
+
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: "https://api.kickify.site/api",
-  // BASE_URL :  'http://10.0.2.2:3000/api', // JSON Server URL
-  // For Android Emulator: 'http://10.0.2.2:3000/api'
-  // For iOS Simulator: 'http://localhost:3000/api'
-  // For Real Device: 'http://YOUR_IP:3000/api'
-
+  BASE_URL: resolvedApiBaseUrl,
+  SIGNALR: {
+    CHAT_HUB_URL: resolvedChatHubUrl,
+    MATCH_ROOM_HUB_URL: resolvedMatchRoomHubUrl,
+  },
+  
   TIMEOUT: 30000, // 30 seconds
 
   // API Endpoints
@@ -168,6 +189,10 @@ export const API_CONFIG = {
       ROOM_SEND: "/chat/room/send",
       SEND: "/chat/send",
       READ: "/chat/read/:fromUserId",
+    },
+    AI: {
+      SUGGEST_PLAYERS: "/ai/suggest-players",
+      SUGGEST_ROOMS: "/ai/suggest-rooms",
     },
   },
 } as const;

@@ -7,8 +7,9 @@ import {
   HttpTransportType,
 } from "@microsoft/signalr";
 import { getAuthToken } from "@/shared/api/client";
+import { API_CONFIG } from "@/shared/constants/api";
 
-const MATCH_ROOM_HUB_URL = "https://api.kickify.site/hubs/matchroom";
+const MATCH_ROOM_HUB_URL = API_CONFIG.SIGNALR.MATCH_ROOM_HUB_URL;
 
 const MATCH_ROOM_HUB_METHODS = {
   JoinRoomGroup: "JoinRoomGroupWithTeam",

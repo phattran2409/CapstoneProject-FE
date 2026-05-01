@@ -315,6 +315,51 @@ export interface SendMessageRequest {
   message: string;
 }
 
+export interface SuggestPlayersRequest {
+  query: string;
+  roomId: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SuggestRoomsRequest {
+  query: string;
+  latitude: number;
+  longitude: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SuggestedPlayerProfile {
+  profileId: string;
+  userId: string;
+  userFullName: string;
+  userEmail: string;
+  userAvatarUrl: string | null;
+  currentElo: number;
+  currentRank: string;
+  isLegend: boolean;
+  trustScore: number;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  mvpCount: number;
+  winStreak: number;
+  maxWinStreak: number;
+  preferredPositions: string;
+  preferredFoot: string;
+  createdAt: string;
+}
+
+export type SuggestPlayersResponse = ApiResponse<{
+  profiles: SuggestedPlayerProfile[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>;
+
 /** DTO dùng để tạo mới / upsert preset đơn (legacy) */
 export interface MatchRoomCreatePresetDto {
   matchFormat: MatchFormat;

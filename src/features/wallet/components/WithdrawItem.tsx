@@ -52,11 +52,11 @@ const WithdrawItem: React.FC<WithdrawItemProps> = ({ withdrawal }) => {
           </ThemedText>
         </View>
       </View>
-
+      {withdrawal.createdAt && (
       <ThemedText variant="secondary" size="xs" style={{ marginTop: 6 }}>
-        {formatDateTime(withdrawal.createdAt)}
-      </ThemedText>
-
+          {formatDateTime(withdrawal.createdAt)}
+        </ThemedText>
+      )}
       <ThemedText variant="secondary" size="xs" style={{ marginTop: 8 }}>
         {withdrawal.bankName} • {withdrawal.bankAccountNumber}
       </ThemedText>

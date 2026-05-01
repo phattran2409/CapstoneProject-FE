@@ -19,6 +19,8 @@ export {
   useCancelRoom,
   useUpdateRoomPrivacy,
   useUpdateRoomInfo,
+  useSuggestPlayers,
+  useSuggestAI,
 } from './hooks';
 
 // ============ Utils (shared labels) ============
@@ -44,6 +46,10 @@ export type {
   MatchRoomStatus,
   MatchFormat,
   TeamAssignment,
+  SuggestPlayersRequest,
+  SuggestPlayersResponse,
+  SuggestedPlayerProfile,
+  SuggestRoomsRequest,
 } from './types/room.types';
 
 // ============ UI Store (for internal use within rooms feature) ============

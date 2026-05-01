@@ -19,9 +19,9 @@ import {
   useLeaveMatchRoom,
   useKickPlayer, 
   type MatchRoomFullInfo,
-  type MatchRoomParticipant,
   type TeamAssignment,
   formatMatchFormatVsLabel,
+  SuggestedPlayerProfile,
 } from '@/features/rooms';
 import { useAuthStore } from '@/features/auth';
 import SplashScreen from '@/features/splash/screens/SplashScreen';
@@ -51,11 +51,14 @@ import { formatCurrency, formatDate } from '@/shared/utils/formatters';
 import { useFeedbackSessionStore } from '@/features/feedback';
 import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
-import { useGoBackOrResetToMainTabs, useRoomInformationSignalRHandlers } from '../hooks';
+import {
+  useGoBackOrResetToMainTabs,
+  useRoomInformationSignalRHandlers,
+  useInviteFriend,
+} from '../hooks';
 import { styles } from './styles/RoomInformation.styles';
-import { Text } from 'react-native-svg';
 import { getRoomAutoClosePolicy } from '../utils/roomAutoClosePolicy';
-import { mockPlayerRecommendations } from '../components/AIRecommendationModal';
+import { useSuggestPlayers } from '../hooks/useSuggestAI';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -83,6 +86,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { mutate: updateParticipant, isPending: isUpdatingParticipant } = useUpdateParticipant();
   const { mutate: leaveMatchRoom, isPending: isLeaving } = useLeaveMatchRoom();
   const { mutate: kickPlayer, isPending: isKicking } = useKickPlayer();
+  const { mutate: suggestPlayers, isPending: isSuggestingPlayers } = useSuggestPlayers();
+  const { mutate: inviteFriend, isPending: isInvitingFriend } = useInviteFriend();
 
   const { user } = useAuthStore();
   
@@ -183,6 +188,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [aiModalVisible, setAiModalVisible] = useState(false);
   const [aiQuery, setAiQuery] = useState('');
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
+  const [aiPlayerRecommendations, setAiPlayerRecommendations] = useState<SuggestedPlayerProfile[]>([]);
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -620,6 +626,85 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     teamAName,
     teamBName,
   ]);
+
+  const handleSubmitAiQuery = useCallback(() => {
+    const trimmedQuery = aiQuery.trim();
+    if (!displayRoom || !trimmedQuery) return;
+
+    suggestPlayers(
+      {
+        query: trimmedQuery,
+        roomId: displayRoom.roomId,
+        page: 1,
+        pageSize: 10,
+      },
+      {
+        onSuccess: (response) => {
+          const mappedPlayers: SuggestedPlayerProfile[] = (response.data.profiles || []).map(
+            (profile) => ({
+              profileId: profile.profileId,
+              userId: profile.userId,
+              userFullName: profile.userFullName,
+              userEmail: profile.userEmail,
+              userAvatarUrl: profile.userAvatarUrl,
+              currentElo: profile.currentElo ?? 0,
+              currentRank: profile.currentRank ?? '',
+              isLegend: profile.isLegend ?? false,
+              trustScore: profile.trustScore ?? 0,
+              totalMatches: profile.totalMatches ?? 0,
+              wins: profile.wins ?? 0,
+              losses: profile.losses ?? 0,
+              draws: profile.draws ?? 0,
+              mvpCount: profile.mvpCount ?? 0,
+              winStreak: profile.winStreak ?? 0,
+              maxWinStreak: profile.maxWinStreak ?? 0,
+              preferredPositions: profile.preferredPositions ?? '',
+              preferredFoot: profile.preferredFoot ?? '',
+              createdAt: profile.createdAt ?? '',
+            }),
+          );
+          setAiPlayerRecommendations(mappedPlayers);
+        },
+        onError: (error: any) => {
+          toast.error(
+            t('common.error', 'Lỗi'),
+            getTranslatedError(error?.message, error?.code) ||
+              t('aiRecommendation.searching'),
+          );
+          setAiPlayerRecommendations([]);
+        },
+      },
+    );
+  }, [aiQuery, displayRoom, suggestPlayers, t, toast]);
+
+  const handleInvitePlayer = useCallback(
+    (player: SuggestedPlayerProfile) => {
+      if (!displayRoom) return;
+
+      inviteFriend(
+        {
+          roomId: displayRoom.roomId,
+          friendUserId: player.userId,
+        },
+        {
+          onSuccess: () => {
+            toast.success(
+              t('roomDetail.notifications.success'),
+              t('roomDetail.inviteFriendSuccess'),
+            );
+          },
+          onError: (error: any) => {
+            toast.error(
+              t('common.error', 'Lỗi'),
+              getTranslatedError(error?.message, error?.code) ||
+                t('roomDetail.inviteFriendError'),
+            );
+          },
+        },
+      );
+    },
+    [displayRoom, inviteFriend, t, toast],
+  );
 
   // ✅ Loading state
   if (isLoading) {
@@ -1067,12 +1152,12 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         visible={aiModalVisible}
         mode="player"
         query={aiQuery}
-        matchRecommendations={aiMatchRecommendations}
-        playerRecommendations={mockPlayerRecommendations}
+        isLoading={isSuggestingPlayers || isInvitingFriend}
+        playerRecommendations={aiPlayerRecommendations}
         onClose={() => setAiModalVisible(false)}
         onChangeQuery={setAiQuery}
-        onSubmitQuery={() => {}}
-        onJoinMatch={() => setAiModalVisible(false)}
+        onSubmitQuery={handleSubmitAiQuery}
+        onInvitePlayer={(player) => handleInvitePlayer(player)}
       />
     </ThemedSafeAreaView>
   );

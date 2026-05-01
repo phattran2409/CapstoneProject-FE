@@ -235,7 +235,7 @@ const vi = {
     successMessage: "Tạo trận thành công!",
     errorMessage: "Không thể tạo trận. Vui lòng thử lại.",
     preset: {
-      title: "Mẫu tạo trận",
+      title: "Mẫu tạo trận đấu",
       subtitle:
         "Lưu trên server: thể thức, thời lượng, tên trận, mô tả, trận riêng tư. Mật khẩu không lưu — sau khi áp dụng hãy nhập lại.",
       openButton: "Mở mẫu tạo trận",
