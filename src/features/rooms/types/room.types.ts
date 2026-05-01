@@ -63,6 +63,12 @@ export interface MatchRoomParticipant {
   depositPaid: boolean;
   joinDate: string;
   hasLeftFeedback?: boolean;
+  /** Điểm danh GPS */
+  checkInTime?: string | null;
+  checkInLatitude?: number | null;
+  checkInLongitude?: number | null;
+  checkInMethod?: string | null;
+  distanceFromVenueMeters?: number | null;
 }
 
 /** Alias for participant in room/team context */
@@ -405,4 +411,17 @@ export interface RoomPresetItem {
   durationMinutes: number;
   description: string;
   createdAt: string;
+}
+
+/** Payload g\u1eedi API check-in GPS */
+export interface CheckInRequest {
+  latitude: number;
+  longitude: number;
+}
+
+/** Response t\u1eeb API check-in GPS */
+export interface CheckInResponse {
+  message?: string;
+  distanceFromVenueMeters?: number;
+  alreadyCheckedIn?: boolean;
 }

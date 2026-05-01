@@ -83,8 +83,13 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
   }));
 
   const handleStart = async () => {
-    await setStep("matchResult");
-    navigation.replace("FeedbackMatchResult");
+    if (session?.isHost) {
+      await setStep("matchResult");
+      navigation.replace("FeedbackMatchResult");
+    } else {
+      await setStep("playerRating");
+      navigation.replace("FeedbackRating");
+    }
   };
 
   const handleClose = () => {

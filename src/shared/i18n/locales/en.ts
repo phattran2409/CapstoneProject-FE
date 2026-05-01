@@ -30,6 +30,7 @@ const en = {
       viewMatchDetail: "View Match Detail",
       loadingMore: "Loading more...",
       report: "Report",
+      skip: "Skip",
     },
     email: "Email",
     expandableText: {
@@ -373,6 +374,13 @@ const en = {
     statusActions: {
       reviewingHint:
         "You have about a day after the match to vote on the result and send feedback. If everyone votes early, we finalize immediately.",
+      reviewingInProgress: "Under review",
+      hasLeftFeedback: "You have already submitted feedback",
+      reviewing: "Rate the match",
+      matchFinishedReadOnly: "Match finished",
+      historyViewReadOnly: "Viewing match from another player's history",
+      completed: "View Elo changes",
+      cancelled: "Match cancelled",
     },
     tryAgain: "Try Again",
     roomNotFound: "Match not found",
@@ -540,6 +548,36 @@ const en = {
     toast: {
       directPaymentSuccess: "Direct payment link opened successfully",
       directPaymentError: "Failed to open direct payment link",
+    },
+  },
+  checkIn: {
+    button: "Check in at venue",
+    buttonLabel: "GPS check-in at venue",
+    loading: "Getting location...",
+    checkedIn: "Checked in",
+    checkedInWithDistance: "Checked in ({{distance}}m from venue)",
+    alreadyCheckedIn: "You have already checked in.",
+    success: "Check-in successful! Distance: {{distance}}m",
+    modalTitle: "Check in at venue",
+    modalBody:
+      "The system will use your GPS location to verify you are within 300m of the venue. This protects you in case of any dispute about attendance.",
+    modalNote:
+      "This is optional. You can skip if you prefer not to check in.",
+    confirmButton: "Get location & Check in",
+    skipButton: "Skip, don't check in",
+    sectionTitle: "Attendance",
+    hint: "Check-in opens {{minutes}} minutes before kickoff. You must be within 300m of the venue. This is optional — it serves as proof of attendance in case of any dispute.",
+    errors: {
+      locationPermissionDenied:
+        "Location access is required to check in. Please grant permission in Settings.",
+      locationUnavailable:
+        "Unable to get your current location. Please enable GPS and try again.",
+      tooFar:
+        "You are too far from the venue ({{distance}}m). Must be within 300m to check in. Please move closer.",
+      venueLocationMissing:
+        "Venue coordinates are not available. GPS check-in is unavailable.",
+      roomCancelled: "Match has been cancelled. Check-in is not possible.",
+      generic: "Check-in failed. Please try again.",
     },
   },
   profileHeader: {
@@ -1029,6 +1067,20 @@ const en = {
       ratingRequired: "Rating Required",
       ratingRequiredMessage: "Please select a star rating before submitting.",
       allPlayersRequired: "Please rate all players before completing.",
+    },
+    opponent: {
+      title: "Rate Opponents",
+      subtitle: "Optional — Select the players you want to rate",
+      listHint:
+        'Tap "Rate" to score each player. You can skip this step entirely.',
+      rate: "Rate",
+      rated: "Rated",
+      empty: "No opponents found.",
+      ratingLabel: "Star rating",
+      commentLabel: "Comment (optional)",
+      commentPlaceholder: "Comment on this player...",
+      submitWithCount: "Submit {{count}} rating(s)",
+      continue: "Continue",
     },
     result: {
       headerTitle: "Confirm Result",

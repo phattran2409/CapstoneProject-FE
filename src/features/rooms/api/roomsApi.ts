@@ -22,6 +22,8 @@ import type {
   SuggestPlayersRequest,
   SuggestPlayersResponse,
   SuggestRoomsRequest,
+  CheckInRequest,
+  CheckInResponse,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
@@ -435,6 +437,22 @@ export const roomsApi = {
       pageSize: payload.pageSize ?? 10,
     });
     return data as unknown as MatchRoomsResponse;
+  },
+
+  /**
+   * GPS check-in tại sân
+   * POST /match-rooms/:id/check-in
+   * Payload: { Latitude, Longitude }
+   */
+  checkIn: async (roomId: string, payload: CheckInRequest): Promise<CheckInResponse> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.CHECK_IN.replace(':id', roomId);
+    const data = await apiClient.post(url, {
+      Latitude: payload.latitude,
+      Longitude: payload.longitude,
+    });
+    const body = data as unknown as ApiResponse<CheckInResponse>;
+    if (body?.isSuccess) return body.data as CheckInResponse;
+    return data as unknown as CheckInResponse;
   },
 
   /**

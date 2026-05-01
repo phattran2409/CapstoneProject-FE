@@ -91,6 +91,8 @@ export const API_CONFIG = {
       /** Legacy resource (không phải match-rooms) */
       LEGACY_ROOM: "/rooms/:id",
       DIRECT_PAYMENT: "/bookings/:roomId/payment/vnpay",
+      /** Điểm danh GPS tại sân */
+      CHECK_IN: "/match-rooms/:id/check-in",
     },
     VENUES: {
       LIST: "/venues",

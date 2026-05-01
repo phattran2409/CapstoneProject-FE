@@ -36,7 +36,6 @@ import {
   ReportType,
 } from "../types/feedback.types";
 import { useToast } from "@/shared/toast";
-import { getImageAvatar } from "@/shared/utils/imageSource";
 import { useReportPlayer } from "../hooks";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
 import { BadgesSentiment } from "../components/BadgesSentiment";
@@ -238,7 +237,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
             <Image
-              source={getImageAvatar({ uri: item.reviewerAvatarUrl || "" })}
+              source={require("@/assets/images/default_avatar.png")}
               style={styles.cardAvatar}
             />
             <Text
@@ -246,7 +245,7 @@ const ReceivedFeedbackScreen: React.FC<Props> = ({ navigation }) => {
               numberOfLines={2}
               ellipsizeMode="tail"
             >
-              {item.reviewerName || t("receivedFeedback.anonymous")}
+              {t("receivedFeedback.anonymous")}
             </Text>
           </View>
           <View>

@@ -22,3 +22,4 @@ export {
   MatchCountdown,
   AutoCloseCountdown,
 } from './roomInformation';
+export { CheckInButton } from './CheckInButton';
