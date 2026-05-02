@@ -450,6 +450,7 @@ export const roomsApi = {
       Latitude: payload.latitude,
       Longitude: payload.longitude,
     });
+    console.log('data', data);
     const body = data as unknown as ApiResponse<CheckInResponse>;
     if (body?.isSuccess) return body.data as CheckInResponse;
     return data as unknown as CheckInResponse;

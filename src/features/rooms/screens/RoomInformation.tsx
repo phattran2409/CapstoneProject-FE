@@ -215,6 +215,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [aiQuery, setAiQuery] = useState('');
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   const [aiPlayerRecommendations, setAiPlayerRecommendations] = useState<SuggestedPlayerProfile[]>([]);
+  const [aiPlayerSuggestError, setAiPlayerSuggestError] = useState<string | null>(null);
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -685,7 +686,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const handleSubmitAiQuery = useCallback(() => {
     const trimmedQuery = aiQuery.trim();
     if (!displayRoom || !trimmedQuery) return;
-
+    setAiPlayerSuggestError(null);
     suggestPlayers(
       {
         query: trimmedQuery,
@@ -695,6 +696,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       },
       {
         onSuccess: (response) => {
+          setAiPlayerSuggestError(null);
           const mappedPlayers: SuggestedPlayerProfile[] = (response.data.profiles || []).map(
             (profile) => ({
               profileId: profile.profileId,
@@ -721,16 +723,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
           setAiPlayerRecommendations(mappedPlayers);
         },
         onError: (error: any) => {
-          toast.error(
-            t('common.error', 'Lỗi'),
-            getTranslatedError(error?.message, error?.code) ||
+          setAiPlayerSuggestError(
+            getTranslatedError(error?.details.detail, error?.code) ||
               t('aiRecommendation.searching'),
           );
           setAiPlayerRecommendations([]);
         },
       },
     );
-  }, [aiQuery, displayRoom, suggestPlayers, t, toast]);
+  }, [aiQuery, displayRoom, suggestPlayers, t]);
 
   const handleInvitePlayer = useCallback(
     (player: SuggestedPlayerProfile) => {
@@ -1090,14 +1091,13 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
                 </ThemedText>
                 <CheckInButton
                   roomId={displayRoom.roomId}
-                  hasCheckedIn={!!currentUserParticipant.checkInTime}
+                  hasCheckedIn={!!currentUserParticipant.checkInMethod}
                   distanceFromVenueMeters={currentUserParticipant.distanceFromVenueMeters}
                 />
               </View>
             )}
             </>
           )}
-
           {/* Host Info Tab Content */}
           {activeTab === 'host' && displayRoom.host && (
             <HostTabContent displayRoom={displayRoom} t={t}/>
@@ -1228,9 +1228,17 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         mode="player"
         query={aiQuery}
         isLoading={isSuggestingPlayers || isInvitingFriend}
+        errorMessage={aiPlayerSuggestError}
         playerRecommendations={aiPlayerRecommendations}
-        onClose={() => setAiModalVisible(false)}
-        onChangeQuery={setAiQuery}
+        onClose={() => {
+          setAiQuery('');
+          setAiPlayerSuggestError(null);
+          setAiModalVisible(false);
+        }}
+        onChangeQuery={(value) => {
+          setAiPlayerSuggestError(null);
+          setAiQuery(value);
+        }}
         onSubmitQuery={handleSubmitAiQuery}
         onInvitePlayer={(player) => handleInvitePlayer(player)}
       />

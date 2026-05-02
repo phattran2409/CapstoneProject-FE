@@ -59,7 +59,7 @@ export const CheckInButton: React.FC<CheckInButtonProps> = ({
     let location: Location.LocationObject;
     try {
       location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced,
       });
     } catch {
       setErrorMessage(t('checkIn.errors.locationUnavailable'));
@@ -67,7 +67,8 @@ export const CheckInButton: React.FC<CheckInButtonProps> = ({
     }
 
     const { latitude, longitude } = location.coords;
-
+    console.log('latitude', latitude);
+    console.log('longitude', longitude);
     doCheckIn(
       { roomId, payload: { latitude, longitude } },
       {
@@ -85,7 +86,7 @@ export const CheckInButton: React.FC<CheckInButtonProps> = ({
         onError: (error: any) => {
           const code: string = error?.code ?? '';
           const msg: string = error?.message ?? '';
-
+          console.log('error check in', error);
           if (code === 'TooFarFromVenueGpsOnly' || msg.includes('TooFarFromVenueGpsOnly')) {
             // Thử lấy khoảng cách từ message (nếu BE gửi kèm)
             const distanceMatch = msg.match(/(\d+(?:\.\d+)?)\s*m/i);

@@ -41,6 +41,8 @@ interface AIRecommendationModalProps {
   mode: AIRecommendationMode;
   query?: string;
   isLoading?: boolean;
+  /** Lỗi gần nhất (API / mạng) — hiển thị trong modal thay vì toast để dễ thấy khi modal mở */
+  errorMessage?: string | null;
   matchRecommendations?: MatchRoom[];
   playerRecommendations?: SuggestedPlayerProfile[];
   onClose: () => void;
@@ -67,6 +69,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
   mode,
   query,
   isLoading = false,
+  errorMessage = null,
   matchRecommendations = [],
   playerRecommendations = [],
   onClose,
@@ -374,11 +377,31 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
               </ThemedText>
             </View>
 
+            {errorMessage && !isLoading ? (
+              <View
+                style={[
+                  styles.errorBanner,
+                  {
+                    backgroundColor: `${theme.colors.error}22`,
+                    borderColor: theme.colors.error,
+                  },
+                ]}
+              >
+                <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
+                <ThemedText
+                  size="s"
+                  style={[styles.errorBannerText, { color: theme.colors.text }]}
+                >
+                  {errorMessage}
+                </ThemedText>
+              </View>
+            ) : null}
+
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.listContent}
             >
-              {resultCount === 0 && !isLoading ? (
+              {resultCount === 0 && !isLoading && !errorMessage ? (
                 <View style={[styles.emptyBox, { borderColor: theme.colors.border }]}>
                   <Ionicons name="sparkles" size={28} color={accentColor} />
                   <ThemedText variant="secondary" size="s" style={styles.emptyText}>
@@ -406,7 +429,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sheet: {
-    maxHeight: '88%',
+    maxHeight: '100%',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderWidth: 1,
@@ -483,6 +506,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: 14,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginHorizontal: 20,
+    marginTop: -4,
+    marginBottom: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  errorBannerText: {
+    flex: 1,
+    lineHeight: 20,
   },
   listContent: {
     paddingHorizontal: 20,
