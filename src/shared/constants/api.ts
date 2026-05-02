@@ -1,11 +1,32 @@
+const DEFAULT_API_BASE_URL = "https://api.kickify.site/api";
+
+const normalizeUrl = (url: string): string => url.replace(/\/+$/, "");
+
+const resolvedApiBaseUrl = normalizeUrl(
+  process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL,
+);
+
+const apiOrigin = resolvedApiBaseUrl.endsWith("/api")
+  ? resolvedApiBaseUrl.slice(0, -4)
+  : resolvedApiBaseUrl;
+
+const resolvedChatHubUrl = normalizeUrl(
+  process.env.EXPO_PUBLIC_SIGNALR_CHAT_HUB_URL?.trim() || `${apiOrigin}/hubs/chat`,
+);
+
+const resolvedMatchRoomHubUrl = normalizeUrl(
+  process.env.EXPO_PUBLIC_SIGNALR_MATCH_ROOM_HUB_URL?.trim() ||
+    `${apiOrigin}/hubs/matchroom`,
+);
+
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: "https://api.kickify.site/api",
-  // BASE_URL :  'http://10.0.2.2:3000/api', // JSON Server URL
-  // For Android Emulator: 'http://10.0.2.2:3000/api'
-  // For iOS Simulator: 'http://localhost:3000/api'
-  // For Real Device: 'http://YOUR_IP:3000/api'
-
+  BASE_URL: resolvedApiBaseUrl,
+  SIGNALR: {
+    CHAT_HUB_URL: resolvedChatHubUrl,
+    MATCH_ROOM_HUB_URL: resolvedMatchRoomHubUrl,
+  },
+  
   TIMEOUT: 30000, // 30 seconds
 
   // API Endpoints
@@ -21,12 +42,18 @@ export const API_CONFIG = {
       FORGOT_PASSWORD: "/auth/forgot-password",
       CHANGE_PASSWORD: "/auth/change-password",
       RESEND_OTP: "/auth/resend-otp",
+      PROFILE: "/auth/profile",
     },
     USERS: {
+      LIST: "/users",
+      DETAIL: "/users/:id",
+      AVATAR: "/users/avatar",
       FCM_TOKEN: "/users/fcm-token",
+      MATCH_HISTORY: "/users/:id/match-history",
     },
     ROOMS: {
       LIST: "/match-rooms",
+      RECOMMEND: "/match-rooms/recommended",
       CREATE: "/match-rooms",
       MINE: "/match-rooms/mine",
       PLAYER_HISTORY: "/match-rooms/player/:userId",
@@ -50,19 +77,38 @@ export const API_CONFIG = {
       TEAM_NAME: "/match-rooms/:id/team-name",
       /** Cập nhật privacy (Private/Public + password) */
       PRIVACY: "/match-rooms/:id/privacy",
-      /** Mẫu tạo phòng của user (GET/PUT). Đổi path nếu backend khác. */
+      /** Mẫu tạo phòng của user (GET/PUT). */
       MY_PRESET_LIST: "/match-presets/mine",
       PRESET_CREATE: "/match-presets",
       PRESET_DETAIL: "/match-presets/:id",
       PROCESS_PAYMENT: "/bookings/process-payment",
       VOTE_RESULT: "/match-rooms/:id/vote-result",
+      /** Chuyển quyền host sang người chơi khác */
+      TRANSFER_HOST: "/match-rooms/:id/transfer-host",
+      RESPONSE_TRANSFER_HOST: "/match-rooms/:id/transfer-host/respond",
+      /** Mời bạn bè vào phòng */
+      INVITE_FRIEND: "/match-rooms/:id/invite-friend",
       /** Legacy resource (không phải match-rooms) */
       LEGACY_ROOM: "/rooms/:id",
+      DIRECT_PAYMENT: "/bookings/:roomId/payment/vnpay",
+      /** Điểm danh GPS tại sân */
+      CHECK_IN: "/match-rooms/:id/check-in",
     },
     VENUES: {
       LIST: "/venues",
       DETAIL: "/venues/:id",
+      /** GET danh sách đánh giá sân theo ID sân */
       REVIEWS: "/venues/:id/reviews",
+      /** POST tạo đánh giá sân (venueId trong body) */
+      ADD_REVIEW: "/venues/reviews",
+    },
+    FIELDS: {
+      /** GET lịch trống của sân theo ngày */
+      AVAILABILITY: "/fields/:fieldId/availability",
+    },
+    REVIEWS: {
+      LIST: "/reviews",
+      CREATE: "/reviews",
     },
     BOOKINGS: {
       LIST: "/bookings",
@@ -80,13 +126,75 @@ export const API_CONFIG = {
       CREATE: "/withdrawals",
       GET_MY: "/withdrawals/my",
     },
-    /** Đánh giá nhận được + phản hồi (FR-27/28). Đổi path nếu BE khác. */
+    /** Đánh giá nhận được + phản hồi (FR-27/28). */
     FEEDBACK: {
-      RECEIVED: "/match-feedbacks/received",
-      /** Đánh giá mình đã gửi + phản hồi từ người được đánh giá */
-      GIVEN: "/match-feedbacks/given",
-      REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/reply`,
+      RECEIVED: "/playerprofiles/me/feedbacks/received",
+      GIVEN: "/playerprofiles/me/feedbacks/given",
+      REPLY: (feedbackId: string) => `/match-feedbacks/${feedbackId}/response`,
+      GENERATE_SUGGESTION_COMMENT: "/match-feedbacks/generate-suggestions",
+    },
+    MATCH_FEEDBACKS: {
+      CREATE: "/match-feedbacks",
+    },
+    PLAYER_REPORTS: {
+      CREATE: "/player-reports",
+    },
+    NOTIFICATIONS: {
+      LIST: "/notifications",
+      MARK_READ: "/notifications/:id/read",
+      MARK_ALL_READ: "/notifications/read-all",
+    },
+    NOTIFICATION_PREFERENCES: {
+      BASE: "/notification-preferences",
+    },
+    LEADERBOARD: {
+      LIST: "/playerprofiles/leaderboard",
+      MY_RANK: "/playerprofiles/my-rank",
+    },
+    PLAYER_PROFILES: {
+      RADAR_CHART: "/playerprofiles/me/radar-chart",
+      USER_RADAR_CHART: "/playerprofiles/:userId/radar-chart",
+      ELO_BREAKDOWN: "/playerprofiles/me/elo-breakdown",
+    },
+    ACHIEVEMENTS: {
+      ME: "/achievements/me",
+    },
+    FRIENDSHIPS: {
+      REQUESTS: "/friendships/requests",
+      FRIENDS: "/friendships/friends",
+      STATUS: "/friendships/status/:userId",
+      RESPOND: "/friendships/respond/:requesterId",
+      REQUEST: "/friendships/request/:addresseeId",
+      DETAIL: "/friendships/:userId",
+    },
+    POSTS: {
+      LIST: "/posts",
+      DETAIL: "/posts/:id",
+      LIKE: "/posts/:id/like",
+    },
+    COMMENTS: {
+      BY_POST: "/comments/:postId",
+      DETAIL: "/comments/:commentId",
+      REPLIES: "/comments/:commentId/replies",
+      LIKE: "/comments/:commentId/like",
+      REPLY_LIKE: (commentId: string, replyId: string) =>
+        `/comments/${commentId}/replies/${replyId}/like`,
+    },
+    CONTENT_REPORTS: {
+      CREATE: (contentType: string, contentId: string) =>
+        `/content-reports/${contentType}/${contentId}`,
+    },
+    CHAT: {
+      CONVERSATIONS: "/chat/conversations",
+      CONVERSATION: "/chat/conversation/:userId",
+      ROOM_MESSAGES: "/chat/room/:roomId/messages",
+      ROOM_SEND: "/chat/room/send",
+      SEND: "/chat/send",
+      READ: "/chat/read/:fromUserId",
+    },
+    AI: {
+      SUGGEST_PLAYERS: "/ai/suggest-players",
+      SUGGEST_ROOMS: "/ai/suggest-rooms",
     },
   },
 } as const;
-

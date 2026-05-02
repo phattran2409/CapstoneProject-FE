@@ -30,6 +30,7 @@ export interface Theme {
     darkBlack: string;
     mediumGray: string;
     softWhite: string;
+    blueSky: string;
     
     // Additional
     white: string;

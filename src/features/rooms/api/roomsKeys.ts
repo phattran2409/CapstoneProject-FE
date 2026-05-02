@@ -32,6 +32,7 @@ export const roomsKeys = {
   createPreset: () => [...roomsKeys.all, 'create-preset'] as const,
   matchPresetList: (filters?: Pick<MatchRoomFilters, 'page' | 'pageSize'>) => [...roomsKeys.all, 'match-preset-list', filters] as const,
   matchPresetDetail: (id: string) => [...roomsKeys.all, 'match-preset-detail', id] as const,
+  matchRoomRecommend: () => [...roomsKeys.all, 'match-room-recommend'] as const,
 };
 
 /**

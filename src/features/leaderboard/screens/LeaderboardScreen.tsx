@@ -9,18 +9,16 @@ import { useLeaderboard, useMyRank } from '@/features/leaderboard/hooks/useLeade
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useUserProfile } from '@/features/profile/hooks';
 import { EmptyState, ErrorState, ListSkeleton, RankBadge } from '@/shared/components';
+import { LEADERBOARD_PAGE_SIZE } from '../constants';
 import { Leaderboard } from '../types/leaderboard.types';
 import { getEmailUsername } from '@/shared/utils/formatters';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { RootStackParamList } from '@/app/navigation/types';
 
-type RootStackParamList = {
-  Home: undefined;
-  Leaderboard: undefined;
-  Profile: undefined;
-  PlayerProfile: { playerId: string };
-};
-
-type LeaderboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Leaderboard'>;
+type LeaderboardScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Leaderboard'
+>;
 
 interface LeaderboardScreenProps {
   navigation: LeaderboardScreenNavigationProp;
@@ -34,17 +32,17 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
   const myUser = useAuthStore((s) => s.user);
   const { data: myProfile } = useUserProfile(myUserId || '');
 
-  const leaderboardQuery = useLeaderboard();
+  const leaderboardQuery = useLeaderboard( { pageSize: LEADERBOARD_PAGE_SIZE } );
   const myRankQuery = useMyRank();
 
   const leaderboard = useMemo(() => {
-    const items = leaderboardQuery.data?.data?.leaderboard ?? [];
-    // Product requirement: list size is implicitly 20
-    return items.slice(0, 20);
+    const items = leaderboardQuery.data?.leaderboard ?? [];
+    return items;
   }, [leaderboardQuery.data]);
 
   const myRank = myRankQuery.data?.rank;
-  const isMyRankOutsideTop = typeof myRank === 'number' && myRank > 20;
+  const isMyRankOutsideTop =
+    typeof myRank === 'number' && myRank > LEADERBOARD_PAGE_SIZE;
 
   const getRankColor = useCallback((rank: number) => {
     switch (rank) {
@@ -91,7 +89,11 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
             borderColor: isMe ? theme.colors.neonGreen : theme.colors.border,
           },
         ]}
-        onPress={() => navigation.navigate('PlayerProfile', { playerId: player.userId })}
+        onPress={() => {
+          const userId = player.userId?.trim();
+          if (!userId) return;
+          navigation.navigate('PersonalPage', { userId });
+        }}
       >
         <View style={styles.playerRow}>
           {/* Rank */}
@@ -148,6 +150,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
           <View style={styles.statItem}>
             <RankBadge
               elo={player.currentElo ?? 0}
+              rankTier={player.currentRank}
+              isLegend={player.isLegend}
               size="medium"
               showElo
               transparent
@@ -176,7 +180,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
     return (
       <View style={{ marginTop: 16 }}>
         <ThemedText variant="secondary" size="s" weight="semiBold" style={{ marginBottom: 8 }}>
-          {t('leaderboard.myRank', { defaultValue: 'Your current rank' })}
+          {t('leaderboard.myRank')}
         </ThemedText>
         <ThemedView
           style={[
@@ -223,7 +227,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
                 </ThemedText>
               )}
               <ThemedText variant="secondary" size="xs" style={{ marginTop: 4 }}>
-                {t('leaderboard.outsideTop', { defaultValue: 'Outside top 20' })}
+                {t('leaderboard.outsideTop', {
+                  count: LEADERBOARD_PAGE_SIZE,
+                  defaultValue: `Outside top ${LEADERBOARD_PAGE_SIZE}`,
+                })}
               </ThemedText>
             </View>
           </View>
@@ -247,6 +254,13 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ navigation }) => 
           </ThemedText>
           <View style={{ width: 24 }} />
         </ThemedView>
+        <ThemedText
+          variant="secondary"
+          size="xs"
+          style={{ marginTop: -8, marginBottom: 4, paddingHorizontal: 4, lineHeight: 18 }}
+        >
+          {t('leaderboard.refreshHint')}
+        </ThemedText>
       </ThemedView>
 
       {leaderboardQuery.isLoading && <ListSkeleton />}

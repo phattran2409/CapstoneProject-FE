@@ -276,4 +276,48 @@ export const teamScreenStyles = StyleSheet.create({
   paymentButtonText: {
     marginLeft: 8,
   },
+  paymentMethodOverlay: {
+    flex: 1,
+  },
+  paymentMethodSheetWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  paymentMethodSheet: {
+    width: "100%",
+    maxWidth: 380,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  paymentMethodHeader: {
+    marginBottom: 16,
+  },
+  paymentMethodOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 10,
+    gap: 12,
+  },
+  paymentMethodOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paymentMethodOptionTextBlock: {
+    flex: 1,
+  },
+  paymentMethodFooter: {
+    marginTop: 8,
+    alignItems: "center",
+  },
 });

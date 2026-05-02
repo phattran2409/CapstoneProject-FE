@@ -9,6 +9,7 @@ export type FeedbackStep =
   | 'intro'
   | 'matchResult'
   | 'playerRating'
+  | 'opponentRating'
   | 'fieldRating'
   | 'complete';
 
@@ -42,6 +43,8 @@ export interface FeedbackVenueInfo {
 /** Dữ liệu phiên đánh giá – được persist vào AsyncStorage */
 export interface FeedbackSession {
   roomId: string;
+  /** Người tạo phòng có quyền vote kết quả trận */
+  isHost: boolean;
   /** Tên 2 đội */
   teamAName: string;
   teamBName: string;
@@ -54,6 +57,8 @@ export interface FeedbackSession {
   myTeam: 'A' | 'B';
   /** Danh sách đồng đội cùng đội cần đánh giá (không bao gồm bản thân) */
   teammates: FeedbackPlayer[];
+  /** Danh sách cầu thủ đội đối phương (để đánh giá tùy chọn) */
+  opponents?: FeedbackPlayer[];
   /** Bước hiện tại user đang ở */
   currentStep: FeedbackStep;
   /** Kết quả trận đã chọn */
@@ -124,6 +129,7 @@ export const useFeedbackSessionStore = create<FeedbackSessionState>((set, get) =
   startSession: async (init) => {
     const session: FeedbackSession = {
       ...init,
+      opponents: init.opponents ?? [],
       currentStep: 'intro',
       matchResult: null,
       playerRatings: {},

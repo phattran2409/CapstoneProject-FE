@@ -47,6 +47,7 @@ import {
 } from "@/screens";
 import FeedbackMatchResultScreen from "@/features/feedback/screens/FeedbackMatchResultScreen";
 import FeedbackFieldRatingScreen from "@/features/feedback/screens/FeedbackFieldRatingScreen";
+import FeedbackOpponentRatingScreen from "@/features/feedback/screens/FeedbackOpponentRatingScreen";
 import ReceivedFeedbackScreen from "@/features/feedback/screens/ReceivedFeedbackScreen";
 import GivenFeedbackScreen from "@/features/feedback/screens/GivenFeedbackScreen";
 
@@ -393,6 +394,15 @@ const StackNavigator: React.FC = () => {
             <Stack.Screen
               name="FeedbackRating"
               component={FeedbackRatingScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name="FeedbackOpponentRating"
+              component={FeedbackOpponentRatingScreen}
               options={{
                 headerShown: false,
                 animation: "slide_from_right",

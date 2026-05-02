@@ -7,11 +7,15 @@ import type { CreateMatchPresetDto, UpdateMatchPresetDto } from '../types/room.t
  * GET /match-presets/:id — chi tiết preset theo ID.
  * Chỉ fetch khi enabled=true và id tồn tại.
  */
-export function useMatchPresetById(id: string | undefined) {
+export function useMatchPresetById(
+  id: string | undefined,
+  options?: { enabled?: boolean },
+) {
+  const allowFetch = options?.enabled ?? true;
   return useQuery({
     queryKey: roomsKeys.matchPresetDetail(id ?? ''),
     queryFn: () => roomsApi.getMatchPresetById(id!),
-    enabled: !!id,
+    enabled: !!id && allowFetch,
     staleTime: 2 * 60 * 1000,
   });
 }
@@ -55,7 +59,7 @@ export function useDeleteMatchPreset() {
   return useMutation({
     mutationFn: (id: string) => roomsApi.deleteMatchPreset(id),
     onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: roomsKeys.matchPresetDetail(id) });
+      queryClient.removeQueries({ queryKey: roomsKeys.matchPresetDetail(id) });
       queryClient.invalidateQueries({ queryKey: roomsKeys.matchPresetList() });
     },
   });

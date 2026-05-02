@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,13 +7,13 @@ import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedSafeAreaView, ThemedText, ThemedView } from '@/shared/components/themed';
-import { MatchList, MatchDetailModal, MatchItemData } from '@/shared/components';
+import { MatchList, MatchDetailModal, MatchItemData, MatchroomSkeleton } from '@/shared/components';
 import { useScrollToHideTabBar } from '@/shared/hooks/useScrollToHideTabBar';
 import { RootStackParamList, TabParamList } from '@/app/navigation/types';
-import { ActiveRoomBannerV2 } from '@/shared/components/ActiveRoomBannerV2';
 import { useMatchRooms, useJoinRoomAsUnassigned, MatchRoom, MatchRoomFilters, MatchFormat } from '@/features/rooms';
-import { useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
-import { PrivateRoomPasswordModal } from '../components';
+import * as Location from 'expo-location';
+import { useMatchRoomRecommend, useMyRooms } from '@/features/rooms/hooks/useMatchRooms';
+import { AIRecommendationModal, PrivateRoomPasswordModal, type MatchRecommendation } from '../components';
 import type { VenuePhoto } from '@/features/venues/types/venue.types';
 import { FilterRoomMatch } from '../components/FilterRoomMatch';
 import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
@@ -21,6 +21,9 @@ import { OptionFilter } from '@/features/venues';
 import { useToast } from '@/shared/toast';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { toMatchItemData } from '../utils/matchItemMapper';
+import { useAlert } from '@/shared/hooks';
+import Alert from '@/shared/components/Alert';
+import { useSuggestAI } from '../hooks';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -37,7 +40,12 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const scrollHandler = useScrollToHideTabBar();
   const [selectedMatch, setSelectedMatch] = useState<MatchItemData | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [aiQuery, setAiQuery] = useState('');
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [aiSuggestedRooms, setAiSuggestedRooms] = useState<MatchRoom[]>([]);
+  const [isResolvingAiLocation, setIsResolvingAiLocation] = useState(false);
+  const { visible: alertVisible, alertOptions, showInfo, hideAlert } = useAlert();
   const [pendingJoinParams, setPendingJoinParams] = useState<{
     roomId: string;
     params: { roomId: string; venuePhotos?: VenuePhoto[] };
@@ -57,14 +65,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   // Fetch match rooms from API
   // 1) Recommended matches – không dùng vị trí
   const {
-    matchRooms: recommendedRooms,
+    matchRoomRecommend: recommendedRooms,
     loading: loadingRecommended,
-  } = useMatchRooms(
-    {
-      matchFormat: filter.matchFormat,
-      date: filter.date,
-    }
-  );
+    refreshing: refreshingRecommended,
+    loadingMore: loadingMoreRecommended,
+    error: errorRecommended,
+    refresh: refreshRecommended,
+    loadMore: loadMoreRecommended,
+  } = useMatchRoomRecommend();
 
   // 2) Nearby matches – có dùng vị trí (latitude, longitude, radiusKm)
   const { 
@@ -91,6 +99,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     refreshing: refreshingMyRooms,
     refresh: refreshMyRooms,
   } = useMyRooms({ availableOnly: true });
+  // suggest room AI 
+  const { mutate: suggestRooms, isPending: isSuggestingRooms } = useSuggestAI();
 
   // If only "my rooms" has data and match lists are still loading, we still render UI.
   const isLoading =
@@ -116,6 +126,35 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     () => [...myRoomsMatches, ...featuredMatches, ...listMatches],
     [myRoomsMatches, featuredMatches, listMatches]
   );
+
+  // const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
+  //   const sourceMatches = aiSuggestedRooms.length > 0 ? aiSuggestedRooms.map(toMatchItemData) : allMatches;
+
+  //   return sourceMatches
+  //     .filter((match) => !!match.id)
+  //     .map((match) => {
+  //       const [startTime, endTime] = match.time?.split(' - ') ?? [match.time ?? '', undefined];
+  //       const [filledSlots, totalSlots] = match.players?.split('/').map((value) => Number(value)) ?? [];
+  //       const missingPlayers =
+  //         Number.isFinite(totalSlots) && Number.isFinite(filledSlots)
+  //           ? Math.max(totalSlots - filledSlots, 0)
+  //           : undefined;
+
+  //       return {
+  //         id: match.id,
+  //         title: match.title,
+  //         address: match.venue,
+  //         startTime: startTime || match.date || t('roomDetail.unknown'),
+  //         endTime,
+  //         format: match.format ?? t('roomDetail.unknown'),
+  //         missingPlayers,
+  //         matchReason: t('aiRecommendation.match.cardReason', {
+  //           date: match.date ?? t('roomDetail.unknown'),
+  //           venue: match.venue ?? t('roomDetail.unknown'),
+  //         }),
+  //       };
+  //     });
+  // }, [aiSuggestedRooms, allMatches, t]);
   
   const isEmptyMatches =
     !isLoading &&
@@ -144,18 +183,27 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     }
   }, [scrollHandler, hasMore, loadingMoreNearby, loadMore]);
 
-  // ✅ Hook để join room (tự động thêm vào Unassigned)
   const { mutate: joinRoomAsUnassigned, isPending: isJoining } = useJoinRoomAsUnassigned();
   const toast = useToast();
-  const handleViewDetail = (matchId: string) => {
+  const handleViewDetail = (matchId: string, sourceRooms?: MatchRoom[]) => {
     const match = allMatches.find((m) => m.id === matchId);
-    const room = [
+    const pool = sourceRooms ?? [
       ...recommendedRooms,
       ...nearbyRooms,
       ...(myRoomsData ?? []),
-    ].find((r: any) => r.roomId === matchId);
+    ];
+    const room = [
+      ...pool,
+    ].find((r: any) => String(r.roomId) === String(matchId));
 
-    const venuePhotos = (room as any)?.venuePhotos;
+    const venuePhotosFromRoom = Array.isArray((room as any)?.venuePhotos)
+      ? ((room as any).venuePhotos as VenuePhoto[])
+      : [];
+    const fallbackVenuePhotos =
+      typeof match?.image === 'string' && match.image
+        ? ([{ photoId: `fallback-${matchId}`, photoUrl: match.image, isPrimary: true }] as VenuePhoto[])
+        : [];
+    const venuePhotos = venuePhotosFromRoom.length > 0 ? venuePhotosFromRoom : fallbackVenuePhotos;
     const params = { roomId: matchId, ...(venuePhotos?.length ? { venuePhotos } : {}) };
 
     if (match?.isPrivate) {
@@ -235,6 +283,63 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     setFilterVisible(false);
   }
 
+  const handleSubmitAiQuery = useCallback(async () => {
+    const trimmedQuery = aiQuery.trim();
+    if (!trimmedQuery) return;
+
+    setIsResolvingAiLocation(true);
+    try {
+      let lat = latitude;
+      let lng = longitude;
+
+      if (lat == null || lng == null) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          toast.info(
+            t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
+            t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc theo bán kính.'),
+          );
+          return;
+        }
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        lat = location.coords.latitude;
+        lng = location.coords.longitude;
+      }
+
+      suggestRooms(
+        {
+          query: trimmedQuery,
+          latitude: lat,
+          longitude: lng,
+          page: 1,
+          pageSize: 10,
+        },
+        {
+          onSuccess: (response) => {
+            setAiSuggestedRooms(response.data.rooms || []);
+          },
+          onError: (error: any) => {
+            console.log('Error suggest rooms:', error);
+            toast.error(
+              t('common.error', 'Lỗi'),
+              getTranslatedError(error?.message, error?.code) ||
+                t('aiRecommendation.searching'),
+            );
+            setAiSuggestedRooms([]);
+          },
+        },
+      );
+    } catch (error: any) {
+      toast.error(
+        t('common.error', 'Lỗi'),
+        getTranslatedError(error?.message, error?.code) || t('venueSelection.locationError'),
+      );
+    } finally {
+      setIsResolvingAiLocation(false);
+    }
+  }, [aiQuery, latitude, longitude, suggestRooms, t, toast]);
 
   return (
     <ThemedSafeAreaView style={{ flex: 1 , position: 'relative'}}>
@@ -249,17 +354,45 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           },
         ]}
       >
+        <View style={styles.headerLeft}>
         <ThemedText size="xxl" weight="bold" variant="primary">
           {t("matches.title", "Trận đấu")}
         </ThemedText>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() =>
+              showInfo(
+                t('matches.screenExplainerTitle'),
+                t('matches.screenExplainer'),
+                undefined,
+                false,
+                0,
+              )
+            }
+            accessibilityRole="button"
+            accessibilityLabel={t('matches.screenExplainerTitle')}
+          >
             <Ionicons
-              name="search"
+              name="information-circle-outline"
               size={24}
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setAiModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t('aiRecommendation.match.title')}
+          >
+            <Ionicons
+              name="sparkles"
+              size={24}
+              color={theme.colors.neonGreen}
+            />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.iconButton} onPress={() => setFilterVisible(true)}>
             <Ionicons
               name="filter"
@@ -269,10 +402,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ThemedView>
-
-      {/* Active Room Banner - Chỉ hiển thị khi có active room */}
-      <ActiveRoomBannerV2 />
-
       <View style={styles.flex1}>
         <ScrollView 
           style={styles.flex1}
@@ -282,10 +411,11 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           nestedScrollEnabled={true}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing || refreshingMyRooms}
+              refreshing={refreshing || refreshingMyRooms || refreshingRecommended}
               onRefresh={() => {
                 refresh();
                 refreshMyRooms();
+                refreshRecommended();
               }}
               colors={[theme.colors.neonGreen]}
               tintColor={theme.colors.neonGreen}
@@ -293,9 +423,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           }
         >
           {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.neonGreen} />
-            </View>
+            <MatchroomSkeleton />
           ) : (
             <>
               {/* My rooms (Phòng đấu của tôi) */}
@@ -396,40 +524,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           )}
         </ScrollView>
       </View>
-
-      {/* Footer Create Button (không overlay ScrollView) */}
-      {!isEmptyMatches && (
-        <View style={[styles.createButtonFooter, { paddingHorizontal: theme.spacing.l, paddingBottom: theme.spacing.l }]}>
-          <TouchableOpacity
-            style={[
-              styles.createButton,
-              {
-                backgroundColor: theme.colors.neonGreen,
-                shadowColor: theme.colors.neonGreen,
-                borderRadius: theme.radius.l,
-                paddingVertical: theme.spacing.m,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-            ]}
-            onPress={() => {
-              navigation.navigate("CreateRoom");
-            }}
-          >
-            <Ionicons name="add" size={24} color={theme.colors.background} />
-            <ThemedText
-              size="l"
-              weight="bold"
-              style={{ marginLeft: 8, color: theme.colors.background }}
-            >
-              {t("home.createNewRoom", "Tạo phòng mới")}
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Match Detail Modal */}
       <MatchDetailModal
         visible={modalVisible}
         match={selectedMatch}
@@ -439,8 +533,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         }}
         onViewDetail={handleViewDetail}
       />
-
-      {/* Modal nhập mật khẩu khi vào phòng private */}
       <PrivateRoomPasswordModal
         visible={passwordModalVisible}
         roomName={pendingJoinParams?.roomName}
@@ -453,6 +545,38 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       {/* Filter Room Match Modal */}
       <FilterRoomMatch visible={filterVisible} onApply={handleFilter} onClose={handleCloseFilter} theme={theme} />
       <OptionFilter visible={optionFilterVisible} initialRadiusKm={radiusKm} onApply={handleApplyRadiusFilter} onClose={handleCloseOptionFilter} />
+
+      <AIRecommendationModal
+        visible={aiModalVisible}
+        mode="match"
+        query={aiQuery}
+        isLoading={isSuggestingRooms || isResolvingAiLocation || locationLoading}
+        matchRecommendations={aiSuggestedRooms}
+        onClose={() => setAiModalVisible(false)}
+        onChangeQuery={setAiQuery}
+        onSubmitQuery={handleSubmitAiQuery}
+        onJoinMatch={(recommendation) => {
+          setAiModalVisible(false);
+          handleViewDetail(recommendation.roomId, aiSuggestedRooms);
+        }}
+      />
+
+      {alertOptions && (
+        <Alert
+          visible={alertVisible}
+          type={alertOptions.type}
+          title={alertOptions.title}
+          message={alertOptions.message}
+          confirmText={alertOptions.confirmText}
+          cancelText={alertOptions.cancelText}
+          onConfirm={alertOptions.onConfirm}
+          onCancel={alertOptions.onCancel}
+          onClose={alertOptions.onClose ?? hideAlert}
+          showCloseButton={alertOptions.showCloseButton}
+          autoClose={alertOptions.autoClose}
+          autoCloseDelay={alertOptions.autoCloseDelay}
+        />
+      )}
     </ThemedSafeAreaView>
   );
 };
@@ -467,6 +591,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   headerRight: {

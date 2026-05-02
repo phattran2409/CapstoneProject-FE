@@ -7,6 +7,8 @@ import {
   getAchievements,
   updateNotificationSettings,
   getNotificationSettings,
+  getMyRadarChart,
+  getUserRadarChart,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -28,6 +30,26 @@ export const useAchievements = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export const useMyRadarChart = (enabled = true) => {
+  return useQuery({
+    queryKey: profileKeys.radarChart(),
+    queryFn: getMyRadarChart,
+    staleTime: 30 * 1000,
+    enabled,
+  });
+};
+
+export const useUserRadarChart = (userId: string, enabled = true) => {
+  return useQuery({
+    queryKey: profileKeys.userRadarChart(userId),
+    queryFn: () => getUserRadarChart(userId),
+    staleTime: 30 * 1000,
+    enabled: !!userId && enabled,
+  });
+};
+
+export { useEloBreakdown, useEloBreakdown as useMyEloBreakdown } from "@/features/breakdown/hooks/useEloBreakdown";
 
 // Update my profile
 export const useUpdateProfile = () => {

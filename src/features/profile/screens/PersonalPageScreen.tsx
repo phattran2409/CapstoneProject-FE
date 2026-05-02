@@ -29,6 +29,7 @@ import {
   PostItem,
   Post,
   ProfileSkeleton,
+  MatchListSkeleton,
   ErrorState,
   EmptyState,
   LoadingMoreIndicator,
@@ -37,7 +38,11 @@ import {
   usePaginatedUserPosts,
   useTogglePostLike,
 } from "@/features/post/hooks";
-import { useSendFriendRequest, useUserProfile } from "../hooks";
+import {
+  useSendFriendRequest,
+  useUserProfile,
+  useMyRadarChart,
+} from "../hooks";
 import {
   useGetFriendshipStatus,
   useRemoveFriend,
@@ -47,11 +52,12 @@ import {
   useMyRooms,
   useHistoryRooms,
 } from "@/features/rooms/hooks/useMatchRooms";
-import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
+import { useUpdateProfile, useUpdateAvatar, useUserRadarChart } from "../hooks/useProfile";
 import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
 import { getImageSource } from "@/shared/utils/imageSource";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { MyRoom } from "@/features/rooms/types/room.types";
 
 type PersonalPageScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -72,7 +78,6 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
   return {
     id: String(
       room?.roomId ??
-        room?.id ??
         `${room?.roomName ?? "room"}-${room?.matchDate ?? "date"}-${room?.startTime ?? "start"}`,
     ),
     title:
@@ -82,8 +87,9 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
       "Unknown",
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: getImageSource(room.venuePhotos?.[0]?.photoUrl),
+    image: getImageSource(room.venuePhotos[0]?.photoUrl),
     status: room.status,
+    myMatchOutCome: room.myMatchOutcome,
     date: formatDate(room.matchDate),
     venue: room.field?.venue?.venueName,
     time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
@@ -107,7 +113,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   // Get userId from params or fallback to current user
   const userId = route.params?.userId || currentUser?.userId || "";
   const isCurrentUser = userId === currentUser?.userId;
-  console.log("isCurrentUser", isCurrentUser);
 
   // UI State
   const [activeTab, setActiveTab] = useState<TabType>("posts");
@@ -151,7 +156,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     pageSize: 10,
   });
 
-  const myRoomsQuery = useMyRooms({ availableOnly: true }, { enabled: isCurrentUser });
+  const myRoomsQuery = useMyRooms(undefined, { enabled: isCurrentUser });
   const historyRoomsQuery = useHistoryRooms(userId, {
     enabled: !isCurrentUser && !!userId,
   });
@@ -167,20 +172,16 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     loadMore: matchesLoadMore,
   } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
-  const stats = {
-    matches: 88,
-    winRate: 75,
-  };
-
-  const radarData = {
-    WinLoss: 75,
-    Perf: 85,
-    Feedback: 70,
-    Sentiment: 80,
-    Trust: 75,
-    RoleFactor: 65,
-  };
-
+  const myRadarQuery = useMyRadarChart(isCurrentUser);
+  const userRadarQuery = useUserRadarChart(
+    userId,
+    !isCurrentUser,
+  );
+  const { data: analysisRadarData, isLoading: analysisRadarLoading } = isCurrentUser
+    ? myRadarQuery
+    : userRadarQuery;
+  
+  console.log("analysisRadarData", analysisRadarData);
   // Memoize converted matches
   const listMatches = useMemo(() => {
     const seen = new Set<string>();
@@ -572,7 +573,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
             {activeTab === "history" && (
               <View style={{ flex: 1 }}>
                 {/* Loading State */}
-                {matchesLoading && <ProfileSkeleton />}
+                {matchesLoading && <MatchListSkeleton />}
 
                 {/* Error State */}
                 {matchesError && (
@@ -611,7 +612,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
             {/* Analysis Tab */}
             {activeTab === "analysis" && (
-              <AnalysisTab stats={stats} radarData={radarData} />
+              <AnalysisTab
+                radarData={analysisRadarData ?? null}
+                isLoading={analysisRadarLoading}
+              />
             )}
           </View>
         </ScrollView>

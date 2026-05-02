@@ -3,6 +3,7 @@ import { View, Image, StyleSheet } from 'react-native';
 import { ThemedText, ThemedCard } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
 import type { MatchRoomFullInfo } from '@/features/rooms';
+import { getImageAvatar } from '@/shared/utils/imageSource';
 
 interface HostTabContentProps {
   t: (key: string) => string;
@@ -24,11 +25,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}
       <ThemedCard style={styles.hostCard}>
         <View style={styles.hostHeader}>
           <Image
-            source={{
-              uri:
-                host.avatarUrl ||
-                'https://ui-avatars.com/api/?name=' + encodeURIComponent(host.fullName),
-            }}
+            source={getImageAvatar({uri: host.avatarUrl ?? ''})}
             style={styles.hostAvatar}
           />
           <View style={styles.hostInfo}>
@@ -36,7 +33,7 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}
               {host.fullName}
             </ThemedText>
             <ThemedText variant="secondary" size="s">
-              Host ID: {host.userId.slice(0, 8)}...
+              {t('roomDetail.hostId')}{host.userId.slice(0, 8)}...
             </ThemedText>
           </View>
         </View>
@@ -56,24 +53,6 @@ export const HostTabContent: React.FC<HostTabContentProps> = ({ displayRoom , t}
               {t('roomDetail.rules')}
             </ThemedText>
             <ThemedText size="m">{displayRoom.rules}</ThemedText>
-          </View>
-        )}
-
-        {displayRoom.field.venue.contactPhone && (
-          <View style={styles.hostContact}>
-            <View
-              style={[
-                styles.hostContactItem,
-                { backgroundColor: theme.colors.neonGreen + '10' },
-              ]}
-            >
-              <ThemedText variant="secondary" size="xs" style={styles.contactLabel}>
-                {t('roomDetail.contact')}
-              </ThemedText>
-              <ThemedText size="s" weight="medium">
-                {displayRoom.field.venue.contactPhone}
-              </ThemedText>
-            </View>
           </View>
         )}
       </ThemedCard>

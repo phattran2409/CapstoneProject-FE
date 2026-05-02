@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   withSpring, 
@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ThemedText } from '../themed';
 import type { FormationSlot as SlotType, FormationPlayer, PositionLine } from './types';
+import { getImageAvatar } from '@/shared/utils/imageSource';
 
 /** Colors for different position lines */
 const LINE_COLORS: Record<PositionLine, { bg: string; border: string; text: string }> = {
@@ -54,6 +55,13 @@ const FormationSlotComponent: React.FC<FormationSlotProps> = ({
 }) => {
   const scale = useSharedValue(1);
   const colors = LINE_COLORS[slot.line];
+  const [avatarSource, setAvatarSource] = React.useState<ImageSourcePropType>(() =>
+    getImageAvatar(player?.avatar),
+  );
+
+  React.useEffect(() => {
+    setAvatarSource(getImageAvatar(player?.avatar));
+  }, [player?.avatar]);
 
   // Pulse animation when it's a drop target (always animate, regardless of role match)
   React.useEffect(() => {
@@ -171,18 +179,11 @@ const FormationSlotComponent: React.FC<FormationSlotProps> = ({
         ) : (
           // Player assigned - show avatar
           <>
-            {player.avatar ? (
               <Image 
-                source={player.avatar} 
+                source={avatarSource}
+                onError={() => setAvatarSource(getImageAvatar(undefined))}
                 style={[styles.avatar, { width: size - 6, height: size - 6, borderRadius: (size - 6) / 2 }]} 
               />
-            ) : (
-              <View style={[styles.avatarPlaceholder, { width: size - 6, height: size - 6, borderRadius: (size - 6) / 2 }]}>
-                <ThemedText size="l" weight="bold" style={{ color: colors.text }}>
-                  {player.name?.charAt(0) || '?'}
-                </ThemedText>
-              </View>
-            )}
           </>
         )}
       </TouchableOpacity>

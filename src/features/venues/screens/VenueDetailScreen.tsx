@@ -19,8 +19,11 @@ import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { RootStackParamList } from '@/app/navigation/types';
 import { useVenueDetail, VenueDetail, VenueFieldDetail, OperatingHour, Field, TimeSlot } from '@/features/venues';
-import { FieldsModal } from '../components';
+import { formatMatchFormatVsLabel } from '@/features/rooms';
+import { FieldsModal, VenueOwnerModal, VenueReviewsSection } from '../components';
 import { ErrorState } from '@/shared/components';
+import { formatCurrency } from '@/shared/utils/formatters';
+import { formatTimeToHHMM, getDayName } from '@/shared/utils/dateUtils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -31,40 +34,6 @@ interface VenueDetailScreenProps {
   navigation?: VenueDetailScreenNavigationProp;
   route: VenueDetailScreenRouteProp;
 }
-
-// Helper function to format field type
-const formatFieldType = (fieldType: string): string => {
-  switch (fieldType) {
-    case 'FiveVsFive':
-      return '5 vs 5';
-    case 'SevenVsSeven':
-      return '7 vs 7';
-    case 'ElevenVsEleven':
-      return '11 vs 11';
-    default:
-      return fieldType;
-  }
-};
-
-// Helper function to format price
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-  }).format(price);
-};
-
-// Helper function to format time
-const formatTime = (time: string): string => {
-  // Convert "HH:mm:ss" to "HH:mm"
-  return time.substring(0, 5);
-};
-
-// Helper function to get day name
-const getDayName = (dayOfWeek: number): string => {
-  const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-  return days[dayOfWeek] || '';
-};
 
 // Convert VenueFieldDetail to Field for FieldsModal compatibility
 const convertToField = (venueField: VenueFieldDetail): Field => ({
@@ -83,6 +52,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
   const [activeTab, setActiveTab] = useState<'info' | 'fields' | 'hours'>('info');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
+  const [ownerModalVisible, setOwnerModalVisible] = useState(false);
 
   // Fetch venue detail
   const { data: venue, isLoading, error, refetch } = useVenueDetail(venueId);
@@ -152,7 +122,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.neonGreen} />
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-            Đang tải thông tin sân...
+            {t('venueDetail.loading')}
           </Text>
         </View>
       </SafeAreaView>
@@ -164,7 +134,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkBlack }]}>
         <ErrorState
-          error="Không thể tải thông tin sân"
+          error={t('venueDetail.loadError')}
           onRetry={refetch}
         />
       </SafeAreaView>
@@ -182,7 +152,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
           <Ionicons name="arrow-back" size={24} color={theme.colors.softWhite} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.softWhite }]} numberOfLines={1}>
-          {venue.venueName}
+         {t("venueDetail.title")}
         </Text>
         <View style={{ width: 40 }} />
       </View>
@@ -258,7 +228,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
             <View style={styles.hoursRow}>
               <Ionicons name="time-outline" size={18} color={theme.colors.neonGreen} />
               <Text style={[styles.hoursText, { color: theme.colors.softWhite }]}>
-                Hôm nay: {formatTime(todayHours.openTime)} - {formatTime(todayHours.closeTime)}
+                {t('venueDetail.todayHours')}: {formatTimeToHHMM(todayHours.openTime)} - {formatTimeToHHMM(todayHours.closeTime)}
               </Text>
             </View>
           )}
@@ -277,11 +247,11 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: theme.colors.neonGreen }]}
-              onPress={() => setFieldsModalVisible(true)}
+              onPress={() => setOwnerModalVisible(true)}
             >
-              <Ionicons name="football-outline" size={20} color={theme.colors.darkBlack} />
+              <Ionicons name="person-circle-outline" size={20} color={theme.colors.darkBlack} />
               <Text style={[styles.actionButtonText, { color: theme.colors.darkBlack }]}>
-                Đặt sân ngay
+                {t('venueDetail.ownerButton')}
               </Text>
             </TouchableOpacity>
 
@@ -291,7 +261,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
             >
               <Ionicons name="map-outline" size={20} color={theme.colors.softWhite} />
               <Text style={[styles.actionButtonText, { color: theme.colors.softWhite }]}>
-                Chỉ đường
+                {t('venueDetail.directions')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -315,7 +285,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                 { color: activeTab === 'info' ? theme.colors.darkBlack : theme.colors.textSecondary },
               ]}
             >
-              Thông tin
+              {t('venueDetail.tabs.info')}
             </Text>
           </TouchableOpacity>
 
@@ -335,7 +305,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                 { color: activeTab === 'fields' ? theme.colors.darkBlack : theme.colors.textSecondary },
               ]}
             >
-              Danh sách sân ({venue.fields?.length || 0})
+              {t('venueDetail.tabs.fields', { count: venue.fields?.length || 0 })}
             </Text>
           </TouchableOpacity>
 
@@ -355,7 +325,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                 { color: activeTab === 'hours' ? theme.colors.darkBlack : theme.colors.textSecondary },
               ]}
             >
-              Giờ mở cửa
+              {t('venueDetail.tabs.hours')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -369,7 +339,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
               {venue.description && (
                 <View style={styles.section}>
                   <Text style={[styles.sectionTitle, { color: theme.colors.softWhite }]}>
-                    Mô tả
+                    {t('venueDetail.description')}
                   </Text>
                   <Text style={[styles.descriptionText, { color: theme.colors.textSecondary }]}>
                     {venue.description}
@@ -381,7 +351,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
               {venue.amenities !== null && venue.amenities !== undefined && (
                 <View style={styles.section}>
                   <Text style={[styles.sectionTitle, { color: theme.colors.softWhite }]}>
-                    Tiện ích
+                    {t('venueDetail.amenities')}
                   </Text>
                   <View style={styles.amenitiesContainer}>
                     {venue.amenities.split(',').map((amenity, index) => (
@@ -402,7 +372,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
               {/* Location Map Preview */}
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: theme.colors.softWhite }]}>
-                  Vị trí
+                  {t('venueDetail.location')}
                 </Text>
                 <TouchableOpacity
                   style={[styles.mapPreview, { backgroundColor: '#2a2a2a' }]}
@@ -410,13 +380,15 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                 >
                   <Ionicons name="map" size={48} color={theme.colors.neonGreen} />
                   <Text style={[styles.mapPreviewText, { color: theme.colors.softWhite }]}>
-                    Nhấn để mở bản đồ
+                    {t('venueDetail.openMap')}
                   </Text>
                   <Text style={[styles.coordinatesText, { color: theme.colors.textSecondary }]}>
                     {venue.latitude.toFixed(6)}, {venue.longitude.toFixed(6)}
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <VenueReviewsSection reviews={venue.reviews || []} />
             </View>
           )}
 
@@ -436,16 +408,16 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                         </Text>
                         <View style={[styles.fieldTypeBadge, { backgroundColor: theme.colors.neonGreen + '20' }]}>
                           <Text style={[styles.fieldTypeText, { color: theme.colors.neonGreen }]}>
-                            {formatFieldType(field.fieldType)}
+                            {formatMatchFormatVsLabel(field.fieldType)}
                           </Text>
                         </View>
                       </View>
                       <View style={styles.fieldPricing}>
                         <Text style={[styles.fieldPrice, { color: theme.colors.neonGreen }]}>
-                          {formatPrice(field.hourlyRate)}
+                          {formatCurrency(field.hourlyRate)}
                         </Text>
                         <Text style={[styles.perHourText, { color: theme.colors.textSecondary }]}>
-                          /giờ
+                          {t('venueDetail.perHour')}
                         </Text>
                       </View>
                     </View>
@@ -454,7 +426,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                       <View style={styles.fieldDetails}>
                         <Ionicons name="layers-outline" size={16} color={theme.colors.textSecondary} />
                         <Text style={[styles.fieldDetailText, { color: theme.colors.textSecondary }]}>
-                          Mặt sân: {field.surfaceType}
+                          {t('venueDetail.surfaceType')}: {field.surfaceType}
                         </Text>
                       </View>
                     )}
@@ -463,7 +435,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                       <View style={styles.fieldDetails}>
                         <Ionicons name="trending-up-outline" size={16} color={theme.colors.textSecondary} />
                         <Text style={[styles.fieldDetailText, { color: theme.colors.textSecondary }]}>
-                          Phụ thu giờ cao điểm: {formatPrice(field.peakHourSurcharge)}
+                          {t('venueDetail.peakSurcharge')}: {formatCurrency(field.peakHourSurcharge)}
                         </Text>
                       </View>
                     )}
@@ -473,7 +445,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                       onPress={() => setFieldsModalVisible(true)}
                     >
                       <Text style={[styles.bookFieldButtonText, { color: theme.colors.darkBlack }]}>
-                        Đặt sân này
+                        {t('venueDetail.bookThisField')}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -482,7 +454,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                 <View style={styles.emptyState}>
                   <Ionicons name="football-outline" size={48} color={theme.colors.textSecondary} />
                   <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                    Chưa có thông tin về sân
+                    {t('venueDetail.noFields')}
                   </Text>
                 </View>
               )}
@@ -519,7 +491,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                             {isToday && (
                               <View style={[styles.todayBadge, { backgroundColor: theme.colors.neonGreen }]}>
                                 <Text style={[styles.todayText, { color: theme.colors.darkBlack }]}>
-                                  Hôm nay
+                                  {t('venueDetail.today')}
                                 </Text>
                               </View>
                             )}
@@ -530,7 +502,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                               { color: isToday ? theme.colors.neonGreen : theme.colors.textSecondary },
                             ]}
                           >
-                            {formatTime(hour.openTime)} - {formatTime(hour.closeTime)}
+                            {formatTimeToHHMM(hour.openTime)} - {formatTimeToHHMM(hour.closeTime)}
                           </Text>
                         </View>
                       );
@@ -540,7 +512,7 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
                 <View style={styles.emptyState}>
                   <Ionicons name="time-outline" size={48} color={theme.colors.textSecondary} />
                   <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                    Chưa có thông tin giờ mở cửa
+                    {t('venueDetail.noHours')}
                   </Text>
                 </View>
               )}
@@ -571,10 +543,16 @@ const VenueDetailScreen: React.FC<VenueDetailScreenProps> = ({ navigation, route
         >
           <Ionicons name="football" size={24} color={theme.colors.darkBlack} />
           <Text style={[styles.floatingButtonText, { color: theme.colors.darkBlack }]}>
-            Đặt sân ngay
+            {t('venueDetail.bookNow')}
           </Text>
         </TouchableOpacity>
       </View>
+
+      <VenueOwnerModal
+        visible={ownerModalVisible}
+        ownerInfo={venue.owner || null}
+        onClose={() => setOwnerModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };

@@ -4,11 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
@@ -16,6 +17,7 @@ import { RootStackParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useToast } from "@/shared/toast";
 import SwipeableRatingCard, { Player } from "../components/SwipeableRatingCard";
+import { ReportPlayerModal } from "../components/ReportPlayerModal";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,9 +29,11 @@ import { useSubmitMatchFeedbacksBatch, useReportPlayer } from "../hooks";
 import {
   DEFAULT_PLAYER_FEEDBACK_ID,
   type MatchFeedbackBatchItem,
+  ReportType,
 } from "../types/feedback.types";
 import { useAuthStore } from "@/features/auth";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { formatDate } from "@/shared/utils/formatters";
 
 type FeedbackRatingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -46,6 +50,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const toast = useToast();
+  const insets = useSafeAreaInsets();
 
   const session = useFeedbackSessionStore((s) => s.session);
   const savePlayerRating = useFeedbackSessionStore((s) => s.savePlayerRating);
@@ -67,26 +72,42 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     [session?.teammates],
   );
 
-  const replaceWithFieldRating = useCallback(() => {
-    navigation.replace("FeedbackFieldRating", {
-      venueId: session?.venue?.venueId,
-    });
-  }, [navigation, session?.venue?.venueId]);
+  const matchSubtitle = useMemo(() => {
+    if (!session?.matchDate) {
+      return t("feedback.rating.subtitleFallback", "Trận đấu của bạn");
+    }
+    const dateLabel = formatDate(session.matchDate, "short");
+    const timePart = session.startTime?.trim().substring(0, 5);
+    return timePart ? `${dateLabel} · ${timePart}` : dateLabel;
+  }, [session?.matchDate, session?.startTime, t]);
 
-  /** Không có đồng đội → bỏ qua bước đánh giá người */
+  const replaceWithNextStep = useCallback(() => {
+    const opponents = session?.opponents ?? [];
+    if (opponents.length > 0) {
+      navigation.replace("FeedbackOpponentRating");
+    } else {
+      navigation.replace("FeedbackFieldRating", {
+        venueId: session?.venue?.venueId,
+      });
+    }
+  }, [navigation, session?.opponents, session?.venue?.venueId]);
+
+  /** Không có đồng đội → bỏ qua bước đánh giá đồng đội */
   useEffect(() => {
     if (!session || players.length > 0) return;
     let cancelled = false;
     void (async () => {
-      await setStep("fieldRating");
+      const opponents = session.opponents ?? [];
+      const nextStep = opponents.length > 0 ? "opponentRating" : "fieldRating";
+      await setStep(nextStep as any);
       if (!cancelled) {
-        replaceWithFieldRating();
+        replaceWithNextStep();
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [session, players.length, setStep, replaceWithFieldRating]);
+  }, [session, players.length, setStep, replaceWithNextStep]);
 
   // Khôi phục index từ store (resume khi tắt app giữa chừng)
   const [currentIndex, setCurrentIndex] = useState(
@@ -104,7 +125,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   );
   const [showReportModal, setShowReportModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
-  const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType | null>(null);
   const [reportDescription, setReportDescription] = useState("");
   const [reportError, setReportError] = useState<string | null>(null);
 
@@ -206,9 +227,12 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
       }))
       .filter((f) => f.rating > 0);
 
+    const opponents = liveSession.opponents ?? [];
+    const nextStep = opponents.length > 0 ? "opponentRating" : "fieldRating";
+
     if (feedbacks.length === 0) {
-      await setStep("fieldRating");
-      replaceWithFieldRating();
+      await setStep(nextStep as any);
+      replaceWithNextStep();
       return;
     }
 
@@ -218,8 +242,8 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         reviewerId: user.userId,
         feedbacks,
       });
-      await setStep("fieldRating");
-      replaceWithFieldRating();
+      await setStep(nextStep as any);
+      replaceWithNextStep();
     } catch (error: any) {
       toast.error(
         t("feedback.rating.submitErrorTitle", "Gửi đánh giá thất bại"),
@@ -237,7 +261,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
     ratings,
     submitBatchMutation,
     setStep,
-    replaceWithFieldRating,
+    replaceWithNextStep,
     toast,
     t,
   ]);
@@ -316,7 +340,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
   };
 
   const handleReportSubmit = async (
-    reportType: string,
+    reportType: ReportType,
     description: string,
   ) => {
     if (!session || !currentPlayer) {
@@ -405,7 +429,7 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
               { color: theme.colors.textSecondary },
             ]}
           >
-            {t("feedback.rating.subtitle", "TRẬN ĐẤU CHỦ NHẬT")}
+            {matchSubtitle}
           </Text>
         </View>
 
@@ -449,289 +473,138 @@ const FeedbackRatingScreen: React.FC<FeedbackRatingScreenProps> = ({
         </View>
       </View>
 
-      {/* Rating Card Container with Stack Effect */}
-      <Animated.View style={[styles.cardContainer]}>
-        {/* Next Card (behind current) - for smooth transition */}
-        {currentIndex < players.length - 1 && (
-          <Animated.View style={[styles.nextCardContainer, nextCardStyle]}>
-            <SwipeableRatingCard
-              key={`next-${players[currentIndex + 1].id}`}
-              player={players[currentIndex + 1]}
-              rating={ratings[players[currentIndex + 1].id] || 0}
-              comment={comments[players[currentIndex + 1].id] || ""}
-              onRatingChange={() => {}}
-              onCommentChange={() => {}}
-              onSwipeRight={() => {}}
-              onSwipeLeft={() => {}}
-              onValidate={handleValidate}
-              isLastPlayer={currentIndex + 1 === players.length - 1}
-            />
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 108 : 0}
+      >
+        <ScrollView
+          style={styles.keyboardScroll}
+          contentContainerStyle={styles.keyboardScrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
+        >
+          {/* Rating Card Container with Stack Effect */}
+          <Animated.View style={[styles.cardContainer]}>
+            {/* Next Card (behind current) - for smooth transition */}
+            {currentIndex < players.length - 1 && (
+              <Animated.View style={[styles.nextCardContainer, nextCardStyle]}>
+                <SwipeableRatingCard
+                  key={`next-${players[currentIndex + 1].id}`}
+                  player={players[currentIndex + 1]}
+                  rating={ratings[players[currentIndex + 1].id] || 0}
+                  comment={comments[players[currentIndex + 1].id] || ""}
+                  onRatingChange={() => {}}
+                  onCommentChange={() => {}}
+                  onSwipeRight={() => {}}
+                  onSwipeLeft={() => {}}
+                  onValidate={handleValidate}
+                  isLastPlayer={currentIndex + 1 === players.length - 1}
+                />
+              </Animated.View>
+            )}
+
+            {/* Current Card (on top) */}
+            {currentPlayer && (
+              <SwipeableRatingCard
+                key={currentPlayer.id}
+                player={currentPlayer}
+                rating={ratings[currentPlayer.id] || 0}
+                comment={comments[currentPlayer.id] || ""}
+                onRatingChange={handleRatingChange}
+                onCommentChange={handleCommentChange}
+                onSwipeRight={handleSwipeRight}
+                onSwipeLeft={handleSwipeLeft}
+                onReport={handleReport}
+                onValidate={handleValidate}
+                isLastPlayer={currentIndex === players.length - 1}
+                onComplete={submitBatchAndGoToField}
+              />
+            )}
           </Animated.View>
-        )}
 
-        {/* Current Card (on top) */}
-        {currentPlayer && (
-          <SwipeableRatingCard
-            key={currentPlayer.id}
-            player={currentPlayer}
-            rating={ratings[currentPlayer.id] || 0}
-            comment={comments[currentPlayer.id] || ""}
-            onRatingChange={handleRatingChange}
-            onCommentChange={handleCommentChange}
-            onSwipeRight={handleSwipeRight}
-            onSwipeLeft={handleSwipeLeft}
-            onReport={handleReport}
-            onValidate={handleValidate}
-            isLastPlayer={currentIndex === players.length - 1}
-            onComplete={submitBatchAndGoToField}
-          />
-        )}
-      </Animated.View>
-
-      {/* Swipe Indicators as Buttons */}
-      <View style={styles.swipeIndicators}>
-        <TouchableOpacity
-          style={styles.swipeIndicator}
-          activeOpacity={0.8}
-          onPress={handleSwipeLeft}
-          disabled={submitBatchMutation.isPending}
-        >
-          <View
-            style={[
-              styles.swipeIcon,
-              { backgroundColor: theme.colors.textTertiary },
-            ]}
-          >
-            <Ionicons name="close" size={24} color="#000" />
-          </View>
-          <Text
-            style={[styles.swipeLabel, { color: theme.colors.textSecondary }]}
-          >
-            {t("feedback.rating.swipeLeft", "VUỐT TRÁI")}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.swipeIndicator}
-          activeOpacity={0.8}
-          onPress={handleSwipeRight}
-          disabled={submitBatchMutation.isPending}
-        >
-          <View
-            style={[
-              styles.swipeIcon,
-              { backgroundColor: theme.colors.primary },
-            ]}
-          >
-            {submitBatchMutation.isPending ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <Ionicons name="checkmark" size={24} color="#000" />
-            )}
-          </View>
-          <Text style={[styles.swipeLabel, { color: theme.colors.primary }]}>
-            {t("feedback.rating.swipeRight", "VUỐT PHẢI")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Tip */}
-      <Text style={[styles.tip, { color: theme.colors.textTertiary }]}>
-        {t(
-          "feedback.rating.tip",
-          "Mẹo: Đánh giá trung thực giúp hệ thống cân bằng đội hình tốt hơn.",
-        )}
-      </Text>
-
-      {/* Custom Report Overlay for player */}
-      {showReportModal && (
-        <View style={styles.modalOverlay} pointerEvents="auto">
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              {t("feedback.report.title", "Báo cáo người chơi")}
-            </Text>
-            <Text
-              style={[
-                styles.modalDescription,
-                { color: theme.colors.textSecondary },
-              ]}
+          {/* Swipe Indicators as Buttons */}
+          <View style={styles.swipeIndicators}>
+            <TouchableOpacity
+              style={styles.swipeIndicator}
+              activeOpacity={0.8}
+              onPress={handleSwipeLeft}
+              disabled={submitBatchMutation.isPending}
             >
-              {t(
-                "feedback.report.description",
-                "Vui lòng cho chúng tôi biết lý do bạn muốn báo cáo người chơi này.",
-              )}
-            </Text>
-
-            <ScrollView style={styles.reportReasons}>
-              {["inappropriate_behavior", "harassment", "toxic_behavior", "AFK", "other"].map(
-                (type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.reasonItem,
-                      {
-                        borderColor:
-                          selectedReportType === type
-                            ? theme.colors.primary
-                            : theme.colors.border,
-                        backgroundColor:
-                          selectedReportType === type
-                            ? `${theme.colors.primary}20`
-                            : theme.colors.background,
-                      },
-                    ]}
-                    onPress={() => {
-                      setSelectedReportType(type);
-                      setReportError(null);
-                    }}
-                    disabled={isReporting}
-                  >
-                    <Text
-                      style={[
-                        styles.reasonText,
-                        {
-                          color:
-                            selectedReportType === type
-                              ? theme.colors.text
-                              : theme.colors.textSecondary,
-                        },
-                      ]}
-                    >
-                      {t(`reportModal.reasons.user.${type}`)}
-                    </Text>
-                    {selectedReportType === type && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={theme.colors.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
-                ),
-              )}
-            </ScrollView>
-
-            <Text
-              style={[styles.modalDescription, { color: theme.colors.text }]}
-            >
-              {t("feedback.report.descriptionLabel", "Mô tả chi tiết")}
-            </Text>
-            <TextInput
-              style={[
-                styles.modalDescription,
-                {
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  padding: 12,
-                  borderColor: reportError
-                    ? theme.colors.error
-                    : theme.colors.border,
-                  color: theme.colors.text,
-                  minHeight: 80,
-                  textAlignVertical: "top",
-                },
-              ]}
-              placeholder={t(
-                "feedback.report.descriptionPlaceholder",
-                "Nhập mô tả chi tiết về hành vi vi phạm...",
-              )}
-              placeholderTextColor={theme.colors.textTertiary}
-              value={reportDescription}
-              onChangeText={(text) => {
-                setReportDescription(text);
-                setReportError(null);
-              }}
-              editable={!isReporting}
-              multiline
-              maxLength={500}
-            />
-
-            {reportError && (
-              <Text style={{ color: theme.colors.error, marginTop: 8 }}>
-                {reportError}
+              <View
+                style={[
+                  styles.swipeIcon,
+                  { backgroundColor: theme.colors.textTertiary },
+                ]}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </View>
+              <Text
+                style={[styles.swipeLabel, { color: theme.colors.textSecondary }]}
+              >
+                {t("feedback.rating.swipeLeft", "VUỐT TRÁI")}
               </Text>
-            )}
+            </TouchableOpacity>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
+            <TouchableOpacity
+              style={styles.swipeIndicator}
+              activeOpacity={0.8}
+              onPress={handleSwipeRight}
+              disabled={submitBatchMutation.isPending}
+            >
+              <View
                 style={[
-                  styles.modalButton,
-                  styles.cancelButton,
-                  { borderColor: theme.colors.border },
+                  styles.swipeIcon,
+                  { backgroundColor: theme.colors.primary },
                 ]}
-                onPress={() => {
-                  if (!isReporting) {
-                    setShowReportModal(false);
-                    setSelectedReportType(null);
-                    setReportDescription("");
-                    setReportError(null);
-                  }
-                }}
-                disabled={isReporting}
               >
-                <Text
-                  style={[
-                    styles.modalButtonText,
-                    { color: theme.colors.text },
-                  ]}
-                >
-                  {t("common.buttons.cancel", "Hủy")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  styles.submitButton,
-                  { backgroundColor: theme.colors.error },
-                ]}
-                onPress={async () => {
-                  if (!selectedReportType) {
-                    setReportError(
-                      t(
-                        "feedback.report.validation.typeRequired",
-                        "Vui lòng chọn lý do báo cáo.",
-                      ),
-                    );
-                    return;
-                  }
-                  if (!reportDescription.trim()) {
-                    setReportError(
-                      t(
-                        "feedback.report.validation.descriptionRequired",
-                        "Vui lòng nhập mô tả chi tiết.",
-                      ),
-                    );
-                    return;
-                  }
-
-                  await handleReportSubmit(
-                    selectedReportType,
-                    reportDescription.trim(),
-                  );
-                }}
-                disabled={isReporting}
-              >
-                <Text
-                  style={[
-                    styles.modalButtonText,
-                    { color: "#fff" },
-                  ]}
-                >
-                  {isReporting
-                    ? t("feedback.report.submitting", "Đang gửi...")
-                    : t("feedback.report.submit", "Gửi báo cáo")}
-                </Text>
-              </TouchableOpacity>
-            </View>
+                {submitBatchMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <Ionicons name="checkmark" size={24} color="#000" />
+                )}
+              </View>
+              <Text style={[styles.swipeLabel, { color: theme.colors.primary }]}>
+                {t("feedback.rating.swipeRight", "VUỐT PHẢI")}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      )}
+
+          {/* Tip */}
+          <Text style={[styles.tip, { color: theme.colors.textTertiary }]}>
+            {t(
+              "feedback.rating.tip",
+              "Chọn số sao rồi bấm nút xác nhận (hoặc vuốt phải). Bỏ qua người này nếu bạn không muốn chấm. Các đánh giá đã chọn sẽ được gửi khi bạn hoàn tất danh sách.",
+            )}
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <ReportPlayerModal
+        visible={showReportModal}
+        isReporting={isReporting}
+        selectedReportType={selectedReportType}
+        reportDescription={reportDescription}
+        reportError={reportError}
+        onSelectType={(type) => {
+          setSelectedReportType(type);
+          setReportError(null);
+        }}
+        onChangeDescription={(text) => {
+          setReportDescription(text);
+          setReportError(null);
+        }}
+        setReportError={setReportError}
+        onRequestClose={() => {
+          setShowReportModal(false);
+          setSelectedReportType(null);
+          setReportDescription("");
+          setReportError(null);
+        }}
+        onSubmit={handleReportSubmit}
+      />
     </SafeAreaView>
   );
 };
@@ -801,11 +674,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     minWidth: 40,
   },
-  cardContainer: {
+  keyboardAvoid: {
     flex: 1,
+  },
+  keyboardScroll: {
+    flex: 1,
+  },
+  keyboardScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 16,
+  },
+  cardContainer: {
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 12,
     position: "relative",
   },
   nextCardContainer: {
@@ -844,72 +726,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 16,
     paddingBottom: 16,
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    zIndex: 100,
-  },
-  modalContent: {
-    width: "100%",
-    maxWidth: 400,
-    borderRadius: 20,
-    padding: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  modalDescription: {
-    fontSize: 14,
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  reportReasons: {
-    maxHeight: 200,
-    marginBottom: 20,
-  },
-  reasonItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 12,
-  },
-  reasonText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  submitButton: {
-    backgroundColor: "#FF5252",
-  },
-  modalButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
   },
 });
 

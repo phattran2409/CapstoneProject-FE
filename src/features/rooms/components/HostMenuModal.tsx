@@ -42,6 +42,8 @@ interface HostMenuModalProps {
   onInviteFriends?: () => void;
   onLeaveRoom?: () => void;
   isLeavingRoom?: boolean;
+  /** Mở modal chuyển quyền host (chỉ host) */
+  onTransferHost?: () => void;
 }
 
 const HostMenuModal: React.FC<HostMenuModalProps> = ({
@@ -52,6 +54,7 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
   onInviteFriends,
   onLeaveRoom,
   isLeavingRoom = false,
+  onTransferHost,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -142,6 +145,11 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
     onInviteFriends?.();
   };
 
+  const handleTransferHost = () => {
+    handleShowMenuModal();
+    onTransferHost?.();
+  };
+
   const handlePlayerLeave = () => {
     console.log('handlePlayerLeave');
     handleShowMenuModal();
@@ -181,7 +189,6 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
                     {t('roomDetail.editRoomInfo')}
                   </ThemedText>
                 </TouchableOpacity>
-
                 <TouchableOpacity style={styles.menuItem} onPress={handleSetPrivateRoom}>
                   <Ionicons name="lock-closed-outline" size={24} color={primaryColor} />
                   <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.text }]}>
@@ -192,6 +199,12 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
                   <Ionicons name="people-outline" size={24} color={primaryColor} />
                   <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.text }]}>
                     {t('roomDetail.menuInviteFriends')}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuItem} onPress={handleTransferHost}>
+                  <Ionicons name='swap-vertical-outline' size={24} color={primaryColor} />
+                  <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: theme.colors.text }]}>
+                    {t('roomDetail.menuTransferHost', 'Chuyển quyền host')}
                   </ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -205,7 +218,6 @@ const HostMenuModal: React.FC<HostMenuModalProps> = ({
                   </ThemedText>
                 </TouchableOpacity>
                 <View style={[styles.menuDivider, { backgroundColor: theme.colors.border }]} />
-
                 <TouchableOpacity style={styles.menuItem} onPress={handleOpenCancelRoom}>
                   <Ionicons name="close-circle" size={26} color={dangerColor} />
                   <ThemedText size="m" weight="medium" style={[styles.menuItemText, { color: dangerColor }]}>

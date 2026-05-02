@@ -87,6 +87,13 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
 
     return (
       <View style={containerStyle}>
+        <ThemedText
+          variant="secondary"
+          size="s"
+          style={{ marginTop: 12, marginBottom: 4, textAlign: 'center', paddingHorizontal: 8 }}
+        >
+          {t('roomDetail.statusActions.reviewingHint')}
+        </ThemedText>
         <TouchableOpacity
           style={[
             actionStyles.joinButton,
@@ -118,21 +125,6 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
         >
           <ThemedText size="l" weight="bold" style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}>
             {t('roomDetail.statusActions.matchFinishedReadOnly', 'Trận đấu đã xong')}
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (hasLeftFeedback) {
-    return (
-      <View style={containerStyle}>
-        <TouchableOpacity
-          style={[actionStyles.joinButton, { backgroundColor: theme.colors.border, shadowColor: 'transparent' }]}
-          disabled
-        >
-          <ThemedText size="l" weight="bold" style={[actionStyles.joinButtonText, { color: theme.colors.textSecondary }]}>
-            {t('roomDetail.statusActions.hasLeftFeedback', 'Bạn đã đánh giá trận đấu')}
           </ThemedText>
         </TouchableOpacity>
       </View>
@@ -191,7 +183,7 @@ const RoomStatusActionBar: React.FC<RoomStatusActionBarProps> = ({
       </View>
     );
   }
-
+  
   if (isViewingOthersMatchHistory) {
     return (
       <View style={containerStyle}>

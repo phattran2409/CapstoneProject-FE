@@ -9,19 +9,27 @@ import { useTheme } from "@/shared/theme";
 import { ThemedText } from "@/shared/components/themed";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getImageSource } from "../utils/imageSource";
+import { getMatchFormatBadgeColor } from "../utils/matchFormatColors";
+import { matchRoomStatusI18nKey } from "../utils/matchRoomStatus";
+import { MatchRoomStatusIcon } from "./MatchRoomStatusIcon";
 import { MatchRoomStatus } from "@/features/rooms";
 import { useTranslation } from "react-i18next";
+
+type MyMatchOutcomeKind = "win" | "loss" | "draw";
 
 export interface MatchItemData {
   id: string;
   title: string;
   format?: string;
   players?: string;
+  hostName?: string;
+  hostAvatar?: string | null;
   image: string | any;
   date?: string;
   status?: MatchRoomStatus;
   venue?: string;
   time?: string;
+  myMatchOutCome?: string;
   /** Hiển thị badge "Riêng tư" khi true */
   isPrivate?: boolean;
 }
@@ -32,6 +40,8 @@ export interface MatchItemProps {
   onPress?: (matchId: string) => void;
   showStatus?: boolean;
 }
+
+
 
 // const PLACEHOLDER_IMAGE = require('@assets/images/Gemini_Generated_Image_olny3jolny3jolny.png');
 
@@ -44,58 +54,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  // const imageSource = match.image?.trim()
-  //   ? { uri: match.image.trim() }
-  //   : PLACEHOLDER_IMAGE;
-
-  const getStatusIcon = (status?: MatchRoomStatus) => {
-    switch (status) {
-      case "Locked":
-        return (
-          <Ionicons name="lock-closed" size={24} color={theme.colors.textSecondary} />
-        );
-      case "Closed":
-        return (
-          <Ionicons name="close-outline" size={24} color={theme.colors.textSecondary} />
-        );
-      case "Completed":
-        return (
-          <Ionicons name="trophy" size={24} color={theme.colors.neonGreen} />
-        );
-      case "Cancelled":
-        return <Ionicons name="close-circle-outline" size={24} color="#ef4444" />;
-      case "Reviewing":
-        return (
-          <Ionicons name="git-compare-outline" size={24} color="#6b7280" />
-        );
-      case "InProgress":
-        return (
-          <Ionicons name="pulse" size={24} color={theme.colors.neonGreen} />
-        );
-      case "Open":
-      case "Full":
-        return (
-          <Ionicons name="time-outline" size={24} color={theme.colors.info} />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getStatusText = (status?: MatchRoomStatus) => {
-    if (!status) return "";
-    const statusMap: Record<MatchRoomStatus, string> = {
-      Open: "Mở",
-      Full: "Đã đủ",
-      Locked: "Đã khóa",
-      Closed: "Đã đóng",
-      InProgress: "Đang diễn ra",
-      Completed: "Hoàn thành",
-      Reviewing: "Đang xem xét",
-      Cancelled: "Đã hủy",
-    };
-    return statusMap[status] || "";
-  };
+  const hostAvatarUri =
+    match.hostAvatar ||
+    (match.hostName
+      ? "https://ui-avatars.com/api/?name=" + encodeURIComponent(match.hostName)
+      : undefined);
 
   const PrivateBadge = () =>
     match.isPrivate ? (
@@ -113,7 +76,69 @@ const MatchItem: React.FC<MatchItemProps> = ({
       </View>
     ) : null;
 
-    if (variant === "card") {
+  const outcomeRaw = match.myMatchOutCome?.trim()?.toLowerCase();
+  const outcomeKind: MyMatchOutcomeKind | null =
+    outcomeRaw === "win" || outcomeRaw === "loss" || outcomeRaw === "draw"
+      ? outcomeRaw
+      : null;
+  const outcomePalette: Record<
+    MyMatchOutcomeKind,
+    { bg: string; border: string; text: string }
+  > = {
+    win: {
+      bg: `${theme.colors.success}`,
+      border: theme.colors.success,
+      text: theme.colors.success,
+    },
+    loss: {
+      bg: `${theme.colors.error}`,
+      border: theme.colors.error,
+      text: theme.colors.error,
+    },
+    draw: {
+      bg: `${theme.colors.warning}`,
+      border: theme.colors.warning,
+      text: theme.colors.warning,
+    },
+  };
+
+  const MyMatchOutComeBadge = () => {
+    if (!match.myMatchOutCome?.trim()) return null;
+    const kind = outcomeKind;
+    const colors = kind ? outcomePalette[kind] : null;
+    const text = kind ? t(`matches.myMatchOutcome.${kind}`, kind) : null;
+    return (
+      <View
+        style={[
+          styles.myMatchOutComeBadge,
+          colors
+            ? {
+                backgroundColor: colors.bg + "58",
+                borderColor: colors.border,
+                borderWidth: 1,
+              }
+            : {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                borderWidth: 1,
+              },
+        ]}
+      >
+        <ThemedText
+          size="xs"
+          weight="semiBold"
+          style={[
+            styles.myMatchOutComeBadgeText,
+            colors ? { color: colors.text } : { color: theme.colors.textSecondary },
+          ]}
+        >
+          {text}
+        </ThemedText>
+      </View>
+    );
+  };
+
+  if (variant === "card") {
     return (
       <TouchableOpacity
         style={[
@@ -133,6 +158,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
             resizeMode="cover"
           />
           <PrivateBadge />
+          {match.myMatchOutCome?.trim() ? (
+            <View style={styles.matchOutcomeBadgeOnImage}>
+              <MyMatchOutComeBadge />
+            </View>
+          ) : null}
         </View>
         <View style={styles.cardContent}>
           <ThemedText size="l" weight="bold" style={styles.cardTitle}>
@@ -146,6 +176,19 @@ const MatchItem: React.FC<MatchItemProps> = ({
             >
               {match.format} {match.players && `- (${match.players})`}
             </ThemedText>
+          )}
+          {match.hostName && (
+            <View style={styles.cardHostRow}>
+              {hostAvatarUri ? (
+                <Image
+                  source={{ uri: hostAvatarUri }}
+                  style={[styles.cardHostAvatar, { borderColor: theme.colors.border }]}
+                />
+              ) : null}
+              <ThemedText variant="secondary" size="xs" numberOfLines={1} style={styles.cardHostName}>
+                {match.hostName}
+              </ThemedText>
+            </View>
           )}
           {match.date && (
             <ThemedText variant="secondary" size="xs" style={styles.cardDate}>
@@ -258,6 +301,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
             resizeMode="cover"
           />
           <PrivateBadge />
+          {match.myMatchOutCome?.trim() ? (
+            <View style={styles.matchOutcomeBadgeOnImage}>
+              <MyMatchOutComeBadge />
+            </View>
+          ) : null}
         </View>
         <View style={styles.compactContent}>
           <ThemedText size="m" weight="semiBold" numberOfLines={1}>
@@ -271,7 +319,7 @@ const MatchItem: React.FC<MatchItemProps> = ({
         </View>
         {showStatus && match.status && (
           <View style={styles.compactStatus}>
-            {getStatusIcon(match.status)}
+            <MatchRoomStatusIcon status={match.status} />
           </View>
         )}
       </TouchableOpacity>
@@ -279,6 +327,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
   }
 
   // Default: list variant
+  const formatAccent = getMatchFormatBadgeColor(
+    match.format,
+    theme.colors.primary,
+  );
+
   return (
     <TouchableOpacity
       style={[
@@ -298,6 +351,11 @@ const MatchItem: React.FC<MatchItemProps> = ({
           resizeMode="cover"
         />
         <PrivateBadge />
+        {match.myMatchOutCome?.trim() ? (
+          <View style={styles.matchOutcomeBadgeOnImage}>
+            <MyMatchOutComeBadge />
+          </View>
+        ) : null}
       </View>
       <View style={styles.listContent}>
         <ThemedText
@@ -317,18 +375,39 @@ const MatchItem: React.FC<MatchItemProps> = ({
           {match.status && showStatus && (
             <ThemedText variant="secondary" size="s" style={styles.listStatus}>
               {match.date && " - "}
-              {getStatusText(match.status)}
+              {t(matchRoomStatusI18nKey(match.status))}
             </ThemedText>
           )}
         </View>
-        {match.format && (
-          <ThemedText variant="secondary" size="xs" style={styles.listFormat}>
-            {match.format} {match.players && `• ${match.players}`}
-          </ThemedText>
+        {(match.format || match.players) && (
+          <View style={styles.listFormatRow}>
+            {match.format ? (
+              <View
+                style={[
+                  styles.formatBadge,
+                  {
+                    backgroundColor: formatAccent + "20",
+                    borderColor: formatAccent,
+                  },
+                ]}
+              >
+                <ThemedText size="xs" weight="bold" style={{ color: formatAccent }}>
+                  {match.format}
+                </ThemedText>
+              </View>
+            ) : null}
+            {match.players ? (
+              <ThemedText variant="secondary" size="xs" style={styles.listPlayers}>
+                {match.format ? ` • ${match.players}` : match.players}
+              </ThemedText>
+            ) : null}
+          </View>
         )}
       </View>
       {showStatus && match.status && (
-        <View style={styles.listStatusIcon}>{getStatusIcon(match.status)}</View>
+        <View style={styles.listStatusIcon}>
+          <MatchRoomStatusIcon status={match.status} />
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -372,6 +451,21 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     marginBottom: 4,
   },
+  cardHostRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+  cardHostAvatar: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+  },
+  cardHostName: {
+    flexShrink: 1,
+  },
   cardDate: {
     marginTop: 4,
   },
@@ -404,8 +498,21 @@ const styles = StyleSheet.create({
   listStatus: {
     marginLeft: 4,
   },
-  listFormat: {
+  listFormatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     marginTop: 4,
+    gap: 4,
+  },
+  formatBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  listPlayers: {
+    flexShrink: 1,
   },
   listStatusIcon: {
     marginLeft: 12,
@@ -474,6 +581,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginTop: 6,
+    marginRight: 20,
   },
   thirdDetailButton: {
     marginTop: 14,
@@ -481,6 +589,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  matchOutcomeBadgeOnImage: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    maxWidth: "85%",
+  },
+  myMatchOutComeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  myMatchOutComeBadgeText: {
+    fontSize: 12,
   },
 });
 

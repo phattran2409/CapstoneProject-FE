@@ -1,15 +1,14 @@
 import type {
-  GetReceivedFeedbacksQuery,
-  GetGivenFeedbacksQuery,
+    GetFeedbacksQuery,
 } from "./feedbackApi";
 
 export const feedbackKeys = {
   all: ["feedback"] as const,
-  received: (query?: GetReceivedFeedbacksQuery) =>
+  received: (query?: GetFeedbacksQuery) =>
     query != null
       ? ([...feedbackKeys.all, "received", query] as const)
       : ([...feedbackKeys.all, "received"] as const),
-  given: (query?: GetGivenFeedbacksQuery) =>
+  given: (query?: GetFeedbacksQuery) =>
     query != null
       ? ([...feedbackKeys.all, "given", query] as const)
       : ([...feedbackKeys.all, "given"] as const),

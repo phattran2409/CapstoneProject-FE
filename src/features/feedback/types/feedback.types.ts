@@ -26,6 +26,14 @@ export interface SubmitMatchFeedbacksRequest {
   feedbacks: MatchFeedbackBatchItem[];
 }
 
+export enum ReportType {
+  InappropriateBehavior = "InappropriateBehavior",
+  Harassment = "Harassment",
+  Spamming = "Spamming",
+  FakeAccount = "FakeAccount",
+  Scamming = "Scamming",
+}
+
 /**
  * ID dimension/template feedback từ backend — thay bằng GUID thật khi BE cung cấp.
  */
@@ -35,47 +43,81 @@ export const DEFAULT_PLAYER_FEEDBACK_ID =
 /** FR-27/28: feedback người chơi nhận được từ người khác */
 export interface ReceivedFeedbackItem {
   feedbackId: string;
-  roomId: string;
-  matchLabel: string;
+  matchId: string;
   reviewerId: string;
   reviewerName: string;
   reviewerAvatarUrl: string | null;
   rating: number;
-  /** Tiêu chí / dimension (VD: Overall, Skill, …) */
-  criteria: string;
   comment: string;
-  receivedAt: string;
-  myResponse: string | null;
-  respondedAt: string | null;
+  sentimentScore: number | null;
+  sentimentLabel: string | null;
+  revieweeResponse: string | null;
+  responseDate: string;
+  createdAt: string;
 }
 
 export interface ReceivedFeedbackListData {
   items: ReceivedFeedbackItem[];
   totalCount?: number;
+  totalPages?: number;
 }
+
+export interface ReceivedFeedbackResponse {
+  isSuccess: boolean;
+  data: {
+    items: ReceivedFeedbackItem[];
+    totalPages: number;
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+export interface GivenFeedbackResponse {
+  isSuccess: boolean;
+  data: {
+    items: GivenFeedbackItem[];
+    totalPages: number;
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
 
 /** Feedback do mình gửi cho người khác; xem họ có phản hồi lại không */
 export interface GivenFeedbackItem {
   feedbackId: string;
-  roomId: string;
-  matchLabel: string;
+  matchId: string;
   revieweeId: string;
   revieweeName: string;
   revieweeAvatarUrl: string | null;
-  /** Sao mình đã chấm cho họ */
   rating: number;
-  criteria: string;
-  /** Nội dung mình viết khi đánh giá */
-  myComment: string;
-  givenAt: string;
-  /** Phản hồi text của người được đánh giá (nếu có) */
-  theirResponse: string | null;
-  theyRespondedAt: string | null;
+  comment: string;
+  sentimentScore: number | null;
+  sentimentLabel: string | null;
+  revieweeResponse: string | null;
+  responseDate: string;
+  createdAt: string;
 }
 
 export interface GivenFeedbackListData {
   items: GivenFeedbackItem[];
   totalCount?: number;
+  totalPages: number;
 }
 
 export const RECEIVED_FEEDBACK_REPLY_MAX_LENGTH = 200;
+
+export type GenerateSuggesionVars = {
+  starRating : number;
+  count : number, 
+  role: string
+}
+
+export interface GenerateSuggestionResponse {
+  starRating : number;
+  suggestions: string[];
+  source: string;
+  modelUsed: string;
+}

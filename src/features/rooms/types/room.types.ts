@@ -63,6 +63,12 @@ export interface MatchRoomParticipant {
   depositPaid: boolean;
   joinDate: string;
   hasLeftFeedback?: boolean;
+  /** Điểm danh GPS */
+  checkInTime?: string | null;
+  checkInLatitude?: number | null;
+  checkInLongitude?: number | null;
+  checkInMethod?: string | null;
+  distanceFromVenueMeters?: number | null;
 }
 
 /** Alias for participant in room/team context */
@@ -143,6 +149,9 @@ export interface MatchRoomFullInfo {
     A?: string | null;
     B?: string | null;
   };
+  teamAAverageElo: number;
+  teamBAverageElo: number;
+  isSkillImbalanced: boolean;
   createdAt: string;
   hasLeftFeedback?: boolean;
 }
@@ -180,7 +189,9 @@ export interface MyRoom {
   filledSlots: number;
   depositPerPerson: number;
   totalDepositCollected: number;
+  myMatchOutcome? : string;
   status: MatchRoomStatus;
+  venuePhotos: VenuePhoto[] | [];
   createdAt: string;
 }
 
@@ -310,6 +321,51 @@ export interface SendMessageRequest {
   message: string;
 }
 
+export interface SuggestPlayersRequest {
+  query: string;
+  roomId: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SuggestRoomsRequest {
+  query: string;
+  latitude: number;
+  longitude: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SuggestedPlayerProfile {
+  profileId: string;
+  userId: string;
+  userFullName: string;
+  userEmail: string;
+  userAvatarUrl: string | null;
+  currentElo: number;
+  currentRank: string;
+  isLegend: boolean;
+  trustScore: number;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  mvpCount: number;
+  winStreak: number;
+  maxWinStreak: number;
+  preferredPositions: string;
+  preferredFoot: string;
+  createdAt: string;
+}
+
+export type SuggestPlayersResponse = ApiResponse<{
+  profiles: SuggestedPlayerProfile[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>;
+
 /** DTO dùng để tạo mới / upsert preset đơn (legacy) */
 export interface MatchRoomCreatePresetDto {
   matchFormat: MatchFormat;
@@ -355,4 +411,17 @@ export interface RoomPresetItem {
   durationMinutes: number;
   description: string;
   createdAt: string;
+}
+
+/** Payload g\u1eedi API check-in GPS */
+export interface CheckInRequest {
+  latitude: number;
+  longitude: number;
+}
+
+/** Response t\u1eeb API check-in GPS */
+export interface CheckInResponse {
+  message?: string;
+  distanceFromVenueMeters?: number;
+  alreadyCheckedIn?: boolean;
 }

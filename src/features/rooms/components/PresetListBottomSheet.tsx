@@ -17,6 +17,7 @@ import { TFunction } from 'i18next';
 import { RoomPresetItem } from '../types/room.types';
 import { useMatchPreset } from '../hooks/useMatchPreset';
 import { matchFormatToUi } from '../utils/matchRoomCreatePresetMap';
+import { getMatchFormatBadgeColor } from '@/shared/utils/matchFormatColors';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '@/app/navigation/types';
 
@@ -32,12 +33,6 @@ interface PresetListBottomSheetProps {
   savingCurrentPreset?: boolean;
   t:TFunction;
 }
-
-const FORMAT_COLORS: Record<string, string> = {
-  '5vs5': '#3B82F6',
-  '7vs7': '#F59E0B',
-  '11vs11': '#EF4444',
-};
 
 const PresetListBottomSheet: React.FC<PresetListBottomSheetProps> = ({
   visible,
@@ -102,7 +97,7 @@ const PresetListBottomSheet: React.FC<PresetListBottomSheetProps> = ({
 
   const renderPresetItem = ({ item }: { item: RoomPresetItem }) => {
     const uiFormat = matchFormatToUi(item.matchFormat);
-    const formatColor = FORMAT_COLORS[uiFormat] ?? theme.colors.primary;
+    const formatColor = getMatchFormatBadgeColor(uiFormat, theme.colors.primary);
 
     const handleViewDetail = () => {
       handleClose();
@@ -212,7 +207,7 @@ const PresetListBottomSheet: React.FC<PresetListBottomSheetProps> = ({
           {/* Sheet header */}
           <View style={[styles.sheetHeader, { borderBottomColor: theme.colors.border }]}>
             <ThemedText size="xl" weight="bold">
-              Match Presets
+              {t('createRoom.preset.title')}
             </ThemedText>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={22} color={theme.colors.text} />

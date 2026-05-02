@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/shared/theme";
@@ -430,11 +430,39 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ navigation, route }) => {
     }
   };
 
+  const handleDirectPayment = async () => {
+    if (isProcessingPayment || hasPaidDeposit) return;
+    try {
+      setIsProcessingPayment(true);
+     const data = await roomsApi.directPayment(roomId);
+     const canOpen = await Linking.canOpenURL(data.paymentUrl);
+     if (canOpen) {
+      toast.info(t("teamScreen.toast.directPaymentSuccess"));
+      setTimeout(() => {
+        Linking.openURL(data.paymentUrl);
+      }, 500);
+     } else {
+      toast.error(t("teamScreen.toast.directPaymentError"));
+     }
+    } catch (error: unknown) {
+      console.error("Failed to direct payment:", error);
+      toast.error(
+        getTranslatedError(
+          (error as { message?: string; code?: string })?.message,
+          (error as { message?: string; code?: string })?.code
+        ) ||
+          t("teamScreen.directPaymentError"),
+      );
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   return (
     <ThemedSafeAreaView style={styles.safeArea}>
       <TeamScreenHeader
         theme={theme}
-        title={t("roomDetail.title")}
+        title={t("teamScreen.title")}
         onBack={() => navigation?.goBack()}
         onOpenChat={handleShowChat}
       />
@@ -482,6 +510,7 @@ const TeamScreen: React.FC<TeamScreenProps> = ({ navigation, route }) => {
           isProcessingPayment={isProcessingPayment}
           hasPaidDeposit={hasPaidDeposit}
           onProcessPayment={handleProcessPayment}
+          onDirectPayment={handleDirectPayment}
         />
         </View>
       </ThemedScrollView>

@@ -103,10 +103,10 @@ export const RoomInfoCard: React.FC<RoomInfoCardProps> = ({
             <ThemedIcon
               name="map-outline"
               size={20}
-              color={theme.colors.primary}
+              color={theme.colors.neonGreen}
             />
             <ThemedText
-              style={[styles.mapButtonText, { color: theme.colors.primary }]}
+              style={[styles.mapButtonText, { color: theme.colors.neonGreen}]}
             >
               {t("feedback.field.openMap", "Xem vị trí trên bản đồ")}
             </ThemedText>

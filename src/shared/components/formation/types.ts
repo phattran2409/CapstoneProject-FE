@@ -29,7 +29,7 @@ export interface FormationSlot {
 export interface FormationPlayer {
   id: string;
   name: string;
-  avatar?: any;
+  avatar?: {uri: string};
   /** Preferred/registered role for this match */
   role?: PositionLine;
   /** Is this player the captain? */

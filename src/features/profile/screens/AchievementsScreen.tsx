@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -27,54 +27,63 @@ type AchievementsScreenProps = NativeStackScreenProps<
 
 type FilterType = "all" | "unlocked" | "locked";
 
-// Map API AchievementItem type → AchievementItem component's Achievement interface
-// Uses local translation map to display Vietnamese name/description
-const mapToAchievement = (
-  item: AchievementItemType,
-  language: string,
-): Achievement => {
-  const { name, description } = getAchievementTranslation(
-    item.achievementId,
-    language,
-    item.name,
-    item.description,
-  );
-  return {
-    id: item.achievementId,
-    title: name,
-    description,
-    icon: "trophy" as keyof typeof Ionicons.glyphMap,
-    isUnlocked: item.isUnlocked,
-    unlockedAt: item.earnedAt ?? undefined,
-  };
-};
-
 const AchievementsScreen: React.FC<AchievementsScreenProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme();
-  const { t } = useTranslation();
-  const language = useAppStore((state) => state.language);
+  const { t, i18n } = useTranslation();
+  const appLanguage = useAppStore((s) => s.language);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const { data: rawData, isLoading, isError } = useAchievements();
 
-  // Map API data to AchievementItem format
-  const achievements: Achievement[] = (rawData?.achievements ?? []).map(
-    (item) => mapToAchievement(item, language),
-  );
+  /** Map cục bộ + khớp phụ theo tên EN — không phụ thuộc i18n key động (UUID) */
+  const achievements: Achievement[] = useMemo(() => {
+    const langTag =
+      [i18n.resolvedLanguage, i18n.language, appLanguage].find(
+        (x) => x != null && String(x).length > 0,
+      ) ?? "vi";
+    return (rawData?.achievements ?? []).map((item: AchievementItemType) => {
+      const { name, description } = getAchievementTranslation(
+        item.achievementId,
+        langTag,
+        item.name,
+        item.description,
+      );
+      return {
+        id: item.achievementId,
+        title: name,
+        description,
+        icon: "trophy" as keyof typeof Ionicons.glyphMap,
+        isUnlocked: item.isUnlocked,
+        status: item.status,
+        unlockedAt: item.earnedAt ?? undefined,
+        progress: item.progressPercent,
+      };
+    });
+  }, [
+    rawData?.achievements,
+    i18n.resolvedLanguage,
+    i18n.language,
+    appLanguage,
+  ]);
 
-  // Filter achievements
+  // "unlocked" bao gồm cả Claimable (đã đủ điều kiện, chưa claim)
   const filteredAchievements = achievements.filter((achievement) => {
-    if (activeFilter === "unlocked") return achievement.isUnlocked;
-    if (activeFilter === "locked") return !achievement.isUnlocked;
+    if (activeFilter === "unlocked")
+      return achievement.isUnlocked || achievement.status === "Claimable";
+    if (activeFilter === "locked")
+      return !achievement.isUnlocked && achievement.status !== "Claimable";
     return true;
   });
 
-  // Use stats directly from API response
+  // Tính stats: Claimable tính vào unlocked để hiển thị chính xác
   const totalAchievements = rawData?.totalAchievements ?? achievements.length;
   const unlockedCount =
-    rawData?.unlockedCount ?? achievements.filter((a) => a.isUnlocked).length;
+    rawData?.unlockedCount ??
+    achievements.filter(
+      (a) => a.isUnlocked || a.status === "Claimable",
+    ).length;
   const completionRate =
     totalAchievements > 0
       ? Math.round((unlockedCount / totalAchievements) * 100)

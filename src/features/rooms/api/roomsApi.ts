@@ -19,9 +19,15 @@ import type {
   MatchRoomCreatePresetDto,
   UpdateMatchPresetDto,
   CreateMatchPresetDto,
+  SuggestPlayersRequest,
+  SuggestPlayersResponse,
+  SuggestRoomsRequest,
+  CheckInRequest,
+  CheckInResponse,
 } from '../types/room.types';
 import { API_CONFIG } from '@/shared/constants/api';
 import { Message } from '@/shared/components';
+import { DepositResponse } from '@/features/wallet/types/wallet.types';
 
 /**
  * Rooms API functions
@@ -47,16 +53,22 @@ export const roomsApi = {
     const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.LIST, { params });
     return data as unknown as MatchRoomsResponse;
   },
+  
+  getMatchRoomRecommend: async (): Promise<MatchRoomsResponse> => {
+    const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.RECOMMEND);
+    return data as unknown as MatchRoomsResponse;
+  },
 
   getMyRooms: async (
-    filters?: Pick<MatchRoomFilters, "availableOnly">,
+    filters?: Pick<MatchRoomFilters, "availableOnly" | "page" | "pageSize">,
   ): Promise<MyRoomsResponse> => {
     const params = {
       ...(filters?.availableOnly !== undefined
         ? { availableOnly: filters.availableOnly }
         : {}),
+      page: filters?.page || 1,
+      pageSize: filters?.pageSize || 10,
     };
-
     const data = await apiClient.get(API_CONFIG.ENDPOINTS.ROOMS.MINE, { params });
     return data as unknown as MyRoomsResponse;
   },
@@ -219,6 +231,15 @@ export const roomsApi = {
     return data;
   },
 
+  directPayment: async (roomId: string): Promise<DepositResponse> => {
+    const data = await apiClient.post(
+      API_CONFIG.ENDPOINTS.ROOMS.DIRECT_PAYMENT.replace(':roomId', roomId),
+    );
+    const body = data as unknown as ApiResponse<DepositResponse>;
+    if (body?.isSuccess) return body.data as DepositResponse;
+    return data as unknown as DepositResponse;
+  },
+
   // ==================== Match Room SignalR API ====================
 
   /**
@@ -372,6 +393,67 @@ export const roomsApi = {
   deleteMatchPreset: async (id: string): Promise<void> => {
     const url = API_CONFIG.ENDPOINTS.ROOMS.PRESET_DETAIL.replace(':id', id);
     await apiClient.delete(url);
+  },
+
+  /**
+   * POST /match-rooms/:id/transfer-host — chuyển quyền host sang người chơi khác.
+   */
+  transferHost: async (roomId: string, targetUserId: string): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.TRANSFER_HOST.replace(':id', roomId);
+    await apiClient.post(url, { targetUserId });
+  },
+
+  responseTransferHost: async (roomId: string, isAccepted: boolean): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.RESPONSE_TRANSFER_HOST.replace(':id', roomId);
+    await apiClient.post(url, {isAccepted });
+  },
+
+  /**
+   * Mời một người bạn vào phòng
+   * POST /match-rooms/:id/invite-friend
+   */
+  inviteFriend: async (roomId: string, friendUserId: string): Promise<void> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.INVITE_FRIEND.replace(':id', roomId);
+    await apiClient.post(url, { friendUserId });
+  },
+
+  suggestPlayers: async (payload: SuggestPlayersRequest): Promise<SuggestPlayersResponse> => {
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AI.SUGGEST_PLAYERS, {
+      query: payload.query,
+      roomId: payload.roomId,
+      page: payload.page ?? 1,
+      pageSize: payload.pageSize ?? 10,
+    });
+    return data as unknown as SuggestPlayersResponse;
+  },
+
+  suggestRooms: async (payload: SuggestRoomsRequest): Promise<MatchRoomsResponse> => {
+    console.log('payload', payload);
+    const data = await apiClient.post(API_CONFIG.ENDPOINTS.AI.SUGGEST_ROOMS, {
+      query: payload.query,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      page: payload.page ?? 1,
+      pageSize: payload.pageSize ?? 10,
+    });
+    return data as unknown as MatchRoomsResponse;
+  },
+
+  /**
+   * GPS check-in tại sân
+   * POST /match-rooms/:id/check-in
+   * Payload: { Latitude, Longitude }
+   */
+  checkIn: async (roomId: string, payload: CheckInRequest): Promise<CheckInResponse> => {
+    const url = API_CONFIG.ENDPOINTS.ROOMS.CHECK_IN.replace(':id', roomId);
+    const data = await apiClient.post(url, {
+      Latitude: payload.latitude,
+      Longitude: payload.longitude,
+    });
+    console.log('data', data);
+    const body = data as unknown as ApiResponse<CheckInResponse>;
+    if (body?.isSuccess) return body.data as CheckInResponse;
+    return data as unknown as CheckInResponse;
   },
 
   /**

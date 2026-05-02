@@ -58,11 +58,13 @@ export type RootStackParamList = {
         eloDelta?: number;
         matchLabel?: string;
         isWin?: boolean;
+        matchId?: string;
       }
     | undefined;
   FeedbackIntro: { roomId: string };
   FeedbackMatchResult: undefined;
   FeedbackRating: undefined;
+  FeedbackOpponentRating: undefined;
   FeedbackFieldRating: { venueId?: string };
   FeedbackComplete: undefined;
   /** FR-27/28: feedback nhận được + phản hồi */

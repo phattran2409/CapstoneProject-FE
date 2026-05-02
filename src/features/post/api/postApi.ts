@@ -10,6 +10,7 @@ import {
   ReplyResponse,
 } from "../types/post.types";
 import { ApiResponse } from "@/shared/api";
+import { API_CONFIG } from "@/shared/constants/api";
 
 // Get posts with pagination
 export const getPosts = async (
@@ -18,11 +19,11 @@ export const getPosts = async (
   searchTerm?: string,
 ): Promise<{ posts: Post[]; totalPages: number; totalCount: number }> => {
   try {
-    let url = `/posts?page=${page}&pageSize=${pageSize}`;
+    const params: Record<string, any> = { page, pageSize };
     if (searchTerm && searchTerm.trim()) {
-      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+      params.searchTerm = searchTerm.trim();
     }
-    const response = (await apiClient.get(url)) as PostsResponse;
+    const response = (await apiClient.get(API_CONFIG.ENDPOINTS.POSTS.LIST, { params })) as PostsResponse;
 
     if (response.isSuccess && response.data) {
       return {
@@ -45,9 +46,9 @@ export const getPostsByUserId = async (
   pageSize: number = 10,
 ): Promise<{ posts: Post[]; totalPages: number; totalCount: number }> => {
   try {
-    const response = (await apiClient.get(
-      `/posts?page=${page}&pageSize=${pageSize}&userId=${userId}`,
-    )) as PostsResponse;
+    const response = (await apiClient.get(API_CONFIG.ENDPOINTS.POSTS.LIST, {
+      params: { page, pageSize, userId },
+    })) as PostsResponse;
 
     if (response.isSuccess && response.data) {
       return {
@@ -67,9 +68,8 @@ export const getPostsByUserId = async (
 // Get post detail
 export const getPostDetail = async (id: string): Promise<Post> => {
   try {
-    const response = (await apiClient.get(
-      `/posts/${id}`,
-    )) as PostDetailResponse;
+    const url = API_CONFIG.ENDPOINTS.POSTS.DETAIL.replace(':id', id);
+    const response = (await apiClient.get(url)) as PostDetailResponse;
     if (response.isSuccess && response.data) {
       return response.data;
     }
@@ -85,9 +85,8 @@ export const togglePostLike = async (
   postId: string,
 ): Promise<PostLikeResponse> => {
   try {
-    const response = (await apiClient.post(
-      `/posts/${postId}/like`,
-    )) as PostLikeResponse;
+    const url = API_CONFIG.ENDPOINTS.POSTS.LIKE.replace(':id', postId);
+    const response = (await apiClient.post(url)) as PostLikeResponse;
     if (response.isSuccess && response.data) {
       return response;
     }
@@ -105,7 +104,8 @@ export const reportContent = async (
   description: string,
 ): Promise<ApiResponse> => {
   try {
-    const res = await apiClient.post(`/content-reports/${contentType}/${contentId}`, {
+    const url = API_CONFIG.ENDPOINTS.CONTENT_REPORTS.CREATE(contentType, contentId);
+    const res = await apiClient.post(url, {
       reason: reason,
       description: description,
     });
@@ -127,8 +127,7 @@ export const createPost = async (
     files.forEach((file) => {
       formData.append("Files", file as any);
     });
-    // apiClient interceptor already returns response.data
-    const response = await apiClient.post(`/posts`, formData, {
+    const response = await apiClient.post(API_CONFIG.ENDPOINTS.POSTS.LIST, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -149,17 +148,15 @@ export const updatePost = async (
   postId: string,
   content: string,
 ): Promise<ApiResponse> => {
-  // apiClient interceptor already returns response.data
-  const res = await apiClient.put(`/posts/${postId}`, { Content: content });
-
+  const url = API_CONFIG.ENDPOINTS.POSTS.DETAIL.replace(':id', postId);
+  const res = await apiClient.put(url, { Content: content });
   return res as unknown as ApiResponse;
 };
 
 // Delete Post
 export const deletePost = async (postId: string): Promise<ApiResponse> => {
-  // apiClient interceptor already returns response.data
-  const res = await apiClient.delete(`/posts/${postId}`);
-
+  const url = API_CONFIG.ENDPOINTS.POSTS.DETAIL.replace(':id', postId);
+  const res = await apiClient.delete(url);
   return res as unknown as ApiResponse;
 };
 
@@ -169,9 +166,10 @@ export const getComments = async (
   postId: string,
 ): Promise<{ comments: Comment[]; totalPages: number; totalCount: number }> => {
   try {
-    const response = (await apiClient.get(
-      `/comments/${postId}?page=${page}&pageSize=${pageSize}`,
-    )) as CommentResponse;
+    const url = API_CONFIG.ENDPOINTS.COMMENTS.BY_POST.replace(':postId', postId);
+    const response = (await apiClient.get(url, {
+      params: { page, pageSize },
+    })) as CommentResponse;
 
     if (response.isSuccess && response.data) {
       return {
@@ -193,9 +191,10 @@ export const getReplies = async (
   commentId: string,
 ): Promise<{ replies: Reply[]; totalPages: number; totalCount: number }> => {
   try {
-    const response = (await apiClient.get(
-      `/comments/${commentId}/replies?page=${page}&pageSize=${pageSize}`,
-    )) as ReplyResponse;
+    const url = API_CONFIG.ENDPOINTS.COMMENTS.REPLIES.replace(':commentId', commentId);
+    const response = (await apiClient.get(url, {
+      params: { page, pageSize },
+    })) as ReplyResponse;
 
     if (response.isSuccess && response.data) {
       return {
@@ -217,12 +216,11 @@ export const createComment = async (
   content: string,
   parentCommentId?: string,
 ): Promise<ApiResponse> => {
-  // apiClient interceptor already returns response.data
-  const res = await apiClient.post(`/comments/${postId}`, {
+  const url = API_CONFIG.ENDPOINTS.COMMENTS.BY_POST.replace(':postId', postId);
+  const res = await apiClient.post(url, {
     parentCommentId: parentCommentId,
     content: content,
   });
-
   return res as unknown as ApiResponse;
 };
 
@@ -231,9 +229,8 @@ export const updateComment = async (
   commentId: string,
   content: string,
 ): Promise<ApiResponse> => {
-  const res = await apiClient.put(`/comments/${commentId}`, {
-    content,
-  });
+  const url = API_CONFIG.ENDPOINTS.COMMENTS.DETAIL.replace(':commentId', commentId);
+  const res = await apiClient.put(url, { content });
   return res as unknown as ApiResponse;
 };
 
@@ -241,7 +238,8 @@ export const updateComment = async (
 export const deleteComment = async (
   commentId: string,
 ): Promise<ApiResponse> => {
-  const res = await apiClient.delete(`/comments/${commentId}`);
+  const url = API_CONFIG.ENDPOINTS.COMMENTS.DETAIL.replace(':commentId', commentId);
+  const res = await apiClient.delete(url);
   return res as unknown as ApiResponse;
 };
 
@@ -249,19 +247,17 @@ export const deleteComment = async (
 export const toggleCommentLike = async (
   commentId: string,
 ): Promise<ApiResponse> => {
-  // apiClient interceptor already returns response.data
-  const response = await apiClient.post(`/comments/${commentId}/like`);
-
+  const url = API_CONFIG.ENDPOINTS.COMMENTS.LIKE.replace(':commentId', commentId);
+  const response = await apiClient.post(url);
   return response as unknown as ApiResponse;
 };
 
-// Like/Unlike reply (stub until backend is ready)
+// Like/Unlike reply
 export const toggleReplyLike = async (
   commentId: string,
   replyId: string,
 ): Promise<ApiResponse> => {
-  const response = await apiClient.post(
-    `/comments/${commentId}/replies/${replyId}/like`,
-  );
+  const url = API_CONFIG.ENDPOINTS.COMMENTS.REPLY_LIKE(commentId, replyId);
+  const response = await apiClient.post(url);
   return response as unknown as ApiResponse;
 };

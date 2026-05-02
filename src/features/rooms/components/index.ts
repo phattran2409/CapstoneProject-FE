@@ -6,11 +6,20 @@ export { EmptySlotCard } from './EmptySlotCard';
 export { PositionSelectionModal, type PlayerPosition } from './PositionSelectionModal';
 export { default as PrivateRoomPasswordModal } from './PrivateRoomPasswordModal';
 export { InviteFriendsModal } from './InviteFriendsModal';
+export { TransferHostModal } from './TransferHostModal';
+export { HostTransferRequestDialog } from './HostTransferRequestDialog';
 export { CaptainBadge } from './CaptainBadge';
+export {
+  AIRecommendationModal,
+  type AIRecommendationMode,
+  type MatchRecommendation,
+} from './AIRecommendationModal';
 export {
   RoomInfoCard,
   HostTabContent,
   VenueTabContent,
   TeamLineup,
   MatchCountdown,
+  AutoCloseCountdown,
 } from './roomInformation';
+export { CheckInButton } from './CheckInButton';

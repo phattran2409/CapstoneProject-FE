@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { ThemedText, ThemedView } from "@/shared/components/themed";
 import { useTheme } from "@/shared/theme";
@@ -12,6 +13,7 @@ interface WithdrawItemProps {
 
 const WithdrawItem: React.FC<WithdrawItemProps> = ({ withdrawal }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const status = (withdrawal.status ?? "").toLowerCase();
   const statusColorMap: Record<string, string> = {
     pending: "#f59e0b",
@@ -46,15 +48,15 @@ const WithdrawItem: React.FC<WithdrawItemProps> = ({ withdrawal }) => {
           ]}
         >
           <ThemedText size="xs" weight="semiBold" style={{ color: statusColor }}>
-            {withdrawal.status}
+            {t(`wallet.withdrawStatus.${status}`, { defaultValue: withdrawal.status })}
           </ThemedText>
         </View>
       </View>
-
+      {withdrawal.createdAt && (
       <ThemedText variant="secondary" size="xs" style={{ marginTop: 6 }}>
-        {formatDateTime(withdrawal.createdAt)}
-      </ThemedText>
-
+          {formatDateTime(withdrawal.createdAt)}
+        </ThemedText>
+      )}
       <ThemedText variant="secondary" size="xs" style={{ marginTop: 8 }}>
         {withdrawal.bankName} • {withdrawal.bankAccountNumber}
       </ThemedText>

@@ -96,6 +96,9 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
   /** Chế độ: edit theo ID khi có presetId từ route, ngược lại dùng legacy single-preset */
   const presetId = route?.params?.presetId;
   const isEditMode = !!presetId;
+  /** Tắt GET chi tiết khi đang/đã xóa để tránh refetch sau invalidate/removeQueries */
+  const [presetDetailFetchEnabled, setPresetDetailFetchEnabled] =
+    useState(true);
 
   // --- Legacy single-preset hooks (dùng khi không có presetId) ---
   const { data: serverPreset, isLoading: legacyLoading } =
@@ -108,7 +111,9 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
     data: presetById,
     isLoading: byIdLoading,
     isError: byIdError,
-  } = useMatchPresetById(presetId);
+  } = useMatchPresetById(presetId, {
+    enabled: presetDetailFetchEnabled,
+  });
   const { mutate: updatePreset, isPending: updating } = useUpdateMatchPreset();
   const { mutate: deletePreset, isPending: deleting } = useDeleteMatchPreset();
 
@@ -116,7 +121,6 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
   const saving = isEditMode ? updating : legacySaving;
 
   const [local, setLocal] = useState<LocalPreset>(defaultLocal);
-  console.log("preset by ID", presetById);
   // Điền form khi dữ liệu được load (legacy)
   useEffect(() => {
     if (isEditMode || !serverPreset) return;
@@ -250,8 +254,19 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
       ),
       () => {
         if (!presetId) return;
+        setPresetDetailFetchEnabled(false);
         deletePreset(presetId, {
-          onSuccess: () => navigation?.goBack(),
+          onSuccess: () => {
+            setTimeout(() => {
+              navigation?.goBack();
+            }, 1000);
+            showSuccess(
+              t("createRoom.preset.deletedTitle", "Xoá preset thành công"),
+              t("createRoom.preset.deletedMessage", "Preset đã được xoá"),
+              () => {},
+              true,
+            );
+          },
           onError: (e: unknown) =>
             showDanger(
               t("common.error"),
@@ -270,6 +285,7 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
     header: {
       flexDirection: "row",
       alignItems: "center",
+      marginTop: 20,
       paddingHorizontal: 20,
       paddingVertical: 12,
       gap: 12,
@@ -411,6 +427,14 @@ const CreateRoomPresetScreen: React.FC<Props> = ({ navigation, route }) => {
             {t("createRoom.preset.loadError")}
           </ThemedText>
         )}
+
+        <ThemedText
+          variant="secondary"
+          size="xs"
+          style={{ marginBottom: 16, lineHeight: 18 }}
+        >
+          {t("createRoom.preset.bookingHint")}
+        </ThemedText>
 
         {/* Match Format */}
         <View style={styles.section}>

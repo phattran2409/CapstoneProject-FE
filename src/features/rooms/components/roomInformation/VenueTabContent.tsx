@@ -5,12 +5,15 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { ThemedText, ThemedCard, ThemedIcon } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
-import type { MatchRoomFullInfo } from '@/features/rooms';
+import { formatMatchFormatVsLabel, type MatchRoomFullInfo } from '@/features/rooms';
 import type { VenuePhoto } from '@/features/venues';
 import { formatCurrency } from '@/shared/utils/formatters';
+import { getMatchFormatBadgeColor } from '@/shared/utils/matchFormatColors';
+import { matchFormatToUi } from '../../utils/matchFormatVsLabel';
 
 interface VenueTabContentProps {
   displayRoom: MatchRoomFullInfo;
@@ -18,13 +21,14 @@ interface VenueTabContentProps {
   selectedImageIndex: number;
   onImageIndexChange: (index: number) => void;
   t: (key: string, defaultValue?: string | object) => string;
+  onViewVenueDetail: () => void;
 }
 
-const formatMatchFormat = (format: string) => {
-  if (format === 'FiveVsFive') return '5v5';
-  if (format === 'SevenVsSeven') return '7v7';
-  return format;
-};
+// const formatMatchFormat = (format: string) => {
+//   if (format === 'FiveVsFive') return '5v5';
+//   if (format === 'SevenVsSeven') return '7v7';
+//   return format;
+// };
 
 export const VenueTabContent: React.FC<VenueTabContentProps> = ({
   displayRoom,
@@ -32,13 +36,14 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
   selectedImageIndex,
   onImageIndexChange,
   t,
+  onViewVenueDetail,
 }) => {
   const { theme } = useTheme();
 
   if (!displayRoom.field) return null;
 
   const pageWidth = Dimensions.get('window').width - 40;
-
+  const formatColor = getMatchFormatBadgeColor(matchFormatToUi(displayRoom.field.fieldType), theme.colors.primary);
   return (
     <View>
       <ThemedText size="xl" weight="bold" style={styles.sectionTitle}>
@@ -96,21 +101,25 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
 
       <View style={styles.venueInfoContainer}>
         <ThemedCard style={styles.venueLocationCard}>
-          <View style={styles.venueInfoHeader}>
-            <ThemedIcon name="football" size={20} variant="accent" />
-            <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
-              {t('roomDetail.field')}
-            </ThemedText>
+          <View style={[styles.venueInfoRow, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+            <View>
+              <View style={styles.venueInfoHeader}>
+                <ThemedIcon name="football" size={20} variant="accent" />
+                <ThemedText size="m" weight="bold" style={styles.venueInfoLabel}>
+                  {t('roomDetail.field')}
+                </ThemedText>
+              </View>
+              <ThemedText size="l" weight="semiBold">
+                {displayRoom.field.fieldName}
+              </ThemedText>
+            </View>
+            <View>
+              <View style={[styles.venueInfoCard, { backgroundColor: formatColor + '20', borderColor: formatColor }]}>
+                <ThemedText size="xl" weight="bold" style={{ color: formatColor }}>{formatMatchFormatVsLabel(displayRoom.field.fieldType)}</ThemedText>
+              </View>
+            </View>
           </View>
-          <ThemedText size="l" weight="semiBold">
-            {displayRoom.field.fieldName}
-          </ThemedText>
-          <ThemedText variant="secondary" size="s">
-            Type:{' '}
-            {formatMatchFormat(displayRoom.field.fieldType)}
-          </ThemedText>
         </ThemedCard>
-
         <View style={styles.venueInfoRow}>
           <ThemedCard style={styles.venueInfoCard}>
             <View style={styles.venueInfoHeader}>
@@ -140,7 +149,7 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
               </ThemedText>
             </View>
             <ThemedText size="xl" weight="bold">
-              {displayRoom.durationMinutes} min
+              {displayRoom.durationMinutes} {t('roomDetail.minutes')}
             </ThemedText>
           </ThemedCard>
         </View>
@@ -182,6 +191,16 @@ export const VenueTabContent: React.FC<VenueTabContentProps> = ({
             </ThemedText>
           </ThemedCard>
         )}
+
+        <TouchableOpacity
+          style={[styles.viewVenueButton, { backgroundColor: theme.colors.neonGreen }]}
+          onPress={onViewVenueDetail}
+        >
+          <ThemedIcon name="eye" size={18} color={theme.colors.darkBlack} />
+          <ThemedText size="m" weight="bold" style={{ color: theme.colors.darkBlack }}>
+            {t('venueDetail.viewVenueDetail')}
+          </ThemedText>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -241,5 +260,13 @@ const styles = StyleSheet.create({
   venueLocationCard: {
     padding: 16,
     borderRadius: 16,
+  },
+  viewVenueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 12,
   },
 });

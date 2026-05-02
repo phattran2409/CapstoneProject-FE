@@ -5,11 +5,15 @@ import { ThemedText } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { MatchRoomParticipant } from '../types/room.types';
 import { CaptainBadge } from './CaptainBadge';
+import { TFunction } from 'i18next';
 
 interface ParticipantCardProps {
+  t: TFunction;
   participant: MatchRoomParticipant;
   teamColor: string;
-  isHost: boolean;
+  /** Host (viewer) được phép kick người chơi này (ví dụ chỉ khi phòng Open) */
+  canKickPlayer: boolean;
+  isRoomHost?: boolean;
   currentUserId?: string;
   isKicking: boolean;
   onKickPlayer: (userId: string, playerName: string) => void;
@@ -19,11 +23,13 @@ interface ParticipantCardProps {
 export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   participant,
   teamColor,
-  isHost,
+  canKickPlayer,
+  isRoomHost = false,
   currentUserId,
   isKicking,
   onKickPlayer,
   onPress,
+  t,
 }) => {
   const { theme } = useTheme();
   const isCurrentUser = participant.userId === currentUserId;
@@ -48,6 +54,13 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
         {participant.isCaptain && (
           <View style={styles.captainBadgeWrapper}>
             <CaptainBadge compact />
+          </View>
+        )}
+
+        {/* Host badge on top-right corner */}
+        {isRoomHost && (
+          <View style={styles.hostBadgeWrapper}>
+            <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>👑</ThemedText>
           </View>
         )}
 
@@ -97,12 +110,18 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             variant="secondary"
             style={{ marginLeft: 2 }}
           >
-            {participant.depositPaid ? 'Paid' : 'Pending'}
+            {participant.depositPaid ? t('roomDetail.paid') : t('roomDetail.pending')}
           </ThemedText>
         </View>
+        {/* Host Badge */}
+        {isRoomHost && (
+          <View style={[styles.hostWrapper , { borderColor: theme.colors.neonGreen }]}>
+            <ThemedText weight="medium" style={{ color: theme.colors.neonGreen , fontSize: 11 }}>{t('roomDetail.host')}</ThemedText>
+          </View>
+        )}
 
         {/* Kick Button (Host only, not for self) */}
-        {isHost && !isCurrentUser && (
+        {canKickPlayer && !isCurrentUser && (
           <TouchableOpacity
             onPress={() => onKickPlayer(participant.userId, participant.fullName)}
             disabled={isKicking}
@@ -158,6 +177,12 @@ const styles = StyleSheet.create({
     left: 4,
     zIndex: 1,
   },
+  hostBadgeWrapper: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 1,
+  },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,5 +192,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
+  },
+  hostWrapper: {
+    marginTop: 4,
+    width: '100%',
+    flexDirection: 'row',
+    padding: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
