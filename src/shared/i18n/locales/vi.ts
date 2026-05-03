@@ -364,6 +364,10 @@ const vi = {
     openRoomPolicyTitle: "Chính sách của trận đấu",
     openRoomPolicyHint:
       "Rủ đủ người và mọi người đóng cọc để giữ slot. Hạn chốt hiện tại là {{cutoff}} ({{rule}}). Nếu trận chưa đủ người hoặc chưa đủ cọc khi đến hạn, hệ thống sẽ hủy trận và hoàn cọc để trả slot cho chủ sân.",
+    openRoomPolicyStepDeadlineLabel: "Thời điểm hạn chốt",
+    openRoomPolicyStepRuleLabel: "Quy tắc áp dụng",
+    openRoomPolicyExplanation:
+      "Rủ đủ người và mọi người đóng cọc để giữ slot. Khi đến hạn mà trận chưa đủ người hoặc chưa đủ cọc, hệ thống sẽ hủy trận và hoàn cọc để trả slot cho chủ sân.",
     openRoomPolicyRule: {
       "24h_after_creation": "chốt sau 24 giờ từ lúc tạo trận",
       "2h_before_kickoff": "chốt trước giờ bóng lăn 2 tiếng",

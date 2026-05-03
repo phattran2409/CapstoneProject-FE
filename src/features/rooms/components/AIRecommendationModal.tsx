@@ -17,6 +17,7 @@ import { ThemedText } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
 import { MatchRoom, SuggestedPlayerProfile } from '../types/room.types';
 import { formatMatchFormatVsLabel } from '../utils/matchFormatVsLabel';
+import { getMatchFormatBadgeColor, MATCH_FORMAT_BADGE_COLORS } from '@/shared/utils/matchFormatColors';
 
 export type AIRecommendationMode = 'match' | 'player';
 
@@ -84,7 +85,6 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
   const accentColor = theme.colors.neonGreen;
   const isMatchMode = mode === 'match';
   const resultCount = isMatchMode ? matchRecommendations.length : playerRecommendations.length;
-
   const title = isMatchMode
     ? t('aiRecommendation.match.title')
     : t('aiRecommendation.player.title');
@@ -98,7 +98,9 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
     ? t('aiRecommendation.match.empty')
     : t('aiRecommendation.player.empty');
 
-  const renderMatchCard = (item: MatchRoom) => (
+  const renderMatchCard = (item: MatchRoom) => {
+    const colorFormat = getMatchFormatBadgeColor(formatMatchFormatVsLabel(item.matchFormat), theme.colors.primary);
+    return (
     <View
       key={item.roomId}
       style={[
@@ -128,13 +130,13 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
             style={[
               styles.formatBadge,
               {
-                backgroundColor: `${accentColor}18`,
-                borderColor: `${accentColor}66`,
+                backgroundColor: `${colorFormat}18`,
+                borderColor: `${colorFormat}66`,
               },
             ]}
           >
             <Ionicons name="football" size={12} color={accentColor} />
-            <ThemedText size="xs" weight="bold" style={{ color: accentColor }}>
+            <ThemedText size="xs" weight="bold" style={{ color: accentColor , }}>
               {formatMatchFormatVsLabel(item.matchFormat)}
             </ThemedText>
           </View>
@@ -191,7 +193,8 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
         ) : null} */}
       </View>
     </View>
-  );
+    );
+  };
 
   const renderPlayerCard = (item: SuggestedPlayerProfile) => (
     <View
