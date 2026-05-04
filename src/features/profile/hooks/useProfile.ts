@@ -9,6 +9,7 @@ import {
   getNotificationSettings,
   getMyRadarChart,
   getUserRadarChart,
+  getMyBookings,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -100,6 +101,15 @@ export const useNotificationSettings = () => {
     queryKey: profileKeys.notificationPreferences(),
     queryFn: getNotificationSettings,
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useMyBookings = (date: string, page = 1, pageSize = 10) => {
+  return useQuery({
+    queryKey: profileKeys.bookings(date, page, pageSize),
+    queryFn: () => getMyBookings(date, page, pageSize),
+    enabled: !!date,
+    staleTime: 30 * 1000,
   });
 };
 

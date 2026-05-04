@@ -14,4 +14,6 @@ export const profileKeys = {
   achievements: () => [...profileKeys.all, "achievements"] as const,
   radarChart: () => [...profileKeys.all, "radar-chart"] as const,
   userRadarChart: (userId: string) => [...profileKeys.all, "user-radar-chart", userId] as const,
+  bookings: (date: string, page: number, pageSize: number) =>
+    [...profileKeys.all, "bookings", date, page, pageSize] as const,
 };

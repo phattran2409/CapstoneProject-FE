@@ -290,10 +290,9 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     if (!trimmedQuery) return;
 
     setIsResolvingAiLocation(true);
-    try {
       let lat = latitude;
       let lng = longitude;
-
+      try {
       if (lat == null || lng == null) {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
@@ -309,7 +308,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         lat = location.coords.latitude;
         lng = location.coords.longitude;
       }
-
       suggestRooms(
         {
           query: trimmedQuery,
@@ -323,18 +321,19 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             setAiSuggestedRooms(response.data.rooms || []);
           },
           onError: (error: any) => {
-            console.log('Error suggest rooms:', error);
+            const err = error as { details?: { detail?: string }; code?: string };
             setAiSuggestedRooms([]);
-            setErrorSuggestingRooms(getTranslatedError(error?.code, error?.details?.detail));
+            setErrorSuggestingRooms(getTranslatedError(err?.details?.detail, err?.code));
+            
           },
         },
       );
-    } catch (error: any) {
-      console.log('Error suggest rooms:', error);
+    } catch (error : any) {
       setErrorSuggestingRooms(getTranslatedError(error?.message, error?.code));
     } finally {
       setIsResolvingAiLocation(false);
     }
+
   }, [aiQuery, latitude, longitude, suggestRooms, t, toast]);
 
   return (

@@ -13,6 +13,7 @@ export { default as PersonalPageScreen } from "../features/profile/screens/Perso
 export { default as ProfileDetailScreen } from "../features/profile/screens/ProfileDetailScreen";
 export { default as AchievementsScreen } from "../features/profile/screens/AchievementsScreen";
 export { default as AppAboutTermsScreen } from "../features/profile/screens/AppAboutTermsScreen";
+export { default as BookingScheduleScreen } from "../features/profile/screens/BookingScheduleScreen";
 
 // Rooms Feature Screens
 export { default as RoomInformation } from "../features/rooms/screens/RoomInformation";
