@@ -88,7 +88,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
       navigation.replace("FeedbackMatchResult");
     } else {
       await setStep("playerRating");
-      navigation.replace("FeedbackOpponentRating");
+      navigation.replace("FeedbackRating");
     }
   };
 
