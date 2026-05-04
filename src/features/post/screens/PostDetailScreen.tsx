@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -9,7 +9,9 @@ import {
   Platform,
   Keyboard,
   Image,
+  RefreshControl,
 } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { useTheme } from "@/shared/theme";
@@ -33,6 +35,7 @@ import {
   useUpdateComment,
   useDeleteComment,
   useToggleCommentLike,
+  useReportContent,
 } from "../hooks";
 import { CommentItem, PostDetailImages } from "../components";
 import { PostMedia, MediaItem, Comment } from "../types/post.types";
@@ -42,6 +45,9 @@ import {
   PostActions,
 } from "@/shared/components";
 import { useAuthStore } from "@/features/auth";
+import { useToast } from "@/shared/toast";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { postKeys } from "../api";
 
 type PostDetailScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -63,6 +69,8 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const scrollHandler = useScrollToHideTabBar();
   const { postId } = route.params;
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [pullRefreshing, setPullRefreshing] = useState(false);
 
   const { data: post, isLoading: postLoading } = usePostDetail(postId);
   const {
@@ -70,7 +78,6 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
     loading: commentsLoading,
     loadMore,
     hasMore,
-    refresh,
   } = usePaginatedComments({
     postId,
     pageSize: 20,
@@ -83,7 +90,8 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
   const { mutateAsync: updateComment } = useUpdateComment();
   const { mutateAsync: deleteComment } = useDeleteComment();
   const { mutate: toggleCommentLike } = useToggleCommentLike();
-
+  const { mutateAsync: reportContent, isPending: isReportingComment } = useReportContent();
+  const toast = useToast();
   const [commentContent, setCommentContent] = useState("");
 
   // Transform PostMedia[] to MediaItem[] for display
@@ -117,9 +125,14 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
         });
         setCommentContent("");
         Keyboard.dismiss();
-        refresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error creating comment:", error);
+        toast.error(
+          getTranslatedError(error?.message) ||
+          t("post.create.errorMessage", {
+            defaultValue: "Không thể tạo bài viết. Vui lòng thử lại.",
+          }),
+        );
       }
     }
   };
@@ -142,14 +155,25 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
     console.log("Report post:", postId, reason, customReason);
   };
 
+  const handleReportComment = async (
+    commentId: string,
+    reason: string,
+    customReason?: string,
+  ) => {
+    await reportContent({
+      contentId: commentId,
+      contentType: "comment",
+      reason,
+      description: customReason ?? reason,
+    });
+  };
+
   const handleEditComment = async (commentId: string, newContent: string) => {
-    await updateComment({ commentId, content: newContent });
-    refresh();
+    await updateComment({ commentId, content: newContent, postId });
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    await deleteComment(commentId);
-    refresh();
+    await deleteComment({ commentId, postId });
   };
 
   const handleLoadMoreComments = () => {
@@ -157,6 +181,21 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
       loadMore();
     }
   };
+
+  const handleRefresh = useCallback(async () => {
+    setPullRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: postKeys.detail(postId) }),
+        queryClient.refetchQueries({
+          queryKey: postKeys.comments(postId),
+          exact: false,
+        }),
+      ]);
+    } finally {
+      setPullRefreshing(false);
+    }
+  }, [queryClient, postId]);
 
   if (postLoading || !post) {
     return (
@@ -225,6 +264,14 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
           style={styles.scrollView}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={pullRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
+          }
         >
           {/* Post Header */}
           <View
@@ -360,9 +407,12 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                     <CommentItem
                       postId={postId}
                       comment={item}
-                      onLike={() => toggleCommentLike(item.commentId)}
+                      onLike={() =>
+                        toggleCommentLike({ commentId: item.commentId, postId })
+                      }
                       onEdit={isOwnComment ? handleEditComment : undefined}
                       onDelete={isOwnComment ? handleDeleteComment : undefined}
+                      onReport={!isOwnComment ? handleReportComment : undefined}
                     />
                   );
                 }}

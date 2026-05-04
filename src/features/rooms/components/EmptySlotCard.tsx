@@ -42,7 +42,7 @@ export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({
     }).start();
   };
 
-  const teamLabel = teamAssignment === 'A' ? 'Team A' : teamAssignment === 'B' ? 'Team B' : 'Team';
+  const teamLabel = teamAssignment === 'A' ? t('roomDetail.teamA', 'Team A') : teamAssignment === 'B' ? t('roomDetail.teamB', 'Team B') : t('roomDetail.team', 'Team');
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -73,7 +73,7 @@ export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({
             <ThemedIcon 
               name={isJoining ? "hourglass" : "add-circle-outline"} 
               size={28} 
-              variant="accent" 
+              color={teamColor}
             />
           </View>
 
@@ -84,13 +84,13 @@ export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({
             weight="medium"
             style={styles.text}
           >
-            {isJoining ? 'Đang xử lý...' : `Tham gia`}
+            {isJoining ? t('common.buttons.processing') : t('roomDetail.join')}
           </ThemedText>
 
           {/* Team Badge */}
           <View style={[styles.teamBadge, { backgroundColor: teamColor + '30' }]}>
             <ThemedText size="xs" weight="bold" style={{ color: teamColor }}>
-              {teamLabel}
+              {teamAssignment === 'A' ? t('roomDetail.teamA') : teamAssignment === 'B' ? t('roomDetail.teamB') : t('roomDetail.team')}
             </ThemedText>
           </View>
         </View>

@@ -32,7 +32,7 @@ interface GoogleLoginRequest {
  * });
  */
 export const useGoogleSignIn = () => {
-  const { setUser, setToken } = useAuthStore();
+  const { setUser, setToken, setPendingLoginSuccessToast } = useAuthStore();
 
   return useMutation({
     mutationFn: async () => {
@@ -67,8 +67,12 @@ export const useGoogleSignIn = () => {
       await setRefreshToken(refreshTokenValue);
       
       // Update auth store
-      setUser(response.data || null);
+      const userData = response.data || null;
+      setUser(userData);
       setToken(accessToken);
+      if (userData?.isEmailVerified) {
+        setPendingLoginSuccessToast(true);
+      }
     },
 
     onError: async (error: any) => {

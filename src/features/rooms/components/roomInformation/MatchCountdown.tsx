@@ -2,20 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTheme } from '@/shared/theme';
 import { ThemedText } from '@/shared/components/themed';
+import { useTranslation } from 'react-i18next';
 import type { MatchRoomStatus } from '@/features/rooms';
-
-type MatchCountdownVariant = 'inline' | 'overlay';
 
 interface MatchCountdownProps {
   matchDate: string;
   startTime: string;
   endTime: string;
   status: MatchRoomStatus;
-  /**
-   * inline: hiển thị như một block bên dưới header
-   * overlay: full-screen overlay với nền trong suốt
-   */
-  variant?: MatchCountdownVariant;
 }
 
 const MS_PER_SECOND = 1000;
@@ -61,9 +55,9 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
   startTime,
   endTime,
   status,
-  variant = 'inline',
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const [remainingMs, setRemainingMs] = useState(() => {
     const endDate = parseTimeToDate(matchDate, endTime);
@@ -94,43 +88,14 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
     () => formatDuration(remainingSeconds),
     [remainingSeconds],
   );
-  // Nếu không active thì không render gì để tránh layout nhấp nháy
+  const caption = status === 'Locked'
+    ? t('roomDetail.countdown.matchStartsIn')
+    : t('roomDetail.countdown.matchTimeRemaining');
+
   if (!isActive) {
     return null;
   }
-  
-  if (variant === 'overlay') {
-    return (
-      <View style={[StyleSheet.absoluteFillObject, styles.overlayContainer]}>
-        <View
-          style={[
-            styles.countdownBubble,
-            {
-              backgroundColor: theme.colors.background + 'D0',
-              borderColor: theme.colors.neonGreen,
-            },
-          ]}
-        >
-          <ThemedText
-            size="s"
-            weight="medium"
-            style={[styles.caption, { color: theme.colors.textSecondary }]}
-          >
-            Thời gian còn lại
-          </ThemedText>
-          <ThemedText
-            size="xxl"
-            weight="bold"
-            style={[styles.timeText, { color: theme.colors.neonGreen }]}
-          >
-            {timeLabel}
-          </ThemedText>
-        </View>
-      </View>
-    );
-  }
 
-  // Mặc định: hiển thị inline ngay dưới header
   return (
     <View style={styles.inlineWrapper}>
       <View
@@ -148,7 +113,7 @@ export const MatchCountdown: React.FC<MatchCountdownProps> = ({
             weight="medium"
             style={[styles.caption, { color: theme.colors.textSecondary }]}
           >
-            Thời gian trận đấu còn lại
+            {caption}
           </ThemedText>
           <ThemedText
             size="xxl"
@@ -187,20 +152,6 @@ const styles = StyleSheet.create({
   },
   timeText: {
     letterSpacing: 1.2,
-  },
-  overlayContainer: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  countdownBubble: {
-    paddingHorizontal: 36,
-    paddingVertical: 24,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 

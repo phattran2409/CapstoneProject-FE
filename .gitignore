@@ -54,3 +54,7 @@ yarn-error.*
 
 # JSON Server backup
 db.json.bak
+
+#folder docs
+docs/
+MOBILE_FE_ELO_RADAR_API_GUIDE.md

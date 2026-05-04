@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -22,7 +23,8 @@ import {
 import Button from "@/shared/components/Button";
 import { RootStackParamList } from "@/app/navigation/types";
 import { bankInfoSchema, BankInfoFormData } from "../validation/walletSchemas";
-import { useWalletBankInfo } from "../hooks";
+import { useWalletBankInfo, useGetBankInfo } from "../hooks";
+import BankInfoCard from "../components/BankInfoCard";
 
 type WalletWithdrawScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -39,9 +41,12 @@ const WalletWithdrawScreen: React.FC<WalletWithdrawScreenProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
 
+  const { data: bankInfo, isLoading: bankInfoLoading } = useGetBankInfo();
+
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<BankInfoFormData>({
     resolver: zodResolver(bankInfoSchema),
@@ -51,6 +56,16 @@ const WalletWithdrawScreen: React.FC<WalletWithdrawScreenProps> = ({
       accountHolderName: "",
     },
   });
+
+  useEffect(() => {
+    if (bankInfo?.hasBankInfo) {
+      reset({
+        bankAccountNumber: bankInfo.bankAccountNumber,
+        bankName: bankInfo.bankName,
+        accountHolderName: bankInfo.accountHolderName,
+      });
+    }
+  }, [bankInfo, reset]);
 
   const { mutate: updateBankInfo, isPending } = useWalletBankInfo();
 
@@ -97,7 +112,6 @@ const WalletWithdrawScreen: React.FC<WalletWithdrawScreenProps> = ({
           <View style={{ width: 24 }} />
         </ThemedView>
 
-        {/* Content */}
         <ScrollView
           style={styles.flex1}
           contentContainerStyle={{
@@ -108,15 +122,47 @@ const WalletWithdrawScreen: React.FC<WalletWithdrawScreenProps> = ({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {/* Current bank info card */}
+          {bankInfoLoading ? (
+            <ActivityIndicator
+              size="small"
+              color={theme.colors.neonGreen}
+              style={{ marginBottom: theme.spacing.l }}
+            />
+          ) : bankInfo?.hasBankInfo ? (
+            <View style={{ marginBottom: theme.spacing.l }}>
+              <ThemedText
+                variant="secondary"
+                size="s"
+                weight="semiBold"
+                style={{ marginBottom: theme.spacing.s }}
+              >
+                {t("wallet.currentBankInfo", {
+                  defaultValue: "Thông tin ngân hàng hiện tại",
+                })}
+              </ThemedText>
+              <BankInfoCard bankInfo={bankInfo} />
+            </View>
+          ) : null}
+
+          {/* Divider */}
+          <View
+            style={[styles.divider, { borderTopColor: theme.colors.border }]}
+          />
+
           <ThemedText
             variant="secondary"
             size="s"
-            style={{ marginBottom: theme.spacing.m }}
+            style={{ marginBottom: theme.spacing.m, marginTop: theme.spacing.s }}
           >
-            {t("wallet.withdrawDescription", {
-              defaultValue:
-                "Vui lòng nhập chính xác thông tin tài khoản ngân hàng để gửi yêu cầu rút tiền.",
-            })}
+            {bankInfo?.hasBankInfo
+              ? t("wallet.updateBankInfo", {
+                  defaultValue: "Cập nhật thông tin ngân hàng",
+                })
+              : t("wallet.withdrawDescription", {
+                  defaultValue:
+                    "Vui lòng nhập chính xác thông tin tài khoản ngân hàng để gửi yêu cầu rút tiền.",
+                })}
           </ThemedText>
 
           {/* Bank Account Number */}
@@ -177,7 +223,7 @@ const WalletWithdrawScreen: React.FC<WalletWithdrawScreenProps> = ({
             <Controller
               control={control}
               name="bankName"
-              render={({ field: { onChange, onBlur, value} }) => (
+              render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
                   style={[
                     styles.input,
@@ -257,11 +303,13 @@ const WalletWithdrawScreen: React.FC<WalletWithdrawScreenProps> = ({
           <Button
             title={
               isPending
-                ? t("wallet.withdrawSubmitting", {
-                    defaultValue: "Đang gửi yêu cầu...",
+                ? t("wallet.withdrawSubmitting", { defaultValue: "Đang lưu..." })
+                : bankInfo?.hasBankInfo
+                ? t("wallet.updateBankInfoBtn", {
+                    defaultValue: "Cập nhật thông tin",
                   })
-                : t("wallet.withdrawSubmit", {
-                    defaultValue: "Gửi yêu cầu rút tiền",
+                : t("wallet.saveBankInfo", {
+                    defaultValue: "Lưu thông tin ngân hàng",
                   })
             }
             onPress={handleSubmit(onSubmit)}
@@ -290,6 +338,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  divider: {
+    borderTopWidth: 1,
+    marginBottom: 4,
+  },
   formField: {
     marginBottom: 16,
   },
@@ -303,4 +355,3 @@ const styles = StyleSheet.create({
 });
 
 export default WalletWithdrawScreen;
-

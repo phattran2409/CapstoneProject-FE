@@ -1,9 +1,6 @@
 // Format currency
-export const formatCurrency = (amount: number, currency: string): string => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
 };
 
 type DateFormatType = 'short' | 'long' | 'time';
@@ -40,5 +37,10 @@ export const capitalizeFirst = (str: string): string => {
 export const truncate = (text: string, maxLength: number = 50): string => {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
+};
+
+// Get username from email (part before @)
+export const getEmailUsername = (email: string): string => {
+  return email.split('@')[0];
 };
 

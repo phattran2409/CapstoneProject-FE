@@ -3,16 +3,41 @@ import {
   User,
   UpdateProfileData,
   UserProfileResponse,
+  AchievementsData,
+  AchievementItem,
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
+import { API_CONFIG } from "@/shared/constants/api";
+
+export interface RadarAssessment {
+  type: string;
+  title: string;
+  description: string;
+  icon: string;
+  highlightAxis: string;
+}
+
+export interface MyRadarChartData {
+  form: number;
+  winRate: number;
+  communityScore: number;
+  trust: number;
+  contribution: number;
+  assessments: RadarAssessment[];
+  summary: string;
+  updatedAt: string;
+}
+
+export type { EloBreakdownRecord } from "@/features/breakdown/types/breakdown.types";
+export { getEloBreakdown as getMyEloBreakdown } from "@/features/breakdown/api/breakdownApi";
 
 // Get user profile by ID
 export const getUserProfile = async (userId: string): Promise<User> => {
   try {
-    const response = await apiClient.get<User>(`/users/${userId}`);
+    const url = API_CONFIG.ENDPOINTS.USERS.DETAIL.replace(':id', userId);
+    const response = await apiClient.get<User>(url);
     console.log("response :", response.data);
 
-    // Ensure we have valid data before returning
     if (!response.data) {
       throw new Error("Invalid response: User profile data is missing");
     }
@@ -24,15 +49,66 @@ export const getUserProfile = async (userId: string): Promise<User> => {
   }
 };
 
+interface AchievementsApiResponse {
+  isSuccess: boolean;
+  data?: {
+    achievements?: Array<Record<string, unknown>>;
+    totalAchievements?: number;
+    unlockedCount?: number;
+  };
+}
+
+/** Chuẩn hóa 1 dòng achievement theo response backend hiện tại */
+function mapAchievementRow(row: Record<string, unknown>): AchievementItem {
+  return {
+    achievementId: String(row.achievementId ?? ""),
+    name: String(row.name ?? ""),
+    description: row.description == null ? "" : String(row.description),
+    badgeIconUrl: row.badgeIconUrl == null ? "" : String(row.badgeIconUrl),
+    criteriaType: String(row.criteriaType ?? ""),
+    targetValue: Number(row.targetValue ?? 0),
+    currentProgress: Number(row.currentProgress ?? 0),
+    progressPercent: Number(row.progressPercent ?? 0),
+    status: String(row.status ?? ""),
+    isUnlocked: Boolean(row.isUnlocked),
+    earnedAt: row.earnedAt == null ? null : String(row.earnedAt),
+  };
+}
+
+export const getAchievements = async (): Promise<AchievementsData> => {
+  try {
+    const response = (await apiClient.get(
+      API_CONFIG.ENDPOINTS.ACHIEVEMENTS.ME,
+    )) as AchievementsApiResponse;
+
+    if (!response?.isSuccess || !response.data) {
+      throw new Error("Invalid response: User achievements data is missing");
+    }
+
+    const rawList = response.data.achievements ?? [];
+    const achievements = rawList.map(mapAchievementRow);
+
+    const totalAchievements = Number(
+      response.data.totalAchievements ?? achievements.length,
+    );
+    const unlockedCount = Number(
+      response.data.unlockedCount ??
+        achievements.filter((a) => a.isUnlocked).length,
+    );
+
+    return { achievements, totalAchievements, unlockedCount };
+  } catch (error) {
+    console.error("Error fetching user achievements:", error);
+    throw error;
+  }
+};
+
 // Update my profile
 export const updateMyProfile = async (
   userId: string,
   data: UpdateProfileData,
 ): Promise<User> => {
-  // Clean data: remove empty strings and null/undefined values
-  // Backend expects null for optional fields, not empty strings
   const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-    // Skip empty strings, null, and undefined
     if (value !== "" && value !== null && value !== undefined) {
       acc[key as keyof UpdateProfileData] = value;
     }
@@ -41,7 +117,8 @@ export const updateMyProfile = async (
 
   console.log("📤 Sending profile update:", cleanedData);
 
-  const response = await apiClient.put<User>(`/users/${userId}`, cleanedData);
+  const url = API_CONFIG.ENDPOINTS.USERS.DETAIL.replace(':id', userId);
+  const response = await apiClient.put<User>(url, cleanedData);
   return response.data;
 };
 
@@ -51,7 +128,7 @@ export const updateAvatar = async (
 ): Promise<ApiResponse<{ avatarUrl: string }>> => {
   const formData = new FormData();
   formData.append("file", file as any);
-  const response = await apiClient.post(`/users/avatar`, formData, {
+  const response = await apiClient.post(API_CONFIG.ENDPOINTS.USERS.AVATAR, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -66,26 +143,82 @@ export const updateAvatar = async (
 // Send friend request
 export const sendFriendRequest = async (addresseeId: string): Promise<void> => {
   try {
-    await apiClient.post(`/friendships/request/${addresseeId}`);
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.REQUEST.replace(':addresseeId', addresseeId);
+    await apiClient.post(url);
   } catch (error) {
     console.error("Error sending friend request:", error);
     throw error;
   }
 };
 
-//Remove Friend
+// Remove Friend
 export const removeFriend = async (friendId: string): Promise<void> => {
   try {
-    await apiClient.delete(`/friendships/${friendId}`);
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.DETAIL.replace(':userId', friendId);
+    await apiClient.delete(url);
   } catch (error) {
     console.error("Error removing friend:", error);
     throw error;
   }
 };
 
-// Get match history for a user (stub – implement when backend is ready)
+// Get match history for a user
 export const getMatchHistory = async (userId?: string): Promise<unknown[]> => {
   const id = userId || "me";
-  const response = await apiClient.get(`/users/${id}/match-history`);
+  const url = API_CONFIG.ENDPOINTS.USERS.MATCH_HISTORY.replace(':id', id);
+  const response = await apiClient.get(url);
   return (response as { data?: unknown[] })?.data ?? [];
 };
+
+export const getMyRadarChart = async (): Promise<MyRadarChartData> => {
+  // The axios interceptor returns response.data, which is { isSuccess, data: MyRadarChartData }
+  const envelope = await apiClient.get<{ isSuccess: boolean; data: MyRadarChartData }>(
+    API_CONFIG.ENDPOINTS.PLAYER_PROFILES.RADAR_CHART,
+  ) as unknown as { isSuccess: boolean; data: MyRadarChartData };
+  if (!envelope?.data) throw new Error("Invalid radar chart response");
+  return envelope.data;
+};
+
+export const getUserRadarChart = async (userId: string): Promise<MyRadarChartData> => {
+  const url = API_CONFIG.ENDPOINTS.PLAYER_PROFILES.USER_RADAR_CHART.replace(':userId', userId);
+  const response = await apiClient.get<MyRadarChartData>(url);
+  return response.data;
+};
+// Update notification settings
+export const updateNotificationSettings = async (
+  matchRoom: boolean,
+  friendship: boolean,
+  post: boolean,
+  chat: boolean,
+): Promise<ApiResponse> => {
+  try {
+    const response = await apiClient.put(API_CONFIG.ENDPOINTS.NOTIFICATION_PREFERENCES.BASE, {
+      matchRoom,
+      friendship,
+      post,
+      chat,
+    });
+    console.log("response :", response);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating notification settings:", error);
+    throw error;
+  }
+};
+
+export interface NotificationPreferences {
+  matchRoom: boolean;
+  friendship: boolean;
+  post: boolean;
+  chat: boolean;
+}
+
+export const getNotificationSettings =
+  async (): Promise<NotificationPreferences> => {
+    const response = await apiClient.get<NotificationPreferences>(
+      API_CONFIG.ENDPOINTS.NOTIFICATION_PREFERENCES.BASE,
+    );
+    if (!response.data) throw new Error("No notification preferences data");
+    console.log("response :", response.data);
+    return response.data;
+  };

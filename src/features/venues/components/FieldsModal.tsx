@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions, ActivityIndicator, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Venue, Field, TimeSlot, FieldAvailability } from '../types/venue.types';
 import { getFieldAvailability } from '../api/venuesApi';
-import { getMinSelectableDate, getMaxSelectableDate, formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
+import { formatDateYYYYMMDDLocal, formatDateDDMMYYYY } from '@/shared/utils';
+import { formatCurrency } from '@/shared/utils/formatters';
+import Alert from '@/shared/components/Alert';
+import { formatMatchFormatVsLabel } from '@/features/rooms';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -30,6 +33,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
   const { t } = useTranslation();
   const [selectedTimeKey, setSelectedTimeKey] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [showSlotTooCloseAlert, setShowSlotTooCloseAlert] = useState(false);
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
   const [availabilityCache, setAvailabilityCache] = useState<AvailabilityCache>({});
   const [loadingFields, setLoadingFields] = useState<Record<string, boolean>>({});
@@ -69,6 +73,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     if (!visible) {
       setSelectedTimeKey(null);
       setSelectedSlot(null);
+      setShowSlotTooCloseAlert(false);
       setExpandedFieldId(null);
       setShowBookedSlotsByFieldId({});
       setAvailabilityCache({});
@@ -93,10 +98,8 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     
     try {
       const availability = await getFieldAvailability(fieldId, selectedDate);
-      console.log('availability', availability);
       setAvailabilityCache(prev => ({ ...prev, [cacheKey]: availability }));
     } catch (error) {
-      console.error('Failed to fetch availability for field:', fieldId, error);
     } finally {
       setLoadingFields(prev => ({ ...prev, [fieldId]: false }));
     }
@@ -112,12 +115,43 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     }
   }, [expandedFieldId, fetchFieldAvailability]);
 
+  // Auto-refetch slot list when date changes for the currently expanded field.
+  useEffect(() => {
+    if (!expandedFieldId) return;
+    fetchFieldAvailability(expandedFieldId);
+  }, [selectedDate, expandedFieldId, fetchFieldAvailability]);
+
+  const isSlotTooCloseToNow = useCallback(
+    (slot: TimeSlot): boolean => {
+      const startHour = Number(slot.startTime.slice(0, 2));
+      const startMinute = Number(slot.startTime.slice(3, 5));
+
+      if (Number.isNaN(startHour) || Number.isNaN(startMinute)) {
+        return false;
+      }
+
+      const slotDateTime = new Date(`${selectedDate}T00:00:00`);
+      slotDateTime.setHours(startHour, startMinute, 0, 0);
+
+      const diffMs = slotDateTime.getTime() - Date.now();
+      const diffMinutes = diffMs / (1000 * 60);
+
+      return diffMinutes < 30;
+    },
+    [selectedDate],
+  );
+
   // Handle time slot selection
   const handleSelectTimeSlot = useCallback((fieldId: string, slot: TimeSlot, index: number) => {
+    if (isSlotTooCloseToNow(slot)) {
+      setShowSlotTooCloseAlert(true);
+      return;
+    }
+
     const key = `${fieldId}-${index}`;
     setSelectedTimeKey(key);
     setSelectedSlot(slot);
-  }, []);
+  }, [isSlotTooCloseToNow]);
 
   // Handle book button press - pass selectedDate (YYYY-MM-DD) so CreateRoom can use it
   const handleBookField = useCallback((field: Field) => {
@@ -126,23 +160,38 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
     }
   }, [venue, selectedSlot, selectedDate, onSelectField]);
 
+  /** Sân tương ứng với khung giờ đang chọn (key: `${fieldId}-${index}`) */
+  const selectedFieldForBook = useMemo(() => {
+    if (!venue || !selectedTimeKey) return null;
+    return venue.fields.find((f) => selectedTimeKey.startsWith(`${f.fieldId}-`)) ?? null;
+  }, [venue, selectedTimeKey]);
+
+  const hasAnyBookableField = useMemo(
+    () =>
+      venue?.fields.some(
+        (f) => f.status !== 'booked' && f.status !== 'maintenance'
+      ) ?? false,
+    [venue]
+  );
+
+  const hasSelectedSlotForBook =
+    !!selectedSlot &&
+    !!selectedFieldForBook &&
+    selectedTimeKey?.startsWith(`${selectedFieldForBook.fieldId}-`) &&
+    selectedFieldForBook.status !== 'booked' &&
+    selectedFieldForBook.status !== 'maintenance';
+
   if (!venue) return null;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
 
-  const getFieldTypeColor = (fieldType: string) : {color: string, shortNameType: string} => {
+  const getFieldTypeColor = (fieldType: string): { color: string; shortNameType: string } => {
     switch (fieldType) {
       case 'FiveVsFive':
-        return { color: '#10B981', shortNameType: '5 vs 5' };
+        return { color: '#10B981', shortNameType: formatMatchFormatVsLabel(fieldType) };
       case 'SevenVsSeven':
-        return { color: '#3B82F6', shortNameType: '7 vs 7' };
+        return { color: '#3B82F6', shortNameType: formatMatchFormatVsLabel(fieldType) };
       case 'ElevenVsEleven':
-        return { color: '#8B5CF6', shortNameType: '11 vs 11' };
+        return { color: '#8B5CF6', shortNameType: formatMatchFormatVsLabel(fieldType) };
       default:
         return { color: theme.colors.neonGreen, shortNameType: fieldType };
     }
@@ -257,7 +306,7 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                         { color: isSelected ? theme.colors.darkBlack : theme.colors.textSecondary },
                       ]}
                     >
-                      {formatPrice(slot.hourlyRate)}
+                      {formatCurrency(slot.hourlyRate)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -361,8 +410,11 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
               mode="date"
               display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={handleDateChange}
-              minimumDate={getMinSelectableDate()}
-              maximumDate={getMaxSelectableDate()}
+              minimumDate={(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return today;
+              })()}
             />
           )}
 
@@ -374,8 +426,6 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
           >
             {venue.fields.map((field, index) => {
               const isExpanded = expandedFieldId === field.fieldId;
-              const isAvailable = field.status !== 'booked' && field.status !== 'maintenance';
-              const hasSelectedSlot = selectedTimeKey?.startsWith(field.fieldId + '-');
               
               return (
                 <View
@@ -444,42 +494,65 @@ const FieldsModal: React.FC<FieldsModalProps> = ({
                         </Text>
                         {renderTimeSlots(field)}
                       </View>
-
-                      {/* Book Button */}
-                      {isAvailable && (
-                        <TouchableOpacity
-                          style={[
-                            styles.bookButton,
-                            { 
-                              backgroundColor: hasSelectedSlot ? theme.colors.neonGreen : '#3a3a3a',
-                            },
-                          ]}
-                          disabled={!hasSelectedSlot}
-                          onPress={() => handleBookField(field)}
-                        >
-                          <Ionicons 
-                            name="calendar-outline" 
-                            size={18} 
-                            color={hasSelectedSlot ? theme.colors.darkBlack : '#666'} 
-                          />
-                          <Text style={[
-                            styles.bookButtonText, 
-                            { color: hasSelectedSlot ? theme.colors.darkBlack : '#666' }
-                          ]}>
-                            {hasSelectedSlot 
-                              ? t('fieldsModal.bookNow', 'Đặt sân ngay') 
-                              : t('fieldsModal.selectTimeFirst', 'Chọn khung giờ trước')}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
                     </View>
                   )}
                 </View>
               );
             })}
           </ScrollView>
+
+          {hasAnyBookableField && (
+            <View
+              style={[
+                styles.bookFooter,
+                {
+                  borderTopColor: '#2a2a2a',
+                  backgroundColor: '#121212',
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.bookButton,
+                  {
+                    backgroundColor: hasSelectedSlotForBook ? theme.colors.neonGreen : '#3a3a3a',
+                  },
+                ]}
+                disabled={!hasSelectedSlotForBook}
+                onPress={() => selectedFieldForBook && handleBookField(selectedFieldForBook)}
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color={hasSelectedSlotForBook ? theme.colors.darkBlack : '#666'}
+                />
+                <Text
+                  style={[
+                    styles.bookButtonText,
+                    { color: hasSelectedSlotForBook ? theme.colors.darkBlack : '#666' },
+                  ]}
+                >
+                  {hasSelectedSlotForBook
+                    ? t('fieldsModal.bookNow', 'Đặt sân ngay')
+                    : t('fieldsModal.selectTimeFirst', 'Chọn khung giờ trước')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
+      <Alert
+        visible={showSlotTooCloseAlert}
+        type="info"
+        title={t('fieldsModal.slotTooCloseTitle', 'Không thể chọn khung giờ')}
+        message={t(
+          'fieldsModal.slotTooCloseMessage',
+          'Bạn cần phải chọn slot giờ trước ít nhất 30 phút.',
+        )}
+        confirmText={t('common.buttons.close', 'Đóng')}
+        onClose={() => setShowSlotTooCloseAlert(false)}
+      />
     </Modal>
   );
 };
@@ -496,6 +569,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     maxHeight: SCREEN_HEIGHT * 0.85,
     minHeight: SCREEN_HEIGHT * 0.5,
+    width: '100%',
+    flexDirection: 'column',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -550,8 +625,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   fieldsScrollView: {
+    maxHeight: SCREEN_HEIGHT * 0.52,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  bookFooter: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    borderTopWidth: 1,
   },
   // Field Card styles
   fieldCard: {

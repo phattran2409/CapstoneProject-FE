@@ -13,6 +13,8 @@ import { FieldsModal, OptionFilter } from '../components';
 import { EmptyState, LoadingMoreIndicator } from '@/shared/components';
 import { useDebounce } from '@/shared/hooks';
 import Toast from 'react-native-toast-message';
+import { useLocationRadiusFilter } from '@/shared/hooks/useLocationRadiusFilter';
+import { formatMatchFormatVsLabel } from '@/features/rooms';
 
 /** Filter theo fieldType của API: FiveVsFive, SevenVsSeven, ElevenVsEleven */
 type FieldTypeFilter = '' | 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
@@ -35,18 +37,18 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   );
   const [fieldsModalVisible, setFieldsModalVisible] = useState(false);
   const [selectedVenueForFields, setSelectedVenueForFields] = useState<Venue | null>(null);
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [radiusKm, setRadiusKm] = useState<number | null>(null);
+  // const [latitude, setLatitude] = useState<number | null>(null);
+  // const [longitude, setLongitude] = useState<number | null>(null);
+  // const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [optionFilterVisible, setOptionFilterVisible] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
+  // const [locationLoading, setLocationLoading] = useState(false);
   useEffect(() => {
     const format = route?.params?.matchFormat as FieldTypeFilter | undefined;
     if (format && ['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'].includes(format)) {
       setSelectedFilter(format);
     }
   }, [route?.params?.matchFormat]);
-
+  const { latitude, longitude, radiusKm,locationLoading, handleApplyRadiusFilter } = useLocationRadiusFilter({t: t as (key: string, defaultValue?: string | object) => string});
   // ✅ Fetch venues from API (sportType gửi fieldType: FiveVsFive, SevenVsSeven, ElevenVsEleven)
   const { 
     venues,
@@ -65,6 +67,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
     longitude: longitude,
     radiusKm: radiusKm,
     searchName: debouncedSearchTerm.trim() || undefined,
+    status: 'approved',
   });
 
   const handleSelectVenue = (venue: Venue) => {
@@ -93,66 +96,59 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   const handleOpenOptionFilter = () => setOptionFilterVisible(true);
   const handleCloseOptionFilter = () => setOptionFilterVisible(false);
 
-  const handleApplyRadiusFilter = useCallback(async (radiusKmValue: number) => {
-    setLocationLoading(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log('Status', status);
-      if (status !== 'granted') {
-        Toast.show({
-          type: 'info',
-          text1: t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
-          text2: t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc sân theo bán kính.'),
-        });
-        setRadiusKm(radiusKmValue);
-        setLatitude(null);
-        setLongitude(null);
-        setOptionFilterVisible(false);
-        setLocationLoading(false);
-        return;
-      }
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      console.log('Location', location);
-      setLatitude(location.coords.latitude);
-      setLongitude(location.coords.longitude);
-      setRadiusKm(radiusKmValue);
-      setOptionFilterVisible(false);
-      Toast.show({
-        type: 'success',
-        text1: t('venueSelection.filterApplied', { km: radiusKmValue }),
-      });
-    } catch (err) {
-      Toast.show({
-        type: 'error',
-        text1: t('venueSelection.locationError'),
-        text2: t('venueSelection.locationErrorHint'),
-      });
-      setRadiusKm(radiusKmValue);
-      setOptionFilterVisible(false);
-    } finally {
-      setLocationLoading(false);
-    }
-  }, [t]);
+  // const handleApplyRadiusFilter = useCallback(async (radiusKmValue: number) => {
+  //   setLocationLoading(true);
+  //   try {
+  //     const { status } = await Location.requestForegroundPermissionsAsync();
+  //     console.log('Status', status);
+  //     if (status !== 'granted') {
+  //       Toast.show({
+  //         type: 'info',
+  //         text1: t('venueSelection.locationPermissionDenied', 'Cần quyền vị trí'),
+  //         text2: t('venueSelection.locationPermissionHint', 'Bật vị trí để lọc sân theo bán kính.'),
+  //       });
+  //       setRadiusKm(radiusKmValue);
+  //       setLatitude(null);
+  //       setLongitude(null);
+  //       setOptionFilterVisible(false);
+  //       setLocationLoading(false);
+  //       return;
+  //     }
+  //     const location = await Location.getCurrentPositionAsync({
+  //       accuracy: Location.Accuracy.Balanced,
+  //     });
+  //     console.log('Location', location);
+  //     setLatitude(location.coords.latitude);
+  //     setLongitude(location.coords.longitude);
+  //     setRadiusKm(radiusKmValue);
+  //     setOptionFilterVisible(false);
+  //     Toast.show({
+  //       type: 'success',
+  //       text1: t('venueSelection.filterApplied', { km: radiusKmValue }),
+  //     });
+  //   } catch (err) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: t('venueSelection.locationError'),
+  //       text2: t('venueSelection.locationErrorHint'),
+  //     });
+  //     setRadiusKm(radiusKmValue);
+  //     setOptionFilterVisible(false);
+  //   } finally {
+  //     setLocationLoading(false);
+  //   }
+  // }, [t]);
 
-  const handleClearRadiusFilter = useCallback(() => {
-    setLatitude(null);
-    setLongitude(null);
-    setRadiusKm(null);
-  }, []);
+  // const handleClearRadiusFilter = useCallback(() => {
+  //   setLatitude(null);
+  //   setLongitude(null);
+  //   setRadiusKm(null);
+  // }, []);
 
-  // console.log('Latitude', latitude);  
-  // console.log('Longitude', longitude);
-  // console.log('Radius km', radiusKm);
 
   // Render Venue Item
   const renderVenueItem = useCallback(({ item: venue }: { item: Venue }) => {
-    // Get available formats from fields
     const availableFormats = [...new Set(venue.fields?.map(f => f.fieldType) || [])];
-    // Get minimum price from fields
-    // const minPrice = venue.fields?.length ? Math.min(...venue.fields.map(f => f.pricePerHour)) : 0;
-    // Get image source
     const imageSource = venue.primaryPhotoUrl 
       ? { uri: venue.primaryPhotoUrl } 
       : require('@assets/images/icon.png');
@@ -230,10 +226,10 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
                 <Ionicons name="football-outline" size={20} color={theme.colors.neonGreen} />
                 <View>
                   <Text style={[styles.fieldsCount, { color: theme.colors.neonGreen }]}>
-                    {venue.fields.length} sân có sẵn
+                    {t('venueSelection.fieldsAvailableCount', { count: venue.fields.length })}
                   </Text>
                   <Text style={[styles.fieldsHint, { color: theme.colors.textSecondary }]}>
-                    Nhấn để xem chi tiết & đặt sân
+                    {t('venueSelection.fieldsTapHint')}
                   </Text>
                 </View>
               </View>
@@ -247,7 +243,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => handleSelectVenue(venue)}
           >
             <Text style={[styles.viewDetailText, { color: theme.colors.textSecondary }]}>
-              Xem chi tiết
+              {t('venueSelection.viewDetail')}
             </Text>
             <Ionicons name="arrow-forward" size={16} color={theme.colors.textSecondary} />
           </TouchableOpacity>
@@ -257,7 +253,6 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
       </TouchableOpacity>
     );
   }, [theme, t]);
-  // Render Footer - Loading More Indicator
   const renderFooter = useCallback(() => {
     if (!loadingMore) return null;
     return (
@@ -269,12 +264,6 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
   const renderEmptyList = useCallback(() => {
     if (loading) return null;
     return (
-      // <View style={styles.emptyState}>
-      //   <Ionicons name="location-outline" size={64} color={theme.colors.textSecondary} />
-      //   <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-      //     {t('venueSelection.noResults')}
-      //   </Text>
-      // </View>
       <EmptyState
         title={t('venueSelection.noResults')}
         description={t('venueSelection.noResultsDescription')}
@@ -365,7 +354,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => setSelectedFilter('FiveVsFive')}
           >
             <Text style={[styles.filterText, { color: selectedFilter === 'FiveVsFive' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
-              5 vs 5
+              {formatMatchFormatVsLabel('FiveVsFive')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -381,7 +370,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => setSelectedFilter('SevenVsSeven')}
           >
             <Text style={[styles.filterText, { color: selectedFilter === 'SevenVsSeven' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
-              7 vs 7
+              {formatMatchFormatVsLabel('SevenVsSeven')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -397,7 +386,7 @@ const VenueSelectionScreen: React.FC<VenueSelectionScreenProps> = ({ navigation,
             onPress={() => setSelectedFilter('ElevenVsEleven')}
           >
             <Text style={[styles.filterText, { color: selectedFilter === 'ElevenVsEleven' ? theme.colors.darkBlack : theme.colors.textSecondary, fontWeight: '600' }]}>
-              11 vs 11
+              {formatMatchFormatVsLabel('ElevenVsEleven')}
             </Text>
           </TouchableOpacity>
         </View>

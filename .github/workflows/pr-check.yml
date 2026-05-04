@@ -33,6 +33,9 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      - name: Run tests
+        run: npx jest --ci
+
       # Bật khi đã thêm ESLint và script "lint" trong package.json:
       # - name: Lint
       #   run: npm run lint

@@ -21,6 +21,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFeedbackSessionStore } from "../store/feedbackSessionStore";
 
 const { width } = Dimensions.get("window");
 
@@ -38,6 +39,8 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const session = useFeedbackSessionStore((s) => s.session);
+  const setStep = useFeedbackSessionStore((s) => s.setStep);
 
   // Animation values
   const scaleAnim = useSharedValue(1);
@@ -79,8 +82,14 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
     transform: [{ scale: teamScale.value }],
   }));
 
-  const handleStart = () => {
-    navigation.navigate("FeedbackMatchResult", { roomId: "" });
+  const handleStart = async () => {
+    if (session?.isHost) {
+      await setStep("matchResult");
+      navigation.replace("FeedbackMatchResult");
+    } else {
+      await setStep("playerRating");
+      navigation.replace("FeedbackRating");
+    }
   };
 
   const handleClose = () => {
@@ -137,7 +146,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
                 />
               </View>
               <Text style={[styles.teamLabel, { color: theme.colors.text }]}>
-                {t("feedback.intro.teamA", "ĐỘI A")}
+                {session?.teamAName ?? t("feedback.intro.teamA", "ĐỘI A")}
               </Text>
             </Animated.View>
 
@@ -159,7 +168,7 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
                 />
               </View>
               <Text style={[styles.teamLabel, { color: theme.colors.text }]}>
-                {t("feedback.intro.teamB", "ĐỘI B")}
+                {session?.teamBName ?? t("feedback.intro.teamB", "ĐỘI B")}
               </Text>
             </Animated.View>
           </View>
@@ -170,13 +179,21 @@ const FeedbackIntroScreen: React.FC<FeedbackIntroScreenProps> = ({
           </Text>
 
           {/* Description */}
-          <Text
+          {/* <Text
             style={[styles.description, { color: theme.colors.textSecondary }]}
           >
             {t(
               "feedback.intro.description",
               "Đánh giá đồng đội một cách công tâm để giúp chúng tôi tổ chức những trận đấu cân sức và hấp dẫn hơn cho bạn.",
             )}
+          </Text> */}
+          <Text
+            style={[
+              styles.reviewWindowHint,
+              { color: theme.colors.textSecondary },
+            ]}
+          >
+            {t("feedback.intro.reviewWindowHint")}
           </Text>
 
           {/* Start Button */}
@@ -312,7 +329,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     lineHeight: 24,
-    marginBottom: 48,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  reviewWindowHint: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 40,
     paddingHorizontal: 16,
   },
   startButton: {

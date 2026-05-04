@@ -5,13 +5,14 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 import { getAuthToken } from "@/shared/api/client";
+import { API_CONFIG } from "@/shared/constants/api";
 import type {
   ConversationDetailData,
   SendChatMessageData,
   MarkAsReadData,
 } from "@/features/chat/types/chat.types";
 
-const CHAT_HUB_URL = "https://api.kickify.site/hubs/chat";
+const CHAT_HUB_URL = API_CONFIG.SIGNALR.CHAT_HUB_URL;
 
 
 export interface UserOnlineStatusPayload {

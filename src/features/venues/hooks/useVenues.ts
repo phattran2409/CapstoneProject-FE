@@ -17,6 +17,7 @@ export const useVenues = (filters?: VenueFilters) => {
         latitude: filters?.latitude ?? undefined,
         longitude: filters?.longitude ?? undefined,
         radiusKm: filters?.radiusKm ?? undefined,
+        status: filters?.status ?? undefined,
       });
       return {
         data: result.data.venues,

@@ -46,7 +46,38 @@ export interface UpdateProfileData {
   preferredFoot?: string;
 }
 
+export interface UpdateNotificationSettingsData {
+  matchRoom: boolean;
+  friendship: boolean;
+  post: boolean;
+}
+
 export interface UserProfileResponse {
   isSuccess: boolean;
   data: User;
+}
+
+export interface AchievementItem {
+  achievementId: string;
+  name: string;
+  description: string;
+  badgeIconUrl: string;
+  criteriaType: string;
+  targetValue: number;
+  currentProgress: number;
+  progressPercent: number;
+  status: string;
+  isUnlocked: boolean;
+  earnedAt: string | null;
+}
+
+export interface AchievementsData {
+  achievements: AchievementItem[];
+  totalAchievements: number;
+  unlockedCount: number;
+}
+
+export interface AchievementsResponse {
+  isSuccess: boolean;
+  data: AchievementsData;
 }

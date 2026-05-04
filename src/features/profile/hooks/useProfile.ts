@@ -4,6 +4,11 @@ import {
   getUserProfile,
   updateMyProfile,
   updateAvatar,
+  getAchievements,
+  updateNotificationSettings,
+  getNotificationSettings,
+  getMyRadarChart,
+  getUserRadarChart,
 } from "../api/profileApi";
 import { UpdateProfileData } from "../types/profile.types";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -17,6 +22,34 @@ export const useUserProfile = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export const useAchievements = () => {
+  return useQuery({
+    queryKey: profileKeys.achievements(),
+    queryFn: () => getAchievements(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useMyRadarChart = (enabled = true) => {
+  return useQuery({
+    queryKey: profileKeys.radarChart(),
+    queryFn: getMyRadarChart,
+    staleTime: 30 * 1000,
+    enabled,
+  });
+};
+
+export const useUserRadarChart = (userId: string, enabled = true) => {
+  return useQuery({
+    queryKey: profileKeys.userRadarChart(userId),
+    queryFn: () => getUserRadarChart(userId),
+    staleTime: 30 * 1000,
+    enabled: !!userId && enabled,
+  });
+};
+
+export { useEloBreakdown, useEloBreakdown as useMyEloBreakdown } from "@/features/breakdown/hooks/useEloBreakdown";
 
 // Update my profile
 export const useUpdateProfile = () => {
@@ -34,6 +67,39 @@ export const useUpdateProfile = () => {
       queryClient.setQueryData(profileKeys.me(), updatedProfile);
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
+  });
+};
+
+// Update notification settings
+export const useUpdateNotificationSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      matchRoom,
+      friendship,
+      post,
+      chat,
+    }: {
+      matchRoom: boolean;
+      friendship: boolean;
+      post: boolean;
+      chat: boolean;
+    }) => updateNotificationSettings(matchRoom, friendship, post, chat),
+    onSuccess: (response) => {
+      queryClient.setQueryData(
+        profileKeys.notificationPreferences(),
+        response.data,
+      );
+    },
+  });
+};
+
+export const useNotificationSettings = () => {
+  return useQuery({
+    queryKey: profileKeys.notificationPreferences(),
+    queryFn: getNotificationSettings,
+    staleTime: 5 * 60 * 1000,
   });
 };
 

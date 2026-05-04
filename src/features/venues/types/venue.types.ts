@@ -13,6 +13,7 @@ export interface Venue {
   primaryPhotoUrl?: string;
   createdAt: string;
 }
+type FieldType = 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven';
 
 /**
  * VenueDetail - Chi tiết venue từ API GET /api/venues/:id
@@ -30,17 +31,39 @@ export interface VenueDetail {
   fields: VenueFieldDetail[];
   operatingHours: OperatingHour[];
   photos: VenuePhoto[];
+  reviews: VenueReview[];
+  owner: owner | null;
   walletBalance: number;
   createdAt: string;
 }
+export interface VenueReview {
+  reviewId: string;
+  userId: string;
+  userFullName: string;
+  userName: string;
+  userAvatarUrl?: string;
+  rating: number;
+  comment: string;
+  ownerResponse: string | null;
+  responseDate: string | null;
+  createdAt: string;
+}
 
+export interface owner {
+  userId: string;
+  fullName: string;
+  phone: string;
+  avatarUrl: string;
+  bio: string | null;
+  role: "VenueOwner";
+}
 /**
  * Field detail trong VenueDetail response
  */
 export interface VenueFieldDetail {
   fieldId: string;
   fieldName: string;
-  fieldType: 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | string;
+  fieldType: FieldType;
   surfaceType: string | null;
   hourlyRate: number;
   peakHourSurcharge: number;
@@ -75,7 +98,7 @@ export interface VenueDetailResponse {
 export interface Field {
   fieldId: string;
   fieldName: string;
-  fieldType: string;
+  fieldType: FieldType;
   // maxPlayers?: number;
   hourlyRate: number;
   description?: string;
@@ -112,6 +135,7 @@ export interface VenueFilters {
   latitude?: number | null;
   longitude?: number | null;
   radiusKm?: number | null;
+  status?: 'approved';
   /** Tìm kiếm theo tên/địa chỉ venue (nên dùng giá trị đã debounce) */
   searchName?: string | null;
 }

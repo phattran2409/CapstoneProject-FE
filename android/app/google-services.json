@@ -14,18 +14,18 @@
       },
       "oauth_client": [
         {
-          "client_id": "600662709460-2u7v746k4l5jvj4g8ehcclbsj5itqf1i.apps.googleusercontent.com",
+          "client_id": "600662709460-9e1ak67prc7or1ldccbk3s3dpblmd9s0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.kickify.app",
-            "certificate_hash": "6d4541b67fc933af634ae89ffb6771bd6223ae53"
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
-          "client_id": "600662709460-dbltm9v1qnnkosq16f41hbdn7qt952nk.apps.googleusercontent.com",
+          "client_id": "600662709460-nnoq2834nin9ue4qsj5n1bu1hnf6pu6t.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.kickyfi.app",
+            "package_name": "com.kickify.app",
             "certificate_hash": "247741ddf937c5c04fbb54ef93944fd18b1b5a9a"
           }
         },
@@ -45,6 +45,13 @@
             {
               "client_id": "600662709460-m0tclu997im6r5qliinv06hj7ut542ag.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "600662709460-3lvgvvl36stvpm8615o3holsoot342kp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kickify.app"
+              }
             }
           ]
         }

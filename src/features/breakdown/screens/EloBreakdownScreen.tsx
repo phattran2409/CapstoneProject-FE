@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
@@ -15,6 +22,8 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import EloBreakdownItem from "../components/EloBreakdownItem";
+import { useEloBreakdown } from "../hooks";
+import { ErrorState } from "@/shared/components";
 
 type EloBreakdownScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -36,10 +45,30 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
   const { t } = useTranslation();
 
   const {
-    eloDelta = 25,
-    matchLabel = "FC Dragons 3 - 1 Wolves",
-    isWin = true,
+    eloDelta = 0,
+    matchLabel = "",
+    matchId,
   } = route.params || {};
+  const {
+    data: breakdown = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEloBreakdown(matchId);
+  const latest = breakdown[0];
+  const currentEloDelta = latest?.eloChange ?? eloDelta;
+  const isPositive = currentEloDelta >= 0;
+  const getDirectionText = (
+    value: number,
+    positiveText: string,
+    negativeText: string,
+    neutralText: string,
+  ) => {
+    if (value > 0) return positiveText;
+    if (value < 0) return negativeText;
+    return neutralText;
+  };
 
   const badgeScale = useSharedValue(0);
   const pointsScale = useSharedValue(0);
@@ -67,8 +96,6 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
     navigation.goBack();
   };
 
-  const isPositive = eloDelta >= 0;
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -87,14 +114,20 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
           {t("eloBreakdown.title", "CHI TIẾT THAY ĐỔI ELO")}
         </Text>
         <TouchableOpacity style={styles.headerIcon}>
-          <Ionicons
+          {/* <Ionicons
             name="information-circle-outline"
             size={22}
             color={theme.colors.textSecondary}
-          />
+          /> */}
         </TouchableOpacity>
       </View>
 
+      {isError ? (
+        <ErrorState
+          error={error instanceof Error ? error.message : String(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : (
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -118,8 +151,8 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               ]}
             >
               {isPositive
-                ? t("eloBreakdown.rankUp", "THĂNG HẠNG MỚI")
-                : t("eloBreakdown.rankDown", "GIẢM HẠNG")}
+                ? t("eloBreakdown.rankUp", "ELO TĂNG")
+                : t("eloBreakdown.rankDown", "ELO GIẢM")}
             </Text>
           </Animated.View>
 
@@ -132,7 +165,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               pointsStyle,
             ]}
           >
-            {`${isPositive ? "+" : ""}${eloDelta}`}
+            {`${isPositive ? "+" : ""}${currentEloDelta}`}
           </Animated.Text>
 
           <Text
@@ -143,13 +176,14 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
           >
             {isPositive
               ? t(
-                  "eloBreakdown.summaryWin",
-                  "Tuyệt vời! Bạn vừa giành chiến thắng trước đối thủ có xếp hạng cao hơn.",
+                  "eloBreakdown.summaryPositive",
+                  "Kết quả trận này đang tác động tích cực lên ELO của bạn.",
                 )
               : t(
-                  "eloBreakdown.summaryLose",
-                  "Bạn đã để thua trước đối thủ. Đừng nản, hãy tiếp tục cố gắng ở trận tiếp theo.",
-                )}
+                  "eloBreakdown.summaryNegative",
+                  "Kết quả trận này đang tác động giảm lên ELO của bạn.",
+                )
+            }
           </Text>
 
           {/* Last match card */}
@@ -172,7 +206,7 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
                     { color: theme.colors.textSecondary },
                   ]}
                 >
-                  {t("eloBreakdown.lastMatch", "TRẬN GẦN NHẤT")}
+                  {t("eloBreakdown.matchRoomLabel", "PHÒNG ĐẤU")}
                 </Text>
                 <Text
                   style={[
@@ -201,65 +235,149 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
             {t("eloBreakdown.detailTitle", "PHÂN TÍCH CHI TIẾT")}
           </Text>
 
-          <EloBreakdownItem
-            type="matchResult"
-            title={t("eloBreakdown.matchResult.title", "Kết quả trận đấu")}
-            description={t(
-              "eloBreakdown.matchResult.desc",
-              "Chiến thắng 3-1 thuyết phục",
-            )}
-            value="+15"
-            valueDelta={15}
-          />
+          {isLoading ? (
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          ) : (
+            <>
+              <EloBreakdownItem
+                type="matchResult"
+                title={t("eloBreakdown.matchResult.title", "Kết quả trận đấu")}
+                description={
+                  getDirectionText(
+                    latest?.k1MatchResultComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
+                value={`${(latest?.k1MatchResultComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k1MatchResultComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k1MatchResultComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="teammateRating"
-            title={t("eloBreakdown.teammateRating.title", "Đánh giá đồng đội")}
-            description={t(
-              "eloBreakdown.teammateRating.desc",
-              "Được bình chọn là MVP của trận",
-            )}
-            value="+5"
-            valueDelta={5}
-          />
+              <EloBreakdownItem
+                type="teammateRating"
+                title={t("eloBreakdown.teammateRating.title", "Đánh giá đồng đội")}
+                description={
+                  getDirectionText(
+                    latest?.k2FeedbackSentimentComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
+                value={`${(latest?.k2FeedbackSentimentComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k2FeedbackSentimentComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k2FeedbackSentimentComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="winRate"
-            title={t("eloBreakdown.winRate.title", "Tỷ lệ thắng")}
-            description={t(
-              "eloBreakdown.winRate.desc",
-              "Thắng đối thủ có bậc Rank cao hơn",
-            )}
-            value="+3"
-            valueDelta={3}
-          />
+              <EloBreakdownItem
+                type="winRate"
+                title={t("eloBreakdown.winRate.title", "Hiệu suất")}
+                description={
+                  getDirectionText(
+                    latest?.k3WinRateComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
+                value={`${(latest?.k3WinRateComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k3WinRateComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k3WinRateComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="feedbackContribution"
-            title={t(
-              "eloBreakdown.feedbackContribution.title",
-              "Đóng góp đánh giá",
-            )}
-            description={t(
-              "eloBreakdown.feedbackContribution.desc",
-              "Hoàn thành đầy đủ đánh giá sau trận đấu",
-            )}
-            value="+2"
-            valueDelta={2}
-          />
+              <EloBreakdownItem
+                type="feedbackContribution"
+                title={t("eloBreakdown.feedbackContribution.title", "Vai trò")}
+                description={
+                  getDirectionText(
+                    latest?.k4ContributionComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
+                value={`${(latest?.k4ContributionComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k4ContributionComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k4ContributionComponent ?? 0}
+              />
 
-          <EloBreakdownItem
-            type="reputation"
-            title={t("eloBreakdown.reputation.title", "Uy tín")}
-            description={t(
-              "eloBreakdown.reputation.desc",
-              "Không có vi phạm, tinh thần Fair-play",
-            )}
-            value="+0"
-            valueDelta={0}
-          />
+              <EloBreakdownItem
+                type="reputation"
+                title={t("eloBreakdown.reputation.title", "Uy tín & sentiment")}
+                description={
+                  getDirectionText(
+                    latest?.k5TrustComponent ?? 0,
+                    t(
+                      "eloBreakdown.direction.positive",
+                      "Mục này đang cộng điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.negative",
+                      "Mục này đang trừ điểm ELO.",
+                    ),
+                    t(
+                      "eloBreakdown.direction.neutral",
+                      "Mục này hiện chưa làm thay đổi ELO.",
+                    ),
+                  )
+                }
+                value={`${(
+                  latest?.k5TrustComponent ?? 0
+                ) >= 0
+                  ? "+"
+                  : ""
+                }${(
+                  latest?.k5TrustComponent ?? 0
+                ).toFixed(2)}`}
+                valueDelta={latest?.k5TrustComponent ?? 0}
+              />
+            </>
+          )}
         </View>
       </ScrollView>
+      )}
 
       {/* Bottom button */}
       <View style={styles.footer}>

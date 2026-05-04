@@ -17,6 +17,13 @@ interface UsePaginationOptions<T> {
   onError?: (error: Error) => void;
 }
 
+interface PaginationQueryData<T> {
+  data: T[];
+  totalPages: number;
+  totalCount: number;
+  page: number;
+}
+
 interface UsePaginationResult<T> {
   data: T[];
   loading: boolean;
@@ -50,6 +57,7 @@ export function usePagination<T>({
 
   // Track if this is initial load
   const isInitialLoad = useRef(true);
+  const pendingPageRef = useRef<number | null>(null);
 
   // Khi queryKey đổi (search/filter): reset ngay về trang 1 và clear data trong cùng render
   // để fetch đúng page 1 và không giữ cache/dữ liệu cũ
@@ -59,6 +67,7 @@ export function usePagination<T>({
   if (isKeyChanged) {
     prevQueryKeyRef.current = queryKeySerialized;
     isInitialLoad.current = true;
+    pendingPageRef.current = null;
   }
 
   const effectivePage = isKeyChanged ? 1 : currentPage;
@@ -68,6 +77,9 @@ export function usePagination<T>({
   useEffect(() => {
     setAccumulatedData([]);
     setCurrentPage(1);
+    setIsRefreshing(false);
+    setIsLoadingMore(false);
+    pendingPageRef.current = null;
     isInitialLoad.current = true;
   }, [queryKeySerialized]);
 
@@ -83,7 +95,13 @@ export function usePagination<T>({
     refetch,
   } = useQuery({
     queryKey: paginatedQueryKey,
-    queryFn: () => fetchFunction(effectivePage, pageSize),
+    queryFn: async () => {
+      const page = effectivePage;
+      const result = await fetchFunction(page, pageSize);
+      // Gắn thêm `page` để tránh trường hợp append nhầm dữ liệu page cũ
+      // trong lúc `currentPage` đã đổi nhưng query chưa trả về.
+      return { ...result, page } as PaginationQueryData<T>;
+    },
     staleTime,
     enabled,
   });
@@ -102,15 +120,19 @@ export function usePagination<T>({
         setAccumulatedData(queryData.data);
         setIsRefreshing(false);
       } else if (isLoadingMore) {
-        // Load more - append data
-        setAccumulatedData((prev) => [...prev, ...queryData.data]);
-        setIsLoadingMore(false);
-      } else if (currentPage === 1) {
+        // Load more - only append when data corresponds to the expected page
+        // (tránh append lại page cũ khi query vừa đổi key và còn giữ previous data).
+        if (pendingPageRef.current === queryData.page) {
+          setAccumulatedData((prev) => [...prev, ...queryData.data]);
+          setIsLoadingMore(false);
+          pendingPageRef.current = null;
+        }
+      } else if (queryData.page === 1) {
         // Page 1 refetch (e.g., from cache invalidation)
         setAccumulatedData(queryData.data);
       }
     }
-  }, [queryData, isRefreshing, isLoadingMore, currentPage]);
+  }, [queryData, isRefreshing, isLoadingMore]);
 
   // Handle errors
   useEffect(() => {
@@ -125,6 +147,8 @@ export function usePagination<T>({
   const refresh = useCallback(() => {
     setIsRefreshing(true);
     setCurrentPage(1);
+    setIsLoadingMore(false);
+    pendingPageRef.current = null;
     isInitialLoad.current = false;
 
     // Invalidate all pages for this query
@@ -142,13 +166,17 @@ export function usePagination<T>({
   // Load more function - increment page
   const loadMore = useCallback(() => {
     if (!isFetching && !isLoadingMore && currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      pendingPageRef.current = nextPage;
       setIsLoadingMore(true);
-      setCurrentPage((prev) => prev + 1);
+      setCurrentPage(nextPage);
     }
   }, [isFetching, isLoadingMore, currentPage, totalPages]);
 
   // Determine loading states
-  const loading = isLoading && isInitialLoad.current;
+  // accumulatedData.length === 0 giữ loading=true trong frame giữa khi isLoading
+  // vừa thành false nhưng useEffect chưa chạy để set data → tránh flash EmptyState
+  const loading = (isLoading || accumulatedData.length === 0) && isInitialLoad.current;
   const refreshing = isRefreshing && isFetching;
   const loadingMore = isLoadingMore;
 

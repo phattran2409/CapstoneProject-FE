@@ -33,6 +33,9 @@ export interface MatchRoomVenue {
   venueName: string;
   address: string;
   contactPhone: string | null;
+  /** Khi BE trả về — dùng mở Maps native */
+  latitude?: number;
+  longitude?: number;
 }
 
 /**
@@ -59,6 +62,13 @@ export interface MatchRoomParticipant {
   position: string;
   depositPaid: boolean;
   joinDate: string;
+  hasLeftFeedback?: boolean;
+  /** Điểm danh GPS */
+  checkInTime?: string | null;
+  checkInLatitude?: number | null;
+  checkInLongitude?: number | null;
+  checkInMethod?: string | null;
+  distanceFromVenueMeters?: number | null;
 }
 
 /** Alias for participant in room/team context */
@@ -139,7 +149,11 @@ export interface MatchRoomFullInfo {
     A?: string | null;
     B?: string | null;
   };
+  teamAAverageElo: number;
+  teamBAverageElo: number;
+  isSkillImbalanced: boolean;
   createdAt: string;
+  hasLeftFeedback?: boolean;
 }
 
 export interface MyRoom {
@@ -175,7 +189,9 @@ export interface MyRoom {
   filledSlots: number;
   depositPerPerson: number;
   totalDepositCollected: number;
+  myMatchOutcome? : string;
   status: MatchRoomStatus;
+  venuePhotos: VenuePhoto[] | [];
   createdAt: string;
 }
 
@@ -205,6 +221,9 @@ export interface MatchRoomFilters {
   page?: number;
   pageSize?: number;
   availableOnly?: boolean;
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
   matchFormat?: string;
   date?: string;
 }
@@ -238,6 +257,8 @@ export interface CreateRoomRequest {
   /** Required when visibility is Private */
   password?: string;
 }
+
+/** Preset tạo phòng (lưu trên server) — map body/response trong roomsApi nếu BE khác field */
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {
   status?: RoomStatus;
@@ -298,4 +319,109 @@ export interface SendMessageRequest {
   roomId: string;
   userId: string;
   message: string;
+}
+
+export interface SuggestPlayersRequest {
+  query: string;
+  roomId: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SuggestRoomsRequest {
+  query: string;
+  latitude: number;
+  longitude: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SuggestedPlayerProfile {
+  profileId: string;
+  userId: string;
+  userFullName: string;
+  userEmail: string;
+  userAvatarUrl: string | null;
+  currentElo: number;
+  currentRank: string;
+  isLegend: boolean;
+  trustScore: number;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  mvpCount: number;
+  winStreak: number;
+  maxWinStreak: number;
+  preferredPositions: string;
+  preferredFoot: string;
+  createdAt: string;
+}
+
+export type SuggestPlayersResponse = ApiResponse<{
+  profiles: SuggestedPlayerProfile[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>;
+
+/** DTO dùng để tạo mới / upsert preset đơn (legacy) */
+export interface MatchRoomCreatePresetDto {
+  matchFormat: MatchFormat;
+  durationMinutes: number;
+  roomName: string;
+  description: string;
+  visibility: 'Public' | 'Private';
+  rules: string;
+  password: string;
+}
+
+/** DTO tạo preset mới theo danh sách preset (POST /match-presets) */
+export interface CreateMatchPresetDto {
+  fieldId: string;
+  roomName: string;
+  matchFormat: string;
+  visibility: 'Public' | 'Private';
+  startTime: string;
+  durationMinutes: number;
+  rules: string;
+  password: string;
+  description: string;
+}
+
+/** DTO dùng để cập nhật preset theo ID (PUT /match-presets/:id) */
+export type UpdateMatchPresetDto = Partial<Omit<MatchRoomCreatePresetDto, 'isPrivate'>> & {
+  visibility?: 'Public' | 'Private';
+  password?: string;
+};
+
+export interface RoomPresetItem {
+  presetId: string;
+  fieldId: string;
+  fieldName: string;
+  venueName: string;
+  venueAddress: string;
+  roomName: string;
+  matchFormat: MatchFormat;
+  visibility: string;
+  password?: string;
+  startTime: string;
+  rules: string;
+  durationMinutes: number;
+  description: string;
+  createdAt: string;
+}
+
+/** Payload g\u1eedi API check-in GPS */
+export interface CheckInRequest {
+  latitude: number;
+  longitude: number;
+}
+
+/** Response t\u1eeb API check-in GPS */
+export interface CheckInResponse {
+  message?: string;
+  distanceFromVenueMeters?: number;
+  alreadyCheckedIn?: boolean;
 }

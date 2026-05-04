@@ -21,10 +21,12 @@ import { Button } from "@/shared/components";
 import { useToast } from "@/shared/toast";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedIcon } from "@/shared/components/themed";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 import {
   registerSchema,
   type RegisterFormData,
 } from "../validation/authSchemas";
+import { useGoogleSignIn } from "@/features/auth/hooks/useGoogleSignIn";
 
 type RootStackParamList = {
   Login: undefined;
@@ -66,7 +68,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   // React Query mutation
   const { mutate: register, isPending: loading } = useRegister();
-
+  const { mutate: signInWithGoogle, isPending: googleLoading } = useGoogleSignIn();
   const onSubmit = (data: RegisterFormData) => {
     // Transform to API request format (name instead of username)
     register(
@@ -88,11 +90,25 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         onError: (error: any) => {
           toast.error(
             t("register.errors.failed", "Đăng ký thất bại"),
-            error.message || t("register.errors.tryAgain", "Vui lòng thử lại.")
+            getTranslatedError(error?.message) || t("register.errors.tryAgain", "Vui lòng thử lại.")
           );
         },
       }
     );
+  };
+
+  const onGoogleSignIn = () => {
+    signInWithGoogle(undefined, {
+      onSuccess: () => {
+        toast.success(t("register.success.title", "Đăng ký thành công"), t("register.success.message", "Tài khoản đã được tạo!"));
+      },
+      onError: (error: any) => {
+        toast.error(
+          t("login.errors.googleFailed", "Đăng nhập Google thất bại"),
+          getTranslatedError(error?.message) || t("login.errors.googleFailed", "Không thể đăng nhập bằng Google. Vui lòng thử lại.")
+        );
+      },
+    });
   };
 
   // Helper to get translated error message
@@ -392,9 +408,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 <TouchableOpacity
                   style={[
                     styles.socialButton,
-                    { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f" },
+                    { borderColor: "#2f2f2f", backgroundColor: "#0f0f0f", opacity: googleLoading ? 0.6 : 1 },
                   ]}
-                  disabled
+                  onPress={onGoogleSignIn}
+                  disabled={googleLoading || loading}
                 >
                   <Image
                     source={require("@assets/images/logo_google.png")}

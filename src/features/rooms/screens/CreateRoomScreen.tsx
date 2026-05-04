@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {Text, View, TouchableOpacity, TextInput, Switch, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { useTheme } from '@/shared/theme';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -20,6 +21,15 @@ import { useAlert } from '@/shared/hooks/useAlert';
 import { Controller, useForm } from 'react-hook-form';
 import { RoomFormData, roomSchema } from '../validation/roomSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { roomsApi } from '../api/roomsApi';
+import { useToast } from '@/shared/toast/useToast';
+import { formatDate, formatTime } from '@/shared/utils';
+import { PresetListBottomSheet } from '../components/PresetListBottomSheet';
+import { MatchFormat, RoomPresetItem } from '../types/room.types';
+import { useCreateMatchPreset } from '../hooks/useMatchPresetActions';
+import { formatMatchFormatVsLabel, MATCH_FORMAT_VS_LABEL } from '../utils/matchFormatVsLabel';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type CreateRoomScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
 type CreateRoomScreenRouteProp = RouteProp<RootStackParamList, 'CreateRoom'>;
@@ -29,27 +39,26 @@ interface CreateRoomScreenProps {
   route?: CreateRoomScreenRouteProp;
 }
 
-type MatchFormat = '5vs5' | '7vs7' | '11vs11';
-type DurationMinutes = 60 | 90 | 120;
-
-const DURATION_OPTIONS: DurationMinutes[] = [ 60, 90, 120];
-
 const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const toast = useToast();
   const { user } = useAuthStore();
   const { visible, alertOptions, showInfo, showSuccess, showDanger, hideAlert } = useAlert();
-  const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('5vs5');
-  const [durationMinutes, setDurationMinutes] = useState<DurationMinutes>(60);
+  const [selectedFormat, setSelectedFormat] = useState<MatchFormat>('FiveVsFive');
+  const [durationMinutes, setDurationMinutes] = useState<number>(60);
   const {
     control,
     handleSubmit,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<RoomFormData>({
     resolver: zodResolver(roomSchema),
     defaultValues: {
       roomName: '',
       description: '',
+      rules: '',
     },
   });
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(
@@ -67,23 +76,12 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [presetSheetVisible, setPresetSheetVisible] = useState(false);
 
   // ✅ Use React Query mutation
   const { mutate: createRoom, isPending: isCreating } = useCreateRoom();
-  const { setActiveRoom } = useActiveRoomStore();
+  const { mutate: createMatchPreset, isPending: isCreatingPreset } = useCreateMatchPreset();
   
-  const FormatMatch = (format: MatchFormat): 'FiveVsFive' | 'SevenVsSeven' | 'ElevenVsEleven' | undefined => {
-    switch (format) {
-      case '5vs5':
-        return 'FiveVsFive';
-      case '7vs7':
-        return 'SevenVsSeven';
-      case '11vs11':
-        return 'ElevenVsEleven';
-      default:
-        return undefined;
-    }
-  }
 
   // Update data when returning from VenueSelection / VenueDetail (TimeSlot + date from field)
   React.useEffect(() => {
@@ -92,6 +90,9 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
     }
     if (route?.params?.selectedField) {
       setSelectedField(route.params.selectedField);
+    }
+    if (route?.params?.selectedField?.fieldType) {
+      setSelectedFormat(route.params.selectedField.fieldType);
     }
     if (route?.params?.selectedTimeSlot) {
       setSelectedTimeSlot(route.params.selectedTimeSlot);
@@ -105,6 +106,20 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       if (!isNaN(d.getTime())) setMatchDate(d);
     }
   }, [route?.params?.selectedVenue, route?.params?.selectedField, route?.params?.selectedTimeSlot, route?.params?.selectedDate]);
+
+  React.useEffect(() => {
+    const nonce = route?.params?.presetApplyNonce;
+    if (nonce == null) return;
+    void (async () => {
+      const p = await roomsApi.getCreateRoomPreset();
+      if (!p) return;
+      setSelectedFormat(p.matchFormat);
+      setDurationMinutes(p.durationMinutes);
+      reset({ roomName: p.roomName, description: p.description || '', rules: p.rules || '' });
+      setIsPrivate(p.visibility === 'Private');
+      setPassword('');
+    })();
+  }, [route?.params?.presetApplyNonce, reset]);
 
   const handleCreateRoom = (data: RoomFormData) => {
     setIsLoading(true);
@@ -138,48 +153,176 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
         matchDate: datetime.toISOString(),
         startTime: startTimeStr,
         durationMinutes,
-        matchFormat: FormatMatch(selectedFormat) ?? (selectedFormat as string),
+        matchFormat: selectedFormat,
         roomName: data.roomName,
         description: data.description || '',
-        rules: '',
+        rules: data.rules || '',
         visibility: isPrivate ? 'Private' : 'Public',
         ...(isPrivate && password.trim() ? { password: password.trim() } : {}),
       },
       {
         onSuccess: async (newRoom) => {
-          showSuccess(t('common.success'), t('createRoom.successMessage'), async () => {
-            if (newRoom?.roomId) {
-              await setActiveRoom(newRoom.roomId);
-              // Replace để không quay lại màn tạo phòng
-              navigation?.replace('RoomInformation', { roomId: newRoom.roomId });
-            } else {
-              navigation?.goBack();
-            }
-          });
+          // autoClose: false để user bấm OK mới đóng → onConfirm chạy → replace (nếu autoClose: true
+          // alert tự đóng sau 3s và không gọi onConfirm, nên replace không chạy, Back từ Room vẫn về CreateRoom)
+          showSuccess(
+            t('common.success'),
+            t('createRoom.successMessage'),
+            async () => {
+              if (newRoom?.roomId) {
+                // await setActiveRoom(newRoom.roomId);
+                // Reset stack: đảm bảo Back từ RoomInformation luôn về MatchesScreen
+                // bất kể trước đó VenueSelection hay bao nhiêu screen còn trong stack
+                navigation?.dispatch(
+                  CommonActions.reset({
+                    index: 1,
+                    routes: [
+                      { name: 'MainTabs', params: { screen: 'Matches' } },
+                      { name: 'RoomInformation', params: { roomId: newRoom.roomId } },
+                    ],
+                  })
+                );
+              } else {
+                navigation?.goBack();
+              }
+            },
+            false
+          );
         },
         onError: (error: any) => {
           setIsLoading(false);
-          showDanger(t('common.error'), error.message || t('createRoom.errorMessage'), () => {});
+          showDanger(
+            t('common.error'),
+            getTranslatedError(error?.message, error?.code) || t('createRoom.errorMessage'),
+            () => {}
+          );
         },
       }
     );
   };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('vi-VN', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
+  
+  const handleSetDurationMinutes = useCallback((type: 'increase' | 'decrease') => {
+    setDurationMinutes((prev) => {
+      if (type === 'increase') {
+        if (prev == 120) { 
+          toast.info(t('createRoom.validation.durationTooLong'));
+          return 120;
+        }
+        return prev + 30;
+      }
+      if (type === 'decrease') {
+        if (prev == 60) {
+          toast.info(t('createRoom.validation.durationTooShort'));
+          return 60;
+        }
+        return prev - 30;
+      }
+      return prev;
     });
-  };
+  }, [t]);
 
-  const formatTime = (time: Date) => {
-    return time.toLocaleTimeString('vi-VN', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false,
+  const handleSelectPreset = useCallback((preset: RoomPresetItem) => {
+    reset({ roomName: preset.roomName, description: preset.description || '', rules: preset.rules || '' });
+    setSelectedFormat(preset.matchFormat);
+    setDurationMinutes(preset.durationMinutes);
+    setIsPrivate(preset.visibility === 'Private');
+    setPassword(preset.password ?? '');
+    setSelectedField({
+      fieldId: preset.fieldId,
+      fieldName: preset.fieldName || preset.venueName || 'Preset Field',
+      fieldType: preset.matchFormat,
+      hourlyRate: 0,
     });
-  };
+    setSelectedVenue({
+      venueId: preset.fieldId,
+      name: preset.venueName || preset.fieldName || t('createRoom.venuePlaceholder'),
+      address: preset.venueAddress || '',
+      latitude: 0,
+      longitude: 0,
+      description: '',
+      amenities: '',
+      contactPhone: '',
+      contactEmail: '',
+      amentities: null,
+      fields: [],
+      createdAt: new Date().toISOString(),
+    });
+    if (preset.startTime) {
+      const [hours, minutes] = preset.startTime.split(':').map(Number);
+      if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+        const newTime = new Date();
+        newTime.setHours(hours, minutes, 0, 0);
+        setMatchTime(newTime);
+      }
+      setSelectedTimeSlot({
+        startTime: preset.startTime,
+        isAvailable: true,
+        hourlyRate: 0,
+      });
+    }
+  }, [reset, t]);
+
+  const handleSaveCurrentPreset = useCallback(() => {
+    const formData = getValues();
+    if (!selectedField?.fieldId) {
+      showInfo(t('createRoom.title'), t('createRoom.validation.venueRequired'));
+      return;
+    }
+    if (!formData.roomName?.trim()) {
+      showInfo(t('createRoom.title'), t('createRoom.preset.validationName'));
+      return;
+    }
+
+    const startTime = selectedTimeSlot?.startTime
+      ? (selectedTimeSlot.startTime.length === 5 ? `${selectedTimeSlot.startTime}:00` : selectedTimeSlot.startTime)
+      : `${formatTime(matchTime)}:00`;
+
+    createMatchPreset(
+      {
+        fieldId: selectedField.fieldId,
+        roomName: formData.roomName.trim(),
+        matchFormat: selectedFormat,
+        visibility: isPrivate ? 'Private' : 'Public',
+        startTime,
+        durationMinutes,
+        rules: formData.rules || '',
+        password: isPrivate ? password.trim() : '',
+        description: formData.description || '',
+      },
+      {
+        onSuccess: () => {
+          setPresetSheetVisible(false);
+          showSuccess(
+            t('createRoom.preset.savedTitle'),
+            t('createRoom.preset.savedMessage'),
+            () => {},
+            true
+          );
+        },
+        onError: (error: unknown) => {
+          showDanger(
+            t('common.error'),
+            error instanceof Error ? error.message : t('createRoom.preset.saveError'),
+            () => {}
+          );
+        },
+      }
+    );
+  }, [
+    createMatchPreset,
+    durationMinutes,
+    getValues,
+    isPrivate,
+    matchTime,
+    password,
+    selectedField,
+    selectedFormat,
+    selectedTimeSlot?.startTime,
+    showDanger,
+    showInfo,
+    showSuccess,
+    t,
+  ]);
+
   const getErrorMessage = (message?: string) => {
     if (!message) return '';
     return message.startsWith('createRoom.validation.') ? t(message) : message;
@@ -188,6 +331,12 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
   const styles = StyleSheet.create({
     safeArea: {
       paddingVertical: 40,
+    },
+    iconButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     header: {
       flexDirection: 'row',
@@ -200,6 +349,13 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
+      flex: 1,
+    },
+    presetButton: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     backButton: {
       width: 40,
@@ -234,14 +390,11 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       gap: 8,
     },
     durationButton: {
-      flex: 1,
-      paddingVertical: 12,
+      // flex: 1,
+      width: 50,
+      height: 50,
+      borderWidth: 1,
       borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    durationButtonText: {
-      textAlign: 'center',
     },
     inputContainer: {
       borderRadius: 16,
@@ -309,6 +462,20 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
       marginTop: 4,
       marginLeft: 4,
     },
+    durationDisplayText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+    },
+    durationDisplayContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+    },
   });
 
   return (
@@ -324,10 +491,38 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
           >
             <ThemedIcon name="arrow-back"  size={24} variant="secondary" />
           </TouchableOpacity>
-          <ThemedText size="xxl" weight="bold">
+          <ThemedText size="xxl" weight="bold" style={{ flexShrink: 1 }}>
             {t('createRoom.title')}
           </ThemedText>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() =>
+              showInfo(
+                t('createRoom.screenExplainerTitle' , "Tạo phòng đấu"),
+                t('createRoom.screenExplainer' , "Chọn sân và khung giờ để tự động điền ngày & giờ"),
+                undefined,
+                false,
+                0,
+              )
+            }
+            accessibilityRole="button"
+            accessibilityLabel={t('matches.screenExplainerTitle')}
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          onPress={() => setPresetSheetVisible(true)}
+          style={styles.presetButton}
+          accessibilityRole="button"
+          accessibilityLabel={t('createRoom.preset.openButton')}
+        >
+          <ThemedIcon name="bookmark-outline" size={26} variant="accent" />
+        </TouchableOpacity>
       </ThemedView>
 
       <ThemedScrollView showsVerticalScrollIndicator={false}>
@@ -338,14 +533,14 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               {t('createRoom.selectFormat')}
             </ThemedText>
             <View style={styles.formatRow}>
-              {["5vs5", "7vs7" , "11vs11"].map((format) => (
+              {['FiveVsFive', 'SevenVsSeven', 'ElevenVsEleven'].map((format) => (
                 <TouchableOpacity
                   key={format}
                   style={[styles.formatButton, { backgroundColor: selectedFormat === format ? theme.colors.neonGreen : theme.colors.surface }]}
                   onPress={() => setSelectedFormat(format as MatchFormat)}
                 >
                   <ThemedText size="l" weight="bold" style={[styles.formatButtonText, { color: selectedFormat === format ? '#000' : theme.colors.textSecondary }]}>
-                    {format}
+                    {formatMatchFormatVsLabel(format as MatchFormat)}
                   </ThemedText>
                 </TouchableOpacity>
               ))}
@@ -358,39 +553,23 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               {t('createRoom.duration')}
             </ThemedText>
             <View style={styles.durationRow}>
-              {DURATION_OPTIONS.map((duration) => (
-                <TouchableOpacity
-                  key={duration}
-                  style={[
-                    styles.durationButton, 
-                    { 
-                      backgroundColor: durationMinutes === duration 
-                        ? theme.colors.neonGreen 
-                        : theme.colors.surface,
-                      borderWidth: 1,
-                      borderColor: durationMinutes === duration 
-                        ? theme.colors.neonGreen 
-                        : theme.colors.border,
-                    }
-                  ]}
-                  onPress={() => setDurationMinutes(duration)}
-                >
-                  <ThemedText 
-                    size="m" 
-                    weight="semiBold" 
-                    style={[
-                      styles.durationButtonText, 
-                      { 
-                        color: durationMinutes === duration 
-                          ? '#000' 
-                          : theme.colors.textSecondary 
-                      }
-                    ]}
-                  >
-                    {duration} {t('createRoom.minutes')}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
+              <TouchableOpacity
+                style={[styles.durationButton]}
+                onPress={() => handleSetDurationMinutes('decrease')}
+              >
+                <ThemedIcon name="remove-circle" size={50} variant="accent" />
+              </TouchableOpacity> 
+              <View style={styles.durationDisplayContainer}>
+                <ThemedText size="m" weight="semiBold" style={styles.durationDisplayText}>
+                  {durationMinutes} {t('createRoom.minutes')}
+                </ThemedText>
+              </View>
+              <TouchableOpacity
+                style={[styles.durationButton, {alignItems: 'flex-end'}]}
+                onPress={() => handleSetDurationMinutes('increase')}
+              >
+                 <ThemedIcon name="add-circle" size={50} variant="accent" />
+              </TouchableOpacity> 
             </View>
           </View>
             {/* Venue Selection */}
@@ -404,7 +583,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 borderWidth: 1, 
                 borderColor: theme.colors.border 
               }]}
-              onPress={() => navigation?.navigate('VenueSelection', { matchFormat: FormatMatch(selectedFormat) })}
+              onPress={() => navigation?.navigate('VenueSelection', { matchFormat: selectedFormat })}
             >
               {selectedVenue ? (
                 <View style={styles.venueContent}>
@@ -484,6 +663,40 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             </Text>
           )}
           </View>
+          {/* Rules */}
+          <View style={styles.section}>
+            <ThemedText variant='muted' size="m" weight="semiBold" style={styles.sectionTitle}>
+              {t('roomDetail.editRoomInfoRules')}
+            </ThemedText>
+            <Controller
+              control={control}
+              name="rules"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ThemedView
+                  variant="surface"
+                  style={[styles.inputContainer, { borderWidth: 1, borderColor: theme.colors.border }]}
+                >
+                  <TextInput
+                    style={{ color: theme.colors.text, fontSize: 16 }}
+                    multiline
+                    numberOfLines={4}
+                    maxLength={1000}
+                    textAlignVertical="top"
+                    placeholder={t('roomDetail.editRoomInfoRulesPlaceholder')}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </ThemedView>
+              )}
+            />
+          {errors.rules && (
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              {getErrorMessage(errors.rules.message)}
+            </Text>
+          )}
+          </View>
 
           {/* Date and Time - read-only from TimeSlot khi đã chọn sân (DateTimePicker đã tắt) */}
           <View style={styles.dateTimeRow}>
@@ -501,7 +714,7 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
                 pointerEvents="none"
               >
                 <ThemedText variant="muted" size="m">
-                  {formatDate(matchDate)}
+                  {formatDate(matchDate.toISOString(), 'long')}
                 </ThemedText>
                 <ThemedIcon name="calendar" size={20} variant="secondary" />
               </View>
@@ -526,11 +739,6 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
               </View>
             </View>
           </View>
-          {!selectedTimeSlot && (
-            <ThemedText variant="muted" size="s" style={{ marginTop: 4 }}>
-              Chọn sân (venue) và khung giờ để tự động điền ngày & giờ
-            </ThemedText>
-          )}
 
           {/* Room Settings */}
           <View style={styles.section}>
@@ -618,6 +826,15 @@ const CreateRoomScreen: React.FC<CreateRoomScreenProps> = ({ navigation, route }
             autoCloseDelay={alertOptions.autoCloseDelay}
           />
         )}
+
+        <PresetListBottomSheet
+          visible={presetSheetVisible}
+          onClose={() => setPresetSheetVisible(false)}
+          onSelectPreset={handleSelectPreset}
+          onSaveCurrentPreset={handleSaveCurrentPreset}
+          savingCurrentPreset={isCreatingPreset}
+          t={t}
+        />
     </ThemedSafeAreaView>
    
   );

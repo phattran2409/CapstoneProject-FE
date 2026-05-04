@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import { RootStackParamList } from "@/app/navigation/types";
@@ -22,6 +22,10 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFeedbackSessionStore, type MatchResult } from "../store/feedbackSessionStore";
+import { useGenerateSuggestionComment, useVoteMatchResult } from "../hooks/useFeedback";
+import { useToast } from "@/shared/toast";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 const { width } = Dimensions.get("window");
 
@@ -30,32 +34,23 @@ type FeedbackMatchResultScreenNavigationProp = NativeStackNavigationProp<
   "FeedbackMatchResult"
 >;
 
-type FeedbackMatchResultScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "FeedbackMatchResult"
->;
-
 interface FeedbackMatchResultScreenProps {
   navigation: FeedbackMatchResultScreenNavigationProp;
-  route: FeedbackMatchResultScreenRouteProp;
 }
-
-type MatchResult = "A" | "B" | "DRAW";
 
 const CARD_WIDTH = (width - 64) / 2; // 2 cards + margins
 
 const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
   navigation,
-  route,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [selectedResult, setSelectedResult] = useState<MatchResult | null>(
-    null,
-  );
+  const [selectedResult, setSelectedResult] = useState<MatchResult | null>(null);
 
-  // roomId có thể được truyền từ màn trước, nếu chưa có thì để rỗng
-  const roomId = route.params?.roomId ?? "";
+  const session = useFeedbackSessionStore((s) => s.session);
+  const setMatchResult = useFeedbackSessionStore((s) => s.setMatchResult);
+  const voteMatchResultMutation = useVoteMatchResult();
+  const toast = useToast();
 
   // Animations
   const glowOpacity = useSharedValue(0.5);
@@ -78,22 +73,33 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
     transform: [{ scale: winnerScale.value }],
   }));
 
-  const handleBack = () => {
-    navigation.goBack();
+  const handleContinue = async () => {
+    if (!selectedResult || !session) return;
+    try {
+      await voteMatchResultMutation.mutateAsync({
+        roomId: session.roomId,
+        vote: selectedResult,
+      });
+      await setMatchResult(selectedResult);
+      navigation.replace("FeedbackRating");
+    } catch (error: any) {  
+      const detail =
+        getTranslatedError(error?.message) ||
+        t(
+          "feedback.result.voteErrorMessage",
+          "Vui lòng kiểm tra kết nối và thử lại.",
+        );
+      toast.error(
+        t("feedback.result.voteErrorTitle", "Không gửi được kết quả"),
+        detail,
+      );
+    }
   };
 
-  const handleContinue = () => {
-    if (!selectedResult) return;
 
-    navigation.navigate("FeedbackRating", {
-      roomId,
-      matchResult: selectedResult,
-    });
-  };
-
-  const isTeamASelected = selectedResult === "A";
-  const isTeamBSelected = selectedResult === "B";
-  const isDrawSelected = selectedResult === "DRAW";
+  const isTeamASelected = selectedResult === "TeamAWin";
+  const isTeamBSelected = selectedResult === "TeamBWin";
+  const isDrawSelected = selectedResult === "Draw";
 
   return (
     <SafeAreaView
@@ -109,7 +115,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
         style={styles.gradient}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
           <TouchableOpacity
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -125,7 +131,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
         <View style={styles.content}>
           {/* Title */}
           <Text style={[styles.title, { color: theme.colors.text }]}>
-            {t("feedback.result.title", "Ai là người chiến thắng?")}
+            {t("feedback.result.title", "Đội nào đã chiến thắng?")}
           </Text>
           <Text
             style={[
@@ -138,7 +144,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
               "Chọn kết quả cuối cùng của trận đấu để cập nhật bảng xếp hạng.",
             )}
           </Text>
-
           {/* Team Cards */}
           <View style={styles.teamsRow}>
             {/* Team A */}
@@ -148,7 +153,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 styles.teamCardWrapper,
                 isTeamASelected && styles.teamCardWrapperSelected,
               ]}
-              onPress={() => setSelectedResult("A")}
+              onPress={() => setSelectedResult("TeamAWin")}
             >
               {isTeamASelected && (
                 <>
@@ -216,7 +221,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                     },
                   ]}
                 >
-                  {t("feedback.result.teamA", "FC SÀI GÒN")}
+                  {session?.teamAName ?? t("feedback.result.teamA", "Đội A")}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -228,7 +233,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 styles.teamCardWrapper,
                 isTeamBSelected && styles.teamCardWrapperSelected,
               ]}
-              onPress={() => setSelectedResult("B")}
+              onPress={() => setSelectedResult("TeamBWin")}
             >
               {isTeamBSelected && (
                 <>
@@ -296,12 +301,11 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                     },
                   ]}
                 >
-                  {t("feedback.result.teamB", "FC HÀ NỘI")}
+                  {session?.teamBName ?? t("feedback.result.teamB", "Đội B")}
                 </Text>
               </View>
             </TouchableOpacity>
           </View>
-
           {/* Draw Option */}
           <TouchableOpacity
             activeOpacity={0.9}
@@ -314,7 +318,7 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 backgroundColor: theme.colors.surface,
               },
             ]}
-            onPress={() => setSelectedResult("DRAW")}
+            onPress={() => setSelectedResult("Draw")}
           >
             <View style={styles.drawLeft}>
               <Ionicons
@@ -347,37 +351,6 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
               )}
             </View>
           </TouchableOpacity>
-
-          {/* Venue Info */}
-          <View
-            style={[
-              styles.venueCard,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <View style={styles.venueHeader}>
-              <Ionicons
-                name="location"
-                size={16}
-                color={theme.colors.primary}
-              />
-              <Text
-                style={[
-                  styles.venueLabel,
-                  { color: theme.colors.textSecondary },
-                ]}
-              >
-                {t("feedback.result.venueLabel", "SÂN VẬN ĐỘNG")}
-              </Text>
-            </View>
-            <Text style={[styles.venueName, { color: theme.colors.text }]}>
-              {t(
-                "feedback.result.venueName",
-                "Sân bóng Đại học Y, Hà Nội",
-              )}
-            </Text>
-          </View>
-
           {/* Continue Button */}
           <TouchableOpacity
             activeOpacity={0.9}
@@ -390,19 +363,22 @@ const FeedbackMatchResultScreen: React.FC<FeedbackMatchResultScreenProps> = ({
                 opacity: selectedResult ? 1 : 0.6,
               },
             ]}
-            disabled={!selectedResult}
+            disabled={!selectedResult || voteMatchResultMutation.isPending}
             onPress={handleContinue}
           >
-            <Text
-              style={[
-                styles.continueButtonText,
-                { color: theme.colors.background },
-              ]}
-            >
-              {t("feedback.result.continue", "TIẾP TỤC")}
-            </Text>
+            {voteMatchResultMutation.isPending ? (
+              <ActivityIndicator color={theme.colors.background} />
+            ) : (
+              <Text
+                style={[
+                  styles.continueButtonText,
+                  { color: theme.colors.background },
+                ]}
+              >
+                {t("feedback.result.continue", "TIẾP TỤC")}
+              </Text>
+            )}
           </TouchableOpacity>
-
           {/* Footer Note */}
           <Text
             style={[
@@ -435,6 +411,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    borderBottomWidth: 1,
   },
   backButton: {
     width: 40,
@@ -443,8 +420,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
   },
   headerRightPlaceholder: {
     width: 40,
@@ -547,26 +524,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  venueCard: {
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 32,
-  },
-  venueHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
-  },
-  venueLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1,
-  },
-  venueName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+
   continueButton: {
     marginTop: "auto",
     borderRadius: 24,

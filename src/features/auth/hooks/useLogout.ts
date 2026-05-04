@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { setAuthToken } from '@/shared/api/client';
 import { useAuthStore } from '../store/authStore';
+import { useFeedbackSessionStore } from '@/features/feedback/store/feedbackSessionStore';
 
 /**
  * Hook to handle user logout
@@ -22,10 +23,13 @@ export const useLogout = () => {
   const logout = useCallback(async () => {
     // Clear auth token from API client
     await setAuthToken(null);
-    
+
+    // Phiên feedback gắn với user cụ thể — tránh tài khoản sau dùng nhầm session cũ
+    await useFeedbackSessionStore.getState().clearSession();
+
     // Reset auth store (clears user, token, isAuthenticated)
     reset();
-    
+
     // Clear all React Query cache
     queryClient.clear();
   }, [reset, queryClient]);

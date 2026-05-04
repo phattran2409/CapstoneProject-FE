@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedView, ThemedText } from "./themed";
+import { ExpandableText } from "./ExpandableText";
 import { PostMediaGrid } from "./PostMediaGrid";
 import { PostActions } from "./PostActions";
 import { Post } from "@/features/post/types/post.types";
@@ -12,6 +13,7 @@ import { getRelativeTime } from "@/shared/utils";
 import auth from "../firebase";
 import ActionButton from "./ActionButton";
 import { useDeletePost, useUpdatePost } from "@/features/post/hooks";
+import { InviteFriendsModal } from "@/features/rooms/components/InviteFriendsModal";
 
 export interface PostItemProps {
   post: Post;
@@ -43,6 +45,8 @@ export const PostItem: React.FC<PostItemProps> = ({
   const { mutateAsync: updatePost } = useUpdatePost();
   const { mutateAsync: deletePost } = useDeletePost();
 
+  const [shareVisible, setShareVisible] = useState(false);
+
   const handleEditPost = async (postId: string, newContent: string) => {
     await updatePost({ postId, content: newContent });
   };
@@ -59,6 +63,12 @@ export const PostItem: React.FC<PostItemProps> = ({
     // TODO: Implement report API
     console.log("Report post:", postId, reason, customReason);
   };
+
+  const shareUrl = `kickify://post/${post.postId}`;
+  const previewContent = post.content.length > 80
+    ? `${post.content.slice(0, 80)}...`
+    : post.content;
+  const shareMessage = `${post.userFullName} vừa chia sẻ một bài viết:\n\n"${previewContent}"\n\n${shareUrl}`;
 
   return (
     <ThemedView
@@ -139,9 +149,18 @@ export const PostItem: React.FC<PostItemProps> = ({
         onPress={() => onPress?.(post.postId)}
         style={{ paddingHorizontal: theme.spacing.l, marginBottom: 12 }}
       >
-        <ThemedText variant="secondary" size="m" style={styles.postContent}>
-          {post.content}
-        </ThemedText>
+        <ExpandableText
+          text={post.content}
+          maxLines={4}
+          textStyle={[
+            styles.postContent,
+            {
+              color: theme.colors.textSecondary,
+              fontSize: theme.fontSizes.m,
+              fontWeight: theme.fontWeights.regular,
+            },
+          ]}
+        />
       </TouchableOpacity>
 
       {/* Post Media (Images/Videos) */}
@@ -166,9 +185,23 @@ export const PostItem: React.FC<PostItemProps> = ({
             onComment?.(post.postId);
             onPress?.(post.postId);
           }}
-          onShare={() => onShare?.(post.postId)}
+          onShare={() => {
+            if (onShare) {
+              onShare(post.postId);
+            } else {
+              setShareVisible(true);
+            }
+          }}
         />
       </View>
+
+      <InviteFriendsModal
+        visible={shareVisible}
+        roomId={post.postId}
+        shareMessage={shareMessage}
+        onClose={() => setShareVisible(false)}
+        title="Chia sẻ bài viết"
+      />
     </ThemedView>
   );
 };

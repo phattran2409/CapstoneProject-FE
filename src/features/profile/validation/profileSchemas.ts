@@ -25,12 +25,48 @@ const bioField = z
   .optional()
   .or(z.literal(""));
 
-// Phone: optional, E.164 format (^\+?[1-9]\d{1,14}$)
+/**
+ * Backend (FluentValidation): ^\+?[1-9]\d{1,14}$
+ * — Không được bắt đầu bằng 0 sau dấu + tùy chọn (035… bị reject).
+ */
+const BACKEND_PHONE_REGEX = /^\+?[1-9]\d{1,14}$/;
+
+const stripPhoneSeparators = (value: string) =>
+  value.trim().replace(/[\s.-]/g, "");
+
+/**
+ * Chuẩn hóa di động VN → dạng API: 8435… (không 0 đầu), khớp BACKEND_PHONE_REGEX.
+ * Nhận: 035…, +84…, 0084…, hoặc đã là 843…
+ */
+export function normalizeToBackendPhone(raw: string): string {
+  let s = stripPhoneSeparators(raw);
+  if (!s) return "";
+  if (s.startsWith("0084")) {
+    s = s.slice(2);
+  } else if (s.startsWith("+84")) {
+    s = s.slice(1);
+  } else if (/^0(?:3|5|7|8|9)\d{8}$/.test(s)) {
+    s = `84${s.slice(1)}`;
+  }
+  return s;
+}
+
+/**
+ * Sau khi normalize, chỉ chấp nhận di động VN (84 + đầu 3|5|7|8|9 + 8 số),
+ * đồng thời khớp rule BE ^\+?[1-9]\d{1,14}$ (không dùng + trong output).
+ */
+const VN_MOBILE_NORMALIZED_REGEX = /^84(?:3|5|7|8|9)\d{8}$/;
+
+// Phone: optional; chuẩn hóa rồi kiểm tra khớp BE + định dạng di động VN
 const phoneField = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, "validation.profile.phone.invalid")
-  .optional()
-  .or(z.literal(""));
+  .transform((val) => normalizeToBackendPhone(val))
+  .refine(
+    (s) =>
+      s === "" ||
+      (BACKEND_PHONE_REGEX.test(s) && VN_MOBILE_NORMALIZED_REGEX.test(s)),
+    { message: "validation.profile.phone.invalid" },
+  );
 
 // AvatarUrl: optional, must be valid HTTP/HTTPS URL
 const avatarUrlField = z
@@ -149,15 +185,9 @@ export type FootballInfoFormData = z.infer<typeof footballInfoSchema>;
 
 export const POSITIONS = [
   { id: "GK", label: "GK" },
-  { id: "CB", label: "CB" },
-  { id: "LB", label: "LB" },
-  { id: "RB", label: "RB" },
-  { id: "CDM", label: "CDM" },
-  { id: "CM", label: "CM" },
-  { id: "CAM", label: "CAM" },
-  { id: "LW", label: "LW" },
-  { id: "RW", label: "RW" },
-  { id: "ST", label: "ST" },
+  { id: "FW", label: "FW" },
+  { id: "DF", label: "DF" },
+  { id: "CF", label: "CF" },
 ] as const;
 
 export const GENDERS = [

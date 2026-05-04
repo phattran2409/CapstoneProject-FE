@@ -7,8 +7,9 @@ import {
   HttpTransportType,
 } from "@microsoft/signalr";
 import { getAuthToken } from "@/shared/api/client";
+import { API_CONFIG } from "@/shared/constants/api";
 
-const MATCH_ROOM_HUB_URL = "https://api.kickify.site/hubs/matchroom";
+const MATCH_ROOM_HUB_URL = API_CONFIG.SIGNALR.MATCH_ROOM_HUB_URL;
 
 const MATCH_ROOM_HUB_METHODS = {
   JoinRoomGroup: "JoinRoomGroupWithTeam",
@@ -34,6 +35,12 @@ const MATCH_ROOM_HUB_EVENTS = {
   ParticipantPaid: "ParticipantPaid",
   // Formation-related events
   FormationUpdated: "FormationUpdated",
+  // Host transfer events
+  HostTransferRequested: "HostTransferRequested",
+  HostTransferRejected: "HostTransferRejected",
+  HostTransferred : "HostTransferred",
+  // Auto-close countdown event
+  AutoCloseCountdownTick: "AutoCloseCountdownTick",
 } as const;
 
 /**
@@ -76,6 +83,14 @@ export interface UseMatchRoomSignalROptions {
 
   // Formation events
   onFormationUpdated?: (payload: FormationUpdatedPayload) => void;
+
+  // Host transfer events
+  onHostTransferRequested?: (payload: HostTransferRequestedPayload) => void;
+  onHostTransferRejected?: (payload: HostTransferRejectedPayload) => void;
+  onHostTransferred?: (payload: HostTransferredPayload) => void;
+
+  // Auto-close countdown event
+  onAutoCloseCountdownTick?: (payload: AutoCloseCountdownTickPayload) => void;
 }
 
 // ==================== Payload Types ====================
@@ -115,7 +130,6 @@ export interface UserJoinedPayload {
   filledSlots: number;
   totalSlots: number;
   joinedAt: string;
-  // Legacy fields (for backward compatibility)
   teamId?: string;
   teamName?: string;
 }
@@ -130,6 +144,7 @@ export interface UserLeftPayload {
   userName: string;
   filledSlots: number;
   totalSlots: number;
+  totalDepositCollected?: number;
   isRoomDeleted: boolean;
   newHostId?: string | null;
   leftAt: string;
@@ -173,9 +188,9 @@ export interface PlayerKickedPayload {
   kickedUserName: string;
   kickedBy: string;
   reason?: string;
-  // Extended fields from latest documentation
   filledSlots?: number;
   totalSlots?: number;
+  totalDepositCollected?: number;
   kickedAt?: string;
 }
 
@@ -271,6 +286,51 @@ export interface FormationUpdatedPayload {
     position: string; // "Goalkeeper" | "Defender" | "Midfielder" | "Forward"
   }>;
   updatedAt: string;
+}
+
+/**
+ * Payload khi host gửi yêu cầu chuyển quyền host cho một người chơi
+ * Backend: HostTransferRequested event
+ */
+export interface HostTransferRequestedPayload {
+  roomId: string;
+  hostName: string;
+  targetUserId: string;
+  requestedAt: string;
+}
+/**
+ * Payload khi host từ chối yêu cầu chuyển quyền host
+ * Backend: HostTransferRejected event
+ */
+export interface HostTransferRejectedPayload {
+  roomId: string;
+  targetUserName?: string | null; 
+  rejectedAt: string;
+}
+/**
+ * Payload khi host chuyển quyền host thành công
+ * Backend: HostTransferred event
+ */
+export interface HostTransferredPayload {
+  roomId: string;
+  newHostId: string;
+  newHostName: string;
+  transferredAt: string;
+}
+/**
+ * Payload khi server phát event đếm ngược auto-close
+ * Server gửi mỗi 60 giây trong 5 phút cuối trước khi room bị auto-close.
+ */
+export interface AutoCloseCountdownTickPayload {
+  roomId: string;
+  /** Số giây còn lại đến lúc auto-close */
+  secondsRemaining: number;
+  /** Thời điểm room sẽ bị close (UTC ISO string) */
+  closesAtUtc: string;
+  /** Lý do: hiện tại chỉ có "DynamicAutoClose" */
+  reason: string;
+  /** Thời điểm server phát event (UTC ISO string) */
+  tickAt: string;
 }
 
 /**
@@ -489,7 +549,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
 
         // User typing in room
         hubConnection.on("RoomUserTyping", (payload: RoomTypingPayload) => {
-          console.log("⌨️ RoomUserTyping:", payload);
           optionsRef.current.onRoomUserTyping?.(payload);
         });
 
@@ -497,7 +556,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           "RoomUserStopTyping",
           (payload: RoomStopTypingPayload) => {
-            console.log("⌨️ RoomUserStopTyping:", payload);
             optionsRef.current.onRoomUserStopTyping?.(payload);
           },
         );
@@ -506,7 +564,6 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.ParticipantPaid,
           (payload: ParticipantPaidEvent) => {
-            console.log("💵 ParticipantPaid:", payload);
             optionsRef.current.onParticipantPaid?.(payload);
           },
         );
@@ -515,14 +572,49 @@ export const useMatchRoomSignalR = (options: UseMatchRoomSignalROptions) => {
         hubConnection.on(
           MATCH_ROOM_HUB_EVENTS.FormationUpdated,
           (payload: FormationUpdatedPayload) => {
-            console.log("⚽ FormationUpdated:", payload);
             optionsRef.current.onFormationUpdated?.(payload);
           },
         );
 
+        // Host transfer requested
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.HostTransferRequested,
+          (payload: HostTransferRequestedPayload) => {
+            optionsRef.current.onHostTransferRequested?.(payload);
+          },
+        );
+
+        // Host transfer rejected by target user
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.HostTransferRejected,
+          (payload: HostTransferRejectedPayload) => {
+            optionsRef.current.onHostTransferRejected?.(payload);
+          },
+        );
+
+        // Host transferred successfully
+        hubConnection.on(
+          MATCH_ROOM_HUB_EVENTS.HostTransferred,
+          (payload: HostTransferredPayload) => {
+            optionsRef.current.onHostTransferred?.(payload);
+          },
+        );
+
+        // Auto-close countdown tick (5 phút cuối trước khi room bị auto-close)
+        hubConnection.on(MATCH_ROOM_HUB_EVENTS.AutoCloseCountdownTick, (raw: any) => {
+          const payload: AutoCloseCountdownTickPayload = {
+            roomId: raw?.RoomId ?? raw?.roomId ?? "",
+            secondsRemaining: raw?.SecondsRemaining ?? raw?.secondsRemaining ?? 0,
+            closesAtUtc: raw?.ClosesAtUtc ?? raw?.closesAtUtc ?? "",
+            reason: raw?.Reason ?? raw?.reason ?? "",
+            tickAt: raw?.TickAt ?? raw?.tickAt ?? "",
+          };
+          console.log("⏳ AutoCloseCountdownTick:", payload);
+          optionsRef.current.onAutoCloseCountdownTick?.(payload);
+        });
+
         // Error from server
         hubConnection.on(MATCH_ROOM_HUB_EVENTS.Error, (payload: any) => {
-          console.warn("❌ MatchRoom SignalR Error:", payload);
           optionsRef.current.onError?.(payload);
         });
 

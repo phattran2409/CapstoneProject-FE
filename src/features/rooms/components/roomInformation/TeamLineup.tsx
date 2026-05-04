@@ -13,6 +13,8 @@ interface TeamLineupProps {
   isSignalRConnected: boolean;
   currentUserParticipant: MatchRoomParticipant | null;
   isHost: boolean;
+  /** userId của host phòng để hiển thị badge host trên PlayerCard */
+  hostId?: string;
   currentUserId: string | undefined;
   isKicking: boolean;
   onKickPlayer: (userId: string, playerName: string) => void;
@@ -20,6 +22,10 @@ interface TeamLineupProps {
   pendingTeamAssignment: TeamAssignment | null;
   onOpenPositionModal: (teamAssignment: TeamAssignment) => void;
   onParticipantPress?: (userId: string) => void;
+  /** Xem phòng từ lịch sử người chơi khác — tắt kick / ô trống join */
+  roomActionsDisabled?: boolean;
+  teamAName: string;
+  teamBName: string;
 }
 
 export const TeamLineup: React.FC<TeamLineupProps> = ({
@@ -28,6 +34,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   isSignalRConnected,
   currentUserParticipant,
   isHost,
+  hostId,
   currentUserId,
   isKicking,
   onKickPlayer,
@@ -35,9 +42,16 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   pendingTeamAssignment,
   onOpenPositionModal,
   onParticipantPress,
+  roomActionsDisabled = false,
+  teamAName,
+  teamBName,
 }) => {
   const { theme } = useTheme();
   const slotsPerTeam = displayRoom.totalSlots / 2;
+  const canHostActOnParticipants = isHost && !roomActionsDisabled;
+  /** Kick chỉ khi phòng còn Open; host không kick được khi Locked / InProgress / … */
+  const hostCanKickParticipant =
+    canHostActOnParticipants && displayRoom.status === "Open";
 
   return (
     <View style={styles.teamLineupSection}>
@@ -57,7 +71,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
             ]}
           />
           <ThemedText variant="secondary" size="xs">
-            {isSignalRConnected ? 'Live' : 'Offline'}
+            {isSignalRConnected ? t('roomDetail.live') : t('roomDetail.offline', 'Offline')}
           </ThemedText>
         </View>
       </View>
@@ -67,17 +81,22 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         <View style={styles.teamHeader}>
           <ThemedIcon name="shield" size={20} variant="accent" />
           <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-            Team A
+           {teamAName ? teamAName : t('roomDetail.teamA')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'A' && (
             <View
               style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.neonGreen + '30' }]}
             >
               <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                Your Team
+                {t('roomDetail.yourTeam')}
               </ThemedText>
             </View>
           )}
+          <ThemedText variant="secondary" size="xs" weight="medium" style={styles.teamAvgElo}>
+            {t('roomDetail.teamAverageElo', {
+              value: Math.round(displayRoom.teamAAverageElo ?? 0),
+            })}
+          </ThemedText>
         </View>
         <ScrollView
           horizontal
@@ -86,10 +105,12 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         >
           {displayRoom.participants.teamA.map((participant) => (
             <ParticipantCard
+              t={t}
               key={participant.participantId}
               participant={participant}
               teamColor="#4CAF50"
-              isHost={isHost}
+              canKickPlayer={hostCanKickParticipant}
+              isRoomHost={!!hostId && participant.userId === hostId}
               currentUserId={currentUserId}
               isKicking={isKicking}
               onKickPlayer={onKickPlayer}
@@ -101,6 +122,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
               teamAssignment="A"
               teamColor="#4CAF50"
               isJoining={isUpdatingParticipant && pendingTeamAssignment === 'A'}
+              disabled={roomActionsDisabled}
               onPress={() => onOpenPositionModal('A')}
             />
           )}
@@ -110,19 +132,25 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
       {/* Team B */}
       <View style={styles.teamContainer}>
         <View style={styles.teamHeader}>
-          <ThemedIcon name="shield" size={20} variant="accent" />
-          <ThemedText variant="accent" size="m" weight="bold" style={styles.teamName}>
-            Team B
+          <ThemedIcon name="shield" size={20} color={theme.colors.blueSky} />
+      
+          <ThemedText size="m" weight="bold" style={[styles.teamName, { color: theme.colors.blueSky }]}>
+          {teamBName ? teamBName : t('roomDetail.teamB')}
           </ThemedText>
           {currentUserParticipant?.teamAssignment === 'B' && (
             <View
-              style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.neonGreen + '30' }]}
+              style={[styles.selectedTeamBadge, { backgroundColor: theme.colors.blueSky + '30' }]}
             >
-              <ThemedText size="xs" weight="bold" style={{ color: theme.colors.neonGreen }}>
-                Your Team
+              <ThemedText size="xs" weight="bold" style={{ color: theme.colors.blueSky }}>
+                {t('roomDetail.yourTeam')}
               </ThemedText>
             </View>
           )}
+          <ThemedText variant="secondary" size="xs" weight="medium" style={styles.teamAvgElo}>
+            {t('roomDetail.teamAverageElo', {
+              value: Math.round(displayRoom.teamBAverageElo ?? 0),
+            })}
+          </ThemedText>
         </View>
         <ScrollView
           horizontal
@@ -131,10 +159,12 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
         >
           {displayRoom.participants.teamB.map((participant) => (
             <ParticipantCard
+              t={t}
               key={participant.participantId}
               participant={participant}
               teamColor="#2196F3"
-              isHost={isHost}
+              canKickPlayer={hostCanKickParticipant}
+              isRoomHost={!!hostId && participant.userId === hostId}
               currentUserId={currentUserId}
               isKicking={isKicking}
               onKickPlayer={onKickPlayer}
@@ -144,8 +174,9 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           {displayRoom.participants.teamB.length < slotsPerTeam && (
             <EmptySlotCard
               teamAssignment="B"
-              teamColor="#2196F3"
+              teamColor={theme.colors.blueSky}
               isJoining={isUpdatingParticipant && pendingTeamAssignment === 'B'}
+              disabled={roomActionsDisabled}
               onPress={() => onOpenPositionModal('B')}
             />
           )}
@@ -158,7 +189,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           <View style={styles.teamHeader}>
             <ThemedIcon name="people" size={20} variant="secondary" />
             <ThemedText variant="secondary" size="m" weight="bold" style={styles.teamName}>
-              Unassigned
+              {t('roomDetail.unassigned')}
             </ThemedText>
           </View>
           <ScrollView
@@ -168,10 +199,12 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           >
             {displayRoom.participants.unassigned.map((participant) => (
               <ParticipantCard
+                t={t}
                 key={participant.participantId}
                 participant={participant}
                 teamColor="#9E9E9E"
-                isHost={isHost}
+                canKickPlayer={hostCanKickParticipant}
+                isRoomHost={!!hostId && participant.userId === hostId}
                 currentUserId={currentUserId}
                 isKicking={isKicking}
                 onKickPlayer={onKickPlayer}
@@ -213,9 +246,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   teamName: {
     marginLeft: 4,
+    flexShrink: 1,
+  },
+  teamAvgElo: {
+    marginLeft: 'auto',
   },
   selectedTeamBadge: {
     paddingHorizontal: 8,

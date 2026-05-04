@@ -3,21 +3,48 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/shared/theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+/** Icon names coming from the backend (highlightAxis / icon field) */
+type BackendIcon = 'shield' | 'message-circle' | 'star' | 'trophy' | 'people' | string;
+
+/** Map BE icon names → Ionicons glyph names */
+const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
+  shield: 'shield-checkmark-outline',
+  'message-circle': 'chatbubble-ellipses-outline',
+  star: 'star-outline',
+  trophy: 'trophy-outline',
+  people: 'people-outline',
+};
+
+const resolveIcon = (icon?: BackendIcon): keyof typeof Ionicons.glyphMap => {
+  if (!icon) return 'star-outline';
+  if (icon in ICON_MAP) return ICON_MAP[icon];
+  // Try as a direct Ionicons name (already correct)
+  return icon as keyof typeof Ionicons.glyphMap;
+};
+
 interface AIAssessmentCardProps {
   title: string;
   description: string;
-  icon?: keyof typeof Ionicons.glyphMap;
+  /** Backend icon string OR Ionicons glyph name */
+  icon?: BackendIcon;
   iconColor?: string;
+  /** "strength" | "improvement" — controls default icon colour */
+  type?: string;
 }
 
 export const AIAssessmentCard: React.FC<AIAssessmentCardProps> = ({
   title,
   description,
-  icon = 'star',
+  icon,
   iconColor,
+  type,
 }) => {
   const { theme } = useTheme();
-  const finalIconColor = iconColor || theme.colors.neonGreen;
+
+  const defaultColor =
+    type === 'improvement' ? theme.colors.textSecondary : theme.colors.neonGreen;
+  const finalIconColor = iconColor || defaultColor;
+  const resolvedIcon = resolveIcon(icon);
 
   return (
     <View
@@ -31,8 +58,8 @@ export const AIAssessmentCard: React.FC<AIAssessmentCardProps> = ({
         },
       ]}
     >
-      <View style={styles.header}>
-        <Ionicons name={icon} size={20} color={finalIconColor} />
+    <View style={styles.header}>
+        <Ionicons name={resolvedIcon} size={20} color={finalIconColor} />
         <Text
           style={[
             styles.title,

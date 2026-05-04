@@ -1,5 +1,6 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ThemedView, ThemedText } from "./themed";
 import { useTheme } from "@/shared/theme";
 
@@ -8,9 +9,11 @@ interface LoadingMoreIndicatorProps {
 }
 
 export const LoadingMoreIndicator: React.FC<LoadingMoreIndicatorProps> = ({
-  text = "Đang tải thêm...",
+  text,
 }) => {
+  const { t } = useTranslation();
   const { theme } = useTheme();
+  const resolvedText = text ?? t("common.buttons.loadingMore");
 
   return (
     <ThemedView style={styles.container}>
@@ -20,7 +23,7 @@ export const LoadingMoreIndicator: React.FC<LoadingMoreIndicatorProps> = ({
         size="s"
         style={{ marginTop: theme.spacing.s }}
       >
-        {text}
+        {resolvedText}
       </ThemedText>
     </ThemedView>
   );

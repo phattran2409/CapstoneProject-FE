@@ -1,6 +1,15 @@
 /**
  * Date utility functions for formatting and manipulating dates
  */
+import i18n from "../i18n";
+
+type TranslationFunction = (
+  key: string,
+  options?: Record<string, unknown>,
+) => string;
+
+const getResolvedLocale = (locale?: string): string =>
+  locale ?? (i18n.language === "vi" ? "vi-VN" : "en-US");
 
 /**
  * Convert a date string to a relative time string in Vietnamese
@@ -11,7 +20,11 @@
  * getRelativeTime("2024-01-24T10:00:00Z") // "2 giờ trước"
  * getRelativeTime("2024-01-20T10:00:00Z") // "4 ngày trước"
  */
-export const getRelativeTime = (dateString: string): string => {
+export const getRelativeTime = (
+  dateString: string,
+  locale?: string,
+  t: TranslationFunction = i18n.t.bind(i18n),
+): string => {
   const now = new Date();
   const postDate = new Date(dateString);
   const diffInMs = now.getTime() - postDate.getTime();
@@ -19,11 +32,12 @@ export const getRelativeTime = (dateString: string): string => {
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInMinutes < 1) return "Vừa xong";
-  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
-  if (diffInHours < 24) return `${diffInHours} giờ trước`;
-  if (diffInDays < 7) return `${diffInDays} ngày trước`;
-  return postDate.toLocaleDateString("vi-VN");
+  if (diffInMinutes < 1) return t("dateTime.justNow");
+  if (diffInMinutes < 60)
+    return t("dateTime.minutesAgo", { count: diffInMinutes });
+  if (diffInHours < 24) return t("dateTime.hoursAgo", { count: diffInHours });
+  if (diffInDays < 7) return t("dateTime.daysAgo", { count: diffInDays });
+  return postDate.toLocaleDateString(getResolvedLocale(locale));
 };
 
 /**
@@ -37,10 +51,10 @@ export const getRelativeTime = (dateString: string): string => {
  */
 export const formatDate = (
   dateString: string,
-  locale: string = "vi-VN",
+  locale?: string,
 ): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString(locale);
+  return date.toLocaleDateString(getResolvedLocale(locale));
 };
 
 /**
@@ -54,10 +68,31 @@ export const formatDate = (
  */
 export const formatDateTime = (
   dateString: string,
-  locale: string = "vi-VN",
+  locale?: string,
 ): string => {
   const date = new Date(dateString);
-  return date.toLocaleString(locale);
+  return date.toLocaleString(getResolvedLocale(locale));
+};
+
+/**
+ * Format a time to a localized time string
+ * @param time - Date object
+ * @returns Formatted time string
+ *
+ * @example
+ * formatTime("2024-01-24T10:00:00Z") // "10:00:00"
+ */
+export const formatTime = (time: Date, locale?: string): string => {
+  return time.toLocaleTimeString(getResolvedLocale(locale), {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
+
+export const formatTimeToHHMM = (time: string): string => {
+  return time.substring(0, 5);
 };
 
 /**
@@ -104,8 +139,35 @@ export const formatDateDDMMYYYY = (yyyyMmDd: string): string => {
     const [yyyy, mm, dd] = parts;
     if (yyyy && mm && dd) return `${dd}/${mm}/${yyyy}`;
   }
-  return new Date(yyyyMmDd).toLocaleDateString("vi-VN");
-};  
+  return new Date(yyyyMmDd).toLocaleDateString(getResolvedLocale());
+};
+
+/**
+ * Format date with Vietnamese "today" label.
+ * - If date is today => "Hôm nay"
+ * - Else => dd/mm/yyyy (2-digit day/month)
+ */
+export const formatDateWithTodayLabel = (
+  dateInput: string | Date | number,
+  locale?: string,
+  t: TranslationFunction = i18n.t.bind(i18n),
+): string => {
+  if (dateInput === undefined || dateInput === null) return "";
+
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  const isTodayLabel = date.toDateString() === now.toDateString();
+
+  return isTodayLabel
+    ? t("dateTime.today")
+    : date.toLocaleDateString(getResolvedLocale(locale), {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+};
 
 export const getMaxSelectableDate = () => {
     const d = new Date();
@@ -119,4 +181,17 @@ export const getMinSelectableDate = () => {
     d.setDate(d.getDate() - 1);
     d.setHours(0, 0, 0, 0);
     return d;
+};
+
+export const getDayName = (dayOfWeek: number): string => {
+  const days = [
+    i18n.t("dateTime.dayNames.sunday"),
+    i18n.t("dateTime.dayNames.monday"),
+    i18n.t("dateTime.dayNames.tuesday"),
+    i18n.t("dateTime.dayNames.wednesday"),
+    i18n.t("dateTime.dayNames.thursday"),
+    i18n.t("dateTime.dayNames.friday"),
+    i18n.t("dateTime.dayNames.saturday"),
+  ];
+  return days[dayOfWeek] || "";
 };

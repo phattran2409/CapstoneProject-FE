@@ -3,6 +3,7 @@ import { View, Text, FlatList, ListRenderItem, TouchableOpacity, Linking } from 
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useJoinRoomAsUnassigned } from "@/features/rooms";
 
 export interface Message {
   id: string;
@@ -51,6 +52,8 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
   ) => {
     const { theme } = useTheme();
     const { t } = useTranslation();
+    const { mutate: joinRoomAsUnassigned, isPending: isJoiningRoom } =
+      useJoinRoomAsUnassigned();
     const flatListRef = useRef<FlatList>(null);
     const isAtBottomRef = useRef(true);
     const lastMessageCountRef = useRef(messages.length);
@@ -102,16 +105,40 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
 
     const renderMessage: ListRenderItem<Message> = useCallback(
       ({ item }) => {
-        // Detect room invite deep link in message text
+        // Detect deep links in message text
         const roomLinkMatch = item.text.match(/(kickify:\/\/room\/\S+)/);
         const roomLink = roomLinkMatch?.[1];
 
+        const postLinkMatch = item.text.match(/(kickify:\/\/post\/\S+)/);
+        const postLink = postLinkMatch?.[1];
+
+        const userLinkMatch = item.text.match(/(kickify:\/\/user\/\S+)/);
+        const userLink = userLinkMatch?.[1];
+
+        const handleDeepLink = (url: string) => {
+          Linking.openURL(url).catch(() => {});
+        };
+
         const handleJoinRoom = () => {
-          if (roomLink) {
-            Linking.openURL(roomLink).catch(() => {
-              // Silent fail; optionally could show a toast if app has one here
-            });
-          }
+          const taggedRoomIdMatch = item.text.match(/\[ROOM_ID:([^\]]+)\]/);
+          const taggedRoomId = taggedRoomIdMatch?.[1]?.trim();
+          const roomIdFromLink = roomLink?.replace("kickify://room/", "").split(/[/?#]/)[0];
+          const roomId = taggedRoomId || roomIdFromLink;
+
+          if (!roomId) return;
+
+          joinRoomAsUnassigned(
+            { roomId },
+            {
+              onSuccess: () => {
+                handleDeepLink(roomLink || `kickify://room/${roomId}`);
+              },
+              onError: () => {
+                // Fallback mở deeplink để user vẫn có thể vào màn room
+                handleDeepLink(roomLink || `kickify://room/${roomId}`);
+              },
+            },
+          );
         };
 
         return (
@@ -167,7 +194,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                     color: item.isOwn ? theme.colors.black : theme.colors.text,
                   }}
                 >
-                  {item.text}
+                  {item.text.replace(/\n?\[ROOM_ID:[^\]]+\]/g, "")}
                 </Text>
 
                 {roomLink && (
@@ -183,17 +210,84 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                       paddingHorizontal: 10,
                       alignSelf: "flex-start",
                     }}
+                    disabled={isJoiningRoom}
                   >
                     <Text
                       style={{
                         fontSize: theme.fontSizes.s,
                         fontWeight: "600",
-                        color: item.isOwn
-                          ? theme.colors.neonGreen
-                          : "#000",
+                        color: item.isOwn ? theme.colors.neonGreen : "#000",
                       }}
                     >
                       Tham gia phòng
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {postLink && (
+                  <TouchableOpacity
+                    onPress={() => handleDeepLink(postLink)}
+                    style={{
+                      marginTop: theme.spacing.s,
+                      backgroundColor: item.isOwn
+                        ? theme.colors.black
+                        : theme.colors.neonGreen,
+                      borderRadius: theme.radius.s,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      alignSelf: "flex-start",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons
+                      name="newspaper-outline"
+                      size={14}
+                      color={item.isOwn ? theme.colors.neonGreen : "#000"}
+                    />
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.s,
+                        fontWeight: "600",
+                        color: item.isOwn ? theme.colors.neonGreen : "#000",
+                      }}
+                    >
+                      Xem bài viết
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {userLink && (
+                  <TouchableOpacity
+                    onPress={() => handleDeepLink(userLink)}
+                    style={{
+                      marginTop: theme.spacing.s,
+                      backgroundColor: item.isOwn
+                        ? theme.colors.black
+                        : theme.colors.neonGreen,
+                      borderRadius: theme.radius.s,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      alignSelf: "flex-start",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons
+                      name="person-outline"
+                      size={14}
+                      color={item.isOwn ? theme.colors.neonGreen : "#000"}
+                    />
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.s,
+                        fontWeight: "600",
+                        color: item.isOwn ? theme.colors.neonGreen : "#000",
+                      }}
+                    >
+                      Xem hồ sơ
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -252,7 +346,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           </View>
         );
       },
-      [theme, t],
+      [theme, t, joinRoomAsUnassigned, isJoiningRoom],
     );
 
     // Handle content size change để auto scroll khi content được render

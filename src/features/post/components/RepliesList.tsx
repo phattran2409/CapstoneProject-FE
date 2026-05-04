@@ -9,15 +9,19 @@ import { useToggleCommentLike } from "../hooks";
 
 interface RepliesListProps {
   commentId: string;
+  postId: string;
 }
 
-export const RepliesList: React.FC<RepliesListProps> = ({ commentId }) => {
+export const RepliesList: React.FC<RepliesListProps> = ({
+  commentId,
+  postId,
+}) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
   const { replies, loading, hasMore, loadMore } = usePaginatedReplies({
     commentId,
-    pageSize: 5, 
+    pageSize: 5,
   });
 
   const { mutate: toggleLike } = useToggleCommentLike();
@@ -42,7 +46,13 @@ export const RepliesList: React.FC<RepliesListProps> = ({ commentId }) => {
         <ReplyItem
           key={reply.commentId}
           reply={reply}
-          onLike={() => toggleLike(reply.commentId)}
+          onLike={() =>
+            toggleLike({
+              commentId: reply.commentId,
+              postId,
+              parentCommentId: commentId,
+            })
+          }
         />
       ))}
 

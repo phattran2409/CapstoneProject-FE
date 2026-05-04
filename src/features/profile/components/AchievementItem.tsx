@@ -11,8 +11,9 @@ export interface Achievement {
   description: string;
   icon: keyof typeof Ionicons.glyphMap;
   isUnlocked: boolean;
+  status?: string; // "InProgress" | "Claimable" | "Claimed"
   unlockedAt?: string;
-  progress?: number; // 0-100 for locked achievements
+  progress?: number; // 0-100
   rarity?: "common" | "rare" | "epic" | "legendary";
 }
 
@@ -43,9 +44,11 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
   };
 
   const rarityColor = getRarityColor(achievement.rarity);
-  const isLocked = !achievement.isUnlocked;
+  const isClaimable = achievement.status === "Claimable";
+  const isUnlocked = achievement.isUnlocked || isClaimable;
+  const isLocked = !isUnlocked;
+  const progress = achievement.progress ?? 0;
 
-  // Format unlock date
   const formatDate = (dateString?: string): string => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -56,6 +59,30 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
     });
   };
 
+  const badgeColor = isClaimable
+    ? "#FFD700"
+    : isUnlocked
+      ? theme.colors.success
+      : "rgba(80,80,80,0.9)";
+
+  const badgeIcon: keyof typeof Ionicons.glyphMap = isClaimable
+    ? "gift"
+    : isUnlocked
+      ? "checkmark"
+      : "lock-closed";
+
+  const iconColor = isLocked
+    ? theme.colors.textSecondary
+    : isClaimable
+      ? "#FFD700"
+      : rarityColor;
+
+  const gradientColors: [string, string] = isLocked
+    ? ["rgba(255,255,255,0.03)", "transparent"]
+    : isClaimable
+      ? ["rgba(255,215,0,0.12)", "transparent"]
+      : [`${rarityColor}20`, "transparent"];
+
   return (
     <TouchableOpacity
       onPress={() => onPress?.(achievement)}
@@ -63,82 +90,78 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
       disabled={!onPress}
     >
       <BlurView
-        intensity={isLocked ? 20 : 40}
+        intensity={isLocked ? 15 : 40}
         tint="dark"
         style={[
           styles.container,
           {
             borderRadius: theme.radius.m,
-            opacity: isLocked ? 0.6 : 1,
+            opacity: isLocked ? 0.55 : 1,
+            borderColor: isClaimable
+              ? "rgba(255,215,0,0.35)"
+              : "rgba(255,255,255,0.1)",
           },
         ]}
       >
         <LinearGradient
-          colors={
-            isLocked
-              ? ["rgba(255,255,255,0.05)", "transparent"]
-              : [`${rarityColor}20`, "transparent"]
-          }
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          {/* Icon Section */}
+          {/* Icon */}
           <View
             style={[
               styles.iconContainer,
               {
                 backgroundColor: isLocked
-                  ? `${theme.colors.border}30`
-                  : `${rarityColor}30`,
+                  ? `${theme.colors.border}20`
+                  : isClaimable
+                    ? "rgba(255,215,0,0.18)"
+                    : `${rarityColor}30`,
               },
             ]}
           >
-            <Ionicons
-              name={isLocked ? "lock-closed" : achievement.icon}
-              size={32}
-              color={isLocked ? theme.colors.textSecondary : rarityColor}
-            />
-            {!isLocked && achievement.rarity && (
-              <View
-                style={[styles.rarityBadge, { backgroundColor: rarityColor }]}
-              >
-                <Ionicons name="star" size={10} color="#FFFFFF" />
-              </View>
-            )}
+            <Ionicons name={achievement.icon} size={32} color={iconColor} />
+            <View
+              style={[styles.statusBadge, { backgroundColor: badgeColor }]}
+            >
+              <Ionicons name={badgeIcon} size={9} color="#FFFFFF" />
+            </View>
           </View>
 
-          {/* Content Section */}
+          {/* Content */}
           <View style={styles.content}>
+            <View style={styles.titleRow}>
+              <Text
+                style={[
+                  styles.title,
+                  { color: isLocked ? theme.colors.textSecondary : theme.colors.text },
+                ]}
+                numberOfLines={1}
+              >
+                {achievement.title}
+              </Text>
+              {isClaimable && (
+                <View style={styles.claimableBadge}>
+                  <Text style={styles.claimableText}>Có thể nhận</Text>
+                </View>
+              )}
+            </View>
+
             <Text
-              style={[
-                styles.title,
-                {
-                  color: isLocked
-                    ? theme.colors.textSecondary
-                    : theme.colors.text,
-                },
-              ]}
-              numberOfLines={1}
-            >
-              {isLocked ? "???" : achievement.title}
-            </Text>
-            <Text
-              style={[
-                styles.description,
-                { color: theme.colors.textSecondary },
-              ]}
+              style={[styles.description, { color: theme.colors.textSecondary }]}
               numberOfLines={2}
             >
-              {isLocked ? "Thành tựu bị khóa" : achievement.description}
+              {achievement.description}
             </Text>
 
-            {/* Progress bar for locked achievements */}
-            {isLocked && achievement.progress !== undefined && (
-              <View style={styles.progressContainer}>
+            {/* Progress bar (hiện khi chưa unlock hoặc đang claimable) */}
+            {!achievement.isUnlocked && (
+              <View style={styles.progressWrapper}>
                 <View
                   style={[
-                    styles.progressBar,
+                    styles.progressTrack,
                     { backgroundColor: `${theme.colors.border}40` },
                   ]}
                 >
@@ -146,34 +169,27 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
                     style={[
                       styles.progressFill,
                       {
-                        width: `${achievement.progress}%`,
-                        backgroundColor: theme.colors.neonGreen,
+                        width: `${Math.min(progress, 100)}%`,
+                        backgroundColor: isClaimable ? "#FFD700" : theme.colors.neonGreen,
                       },
                     ]}
                   />
                 </View>
-                <Text
-                  style={[
-                    styles.progressText,
-                    { color: theme.colors.textSecondary },
-                  ]}
-                >
-                  {achievement.progress}%
+                <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
+                  {Math.round(progress)}%
                 </Text>
               </View>
             )}
 
-            {/* Unlock date for unlocked achievements */}
-            {!isLocked && achievement.unlockedAt && (
+            {/* Ngày mở khóa */}
+            {achievement.isUnlocked && achievement.unlockedAt && (
               <View style={styles.unlockInfo}>
                 <Ionicons
                   name="checkmark-circle"
                   size={14}
                   color={theme.colors.success}
                 />
-                <Text
-                  style={[styles.unlockDate, { color: theme.colors.success }]}
-                >
+                <Text style={[styles.unlockDate, { color: theme.colors.success }]}>
                   Mở khóa: {formatDate(achievement.unlockedAt)}
                 </Text>
               </View>
@@ -206,16 +222,16 @@ const styles = StyleSheet.create({
     marginRight: 16,
     position: "relative",
   },
-  rarityBadge: {
+  statusBadge: {
     position: "absolute",
     top: 0,
     right: 0,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#1A1A1A",
   },
   content: {
@@ -232,12 +248,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 8,
   },
-  progressContainer: {
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 4,
   },
-  progressBar: {
+  claimableBadge: {
+    backgroundColor: "rgba(255,215,0,0.18)",
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.5)",
+  },
+  claimableText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFD700",
+  },
+  progressWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+  progressTrack: {
     flex: 1,
     height: 6,
     borderRadius: 3,
@@ -250,12 +286,14 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 11,
     fontWeight: "600",
-    minWidth: 35,
+    minWidth: 32,
+    textAlign: "right",
   },
   unlockInfo: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    marginTop: 6,
   },
   unlockDate: {
     fontSize: 12,

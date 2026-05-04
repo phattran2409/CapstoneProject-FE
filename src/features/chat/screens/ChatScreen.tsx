@@ -157,7 +157,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const handleScrollToBottom = useCallback((isAtBottom: boolean) => {
     isAtBottomRef.current = isAtBottom;
   }, []);
-
+  
   // Handle layout để scroll khi FlatList đã render xong
   const handleMessageListLayout = useCallback(() => {
     if (
@@ -243,8 +243,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
     return (
       <EmptyState
         icon="chatbubble-ellipses-outline"
-        title={t("chat.empty")}
-        description={t("chat.inviteFriends")}
+        title={t("chat.noMessages")}
+        description={t("chat.noMessagesDescription")}
       />
     );
   };

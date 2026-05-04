@@ -28,6 +28,7 @@ import { PostMedia } from "../types/post.types";
 import { useAuthStore } from "@/features/auth";
 import * as ImagePicker from "expo-image-picker";
 import { useToast } from "@/shared/toast";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
 
 type CreatePostScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -220,12 +221,13 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
         setMedia([...media, newMedia]);
         setMediaError(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error taking photo:", error);
       toast.error(
-        t("post.media.errorMessage", {
-          defaultValue: "Không thể chụp ảnh/quay video. Vui lòng thử lại.",
-        }),
+        getTranslatedError(error?.message) ||
+          t("post.media.errorMessage", {
+            defaultValue: "Không thể chụp ảnh/quay video. Vui lòng thử lại.",
+          }),
       );
     }
   }, [media, t]);
@@ -306,12 +308,13 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
         }),
       );
       navigation.goBack();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating post:", error);
       toast.error(
-        t("post.create.errorMessage", {
-          defaultValue: "Không thể tạo bài viết. Vui lòng thử lại.",
-        }),
+        getTranslatedError(error?.message) ||
+          t("post.create.errorMessage", {
+            defaultValue: "Không thể tạo bài viết. Vui lòng thử lại.",
+          }),
       );
     }
   }, [content, media, createPost, navigation, t]);

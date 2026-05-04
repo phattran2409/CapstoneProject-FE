@@ -29,6 +29,7 @@ import {
   PostItem,
   Post,
   ProfileSkeleton,
+  MatchListSkeleton,
   ErrorState,
   EmptyState,
   LoadingMoreIndicator,
@@ -37,17 +38,26 @@ import {
   usePaginatedUserPosts,
   useTogglePostLike,
 } from "@/features/post/hooks";
-import { useSendFriendRequest, useUserProfile } from "../hooks";
+import {
+  useSendFriendRequest,
+  useUserProfile,
+  useMyRadarChart,
+} from "../hooks";
 import {
   useGetFriendshipStatus,
   useRemoveFriend,
   useRespondToFriendRequest,
 } from "@/features/friends/hooks";
-import { useMyRooms } from "@/features/rooms/hooks/useMatchRooms";
-import { useUpdateProfile, useUpdateAvatar } from "../hooks/useProfile";
+import {
+  useMyRooms,
+  useHistoryRooms,
+} from "@/features/rooms/hooks/useMatchRooms";
+import { useUpdateProfile, useUpdateAvatar, useUserRadarChart } from "../hooks/useProfile";
 import { useToast } from "@/shared/toast";
 import { formatDate } from "@/shared/utils";
 import { getImageSource } from "@/shared/utils/imageSource";
+import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { MyRoom } from "@/features/rooms/types/room.types";
 
 type PersonalPageScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -66,7 +76,10 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
   };
 
   return {
-    id: room.roomId,
+    id: String(
+      room?.roomId ??
+        `${room?.roomName ?? "room"}-${room?.matchDate ?? "date"}-${room?.startTime ?? "start"}`,
+    ),
     title:
       room.roomName ||
       room.field?.fieldName ||
@@ -74,8 +87,9 @@ const convertMyRoomToMatchItemData = (room: any): MatchItemData => {
       "Unknown",
     format: formatMap[room.matchFormat] || room.matchFormat,
     players: `${room.filledSlots}/${room.totalSlots}`,
-    image: getImageSource(room.venuePhotos?.[0]?.photoUrl),
+    image: getImageSource(room.venuePhotos[0]?.photoUrl),
     status: room.status,
+    myMatchOutCome: room.myMatchOutcome,
     date: formatDate(room.matchDate),
     venue: room.field?.venue?.venueName,
     time: `${room.startTime.substring(0, 5)} - ${room.endTime.substring(0, 5)}`,
@@ -99,7 +113,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   // Get userId from params or fallback to current user
   const userId = route.params?.userId || currentUser?.userId || "";
   const isCurrentUser = userId === currentUser?.userId;
-  console.log("isCurrentUser", isCurrentUser);
 
   // UI State
   const [activeTab, setActiveTab] = useState<TabType>("posts");
@@ -143,7 +156,11 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     pageSize: 10,
   });
 
-  // Matches data - only fetch for current user
+  const myRoomsQuery = useMyRooms(undefined, { enabled: isCurrentUser });
+  const historyRoomsQuery = useHistoryRooms(userId, {
+    enabled: !isCurrentUser && !!userId,
+  });
+
   const {
     myRooms: matches,
     loading: matchesLoading,
@@ -153,25 +170,30 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     hasMore: matchesHasMore,
     refresh: matchesRefresh,
     loadMore: matchesLoadMore,
-  } = useMyRooms();
+  } = isCurrentUser ? myRoomsQuery : historyRoomsQuery;
 
-  const stats = {
-    matches: 88,
-    winRate: 75,
-  };
-
-  const radarData = {
-    WinLoss: 75,
-    Perf: 85,
-    Feedback: 70,
-    Sentiment: 80,
-    Trust: 75,
-    RoleFactor: 65,
-  };
-
+  const myRadarQuery = useMyRadarChart(isCurrentUser);
+  const userRadarQuery = useUserRadarChart(
+    userId,
+    !isCurrentUser,
+  );
+  const { data: analysisRadarData, isLoading: analysisRadarLoading } = isCurrentUser
+    ? myRadarQuery
+    : userRadarQuery;
+  
+  console.log("analysisRadarData", analysisRadarData);
   // Memoize converted matches
   const listMatches = useMemo(() => {
-    return matches.map(convertMyRoomToMatchItemData);
+    const seen = new Set<string>();
+    return matches
+      .filter((room) => {
+        const id = String(room?.roomId ?? "");
+        if (!id) return true;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .map(convertMyRoomToMatchItemData);
   }, [matches]);
 
   // Handle scroll for pagination
@@ -244,9 +266,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           toast.success(t("personalPage.editForm.toast.updateSuccess"));
           setShowEditForm(false);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Error updating profile:", error);
-          toast.error(t("personalPage.editForm.toast.updateError"));
+          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
         },
       },
     );
@@ -265,7 +287,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
   const handleViewDetail = (matchId: string) => {
     setModalVisible(false);
     setSelectedMatch(null);
-    navigation.navigate("RoomInformation", { roomId: matchId });
+    navigation.navigate("RoomInformation", {
+      roomId: matchId,
+      viewAsOthersMatchHistory: !isCurrentUser,
+    });
   };
 
   const handleAddFriend = () => {
@@ -274,8 +299,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         console.log("Friend request sent successfully");
         refetchStatus();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Failed to send friend request:", error);
+        toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
       },
     });
   };
@@ -286,8 +312,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
         console.log("Friend removed successfully");
         refetchStatus();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Failed to remove friend:", error);
+        toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
       },
     });
   };
@@ -300,8 +327,9 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
           console.log("Friend request accepted");
           refetchStatus();
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Failed to accept friend request:", error);
+          toast.error(getTranslatedError(error?.message) || t("personalPage.editForm.toast.updateError"));
         },
       },
     );
@@ -421,6 +449,52 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
               }
             />
 
+            {isCurrentUser && (
+              <View style={{ marginHorizontal: theme.spacing.m, marginBottom: theme.spacing.m, gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("ReceivedFeedback")}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: theme.spacing.m,
+                    paddingHorizontal: theme.spacing.m,
+                    borderRadius: theme.radius?.m ?? 12,
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    gap: 10,
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("personalPage.receivedFeedback.title")}
+                >
+                  <Ionicons
+                    name="chatbox-ellipses-outline"
+                    size={22}
+                    style={{ paddingLeft: 15 }}
+                    color={theme.colors.neonGreen}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: theme.fontSizes.m,
+                        fontWeight: "700",
+                        color: theme.colors.text,
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("personalPage.receivedFeedback.title")}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Navigation Tabs */}
             <View
               style={{
@@ -499,7 +573,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
             {activeTab === "history" && (
               <View style={{ flex: 1 }}>
                 {/* Loading State */}
-                {matchesLoading && <ProfileSkeleton />}
+                {matchesLoading && <MatchListSkeleton />}
 
                 {/* Error State */}
                 {matchesError && (
@@ -538,7 +612,10 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
 
             {/* Analysis Tab */}
             {activeTab === "analysis" && (
-              <AnalysisTab stats={stats} radarData={radarData} />
+              <AnalysisTab
+                radarData={analysisRadarData ?? null}
+                isLoading={analysisRadarLoading}
+              />
             )}
           </View>
         </ScrollView>

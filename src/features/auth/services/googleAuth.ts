@@ -1,29 +1,40 @@
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import Constants from 'expo-constants';
 
-// Configure Google Sign-In (chỉ cần gọi 1 lần khi app start)
-// Lấy webClientId từ environment variable
+/**
+ * Web OAuth client (client_type 3 trong google-services.json).
+ * - Ưu tiên EXPO_PUBLIC_GOOGLE_CLIENT_ID (.env local)
+ * - Fallback: expo.extra.googleWebClientId (app.json) — bắt buộc cho EAS build vì .env không lên cloud
+ */
 const getWebClientId = (): string => {
-  const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID as string | undefined;
-  return clientId ?? '';
+  const fromEnv = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID as string | undefined;
+  const fromExtra = Constants.expoConfig?.extra?.googleWebClientId as string | undefined;
+  const id = (fromEnv?.trim() || fromExtra?.trim() || '').trim();
+  return id;
 };
 
-// Configure Google Sign-In
-const webClientId = getWebClientId();
-if (!webClientId) {
-  console.error('⚠️ EXPO_PUBLIC_GOOGLE_CLIENT_ID is not set in .env file!');
-} else {
-  console.log('✅ Google Sign-In configured with Web Client ID:', webClientId.substring(0, 30) + '...');
-}
+let didConfigureGoogleSignIn = false;
 
-GoogleSignin.configure({
-  webClientId: webClientId, // Web client ID từ Firebase (phải là Web Client ID, không phải Android)
-  offlineAccess: true, // Nếu cần access token
-  forceCodeForRefreshToken: true, // Android
-  // Additional configuration for better error handling
-  scopes: ['profile', 'email'], // Request profile and email scopes
-});
+/**
+ * offlineAccess + forceCodeForRefreshToken:true đôi khi gây DEVELOPER_ERROR trên Android
+ * khi không cần server auth code. Firebase chỉ cần idToken → giữ đơn giản.
+ */
+const ensureGoogleSignInConfigured = () => {
+  const webClientId = getWebClientId();
+  if (!webClientId) {
+    return;
+  }
+  if (didConfigureGoogleSignIn) return;
+  didConfigureGoogleSignIn = true;
+  GoogleSignin.configure({
+    webClientId,
+    offlineAccess: false,
+    forceCodeForRefreshToken: false,
+    scopes: ['profile', 'email'],
+  });
+};
 
 /**
  * Sign in with Google using Firebase Native SDK (giống Flutter)
@@ -34,11 +45,11 @@ GoogleSignin.configure({
  */
 export const signInWithGoogle = async () => {
   try {
+    ensureGoogleSignInConfigured();
     const webClientId = getWebClientId();
-
     if (!webClientId) {
       throw new Error(
-        'Google Client ID not configured. Please add EXPO_PUBLIC_GOOGLE_CLIENT_ID to your environment variables.'
+        'Google Client ID not configured. Add EXPO_PUBLIC_GOOGLE_CLIENT_ID to .env or googleWebClientId in app.json extra.',
       );
     }
 
@@ -114,6 +125,7 @@ export const getCurrentUser = (): FirebaseAuthTypes.User | null => {
  */
 export const signOut = async () => {
   try {
+    ensureGoogleSignInConfigured();
     await GoogleSignin.signOut();
     await auth().signOut();
   } catch (error) {
@@ -127,6 +139,7 @@ export const signOut = async () => {
  */
 export const isSignedIn = async (): Promise<boolean> => {
   try {
+    ensureGoogleSignInConfigured();
     const user = await GoogleSignin.getCurrentUser();
     return user !== null;
   } catch (error) {
@@ -139,6 +152,7 @@ export const isSignedIn = async (): Promise<boolean> => {
  */
 export const getCurrentGoogleUser = async () => {
   try {
+    ensureGoogleSignInConfigured();
     const userInfo = await GoogleSignin.getCurrentUser();
     return userInfo;
   } catch (error) {

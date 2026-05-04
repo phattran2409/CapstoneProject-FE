@@ -34,7 +34,10 @@ import { useAppStore } from "@/store/appStore";
 import { RootStackParamList, TabParamList } from "@/app/navigation/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useScrollToHideTabBar } from "@/shared/hooks/useScrollToHideTabBar";
-import { use } from "i18next";
+import {
+  useNotificationSettings,
+  useUpdateNotificationSettings,
+} from "../hooks";
 
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, "Profile">,
@@ -54,7 +57,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [matchNotifications, setMatchNotifications] = useState(true);
   const [postNotifications, setPostNotifications] = useState(false);
   const [notificationExpanded, setNotificationExpanded] = useState(false);
+  const [friendshipNotifications, setFriendshipNotifications] = useState(false);
+  const [chatNotifications, setChatNotifications] = useState(false);
   const chevronRotation = useRef(new Animated.Value(0)).current;
+
+  const { data: notificationSettings } = useNotificationSettings();
+  const { mutate: updateNotificationSettings } =
+    useUpdateNotificationSettings();
+
+  // Sync local state when data is loaded from API
+  React.useEffect(() => {
+    if (notificationSettings) {
+      setMatchNotifications(notificationSettings.matchRoom);
+      setPostNotifications(notificationSettings.post);
+      setFriendshipNotifications(notificationSettings.friendship);
+      setChatNotifications(notificationSettings.chat);
+    }
+  }, [notificationSettings]);
 
   if (Platform.OS === "android") {
     UIManager.setLayoutAnimationEnabledExperimental &&
@@ -175,7 +194,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 }}
                 numberOfLines={1}
               >
-                Trang cá nhân
+                {t("profile.personalPage")}
               </Text>
             </View>
 
@@ -214,6 +233,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   marginBottom: theme.spacing.xs,
                 },
               ]}
+              onPress={() =>
+                navigation.navigate("ChangePassword", {
+                  email: user?.email || "",
+                })
+              }
             >
               <Ionicons
                 name="lock-closed-outline"
@@ -238,7 +262,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 color={theme.colors.textSecondary}
               />
             </TouchableOpacity>
-           
           </View>
 
           {/* Notifications Section */}
@@ -362,7 +385,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   </Text>
                   <Switch
                     value={matchNotifications}
-                    onValueChange={setMatchNotifications}
+                    onValueChange={(val) => {
+                      setMatchNotifications(val);
+                      updateNotificationSettings({
+                        matchRoom: val,
+                        post: postNotifications,
+                        friendship: friendshipNotifications,
+                        chat: chatNotifications,
+                      });
+                    }}
                     trackColor={{
                       false: theme.colors.border,
                       true: theme.colors.neonGreen,
@@ -378,6 +409,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     {
                       paddingVertical: theme.spacing.m,
                       paddingHorizontal: theme.spacing.m,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
                     },
                   ]}
                 >
@@ -400,7 +433,109 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   </Text>
                   <Switch
                     value={postNotifications}
-                    onValueChange={setPostNotifications}
+                    onValueChange={(val) => {
+                      setPostNotifications(val);
+                      updateNotificationSettings({
+                        matchRoom: matchNotifications,
+                        post: val,
+                        friendship: friendshipNotifications,
+                        chat: chatNotifications,
+                      });
+                    }}
+                    trackColor={{
+                      false: theme.colors.border,
+                      true: theme.colors.neonGreen,
+                    }}
+                    thumbColor={theme.colors.white}
+                  />
+                </View>
+                {/* Friendship Notification */}
+                <View
+                  style={[
+                    styles.settingItem,
+                    {
+                      paddingVertical: theme.spacing.m,
+                      paddingHorizontal: theme.spacing.m,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="person-add-outline"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.settingText,
+                      {
+                        color: theme.colors.text,
+                        fontSize: theme.fontSizes.s,
+                        marginLeft: theme.spacing.m,
+                      },
+                    ]}
+                  >
+                    {t("profile.friendshipNotification")}
+                  </Text>
+                  <Switch
+                    value={friendshipNotifications}
+                    onValueChange={(val) => {
+                      setFriendshipNotifications(val);
+                      updateNotificationSettings({
+                        matchRoom: matchNotifications,
+                        post: postNotifications,
+                        friendship: val,
+                        chat: chatNotifications,
+                      });
+                    }}
+                    trackColor={{
+                      false: theme.colors.border,
+                      true: theme.colors.neonGreen,
+                    }}
+                    thumbColor={theme.colors.white}
+                  />
+                </View>
+                 {/* Chat Notification */}
+                 <View
+                  style={[
+                    styles.settingItem,
+                    {
+                      paddingVertical: theme.spacing.m,
+                      paddingHorizontal: theme.spacing.m,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={20}
+                    color={theme.colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.settingText,
+                      {
+                        color: theme.colors.text,
+                        fontSize: theme.fontSizes.s,
+                        marginLeft: theme.spacing.m,
+                      },
+                    ]}
+                  >
+                    {t("profile.chatNotification")}
+                  </Text>
+                  <Switch
+                    value={chatNotifications}
+                    onValueChange={(val) => {
+                      setChatNotifications(val);
+                      updateNotificationSettings({
+                        matchRoom: matchNotifications,
+                        post: postNotifications,
+                        friendship: friendshipNotifications,
+                        chat: val,
+                      });
+                    }}
                     trackColor={{
                       false: theme.colors.border,
                       true: theme.colors.neonGreen,
@@ -519,7 +654,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 }}
                 thumbColor={theme.colors.white}
               />
-            </TouchableOpacity>           
+            </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.settingItem,
@@ -531,6 +666,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   marginBottom: theme.spacing.xs,
                 },
               ]}
+              onPress={() => navigation.navigate("AppAboutTerms")}
+              accessibilityRole="button"
+              accessibilityLabel={t("profile.termsOfService")}
             >
               <Ionicons
                 name="document-text-outline"

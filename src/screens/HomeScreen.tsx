@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -38,9 +38,12 @@ import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useDebounce } from "@/shared/hooks";
 import { EloLeaderboardSection } from "@/features/leaderboard";
+import { useLeaderboard } from "@/features/leaderboard/hooks/useLeaderboard";
 import { useAuthStore } from "@/features/auth";
 import { authApi } from "@/features/auth/api";
 import { getFcmToken } from "@/shared/firebase/messaging";
+import { usePaginatedNotifications } from "@/features/notification/hooks";
+import { useToast } from "@/shared/toast";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, "Home">,
@@ -56,7 +59,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
   const scrollHandler = useScrollToHideTabBar();
   const { user } = useAuthStore();
+  const pendingLoginSuccessToast = useAuthStore(
+    (s) => s.pendingLoginSuccessToast,
+  );
+  const setPendingLoginSuccessToast = useAuthStore(
+    (s) => s.setPendingLoginSuccessToast,
+  );
   const hasSyncedFcmRef = useRef(false);
+  const toast = useToast();
+  const leaderboardQuery = useLeaderboard();
+  const topUsers = useMemo(
+    () => (leaderboardQuery.data?.leaderboard ?? []).slice(0, 5),
+    [leaderboardQuery.data?.leaderboard],
+  );
+
+  // Toast đăng nhập thành công: gọi ở đây vì Login unmount ngay khi chuyển sang MainTabs
+  useEffect(() => {
+    if (!pendingLoginSuccessToast || !user) return;
+    setPendingLoginSuccessToast(false);
+    toast.success(
+      t("login.success.title", "Đăng nhập thành công"),
+      t("login.success.message", "Chào mừng bạn trở lại!"),
+    );
+  }, [pendingLoginSuccessToast, user, setPendingLoginSuccessToast, toast, t]);
 
   // Đăng ký / đồng bộ FCM token sau khi user đã đăng nhập và vào Home
   useEffect(() => {
@@ -69,7 +94,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         await authApi.updateFcmToken(token);
         hasSyncedFcmRef.current = true;
         console.log("✅ FCM token registered from HomeScreen");
-      } catch (error) {
+      } catch (error: any) {
+        toast.error(error?.message || t("personalPage.editForm.toast.updateError"));
         console.error("❌ Failed to register FCM token from HomeScreen:", error);
       }
     };
@@ -90,6 +116,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   } = usePaginatedPosts({ pageSize: 10 });
 
   const { mutate: toggleLike } = useTogglePostLike();
+
+  // Kiểm tra có thông báo chưa đọc không
+  const { notifications: allNotifications } = usePaginatedNotifications({ pageSize: 20 });
+  const hasUnreadNotification = allNotifications.some((n) => !n.isRead);
 
   const handleLike = (postId: string) => {
     toggleLike(postId);
@@ -178,7 +208,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <ThemedText variant="secondary" size="m">
-              {t("newsFeed.whatsOnMind", {
+              {t("newsFeed.whatdoyouthink", {
                 defaultValue: "Bạn đang nghĩ gì?",
               })}
             </ThemedText>
@@ -187,7 +217,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       </ThemedView>
 
       {/* ELO Leaderboard Section */}
-      <EloLeaderboardSection />
+      <EloLeaderboardSection users={topUsers} loading={leaderboardQuery.isLoading} error={leaderboardQuery.error} />
     </>
   );
 
@@ -225,37 +255,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             {t("newsFeed.title")}
           </ThemedText>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              const parent = navigation.getParent();
-              if (parent) {
-                parent.navigate("FeedbackIntro");
-              }
-            }}
-          >
-            <Ionicons
-              name="star-outline"
-              size={24}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => {
-              const parent = navigation.getParent();
-              if (parent) {
-                parent.navigate("PaymentSuccess");
-              }
-            }}
-          >
-            <Ionicons
-              name="stats-chart-outline"
-              size={24}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
+        <View style={styles.headerRight}>        
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => navigation.navigate("Search" as any)}
@@ -275,7 +275,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             icon="notifications-outline"
             onPress={() => navigation.navigate("Notifications" as any)}
             size="medium"
-            notificationCount={5}
+            showDot={hasUnreadNotification}
           />
         </View>
       </ThemedView>

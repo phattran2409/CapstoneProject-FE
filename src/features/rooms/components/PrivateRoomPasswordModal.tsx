@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/shared/theme';
 import { ThemedText, ThemedView, ThemedIcon } from '@/shared/components/themed';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -24,6 +25,10 @@ export interface PrivateRoomPasswordModalProps {
   title?: string;
   /** Tùy chỉnh mô tả (mặc định: roomName hoặc "Nhập mật khẩu để vào phòng") */
   subtitle?: string;
+  passwordPlaceholder?: string;
+  cancelButtonLabel?: string;
+  confirmButtonLabel?: string;
+  loadingLabel?: string;
   onConfirm: (password: string) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -35,13 +40,23 @@ const PrivateRoomPasswordModal: React.FC<PrivateRoomPasswordModalProps> = ({
   roomName,
   title: titleProp,
   subtitle: subtitleProp,
+  passwordPlaceholder,
+  cancelButtonLabel,
+  confirmButtonLabel,
+  loadingLabel,
   onConfirm,
   onCancel,
   isLoading = false,
   errorMessage,
 }) => {
-  const title = titleProp ?? 'Phòng riêng tư';
-  const subtitle = subtitleProp ?? (roomName ? roomName : 'Nhập mật khẩu để vào phòng');
+  const { t } = useTranslation();
+  const title = titleProp ?? t('roomDetail.privateRoomModalTitle');
+  const subtitle =
+    subtitleProp ?? (roomName ? roomName : t('roomDetail.privateRoomModalSubtitleDefault'));
+  const resolvedPlaceholder = passwordPlaceholder ?? t('roomDetail.privateRoomPasswordPlaceholder');
+  const resolvedCancel = cancelButtonLabel ?? t('common.buttons.cancel');
+  const resolvedConfirm = confirmButtonLabel ?? t('common.buttons.confirm');
+  const resolvedLoading = loadingLabel ?? t('common.buttons.processing');
   const { theme } = useTheme();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -105,7 +120,7 @@ const PrivateRoomPasswordModal: React.FC<PrivateRoomPasswordModalProps> = ({
                         borderColor: errorMessage ? theme.colors.error : theme.colors.border,
                       },
                     ]}
-                    placeholder="Mật khẩu phòng"
+                    placeholder={resolvedPlaceholder}
                     placeholderTextColor={theme.colors.textSecondary}
                     value={password}
                     onChangeText={(text) => {
@@ -141,7 +156,7 @@ const PrivateRoomPasswordModal: React.FC<PrivateRoomPasswordModalProps> = ({
                     disabled={isLoading}
                   >
                     <ThemedText size="m" weight="semiBold" variant="secondary">
-                      Hủy
+                      {resolvedCancel}
                     </ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -157,7 +172,7 @@ const PrivateRoomPasswordModal: React.FC<PrivateRoomPasswordModalProps> = ({
                     disabled={isLoading || !password.trim()}
                   >
                     <ThemedText size="m" weight="bold" style={{ color: '#000' }}>
-                      {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
+                      {isLoading ? resolvedLoading : resolvedConfirm}
                     </ThemedText>
                   </TouchableOpacity>
                 </View>

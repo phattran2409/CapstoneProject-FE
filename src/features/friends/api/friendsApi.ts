@@ -13,6 +13,7 @@ import {
   PlayersResponse,
 } from "../types/friends.types";
 import { apiClient } from "@/shared/api/client";
+import { API_CONFIG } from "@/shared/constants/api";
 
 export const getFriendRequests = async (
   page: number = 1,
@@ -24,11 +25,11 @@ export const getFriendRequests = async (
   totalCount: number;
 }> => {
   try {
-    let url = `/friendships/requests?page=${page}&pageSize=${pageSize}`;
+    const params: Record<string, any> = { page, pageSize };
     if (searchTerm && searchTerm.trim()) {
-      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+      params.searchTerm = searchTerm.trim();
     }
-    const response = (await apiClient.get(url)) as FriendRequestResponse;
+    const response = (await apiClient.get(API_CONFIG.ENDPOINTS.FRIENDSHIPS.REQUESTS, { params })) as FriendRequestResponse;
     if (response.isSuccess && response.data) {
       return {
         requests: response.data.requests,
@@ -53,13 +54,12 @@ export const getFriends = async (
   totalCount: number;
 }> => {
   try {
-    // Build URL with proper query parameters
-    let url = `/friendships/friends?page=${page}&pageSize=${pageSize}`;
+    const params: Record<string, any> = { page, pageSize };
     if (searchTerm && searchTerm.trim()) {
-      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+      params.searchTerm = searchTerm.trim();
     }
 
-    const response = (await apiClient.get(url)) as FriendResponse;
+    const response = (await apiClient.get(API_CONFIG.ENDPOINTS.FRIENDSHIPS.FRIENDS, { params })) as FriendResponse;
     if (response.isSuccess && response.data) {
       return {
         friends: response.data.friends,
@@ -85,15 +85,18 @@ export const getPlayers = async (
   totalCount: number;
 }> => {
   try {
-    let url = `/users?page=${page}&pageSize=${pageSize}&role=${role}`;
+    const params: Record<string, any> = { page, pageSize, role };
     if (searchTerm && searchTerm.trim()) {
-      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+      params.searchTerm = searchTerm.trim();
     }
 
-    const response = (await apiClient.get(url)) as PlayersResponse;
+    const response = (await apiClient.get(API_CONFIG.ENDPOINTS.USERS.LIST, { params })) as PlayersResponse;
     if (response.isSuccess && response.data) {
+      const filteredUsers = response.data.users.filter(
+        (u) => u.isEmailVerified && u.isActive,
+      );
       return {
-        users: response.data.users,
+        users: filteredUsers,
         totalPages: response.data.totalPages,
         totalCount: response.data.totalCount,
       };
@@ -109,9 +112,8 @@ export const getFriendshipStatus = async (
   userId: string,
 ): Promise<FriendshipStatusData> => {
   try {
-    const response = (await apiClient.get(
-      `/friendships/status/${userId}`,
-    )) as FriendshipStatusResponse;
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.STATUS.replace(':userId', userId);
+    const response = (await apiClient.get(url)) as FriendshipStatusResponse;
 
     if (response.isSuccess && response.data) {
       return response.data;
@@ -129,10 +131,8 @@ export const respondToFriendRequest = async (
   accept: boolean,
 ): Promise<RespondRequestData> => {
   try {
-    const response = (await apiClient.post(
-      `/friendships/respond/${requesterId}`,
-      { accept },
-    )) as RespondRequest;
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.RESPOND.replace(':requesterId', requesterId);
+    const response = (await apiClient.post(url, { accept })) as RespondRequest;
 
     if (response.isSuccess && response.data) {
       return response.data;
@@ -148,9 +148,8 @@ export const removeFriend = async (
   userId: string,
 ): Promise<RemoveFriendData> => {
   try {
-    const response = (await apiClient.delete(
-      `/friendships/${userId}`,
-    )) as RemoveFriendResponse;
+    const url = API_CONFIG.ENDPOINTS.FRIENDSHIPS.DETAIL.replace(':userId', userId);
+    const response = (await apiClient.delete(url)) as RemoveFriendResponse;
 
     if (response.isSuccess && response.data) {
       return response.data;

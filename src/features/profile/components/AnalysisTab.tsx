@@ -3,46 +3,37 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/shared/theme";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RadarChart } from "./RadarChart";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import RadarChart from "@/features/profile/components/RadarChart";
 import { AIAssessmentCard } from "./AIAssessmentCard";
 
 interface AnalysisTabProps {
-  stats: {
-    matches: number;
-    winRate: number;
-  };
   radarData: {
-    WinLoss: number;
-    Perf: number;
-    Feedback: number;
-    Sentiment: number;
-    Trust: number;
-    RoleFactor: number;
-  };
+    form: number;
+    winRate: number;
+    communityScore: number;
+    trust: number;
+    contribution: number;
+    summary?: string;
+    assessments?: Array<{
+      type?: string;       // "strength" | "improvement"
+      title: string;
+      description: string;
+      icon?: string;       // BE icon key: "shield", "message-circle", etc.
+      highlightAxis?: string;
+    }>;
+  } | null;
+  isLoading?: boolean;
 }
 
 export const AnalysisTab: React.FC<AnalysisTabProps> = ({
-  stats,
   radarData,
+  isLoading = false,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  const assessments = [
-    {
-      title: "Tiềm năng thủ lĩnh",
-      description: `Dựa trên ${stats.matches} trận đấu, bạn duy trì sự ổn định đáng kinh ngạc. Tỷ lệ thắng ${stats.winRate}% là minh chứng rõ ràng cho khả năng dẫn dắt đội bóng của bạn.`,
-      icon: "star" as const,
-      iconColor: theme.colors.neonGreen,
-    },
-    {
-      title: "Cần cải thiện RoleFactor",
-      description:
-        "Biểu đồ năng lực cho thấy RoleFactor của bạn hơi thấp so với Rank Diamond I. Hãy tích cực tham gia vào các pha phối hợp nhóm hơn để tối ưu hóa hiệu suất.",
-      icon: "bar-chart" as const,
-      iconColor: theme.colors.textSecondary,
-    },
-  ];
+  const assessments = radarData?.assessments ?? [];
 
   return (
     <View style={[styles.container, { paddingHorizontal: theme.spacing.m }]}>
@@ -68,9 +59,7 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
             },
           ]}
         >
-          {t("personalPage.analysis.title", {
-            defaultValue: "Biểu đồ Hồ sơ Thi đấu",
-          })}
+          {t("personalPage.analysis.title")}
         </Text>
       </View>
 
@@ -84,18 +73,58 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
           },
         ]}
       >
-        <RadarChart
-          data={{
-            form: radarData.Perf / 50 - 1, // Convert 0-100 to -1..1
-            winRate: radarData.WinLoss / 100, // Convert 0-100 to 0..1
-            avgStar: (radarData.Feedback / 100) * 5, // Convert 0-100 to 0..5
-            sentiment: radarData.Sentiment / 100, // Convert 0-100 to 0..1
-            trust: radarData.Trust, // Keep 0-100
-            contribution: radarData.RoleFactor / 100, // Convert 0-100 to 0..1
-          }}
-        />
-      </View>
+        {/* //Radar chart Biểu đồ Hồ sơ Thi đấu
 
+Radar chart đóng vai trò minh bạch hóa các yếu tố ảnh hưởng đến xếp hạng, giúp người chơi cải thiện hành vi hoặc người khác có thể xem và đánh giá.
+
+Form (phong Độ) = Average(Result - Expected) trong 10 trận gần nhất
+WinRate: tỉ lệ thắng 10 trận gần nhất
+communityScore: trung bình (Feedback/Sentiment)
+TrustScore (max: 100)
+ContributionRate = số lần đánh giá / số trận tham gia
+
+ví dụ trả về 
+{
+  "form": 0.35,
+  "winRate": 0.75,
+  "communityScore": 0.81,
+  "trust": 87,
+  "contribution": 0.6
+} */}
+
+    <RadarChart data={radarData ?? undefined} />
+      </View>
+    <View style={[styles.summaryContainer,
+      { backgroundColor: theme.colors.surface,
+        borderRadius: theme.radius.m,
+        padding: theme.spacing.m,
+        marginBottom: theme.spacing.m,
+      }]}>
+      <View style={{ flexDirection: "row"}}>
+        <FontAwesome name="lightbulb-o" size={20} color={theme.colors.neonGreen} />
+        <Text style={{ color: theme.colors.neonGreen, marginLeft: theme.spacing.s, fontWeight: "700" }}>
+          {t("personalPage.analysis.summary")}
+        </Text>
+      </View>
+      {radarData?.summary ? (
+        <Text
+          style={{
+            color: theme.colors.textSecondary,
+            marginBottom: theme.spacing.m,
+            paddingHorizontal: theme.spacing.m,
+            paddingVertical: theme.spacing.s,
+            lineHeight: 20,
+          }}
+        >
+          {radarData.summary}
+        </Text>
+        ) : null}
+    </View>
+      {isLoading ? (
+        <Text style={{ color: theme.colors.textSecondary }}>
+          {t("personalPage.analysis.loadingHint")}
+        </Text>
+      ) : null} 
 
       {/* AI Assessment Section */}
       <View style={styles.assessmentSection}>
@@ -109,7 +138,7 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
             },
           ]}
         >
-          <Ionicons name="settings" size={20} color={theme.colors.neonGreen} />
+        <Ionicons name="settings" size={20} color={theme.colors.neonGreen} />
           <Text
             style={[
               styles.assessmentTitle,
@@ -121,9 +150,7 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
               },
             ]}
           >
-            {t("personalPage.analysis.aiAssessment", {
-              defaultValue: "Đánh giá & Phân tích AI",
-            })}
+            {t("personalPage.analysis.aiAssessment")}
           </Text>
         </View>
 
@@ -133,9 +160,15 @@ export const AnalysisTab: React.FC<AnalysisTabProps> = ({
             title={assessment.title}
             description={assessment.description}
             icon={assessment.icon}
-            iconColor={assessment.iconColor}
+            type={assessment.type}
           />
         ))}
+
+        {!isLoading && assessments.length === 0 ? (
+          <Text style={{ color: theme.colors.textSecondary }}>
+            {t("personalPage.analysis.noAssessment")}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
@@ -182,5 +215,9 @@ const styles = StyleSheet.create({
   },
   assessmentTitle: {
     fontWeight: "700",
+  },
+  summaryContainer: {
+    
+    marginBottom: 24,
   },
 });

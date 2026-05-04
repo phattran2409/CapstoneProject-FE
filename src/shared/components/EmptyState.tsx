@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useTranslation } from "react-i18next";
 import { ThemedView, ThemedText } from "./themed";
 import { useTheme } from "@/shared/theme";
 
@@ -13,11 +14,13 @@ interface EmptyStateProps {
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon = "document-text-outline",
-  title = "Không có dữ liệu",
+  title,
   description,
   iconSize = 48,
 }) => {
+  const { t } = useTranslation();
   const { theme } = useTheme();
+  const resolvedTitle = title ?? t("emptyState.defaultTitle");
 
   return (
     <ThemedView style={styles.container}>
@@ -32,13 +35,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         weight="semiBold"
         style={{ marginTop: theme.spacing.m }}
       >
-        {title}
+        {resolvedTitle}
       </ThemedText>
       {description && (
         <ThemedText
           variant="secondary"
           size="m"
-          style={{ marginTop: theme.spacing.s, textAlign: "center" }}
+          style={{ marginTop: theme.spacing.s, textAlign: "center", paddingLeft: 32, paddingRight: 32 }}
         >
           {description}
         </ThemedText>

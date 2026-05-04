@@ -222,9 +222,9 @@ export const EditProfileForm: React.FC<EditProfileFormProps> = ({
                   name="phone"
                   label={t("personalPage.editForm.fields.phone") + " (+84)"}
                   icon="call"
-                  placeholder="0123456789"
+                  placeholder="0351234567 hoặc +84351234567"
                   keyboardType="phone-pad"
-                  maxLength={11}
+                  maxLength={16}
                   error={errors.phone}
                 />
 
