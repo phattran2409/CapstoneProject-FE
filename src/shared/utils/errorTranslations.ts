@@ -137,6 +137,7 @@ const backendErrorCodeMessages: Record<string, string> = {
   "MatchRoom.OutsideOperatingHours": "Thời gian yêu cầu nằm ngoài khung giờ hoạt động của sân.",
   "MatchRoom.SlotAlreadyBooked": "Thời gian đã được đặt chỗ bởi phòng khác",
   "AiSuggestion.ServiceUnavailable" : "Dịch vụ AI tạm thời không phản hồi",
+  "MatchRoom.TooFar": "Bạn đang cách sân quá xa",
 };
 
 export const getTranslatedError = (errMessage?: string, errCode?: string): string => {
