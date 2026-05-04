@@ -15,7 +15,7 @@ import type { MatchRoomFullInfo, MatchRoomStatus } from "../types/room.types";
  */
 export const ROOM_FEEDBACK_TEST = {
   /** Đổi thành true khi cần test */
-  ENABLED: false,
+  ENABLED: true,
 
   /** Ép status hiển thị & logic action bar (vd: nút "Đánh giá trận đấu") */
   forceStatus: "Reviewing" as MatchRoomStatus,
