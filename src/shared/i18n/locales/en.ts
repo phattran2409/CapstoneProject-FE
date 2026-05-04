@@ -364,6 +364,10 @@ const en = {
     openRoomPolicyTitle: "Match policy",
     openRoomPolicyHint:
       "Fill all slots and have everyone pay the deposit to hold the booking. Current cutoff is {{cutoff}} ({{rule}}). If players or deposits are still missing at cutoff, the match is cancelled and deposits are refunded so the slot is released back to the venue owner.",
+    openRoomPolicyStepDeadlineLabel: "Cutoff time",
+    openRoomPolicyStepRuleLabel: "Policy rule",
+    openRoomPolicyExplanation:
+      "Fill all slots and have everyone pay the deposit to hold the booking. If players or deposits are still missing when the cutoff hits, the match is cancelled and deposits are refunded so the slot is released back to the venue owner.",
     openRoomPolicyRule: {
       "24h_after_creation": "deadline is 24 hours after match creation",
       "2h_before_kickoff": "deadline is 2 hours before kickoff",

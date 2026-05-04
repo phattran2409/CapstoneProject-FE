@@ -298,6 +298,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           />
         )
       )}
+    { isCurrentUser &&(
       <TouchableOpacity
       onPress={onAchievementsPress}
         activeOpacity={0.7}
@@ -341,6 +342,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </LinearGradient>
         </BlurView>
       </TouchableOpacity>
+      )}
     </View>
   );
 };

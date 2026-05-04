@@ -62,6 +62,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   });
   const [optionFilterVisible, setOptionFilterVisible] = useState(false);
   const { latitude, longitude, radiusKm,locationLoading, handleApplyRadiusFilter } = useLocationRadiusFilter({t: t as (key: string, defaultValue?: string | object) => string});
+  
+  const [errorSuggestingRooms, setErrorSuggestingRooms] = useState<string | undefined>(undefined);
   // Fetch match rooms from API
   // 1) Recommended matches – không dùng vị trí
   const {
@@ -322,20 +324,14 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           },
           onError: (error: any) => {
             console.log('Error suggest rooms:', error);
-            toast.error(
-              t('common.error', 'Lỗi'),
-              getTranslatedError(error?.message, error?.code) ||
-                t('aiRecommendation.searching'),
-            );
             setAiSuggestedRooms([]);
+            setErrorSuggestingRooms(getTranslatedError(error?.code, error?.details?.detail));
           },
         },
       );
     } catch (error: any) {
-      toast.error(
-        t('common.error', 'Lỗi'),
-        getTranslatedError(error?.message, error?.code) || t('venueSelection.locationError'),
-      );
+      console.log('Error suggest rooms:', error);
+      setErrorSuggestingRooms(getTranslatedError(error?.message, error?.code));
     } finally {
       setIsResolvingAiLocation(false);
     }
@@ -559,6 +555,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           setAiModalVisible(false);
           handleViewDetail(recommendation.roomId, aiSuggestedRooms);
         }}
+        errorMessage={errorSuggestingRooms}
       />
 
       {alertOptions && (

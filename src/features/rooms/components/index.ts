@@ -21,5 +21,6 @@ export {
   TeamLineup,
   MatchCountdown,
   AutoCloseCountdown,
+  OpenRoomPolicyBanner,
 } from './roomInformation';
 export { CheckInButton } from './CheckInButton';

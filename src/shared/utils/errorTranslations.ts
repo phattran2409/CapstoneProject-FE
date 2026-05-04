@@ -127,6 +127,7 @@ export const backendErrorMessages = {
     "An achievement with this name already exists": "Thành tích đã đạt được",
     "Failed to upload badge icon": "Tải biểu tượng thành tích thất bại",
     "Invalid criteria type": "Chưa hoàn thành đủ nội dung",
+    "Current location is unavailable": "Không thể lấy được vị trí. Vui lòng bật GPS và thử lại.",
 };
 
 // Backend error "title/code" map (code-based translation).
