@@ -222,6 +222,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
             </ThemedText>
           </View>
         </View>
+      {item.preferredPositions && (
         <View
           style={[
             styles.positionBadge,
@@ -235,7 +236,9 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
             {item.preferredPositions}
           </ThemedText>
         </View>
+    )}
       </View>
+  
 
       <View style={styles.statsGrid}>
         <MetricItem

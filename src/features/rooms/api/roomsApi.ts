@@ -446,9 +446,14 @@ export const roomsApi = {
    */
   checkIn: async (roomId: string, payload: CheckInRequest): Promise<CheckInResponse> => {
     const url = API_CONFIG.ENDPOINTS.ROOMS.CHECK_IN.replace(':id', roomId);
-    const data = await apiClient.post(url, {
-      Latitude: payload.latitude,
-      Longitude: payload.longitude,
+    const formData = new FormData();
+    formData.append('Latitude', payload.latitude.toString());
+    formData.append('Longitude', payload.longitude.toString());
+
+    const data = await apiClient.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     console.log('data', data);
     const body = data as unknown as ApiResponse<CheckInResponse>;
