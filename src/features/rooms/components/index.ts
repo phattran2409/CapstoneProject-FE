@@ -22,5 +22,6 @@ export {
   MatchCountdown,
   AutoCloseCountdown,
   OpenRoomPolicyBanner,
+  StrengthComparisonModal,
 } from './roomInformation';
 export { CheckInButton } from './CheckInButton';

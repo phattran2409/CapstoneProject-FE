@@ -87,7 +87,8 @@ const BookingScheduleScreen: React.FC<BookingScheduleScreenProps> = ({
         return "#F59E0B";
       case "Cancelled":
         return theme.colors.error;
-      case "Paid":
+      case "Confirmed":
+        return theme.colors.neonGreen;
       case "Completed":
         return theme.colors.neonGreen;
       default:

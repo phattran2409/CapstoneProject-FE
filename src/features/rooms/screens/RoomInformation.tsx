@@ -40,6 +40,7 @@ import {
   HostTransferRequestDialog,
   AIRecommendationModal,
   type MatchRecommendation,
+  StrengthComparisonModal,
 } from '../components';
 import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusActionBar';
 import { useMatchRoomSignalR, useAlert } from '@/shared/hooks';
@@ -203,6 +204,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
+  const [showStrengthModal, setShowStrengthModal] = useState(false);
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
 
   const toast = useToast();
@@ -271,12 +273,23 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         : aiPlayerRecommendations,
     [aiPlayerRecommendations, user?.userId],
   );
-
   // ==================== SignalR Integration ====================
 
   /** Toast khi BE báo chênh Elo: isSkillImbalanced === true (hai đội lệch trình độ đáng kể). */
   const prevSkillImbalanceFlagRef = useRef<boolean | undefined>(undefined);
   const skillImbalanceRoomIdRef = useRef<string | undefined>(undefined);
+
+  const teamAName = useMemo(() => {
+    return displayRoom?.formations?.teamA?.teamName ||
+      displayRoom?.teamNames?.A ||
+      t('roomDetail.teamA', 'Đội A');
+  }, [displayRoom, t]);
+
+  const teamBName = useMemo(() => {
+    return displayRoom?.formations?.teamB?.teamName ||
+      displayRoom?.teamNames?.B ||
+      t('roomDetail.teamB', 'Đội B');
+  }, [displayRoom, t]);
 
   useEffect(() => {
     if (!displayRoom) return;
@@ -289,7 +302,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       toast.warning(
         t('roomDetail.skillImbalancedTitle'),
         t('roomDetail.skillImbalancedMessage', {
+          teamNameA: teamAName,
           teamA: Math.round(displayRoom.teamAAverageElo ?? 0),
+          teamNameB: teamBName,
           teamB: Math.round(displayRoom.teamBAverageElo ?? 0),
         }),
       );
@@ -346,15 +361,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     return () => subscription.remove();
   }, [refetch]);
 
-  const teamAName =
-    displayRoom?.formations?.teamA?.teamName ||
-    displayRoom?.teamNames?.A ||
-    t('roomDetail.teamA', 'Đội A');
 
-  const teamBName =
-    displayRoom?.formations?.teamB?.teamName ||
-    displayRoom?.teamNames?.B ||
-    t('roomDetail.teamB', 'Đội B');
 
   const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
     if (!displayRoom) return [];
@@ -651,6 +658,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             onOpenPositionModal={handleOpenPositionModal}
             onParticipantPress={(userId) => navigation?.navigate('PersonalPage', { userId })}
             roomActionsDisabled={roomActionsBlocked}
+            onOpenStrengthComparison={() => setShowStrengthModal(true)}
           />
 
           {/* GPS Check-in – hiện khi cửa sổ 30 phút trước trận hoặc đang Locked/InProgress */}
@@ -722,6 +730,17 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         shareMessage={shareMessage}
         inviteToRoom
         onClose={() => setInviteFriendsVisible(false)}
+      />
+      
+      {/* Strength Comparison Modal */}
+      <StrengthComparisonModal
+        t={t as any}
+        visible={showStrengthModal}
+        onClose={() => setShowStrengthModal(false)}
+        teamAName={teamAName}
+        teamBName={teamBName}
+        eloA={displayRoom.teamAAverageElo || 0}
+        eloB={displayRoom.teamBAverageElo || 0}
       />
 
       {/* Room menu: host (quản lý phòng) | player (mời bạn bè, rời phòng) */}

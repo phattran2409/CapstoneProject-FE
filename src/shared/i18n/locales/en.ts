@@ -336,6 +336,7 @@ const en = {
     datetime: "Date & Time",
     venue: "Venue",
     teamLineup: "Team Lineup",
+    compareStrength: "Compare Strength",
     players: "players",
     teamA: "Team A",
     teamB: "Team B",
@@ -471,7 +472,7 @@ const en = {
     teamAverageElo: "Avg ELO: {{value}}",
     skillImbalancedTitle: "Skill gap",
     skillImbalancedMessage:
-      "Team A ({{teamA}}) vs Team B ({{teamB}}) average Elo differs significantly. Consider rebalancing teams.",
+      "Team {{teamNameA}} ({{teamA}}) vs Team {{teamNameB}} ({{teamB}}) average Elo differs significantly. Consider rebalancing teams.",
     unassigned: "Unassigned",
     countdown: {
       matchStartsIn: "Match starts in",
@@ -583,6 +584,14 @@ const en = {
       roomCancelled: "Match has been cancelled. Check-in is not possible.",
       generic: "Check-in failed. Please try again.",
     },
+  },
+  strengthModal: {
+    title: "Strength Comparison",
+    advantageA: "{{teamNameA}} Advantage",
+    advantageB: "{{teamNameB}} Advantage",
+    advantageNone: "Balanced",
+    advantageDesc: "{{team}} has a {{percent}}% advantage based on current Elo.",
+    advantageDescNone: "Both teams are balanced based on current Elo.",
   },
   profileHeader: {
     chooseAvatarTitle: "Choose profile photo",
@@ -1324,7 +1333,7 @@ const en = {
     status: {
       Pending: "Pending",
       Cancelled: "Cancelled",
-      Paid: "Paid",
+      Confirmed: "Paid",
       Completed: "Completed",
     },
   },
