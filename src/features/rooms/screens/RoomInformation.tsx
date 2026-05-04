@@ -205,6 +205,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
   const [showStrengthModal, setShowStrengthModal] = useState(false);
+
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
 
   const toast = useToast();
