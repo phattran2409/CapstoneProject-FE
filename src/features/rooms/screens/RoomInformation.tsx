@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { View, TouchableOpacity, AppState, AppStateStatus, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation } from '@react-navigation/native';
@@ -19,9 +19,7 @@ import {
   useLeaveMatchRoom,
   useKickPlayer, 
   type MatchRoomFullInfo,
-  type TeamAssignment,
   formatMatchFormatVsLabel,
-  SuggestedPlayerProfile,
 } from '@/features/rooms';
 import { useAuthStore } from '@/features/auth';
 import SplashScreen from '@/features/splash/screens/SplashScreen';
@@ -37,26 +35,22 @@ import {
   AutoCloseCountdown,
   OpenRoomPolicyBanner,
   CheckInButton,
-  type PlayerPosition,
   InviteFriendsModal,
   TransferHostModal,
   HostTransferRequestDialog,
   AIRecommendationModal,
   type MatchRecommendation,
 } from '../components';
-import type { HostTransferRequestPayload } from '../components/HostTransferRequestDialog';
-import { useResponseTransferHost } from '../hooks/useTransferHost';
 import { RoomStatusActionBar } from '../components/roomInformation/RoomStatusActionBar';
 import { useMatchRoomSignalR, useAlert } from '@/shared/hooks';
 import { useToast } from '@/shared/toast';
 import { formatCurrency, formatDate } from '@/shared/utils/formatters';
-import { useFeedbackSessionStore } from '@/features/feedback';
 import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbackTestOverrides';
-import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import {
   useGoBackOrResetToMainTabs,
   useRoomInformationSignalRHandlers,
   useInviteFriend,
+  useRoomInformationScreenHandlers,
 } from '../hooks';
 import { styles } from './styles/RoomInformation.styles';
 import { getRoomAutoClosePolicy } from '../utils/roomAutoClosePolicy';
@@ -205,43 +199,74 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
 
   const canJoinMatch = !!currentUserParticipant && hasSelectedTeam;
 
-  // ✅ Selected team (A, B, or null)
-  const [selectedTeam, setSelectedTeam] = useState<TeamAssignment | null>(null);
-  
-  // ✅ Local UI state
+  // ✅ Local UI state (tabs, menu, invite sheet — không gồm logic đã chuyển sang useRoomInformationScreenHandlers)
   const [activeTab, setActiveTab] = useState<'teams' | 'host' | 'venue'>('teams');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
-  const [aiModalVisible, setAiModalVisible] = useState(false);
-  const [aiQuery, setAiQuery] = useState('');
   const [inviteFriendsVisible, setInviteFriendsVisible] = useState(false);
-  const [aiPlayerRecommendations, setAiPlayerRecommendations] = useState<SuggestedPlayerProfile[]>([]);
-  const [aiPlayerSuggestError, setAiPlayerSuggestError] = useState<string | null>(null);
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // ✅ Position selection modal state
-  const [showPositionModal, setShowPositionModal] = useState(false);
-  const [pendingTeamAssignment, setPendingTeamAssignment] = useState<'A' | 'B' | null>(null);
 
-  // ✅ Transfer host state
-  const [transferHostVisible, setTransferHostVisible] = useState(false);
-  const [transferRequest, setTransferRequest] = useState<HostTransferRequestPayload | null>(null);
-  const { mutate: acceptTransfer, isPending: isAcceptingTransfer } = useResponseTransferHost();
+  const toast = useToast();
 
-  // ✅ Auto-close countdown state (nhận từ SignalR AutoCloseCountdownTick)
-  const [autoCloseSeconds, setAutoCloseSeconds] = useState<number | null>(null);
-  const [autoCloseTickAt, setAutoCloseTickAt] = useState<string>('');
-
-  const handleAutoCloseCountdownTick = useCallback((payload: { secondsRemaining: number; tickAt: string; roomId: string; closesAtUtc: string; reason: string }) => {
-    setAutoCloseSeconds(payload.secondsRemaining);
-    setAutoCloseTickAt(payload.tickAt);
-  }, []);
+  const {
+    transferRequest,
+    setTransferRequest,
+    transferHostVisible,
+    setTransferHostVisible,
+    isAcceptingTransfer,
+    autoCloseSeconds,
+    setAutoCloseSeconds,
+    autoCloseTickAt,
+    handleAutoCloseCountdownTick,
+    handleAcceptTransfer,
+    handleRejectTransfer,
+    handleRefresh,
+    isRefreshing,
+    showPositionModal,
+    pendingTeamAssignment,
+    handleOpenPositionModal,
+    handlePositionSelected,
+    handleClosePositionModal,
+    handleJoinMatch,
+    handleKickPlayer,
+    handleLeaveRoom,
+    handleNavigateToFeedbackIntro,
+    handleNavigateToEloBreakdown,
+    aiModalVisible,
+    setAiModalVisible,
+    aiQuery,
+    aiPlayerRecommendations,
+    aiPlayerSuggestError,
+    handleSubmitAiQuery,
+    handleInvitePlayer,
+    closeAiModal,
+    onAiQueryChange,
+  } = useRoomInformationScreenHandlers({
+    roomId,
+    roomActionsBlocked,
+    displayRoom,
+    venuePhotosToShow,
+    userId: user?.userId,
+    currentUserParticipant,
+    hasSelectedTeam,
+    isHost,
+    navigation,
+    handleGoBack,
+    refetch,
+    toast,
+    updateParticipant,
+    kickPlayer,
+    leaveMatchRoom,
+    suggestPlayers,
+    inviteFriend,
+    showDanger,
+    showConfirm,
+    showInfo,
+    showSuccess,
+    t,
+  });
 
   // ==================== SignalR Integration ====================
-  
-  // ✅ Toast hook for notifications
-  const toast = useToast();
 
   /** Toast khi BE báo chênh Elo: isSkillImbalanced === true (hai đội lệch trình độ đáng kể). */
   const prevSkillImbalanceFlagRef = useRef<boolean | undefined>(undefined);
@@ -288,51 +313,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     onAutoCloseCountdownTick: handleAutoCloseCountdownTick,
   });
 
-  const handleAcceptTransfer = useCallback(() => {
-    if (!transferRequest) return;
-    acceptTransfer(
-      { roomId: transferRequest.roomId, isAccepted: true },
-      {
-        onSuccess: () => {
-          setTransferRequest(null);
-          refetch();
-          toast.success(
-            t('roomDetail.transferAccepted')
-          );
-        },
-        onError: (error: any) => {
-          toast.error(
-            t('common.error', 'Lỗi'),
-            getTranslatedError(error?.message, error?.code) ||
-              t('roomDetail.transferAcceptError', 'Không thể chấp nhận chuyển host'),
-          );
-        },
-      },
-    );
-  }, [transferRequest, acceptTransfer, refetch, toast, t]);
-
-  const handleRejectTransfer = useCallback(() => {
-    if (!transferRequest) return;
-    acceptTransfer(
-      { roomId: transferRequest.roomId, isAccepted: false },
-      {
-        onSuccess: () => {
-          setTransferRequest(null);
-          toast.success(
-            t('roomDetail.transferRejected')
-          );
-        },
-        onError: (error: any) => {
-          toast.error(
-            t('common.error', 'Lỗi'),
-            getTranslatedError(error?.message, error?.code) ||
-              t('roomDetail.transferRejectError'),
-          );
-        },
-      },
-    );
-  }, [transferRequest , toast, t]);
-
   // ✅ Kết nối SignalR với handlers
   const { isConnected: isSignalRConnected, connectionState } = useMatchRoomSignalR(signalRHandlers);
   
@@ -359,293 +339,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     });
     return () => subscription.remove();
   }, [refetch]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
-
-  // ✅ Handle open position selection modal
-  const handleOpenPositionModal = (teamAssignment: TeamAssignment) => {
-    if (roomActionsBlocked) return;
-    if (!user) {
-      showInfo(t('roomDetail.loginRequired'), t('roomDetail.loginRequiredDesc'));
-      return;
-    }
-
-    // User phải là participant (đã join vào Unassigned từ MatchesScreen)
-    if (!currentUserParticipant) {
-      showInfo(t('roomDetail.joinFirst'), t('roomDetail.joinFirstDesc'));
-      return;
-    }
-
-    // Nếu đã có team rồi thì thông báo (có thể cho phép đổi team sau này)
-    // if (currentUserParticipant.teamAssignment !== 'Unassigned') {
-    //   Alert.alert('Đã chọn đội', `Bạn đã ở Team ${currentUserParticipant.teamAssignment}`);
-    //   return;
-    // }
-
-    // Set pending team and show modal
-    if (teamAssignment === 'A' || teamAssignment === 'B') {
-      setPendingTeamAssignment(teamAssignment);
-      setShowPositionModal(true);
-    }
-  };
-
-  // ✅ Handle position selected from modal - Cập nhật team assignment và position
-  const handlePositionSelected = (position: PlayerPosition) => {
-    if (roomActionsBlocked) return;
-    if (!pendingTeamAssignment || !displayRoom) return;
-    updateParticipant(
-      { 
-        roomId: displayRoom.roomId, 
-        teamAssignment: pendingTeamAssignment, 
-        position: position,
-      },
-      {
-        onSuccess: () => {
-          toast.success(
-            t('roomDetail.chooseTeamSuccess'),
-            t('roomDetail.chooseTeamDesc', { team: pendingTeamAssignment, position }),
-          );
-          setSelectedTeam(pendingTeamAssignment);
-          setShowPositionModal(false);
-          setPendingTeamAssignment(null);
-          refetch();
-        },
-        onError: (error: any) => {
-          toast.error(
-            t('roomDetail.notifications.error'),
-            getTranslatedError(error?.message, error?.code) || t('roomDetail.chooseTeamError')
-          );
-          setShowPositionModal(false);
-          setPendingTeamAssignment(null);
-        },
-      }
-    );
-  };
-
-  // ✅ Handle close position modal
-  const handleClosePositionModal = () => {
-    setShowPositionModal(false);
-    setPendingTeamAssignment(null);
-  };
-
-  const handleJoinMatch = () => {
-    if (roomActionsBlocked) return;
-
-    if (!currentUserParticipant) {
-      showInfo(t('roomDetail.joinFirstRoom'), t('roomDetail.joinFirstRoomDesc'));
-      return;
-    }
-
-    if (!hasSelectedTeam) {
-      showInfo(t('roomDetail.selectTeamFirst'), t('roomDetail.selectTeamFirstDesc'));
-      return;
-    }
-
-    // Ưu tiên team hiện tại (A/B) – tới đây chắc chắn không còn Unassigned
-    const currentTeam = currentUserParticipant.teamAssignment === "B" ? "B" : "A";
-    navigation?.navigate("Team", { roomId, team: currentTeam });
-  };
-
-  // ✅ Handle kick player (host only)
-  const handleKickPlayer = (userId: string, playerName: string) => {
-    if (roomActionsBlocked) return;
-
-    showDanger(
-      t('roomDetail.kickTitle'),
-      t('roomDetail.kickMessage', { name: playerName }),
-      () => {
-        kickPlayer(
-          { roomId, playerId: userId },
-          {
-            onSuccess: () => {
-              showSuccess(t('roomDetail.kickSuccess'), t('roomDetail.kickSuccessDesc'));
-              refetch();
-            },
-            onError: (error: any) => {
-              showDanger(
-                t('roomDetail.notifications.error'),
-                getTranslatedError(error?.message, error?.code) || t('roomDetail.kickError'),
-                () => {}
-              );
-            },
-          }
-        );
-      },
-      undefined,
-      t('roomDetail.kickButton'),
-      t('common.buttons.cancel'),
-    );
-  };
-  // ✅ Handle leave room
-  const handleLeaveRoom = () => {
-    if (roomActionsBlocked) return;
-
-    showConfirm(
-      t('roomDetail.leaveRoomTitle', 'Rời phòng'),
-      t('roomDetail.leaveRoomMessage', 'Bạn có chắc muốn rời khỏi phòng này?'),
-      () => {
-        leaveMatchRoom(roomId, {
-          onSuccess: () => {
-            toast.success(
-              t('roomDetail.leaveRoomSuccess', 'Rời phòng'),
-              t('roomDetail.leaveRoomSuccessDesc', 'Bạn đã rời khỏi phòng'),
-            );
-            handleGoBack();
-          },
-          onError: (error: any) => {
-            toast.error(
-              t('common.error', 'Lỗi'),
-              getTranslatedError(error?.message, error?.code) ||
-                t('roomDetail.leaveRoomError', 'Không thể rời phòng'),
-            );
-          },
-        });
-      },
-      undefined,
-      t('roomDetail.leaveRoomConfirm'),
-      t('common.buttons.cancel'),
-    );
-  };
-
-  const { startSession, session: feedbackSession } = useFeedbackSessionStore();
-
-  const handleNavigateToFeedbackIntro = async () => {
-    if (!displayRoom || !user?.userId) return;
-    if (roomActionsBlocked) return;
-
-    if (feedbackSession?.roomId === displayRoom.roomId) {
-      switch (feedbackSession.currentStep) {
-        case 'intro':
-          navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });
-          return;
-        case 'matchResult':
-          if (feedbackSession.isHost) {
-            navigation?.navigate('FeedbackMatchResult');
-          } else {
-            navigation?.navigate('FeedbackRating');
-          }
-          return;
-        case 'playerRating':
-          navigation?.navigate('FeedbackRating');
-          return;
-        case 'opponentRating':
-          navigation?.navigate('FeedbackOpponentRating');
-          return;
-        case 'fieldRating':
-          navigation?.navigate('FeedbackFieldRating', {
-            venueId: feedbackSession.venue?.venueId ?? displayRoom.field.venue.venueId,
-          });
-          return;
-        case 'complete':
-          navigation?.navigate('FeedbackComplete');
-          return;
-      }
-    }
-
-    const allParticipants = [
-      ...displayRoom.participants.teamA,
-      ...displayRoom.participants.teamB,
-      ...displayRoom.participants.unassigned,
-    ];
-    const me = allParticipants.find((p) => p.userId === user.userId);
-    const myTeam = me?.teamAssignment === 'A' || me?.teamAssignment === 'B'
-      ? me.teamAssignment
-      : 'A';
-
-    // Lấy tên đội từ formations (ưu tiên) rồi đến teamNames
-    const teamAName =
-      displayRoom.formations?.teamA?.teamName ||
-      displayRoom.teamNames?.A ||
-      t('roomDetail.teamA', 'Đội A');
-    const teamBName =
-      displayRoom.formations?.teamB?.teamName ||
-      displayRoom.teamNames?.B ||
-      t('roomDetail.teamB', 'Đội B');
-
-    // Lookup position từ formations assignments theo playerId
-    const formationAssignments =
-      myTeam === 'A'
-        ? (displayRoom.formations?.teamA?.assignments ?? [])
-        : (displayRoom.formations?.teamB?.assignments ?? []);
-
-    // Đồng đội cùng đội, không bao gồm bản thân
-    const teamPool =
-      myTeam === 'A' ? displayRoom.participants.teamA : displayRoom.participants.teamB;
-    const teammates = teamPool
-      .filter((p) => p.userId !== user.userId)
-      .map((p) => {
-        const formationSlot = formationAssignments.find(
-          (a) => a.playerId === p.userId,
-        );
-        return {
-          userId: p.userId,
-          fullName: p.fullName,
-          avatarUrl: p.avatarUrl,
-          position: formationSlot?.position ?? p.position,
-          teamAssignment: p.teamAssignment as 'A' | 'B',
-        };
-      });
-
-    // Đội đối phương để đánh giá tùy chọn
-    const opponentPool =
-      myTeam === 'A' ? displayRoom.participants.teamB : displayRoom.participants.teamA;
-    const opponentFormationAssignments =
-      myTeam === 'A'
-        ? (displayRoom.formations?.teamB?.assignments ?? [])
-        : (displayRoom.formations?.teamA?.assignments ?? []);
-    const opponents = opponentPool.map((p) => {
-      const formationSlot = opponentFormationAssignments.find(
-        (a) => a.playerId === p.userId,
-      );
-      return {
-        userId: p.userId,
-        fullName: p.fullName,
-        avatarUrl: p.avatarUrl,
-        position: formationSlot?.position ?? p.position,
-        teamAssignment: p.teamAssignment as 'A' | 'B',
-      };
-    });
-
-    await startSession({
-      roomId: displayRoom.roomId,
-      isHost,
-      teamAName,
-      teamBName,
-      venue: {
-        venueId: displayRoom.field.venue.venueId,
-        fieldId: displayRoom.fieldId,
-        fieldName: displayRoom.field.fieldName,
-        venueName: displayRoom.field.venue.venueName,
-        address: displayRoom.field.venue.address,
-        photoUrls: (venuePhotosToShow ?? [])
-          .map((p) => p.photoUrl)
-          .filter(Boolean),
-      },
-      matchDate: displayRoom.matchDate,
-      startTime: displayRoom.startTime,
-      myTeam,
-      teammates,
-      opponents,
-    });
-    navigation?.navigate('FeedbackIntro', { roomId: displayRoom.roomId });  
-  };
-
-  const handleNavigateToEloBreakdown = () => {
-    if (roomActionsBlocked) return;
-    navigation?.navigate('EloBreakdown', {
-      matchId: displayRoom?.roomId,
-      matchLabel:
-        displayRoom?.roomName ||
-        `${displayRoom?.teamNames?.A ?? t('roomDetail.teamA', 'Team A')} vs ${displayRoom?.teamNames?.B ?? t('roomDetail.teamB', 'Team B')}`,
-    });
-  };
 
   const teamAName =
     displayRoom?.formations?.teamA?.teamName ||
@@ -683,85 +376,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     teamAName,
     teamBName,
   ]);
-
-  const handleSubmitAiQuery = useCallback(() => {
-    const trimmedQuery = aiQuery.trim();
-    if (!displayRoom || !trimmedQuery) return;
-    setAiPlayerSuggestError(null);
-    suggestPlayers(
-      {
-        query: trimmedQuery,
-        roomId: displayRoom.roomId,
-        page: 1,
-        pageSize: 10,
-      },
-      {
-        onSuccess: (response) => {
-          setAiPlayerSuggestError(null);
-          const mappedPlayers: SuggestedPlayerProfile[] = (response.data.profiles || []).map(
-            (profile) => ({
-              profileId: profile.profileId,
-              userId: profile.userId,
-              userFullName: profile.userFullName,
-              userEmail: profile.userEmail,
-              userAvatarUrl: profile.userAvatarUrl,
-              currentElo: profile.currentElo ?? 0,
-              currentRank: profile.currentRank ?? '',
-              isLegend: profile.isLegend ?? false,
-              trustScore: profile.trustScore ?? 0,
-              totalMatches: profile.totalMatches ?? 0,
-              wins: profile.wins ?? 0,
-              losses: profile.losses ?? 0,
-              draws: profile.draws ?? 0,
-              mvpCount: profile.mvpCount ?? 0,
-              winStreak: profile.winStreak ?? 0,
-              maxWinStreak: profile.maxWinStreak ?? 0,
-              preferredPositions: profile.preferredPositions ?? '',
-              preferredFoot: profile.preferredFoot ?? '',
-              createdAt: profile.createdAt ?? '',
-            }),
-          );
-          setAiPlayerRecommendations(mappedPlayers);
-        },
-        onError: (error: any) => {
-          setAiPlayerSuggestError(
-            getTranslatedError(error?.details.detail, error?.code) ||
-              t('aiRecommendation.searching'),
-          );
-          setAiPlayerRecommendations([]);
-        },
-      },
-    );
-  }, [aiQuery, displayRoom, suggestPlayers, t]);
-
-  const handleInvitePlayer = useCallback(
-    (player: SuggestedPlayerProfile) => {
-      if (!displayRoom) return;
-
-      inviteFriend(
-        {
-          roomId: displayRoom.roomId,
-          friendUserId: player.userId,
-        },
-        {
-          onSuccess: () => {
-            toast.success(
-              t('roomDetail.notifications.success'),
-              t('roomDetail.inviteFriendSuccess'),
-            );
-          },
-          onError: (error: any) => {
-            toast.error(
-              t('common.error', 'Lỗi'),
-              getTranslatedError(error?.message, error?.code) ||
-                t('roomDetail.inviteFriendError'),
-            );
-          },
-        },
-      );
-    },
-    [displayRoom, inviteFriend, t, toast],
-  );
 
   // ✅ Loading state
   if (isLoading) {
@@ -1184,17 +798,10 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         isLoading={isSuggestingPlayers || isInvitingFriend}
         errorMessage={aiPlayerSuggestError}
         playerRecommendations={aiPlayerRecommendations}
-        onClose={() => {
-          setAiQuery('');
-          setAiPlayerSuggestError(null);
-          setAiModalVisible(false);
-        }}
-        onChangeQuery={(value) => {
-          setAiPlayerSuggestError(null);
-          setAiQuery(value);
-        }}
+        onClose={closeAiModal}
+        onChangeQuery={onAiQueryChange}
         onSubmitQuery={handleSubmitAiQuery}
-        onInvitePlayer={(player) => handleInvitePlayer(player)}
+        onInvitePlayer={handleInvitePlayer}
       />
     </ThemedSafeAreaView>
   );

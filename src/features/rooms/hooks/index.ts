@@ -22,4 +22,5 @@ export { useSuggestAI } from './useSuggestAI';
 export { useSuggestPlayers } from './useSuggestAI';
 export { useGoBackOrResetToMainTabs } from './useGoBackOrResetToMainTabs';
 export { useRoomInformationSignalRHandlers } from './useRoomInformationSignalRHandlers';
+export { useRoomInformationScreenHandlers } from './useRoomInformationScreenHandlers';
 export { useCheckIn } from './useCheckIn';

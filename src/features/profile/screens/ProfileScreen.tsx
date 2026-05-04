@@ -561,6 +561,37 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               {t("profile.application")}
             </Text>
             <TouchableOpacity
+              onPress={() => navigation.navigate("BookingSchedule")}
+              style={[
+                styles.settingItem,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.border,
+                  paddingVertical: theme.spacing.m,
+                  paddingHorizontal: theme.spacing.m,
+                  borderRadius: theme.radius.m,
+                  marginBottom: theme.spacing.xs,
+                },
+              ]}
+              >
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={theme.colors.text}
+              />
+              <Text
+                style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}
+              >
+                {t("profile.bookingSchedule")}
+              </Text> 
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => setLanguage(language === "vi" ? "en" : "vi")}
               style={[
                 styles.settingItem,
@@ -655,6 +686,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 thumbColor={theme.colors.white}
               />
             </TouchableOpacity>
+
             <TouchableOpacity
               style={[
                 styles.settingItem,
