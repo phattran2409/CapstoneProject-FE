@@ -49,12 +49,12 @@ import { applyRoomFeedbackTestOverrides } from '@/features/rooms/dev/roomFeedbac
 import {
   useGoBackOrResetToMainTabs,
   useRoomInformationSignalRHandlers,
-  useInviteFriend,
   useRoomInformationScreenHandlers,
 } from '../hooks';
 import { styles } from './styles/RoomInformation.styles';
 import { getRoomAutoClosePolicy } from '../utils/roomAutoClosePolicy';
 import { useSuggestPlayers } from '../hooks/useSuggestAI';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 type RoomInformationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
@@ -82,8 +82,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const { mutate: updateParticipant, isPending: isUpdatingParticipant } = useUpdateParticipant();
   const { mutate: leaveMatchRoom, isPending: isLeaving } = useLeaveMatchRoom();
   const { mutate: kickPlayer, isPending: isKicking } = useKickPlayer();
-  const { mutate: suggestPlayers, isPending: isSuggestingPlayers } = useSuggestPlayers();
-  const { mutate: inviteFriend, isPending: isInvitingFriend } = useInviteFriend();
+  const { mutateAsync: suggestPlayers } = useSuggestPlayers();
 
   const { user } = useAuthStore();
   
@@ -207,7 +206,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
   const [isOpenRoomPolicyExpanded, setIsOpenRoomPolicyExpanded] = useState(false);
 
   const toast = useToast();
-
   const {
     transferRequest,
     setTransferRequest,
@@ -237,8 +235,9 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     aiQuery,
     aiPlayerRecommendations,
     aiPlayerSuggestError,
+    aiThinkingText,
+    isSuggestingPlayers,
     handleSubmitAiQuery,
-    handleInvitePlayer,
     closeAiModal,
     onAiQueryChange,
   } = useRoomInformationScreenHandlers({
@@ -258,13 +257,20 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     kickPlayer,
     leaveMatchRoom,
     suggestPlayers,
-    inviteFriend,
     showDanger,
     showConfirm,
     showInfo,
     showSuccess,
     t,
   });
+
+  const aiPlayerRecommendationsForModal = useMemo(
+    () =>
+      user?.userId
+        ? aiPlayerRecommendations.filter((p) => p.userId !== user.userId)
+        : aiPlayerRecommendations,
+    [aiPlayerRecommendations, user?.userId],
+  );
 
   // ==================== SignalR Integration ====================
 
@@ -451,24 +457,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         </View>
         {displayRoom.status === 'Open' && !roomActionsBlocked && (isHost || currentUserParticipant) && (
         <View style={styles.headerRight}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <TouchableOpacity
-              onPress={() => setAiModalVisible(true)}
-              style={styles.menuButton}
-            >
-              <Ionicons name="sparkles" size={24} color={theme.colors.neonGreen}/>
-            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowMenuModal(true)}
               style={styles.menuButton}
             >
               <Ionicons name="ellipsis-vertical" size={24} color={theme.colors.textSecondary}/>
             </TouchableOpacity> 
-          </View>
         </View>
         )} 
       </ThemedView>
-
       {(displayRoom.status === 'Locked' || displayRoom.status === 'InProgress') && (
         <MatchCountdown
           matchDate={displayRoom.matchDate}
@@ -625,6 +622,17 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
             />
             
           </View>
+          {displayRoom.status === 'Open' && (
+            <TouchableOpacity onPress={() => setAiModalVisible(true)} style={[styles.aiRecommendationButton, 
+              { backgroundColor: theme.colors.neonGreen + '18', borderColor: theme.colors.neonGreen, borderWidth: 1, borderRadius: 10, padding: 10 }
+            ]}
+            >
+              <FontAwesome5 name="robot" size={16} color={theme.colors.neonGreen}/>
+              <ThemedText size="s" weight="bold" style={{ color: theme.colors.neonGreen }}>
+                {t('aiRecommendation.player.title')}
+              </ThemedText>
+            </TouchableOpacity>
+          )}
           {/* Team Lineup Section */}
           <TeamLineup
             displayRoom={displayRoom}
@@ -794,14 +802,15 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       <AIRecommendationModal
         visible={aiModalVisible}
         mode="player"
+        roomId={displayRoom.roomId}
         query={aiQuery}
-        isLoading={isSuggestingPlayers || isInvitingFriend}
+        isLoading={isSuggestingPlayers}
+        thinkingText={aiThinkingText}
         errorMessage={aiPlayerSuggestError}
-        playerRecommendations={aiPlayerRecommendations}
+        playerRecommendations={aiPlayerRecommendationsForModal}
         onClose={closeAiModal}
         onChangeQuery={onAiQueryChange}
         onSubmitQuery={handleSubmitAiQuery}
-        onInvitePlayer={handleInvitePlayer}
       />
     </ThemedSafeAreaView>
   );

@@ -1204,6 +1204,11 @@ const vi = {
   },
   aiRecommendation: {
     searching: "AI đang tìm gợi ý phù hợp nhất...",
+    thinking: {
+      title: "AI đang suy nghĩ...",
+      analyze: "Đang phân tích câu hỏi của bạn...",
+      search: "Đang tìm kiếm dữ liệu phù hợp...",
+    },
     match: {
       title: "AI Gợi ý Trận đấu",
       placeholder: "Nhập yêu cầu của bạn (VD: Tìm sân 5 gần Cầu Giấy tối nay)...",
@@ -1259,7 +1264,7 @@ const vi = {
     bookingIncome: "Thu nhập từ đặt sân",
     topup: "Nạp tiền",
     refund: "Hoàn tiền",
-    checkinFee: "Phí check-in",
+    checkinFee: "Thanh toán",
     other: "Khác",
     recentTransactions: "Giao dịch gần đây",
     viewAll: "Xem tất cả",
@@ -1289,7 +1294,7 @@ const vi = {
     updateBankInfo: "Cập nhật thông tin ngân hàng",
     updateBankInfoBtn: "Cập nhật thông tin",
     saveBankInfo: "Lưu thông tin ngân hàng",
-    depositMinError: "Vui lòng nhập số tiền tối thiểu 1.000 VND",
+    depositMinError: "Vui lòng nhập số tiền tối thiểu 10.000 VND",
     paymentLinkError: "Không thể mở link thanh toán. Vui lòng thử lại.",
     noPaymentUrl: "Không nhận được link thanh toán. Vui lòng thử lại.",
     noPaymentLinkError: "Không nhận được link thanh toán. Vui lòng thử lại.",
@@ -1313,7 +1318,7 @@ const vi = {
       booking: "Đặt sân",
       topup: "Nạp tiền",
       refund: "Hoàn tiền",
-      checkin: "Check-in",
+      checkin: "Thanh toán",
       withdraw: "Rút tiền",
     },
     withdrawStatus: {

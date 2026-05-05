@@ -123,4 +123,14 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  aiRecommendationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: 16,
+    padding: 10,
+    borderRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
 });

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import type { UseMutateFunction } from '@tanstack/react-query';
+import { useState, useCallback, useRef } from 'react';
+import type { UseMutateAsyncFunction } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AutoCloseCountdownTickPayload } from '@/shared/hooks';
@@ -16,8 +16,14 @@ import type {
 import type { HostTransferRequestPayload } from '../components/HostTransferRequestDialog';
 import type { PlayerPosition } from './useJoinMatchRoom';
 import { useResponseTransferHost } from './useTransferHost';
-import { useFeedbackSessionStore } from '@/features/feedback';
+import { useFeedbackSessionStore } from '@/features/feedback/store/feedbackSessionStore';
 import { getTranslatedError } from '@/shared/utils/errorTranslations';
+import { getAIThinkingText } from '@/shared/utils/geminiService';
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 type RoomNav = NativeStackNavigationProp<RootStackParamList, 'RoomInformation'>;
 
 type ParticipantLike = {
@@ -62,16 +68,12 @@ export interface UseRoomInformationScreenHandlersParams {
     callbacks?: MutationCallbacks,
   ) => void;
   leaveMatchRoom: (roomId: string, callbacks?: MutationCallbacks) => void;
-  suggestPlayers: UseMutateFunction<
+  suggestPlayers: UseMutateAsyncFunction<
     SuggestPlayersResponse,
     Error,
     SuggestPlayersRequest,
     unknown
   >;
-  inviteFriend: (
-    variables: { roomId: string; friendUserId: string },
-    callbacks?: MutationCallbacks,
-  ) => void;
   showDanger: (
     title: string,
     message: string,
@@ -116,7 +118,6 @@ export function useRoomInformationScreenHandlers({
   kickPlayer,
   leaveMatchRoom,
   suggestPlayers,
-  inviteFriend,
   showDanger,
   showConfirm,
   showInfo,
@@ -145,6 +146,9 @@ export function useRoomInformationScreenHandlers({
     [],
   );
   const [aiPlayerSuggestError, setAiPlayerSuggestError] = useState<string | null>(null);
+  const [aiThinkingText, setAiThinkingText] = useState<string | null>(null);
+  const [isSuggestingPlayers, setIsSuggestingPlayers] = useState(false);
+  const aiPlayerSuggestLockRef = useRef(false);
 
   const handleAutoCloseCountdownTick = useCallback((payload: AutoCloseCountdownTickPayload) => {
     setAutoCloseSeconds(payload.secondsRemaining);
@@ -485,92 +489,76 @@ export function useRoomInformationScreenHandlers({
     });
   }, [roomActionsBlocked, navigation, displayRoom, t]);
 
-  const handleSubmitAiQuery = useCallback(() => {
+  const handleSubmitAiQuery = useCallback(async () => {
     const trimmedQuery = aiQuery.trim();
-    if (!displayRoom || !trimmedQuery) return;
+    if (!displayRoom || !trimmedQuery || aiPlayerSuggestLockRef.current) return;
+
+    aiPlayerSuggestLockRef.current = true;
+    setIsSuggestingPlayers(true);
     setAiPlayerSuggestError(null);
-    suggestPlayers(
-      {
+    setAiThinkingText(null);
+    setAiPlayerRecommendations([]);
+
+    try {
+      const thinking = await getAIThinkingText(trimmedQuery, 'player').catch(() => '');
+      setAiThinkingText(thinking);
+      await delay(5000);
+
+      const response = await suggestPlayers({
         query: trimmedQuery,
         roomId: displayRoom.roomId,
         page: 1,
         pageSize: 10,
-      },
-      {
-        onSuccess: (response) => {
-          setAiPlayerSuggestError(null);
-          const mappedPlayers: SuggestedPlayerProfile[] = (response.data.profiles || []).map(
-            (profile) => ({
-              profileId: profile.profileId,
-              userId: profile.userId,
-              userFullName: profile.userFullName,
-              userEmail: profile.userEmail,
-              userAvatarUrl: profile.userAvatarUrl,
-              currentElo: profile.currentElo ?? 0,
-              currentRank: profile.currentRank ?? '',
-              isLegend: profile.isLegend ?? false,
-              trustScore: profile.trustScore ?? 0,
-              totalMatches: profile.totalMatches ?? 0,
-              wins: profile.wins ?? 0,
-              losses: profile.losses ?? 0,
-              draws: profile.draws ?? 0,
-              mvpCount: profile.mvpCount ?? 0,
-              winStreak: profile.winStreak ?? 0,
-              maxWinStreak: profile.maxWinStreak ?? 0,
-              preferredPositions: profile.preferredPositions ?? '',
-              preferredFoot: profile.preferredFoot ?? '',
-              createdAt: profile.createdAt ?? '',
-            }),
-          );
-          setAiPlayerRecommendations(mappedPlayers);
-        },
-        onError: (error: unknown) => {
-          const err = error as { details?: { detail?: string }; code?: string };
-          setAiPlayerSuggestError(
-            getTranslatedError(err?.details?.detail, err?.code) || t('aiRecommendation.searching'),
-          );
-          setAiPlayerRecommendations([]);
-        },
-      },
-    );
-  }, [aiQuery, displayRoom, suggestPlayers, t]);
+      });
 
-  const handleInvitePlayer = useCallback(
-    (player: SuggestedPlayerProfile) => {
-      if (!displayRoom) return;
-      inviteFriend(
-        {
-          roomId: displayRoom.roomId,
-          friendUserId: player.userId,
-        },
-        {
-          onSuccess: () => {
-            toast.success(
-              t('roomDetail.notifications.success'),
-              t('roomDetail.inviteFriendSuccess'),
-            );
-          },
-          onError: (error: unknown) => {
-            const err = error as { message?: string; code?: string };
-            toast.error(
-              t('common.error', 'Lỗi'),
-              getTranslatedError(err?.message, err?.code) || t('roomDetail.inviteFriendError'),
-            );
-          },
-        },
+      setAiPlayerSuggestError(null);
+      const mappedPlayers: SuggestedPlayerProfile[] = (response.data.profiles || []).map(
+        (profile) => ({
+          profileId: profile.profileId,
+          userId: profile.userId,
+          userFullName: profile.userFullName,
+          userEmail: profile.userEmail,
+          userAvatarUrl: profile.userAvatarUrl,
+          currentElo: profile.currentElo ?? 0,
+          currentRank: profile.currentRank ?? '',
+          isLegend: profile.isLegend ?? false,
+          trustScore: profile.trustScore ?? 0,
+          totalMatches: profile.totalMatches ?? 0,
+          wins: profile.wins ?? 0,
+          losses: profile.losses ?? 0,
+          draws: profile.draws ?? 0,
+          mvpCount: profile.mvpCount ?? 0,
+          winStreak: profile.winStreak ?? 0,
+          maxWinStreak: profile.maxWinStreak ?? 0,
+          preferredPositions: profile.preferredPositions ?? '',
+          preferredFoot: profile.preferredFoot ?? '',
+          createdAt: profile.createdAt ?? '',
+        }),
       );
-    },
-    [displayRoom, inviteFriend, t, toast],
-  );
+      setAiPlayerRecommendations(mappedPlayers);
+    } catch (error: unknown) {
+      const err = error as { details?: { detail?: string }; code?: string };
+      setAiPlayerSuggestError(
+        getTranslatedError(err?.details?.detail, err?.code) || t('aiRecommendation.searching'),
+      );
+      setAiPlayerRecommendations([]);
+    } finally {
+      aiPlayerSuggestLockRef.current = false;
+      setIsSuggestingPlayers(false);
+    }
+  }, [aiQuery, displayRoom, suggestPlayers, t]);
 
   const closeAiModal = useCallback(() => {
     setAiQuery('');
     setAiPlayerSuggestError(null);
+    setAiThinkingText(null);
+    setAiPlayerRecommendations([]);
     setAiModalVisible(false);
   }, []);
 
   const onAiQueryChange = useCallback((value: string) => {
     setAiPlayerSuggestError(null);
+    setAiThinkingText(null);
     setAiQuery(value);
   }, []);
 
@@ -603,8 +591,9 @@ export function useRoomInformationScreenHandlers({
     aiQuery,
     aiPlayerRecommendations,
     aiPlayerSuggestError,
+    aiThinkingText,
+    isSuggestingPlayers,
     handleSubmitAiQuery,
-    handleInvitePlayer,
     closeAiModal,
     onAiQueryChange,
   };

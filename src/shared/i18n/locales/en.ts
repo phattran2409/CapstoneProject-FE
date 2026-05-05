@@ -1182,6 +1182,11 @@ const en = {
   },
   aiRecommendation: {
     searching: "AI is finding the best recommendations...",
+    thinking: {
+      title: "AI is thinking...",
+      analyze: "Analyzing your query...",
+      search: "Searching for matching data...",
+    },
     match: {
       title: "AI Match Room Suggestions",
       placeholder: "Enter your request (e.g. Find a 5v5 field near Cau Giay tonight)...",
@@ -1291,7 +1296,7 @@ const en = {
       booking: "Booking",
       topup: "Top-up",
       refund: "Refund",
-      checkin: "Check-in",
+      checkin: "Payment",
       withdraw: "Withdraw",
     },
     withdrawStatus: {

@@ -107,12 +107,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <ThemedSafeAreaView>
-      {/* Header */}
-      <ThemedScrollView
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        contentContainerStyle={styles.scrollContent}
-      >
         <ThemedView
           style={[
             styles.header,
@@ -126,7 +120,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <ThemedText variant="primary" size="xxl" weight="bold">
             {t("profile.title")}
           </ThemedText>
-        </ThemedView>
+      </ThemedView>
+      {/* Header */}
+      <ThemedScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.scrollContent}
+      >
         <ThemedView
           style={{
             paddingHorizontal: theme.spacing.l,

@@ -17,6 +17,7 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import { formatDateYYYYMMDDLocal } from "@/shared/utils/dateUtils";
 import {
   ThemedSafeAreaView,
+  ThemedScrollView,
   ThemedText,
   ThemedView,
 } from "@/shared/components/themed";
@@ -106,60 +107,99 @@ const BookingScheduleScreen: React.FC<BookingScheduleScreenProps> = ({
         ]}
       >
         <View style={styles.rowBetween}>
-          <ThemedText size="m" weight="bold">
-            {item.fieldName}
-          </ThemedText>
-          <ThemedText
-            size="s"
-            weight="semiBold"
-            style={{ color: getStatusColor(item.status) }}
+          <View style={[styles.row, { flex: 1, marginRight: theme.spacing.s }]}>
+            <Ionicons
+              name="football-outline"
+              size={15}
+              color={theme.colors.neonGreen}
+              style={{ marginRight: 6 }}
+            />
+            <ThemedText size="m" weight="bold" numberOfLines={1} style={{ flex: 1 }}>
+              {item.fieldName}
+            </ThemedText>
+          </View>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: `${getStatusColor(item.status)}18`, borderColor: `${getStatusColor(item.status)}55` },
+            ]}
           >
-            {t(`bookingSchedule.status.${item.status}`, {
-              defaultValue: item.status,
-            })}
+            <ThemedText
+              size="s"
+              weight="semiBold"
+              style={{ color: getStatusColor(item.status) }}
+            >
+              {t(`bookingSchedule.status.${item.status}`)}
+            </ThemedText>
+          </View>
+        </View>
+
+        <View style={[styles.row, { marginTop: theme.spacing.xs }]}>
+          <Ionicons
+            name="location-outline"
+            size={13}
+            color={theme.colors.textSecondary}
+            style={{ marginRight: 5 }}
+          />
+          <ThemedText variant="secondary" size="s" style={{ flex: 1 }} numberOfLines={1}>
+            {item.venueName}
           </ThemedText>
         </View>
-        <ThemedText
-          variant="secondary"
-          size="s"
-          style={{ marginTop: theme.spacing.xs }}
+
+        <View style={[styles.row, { marginTop: theme.spacing.xs }]}>
+          <Ionicons
+            name="time-outline"
+            size={13}
+            color={theme.colors.textSecondary}
+            style={{ marginRight: 5 }}
+          />
+          <ThemedText variant="secondary" size="s">
+            {`${item.startTime.substring(0, 5)} - ${item.endTime.substring(0, 5)}`}
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.amountRow,
+            { marginTop: theme.spacing.s, borderTopColor: theme.colors.border },
+          ]}
         >
-          {item.venueName}
-        </ThemedText>
-        <ThemedText
-          variant="secondary"
-          size="s"
-          style={{ marginTop: theme.spacing.xs }}
-        >
-          {`${item.startTime.substring(0, 5)} - ${item.endTime.substring(0, 5)}`}
-        </ThemedText>
-        <ThemedText size="m" weight="bold" style={{ marginTop: theme.spacing.s }}>
-          {formatCurrency(item.totalAmount)}
-        </ThemedText>
+          <Ionicons name="cash-outline" size={15} color={theme.colors.neonGreen} />
+          <ThemedText size="m" weight="bold" style={{ color: theme.colors.neonGreen }}>
+            {formatCurrency(item.totalAmount)}
+          </ThemedText>
+        </View>
       </ThemedView>
     );
   };
 
   return (
     <ThemedSafeAreaView>
+      {/* Header */}
       <ThemedView
         style={[
           styles.header,
           {
             borderBottomColor: theme.colors.border,
             paddingHorizontal: theme.spacing.l,
+            paddingVertical: theme.spacing.m,
+            marginTop: theme.spacing.xl,
           },
         ]}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
         </TouchableOpacity>
         <ThemedText size="xl" weight="bold">
           {t("bookingSchedule.title")}
         </ThemedText>
         <View style={styles.headerRight} />
       </ThemedView>
-
+      {/* Date Picker */} 
       <View style={{ padding: theme.spacing.l }}>
         <TouchableOpacity
           style={[
@@ -221,6 +261,8 @@ const BookingScheduleScreen: React.FC<BookingScheduleScreenProps> = ({
         </View>
       ) : (
         <FlatList
+          refreshing={isFetching}
+          onRefresh={refetch}
           data={data?.bookings ?? []}
           keyExtractor={(item) => item.bookingId}
           renderItem={renderItem}
@@ -287,15 +329,21 @@ const BookingScheduleScreen: React.FC<BookingScheduleScreenProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    height: 56,
     borderBottomWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerRight: {
-    width: 24,
-    height: 24,
+    width: 36,
+    height: 36,
   },
   dateButton: {
     borderWidth: 1,
@@ -308,14 +356,31 @@ const styles = StyleSheet.create({
   },
   card: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  statusBadge: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  amountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingTop: 10,
+    borderTopWidth: 1,
   },
   retryButton: {
     borderWidth: 1,

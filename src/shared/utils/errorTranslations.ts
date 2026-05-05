@@ -138,6 +138,7 @@ const backendErrorCodeMessages: Record<string, string> = {
   "MatchRoom.SlotAlreadyBooked": "Thời gian đã được đặt chỗ bởi phòng khác",
   "AiSuggestion.ServiceUnavailable" : "Dịch vụ AI tạm thời không phản hồi",
   "MatchRoom.TooFar": "Bạn đang cách sân quá xa",
+  "MatchRoomErrors.InvalidTime" : "Không thể tạo trận đấu có thời gian bắt đầu ở quá khứ" 
 };
 
 export const getTranslatedError = (errMessage?: string, errCode?: string): string => {

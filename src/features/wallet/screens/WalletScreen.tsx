@@ -34,7 +34,11 @@ import { Transaction, TransactionQuery, TransactionType, withdrawals as Withdraw
 import { useWalletTransaction } from "../hooks/useWalletTransaction";
 import { useGetMyWithdrawals } from "../hooks/useWithdrawal";
 import { formatDate, formatDateDDMMYYYY, formatDateTime } from "@/shared/utils";
-import { helperTransactionCategory, helperTransactionTypeIcons } from "../helper/helperWallet";
+import {
+  helperTransactionCategory,
+  helperTransactionTypeIcons,
+  helperTranslateTransactionDescription,
+} from "../helper/helperWallet";
 
 const formatBalance = (value: number) =>
   value.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
@@ -49,7 +53,7 @@ interface WalletScreenProps {
 
 const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: wallet, isLoading: balanceLoading } = useWalletBalance();
   const depositMutation = useWalletDeposit();
   const { data: bankInfo, isLoading: bankInfoLoading } = useGetBankInfo();
@@ -117,9 +121,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     const amount = Number(withdrawAmount?.replace(/\D/g, "") || 0);
     if (!amount || amount < 10000) {
       setWithdrawError(
-        t("wallet.withdrawMinError", {
-          defaultValue: "Vui lòng nhập số tiền tối thiểu 10.000 VND",
-        }),
+        t("wallet.withdrawMinError"),
       );
       return;
     }
@@ -129,9 +131,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       setShowWithdrawModal(false);
       Alert.alert(
         t("common.success"),
-        t("wallet.withdrawSuccess", {
-          defaultValue: "Yêu cầu rút tiền đã được gửi thành công",
-        }),
+        t("wallet.withdrawSuccess"),
       );
     } catch (err: any) {
       const errorMessage =
@@ -145,11 +145,9 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
 
   const handleDeposit = async () => {
     const amount = Number(depositAmount?.replace(/\D/g, "") || 0);
-    if (!amount || amount < 1000) {
+    if (!amount || amount < 10000) {
       setDepositError(
-        t("wallet.depositMinError", {
-          defaultValue: "Vui lòng nhập số tiền tối thiểu 1.000 VND",
-        }),
+        t("wallet.depositMinError"),
       );
       return;
     }
@@ -185,6 +183,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     const isIncome = item.transactionType === "BookingIncome" || item.transactionType === "Deposit" || item.transactionType === "Refund";
     const { icon: iconName, color: iconColor, bg: iconBg } = helperTransactionTypeIcons(item.transactionType,theme);
     const category = helperTransactionCategory(item.transactionType, t);
+    const translatedDescription = helperTranslateTransactionDescription(item.description, i18n.language);
     return (
       <ThemedView
         style={[
@@ -213,47 +212,47 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
             color={iconColor}
           />
         </View>
-
-        <View style={styles.transactionInfo}>
-          <ThemedText
-            variant="primary"
-            size="m"
-            weight="semiBold"
-            numberOfLines={1}
-          >
-            {item.description}
-          </ThemedText>
-          <ThemedText
-            variant="secondary"
-            size="xs"
-            style={{ marginTop: 2 }}
-            numberOfLines={1}
-          >
-            {formatDateTime(item.createdAt)}
-          </ThemedText>
-        </View>
-
-        <View style={styles.transactionMeta}>
-          <ThemedText
-            size="m"
-            weight="bold"
-            style={{
-              color: isIncome ? theme.colors.neonGreen : theme.colors.error,
-              textAlign: "right",
-            }}
-          >
-            {formatBalance(item.amount)} VND
-          </ThemedText>
-          <ThemedText
-            size="xs"
-            style={{
-              marginTop: 2,
-              color: theme.colors.textSecondary,
-              textTransform: "uppercase",
-            }}
-          >
-            {category}
-          </ThemedText>
+        <View style={{ flex: 1 }}>
+          <View style={[styles.transactionInfo, {  borderBottomColor: theme.colors.border, paddingVertical: theme.spacing.s }]}>
+            <ThemedText
+              variant="primary"
+              size="m"
+              weight="semiBold"
+              numberOfLines={1}
+            >
+              {translatedDescription}
+            </ThemedText>
+            <ThemedText
+              variant="secondary"
+              size="xs"
+              style={{ marginTop: 2 }}
+              numberOfLines={1}
+            >
+              {formatDateTime(item.createdAt)}
+            </ThemedText>
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: theme.spacing.s}}>
+            <ThemedText
+              size="m"
+              weight="bold"
+              style={{
+                color: isIncome ? theme.colors.neonGreen : theme.colors.error,
+                textAlign: "right",
+              }}
+            >
+              {formatBalance(item.amount)} VND
+            </ThemedText>
+            <ThemedText
+              size="xs"
+              style={{
+                marginTop: 2,
+                color: theme.colors.textSecondary,
+                textTransform: "uppercase",
+              }}
+            >
+              {category}
+            </ThemedText>
+          </View>
         </View>
       </ThemedView>
     );
@@ -281,7 +280,7 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     },
     {
       key: "CheckinFee",
-      label: t("wallet.filters.checkin", { defaultValue: "Check-in" }),
+      label: t("wallet.filters.checkin", { defaultValue: "Thanh Toán" }),
       value: "CheckinFee",
     },
     {
@@ -921,9 +920,7 @@ const styles = StyleSheet.create({
   },
   transactionInfo: {
     flex: 1,
-  },
-  transactionMeta: {
-    alignItems: "flex-end",
+    borderBottomWidth: 1,
   },
   modalOverlay: {
     flex: 1,
