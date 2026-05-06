@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedView, ThemedText } from "@/shared/components/themed";
 import { Comment } from "../types/post.types";
-import { ActionButton, LikeButton } from "@/shared/components";
+import { ActionButton, LikeButton, PremiumBadge } from "@/shared/components";
 import { RepliesList } from "./RepliesList";
 import { useCreateComment } from "../hooks";
 
@@ -101,9 +101,17 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         </View>
         <View style={styles.commentContent}>
           <View style={styles.commentAuthorRow}>
-            <ThemedText variant="primary" size="m" weight="semiBold">
-              {comment.userFullName}
-            </ThemedText>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <ThemedText variant="primary" size="m" weight="semiBold">
+                {comment.userFullName}
+              </ThemedText>
+              {comment.isPremium && (
+                <PremiumBadge
+                  style={{ paddingVertical: 2, paddingHorizontal: 6 }}
+                  labelFontSize={10}
+                />
+              )}
+            </View>
             <ThemedText variant="secondary" size="s" style={styles.timestamp}>
               {new Date(comment.createdAt).toLocaleDateString()}
               {comment.isEdited &&

@@ -292,11 +292,11 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
               />
 
               <EloBreakdownItem
-                type="winRate"
-                title={t("eloBreakdown.winRate.title", "Hiệu suất")}
+                type="winStreak"
+                title={t("eloBreakdown.winStreak.title", "Chuỗi thắng")}
                 description={
                   getDirectionText(
-                    latest?.k3WinRateComponent ?? 0,
+                    latest?.k3WinStreakComponent ?? 0,
                     t(
                       "eloBreakdown.direction.positive",
                       "Mục này đang cộng điểm ELO.",
@@ -311,10 +311,10 @@ const EloBreakdownScreen: React.FC<EloBreakdownScreenProps> = ({
                     ),
                   )
                 }
-                value={`${(latest?.k3WinRateComponent ?? 0) >= 0 ? "+" : ""}${(
-                  latest?.k3WinRateComponent ?? 0
+                value={`${(latest?.k3WinStreakComponent ?? 0) >= 0 ? "+" : ""}${(
+                  latest?.k3WinStreakComponent ?? 0
                 ).toFixed(2)}`}
-                valueDelta={latest?.k3WinRateComponent ?? 0}
+                valueDelta={latest?.k3WinStreakComponent ?? 0}
               />
 
               <EloBreakdownItem

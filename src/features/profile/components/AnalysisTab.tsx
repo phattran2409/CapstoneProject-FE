@@ -127,7 +127,7 @@ ví dụ trả về
       ) : null} 
 
       {/* AI Assessment Section */}
-      <View style={styles.assessmentSection}>
+      {/* <View style={styles.assessmentSection}>
         <View
           style={[
             styles.assessmentHeader,
@@ -169,7 +169,7 @@ ví dụ trả về
             {t("personalPage.analysis.noAssessment")}
           </Text>
         ) : null}
-      </View>
+      </View> */}
     </View>
   );
 };

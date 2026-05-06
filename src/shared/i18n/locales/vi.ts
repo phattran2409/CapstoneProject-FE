@@ -1426,9 +1426,9 @@ const vi = {
       title: "Đánh giá đồng đội",
       desc: "Được bình chọn là MVP của trận",
     },
-    winRate: {
-      title: "Tỷ lệ thắng",
-      desc: "Thắng đối thủ có bậc Rank cao hơn",
+    winStreak: {
+      title: "Chuỗi thắng",
+      desc: "Thắng liên tiếp nhiều trận đấu",
     },
     feedbackContribution: {
       title: "Đóng góp đánh giá",
