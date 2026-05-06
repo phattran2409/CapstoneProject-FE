@@ -68,3 +68,4 @@ export { default as HorizontalScrollWithHint } from "./HorizontalScrollWithHint"
 export type { HorizontalScrollWithHintProps } from "./HorizontalScrollWithHint";
 export { ExpandableText, default as ExpandableTextDefault } from "./ExpandableText";
 export type { ExpandableTextProps } from "./ExpandableText";
+export { default as PremiumBadge } from "./PremiumBadge";

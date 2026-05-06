@@ -8,6 +8,7 @@ import {
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
 import { API_CONFIG } from "@/shared/constants/api";
+import { DepositResponse } from "@/features/wallet/types/wallet.types";
 
 export interface RadarAssessment {
   type: string;
@@ -269,4 +270,16 @@ export const getMyBookings = async (
   }
 
   return envelope.data;
+};
+
+export const purchasePremiumDirect = async (): Promise<DepositResponse> => {
+  const data = await apiClient.post(API_CONFIG.ENDPOINTS.PREMIUM.PURCHASE);
+  const body = data as unknown as ApiResponse<DepositResponse>;
+  if (body?.isSuccess) return body.data as DepositResponse;
+  return data as unknown as DepositResponse;
+};
+
+export const purchasePremiumByWallet = async (): Promise<unknown> => {
+  const data = await apiClient.post(API_CONFIG.ENDPOINTS.PREMIUM.PURCHASE_WALLET);
+  return data;
 };

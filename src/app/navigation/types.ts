@@ -44,6 +44,7 @@ export type RootStackParamList = {
   /** Giới thiệu app, tính năng mobile & tóm tắt điều khoản (Capstone register) */
   AppAboutTerms: undefined;
   BookingSchedule: undefined;
+  PremiumUpgrade: undefined;
   Notifications: undefined;
   PostDetail: { postId: string };
   CreatePost: undefined;

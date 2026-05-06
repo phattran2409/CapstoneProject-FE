@@ -14,6 +14,7 @@ export { default as ProfileDetailScreen } from "../features/profile/screens/Prof
 export { default as AchievementsScreen } from "../features/profile/screens/AchievementsScreen";
 export { default as AppAboutTermsScreen } from "../features/profile/screens/AppAboutTermsScreen";
 export { default as BookingScheduleScreen } from "../features/profile/screens/BookingScheduleScreen";
+export { default as PremiumUpgradeScreen } from "../features/profile/screens/PremiumUpgradeScreen";
 
 // Rooms Feature Screens
 export { default as RoomInformation } from "../features/rooms/screens/RoomInformation";
