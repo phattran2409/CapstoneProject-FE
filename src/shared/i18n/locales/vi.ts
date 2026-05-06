@@ -1255,6 +1255,10 @@ const vi = {
   },
   aiRecommendation: {
     searching: "AI đang tìm gợi ý phù hợp nhất...",
+    premium: {
+      title: "Tính năng gói đăng ký",
+      description: "Tính năng AI đề xuất chỉ dành cho tài khoản gói đăng ký. Vui lòng nâng cấp để mở khóa.",
+    },
     thinking: {
       title: "AI đang suy nghĩ...",
       analyze: "Đang phân tích câu hỏi của bạn...",

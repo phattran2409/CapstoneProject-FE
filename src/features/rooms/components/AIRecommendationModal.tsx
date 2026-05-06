@@ -53,6 +53,7 @@ interface AIRecommendationModalProps {
   matchRecommendations?: MatchRoom[];
   playerRecommendations?: SuggestedPlayerProfile[];
   roomId?: string;
+  isPremium?: boolean; 
   onClose: () => void;
   onChangeQuery?: (value: string) => void;
   onSubmitQuery?: () => void;
@@ -145,6 +146,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
   matchRecommendations = [],
   playerRecommendations = [],
   roomId,
+  isPremium,
   onClose,
   onChangeQuery,
   onSubmitQuery,
@@ -173,6 +175,8 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
     }
   }, [isLoading, spinAnim]);
   const accentColor = theme.colors.neonGreen;
+  const premiumNeonGold = '#FFD700';
+  const isPremiumUser = !!isPremium;
   const isMatchMode = mode === 'match';
   const resultCount = isMatchMode ? matchRecommendations.length : playerRecommendations.length;
   const title = isMatchMode
@@ -450,157 +454,189 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <View
-              style={[
-                styles.searchBox,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: `${accentColor}8A`,
-                  shadowColor: accentColor,
-                },
-              ]}
-            >
-              <Ionicons name="sparkles" size={24} color={accentColor} />
-              <TextInput
-                value={query}
-                onChangeText={onChangeQuery}
-                placeholder={placeholder}
-                placeholderTextColor={theme.colors.textSecondary}
-                style={[styles.input, { color: theme.colors.text }]}
-                multiline
-                returnKeyType="send"
-                onSubmitEditing={onSubmitQuery}
-              />
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={[
-                  styles.submitButton,
-                  {
-                    backgroundColor: accentColor,
-                    opacity: isLoading ? 0.7 : 1,
-                  },
-                ]}
-                disabled={isLoading}
-                onPress={onSubmitQuery}
-              >
-                <Ionicons name="send" size={20} color={theme.colors.black} />
-              </TouchableOpacity>
-            </View>
-
-            {isLoading ? (
+            {!isPremiumUser ? (
               <View
                 style={[
-                  styles.thinkingPanel,
+                  styles.premiumNotice,
                   {
-                    borderColor: `${accentColor}33`,
-                    backgroundColor: `${accentColor}0A`,
+                    borderColor: premiumNeonGold,
+                    backgroundColor: `${premiumNeonGold}14`,
+                    shadowColor: premiumNeonGold,
                   },
                 ]}
               >
-                <View style={styles.thinkingHeader}>
-                  <Animated.View
-                    style={{
-                      transform: [
-                        {
-                          rotate: spinAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg'],
-                          }),
-                        },
-                      ],
-                    }}
-                  >
-                    <Ionicons name="sync" size={15} color={accentColor} />
-                  </Animated.View>
-                  <ThemedText size="s" weight="bold" style={{ color: accentColor }}>
-                    {t('aiRecommendation.thinking.title')}
+                <View style={styles.premiumNoticeHeader}>
+                  <Ionicons name="diamond" size={20} color={premiumNeonGold} />
+                  <ThemedText size="m" weight="bold" style={{ color: premiumNeonGold }}>
+                    {t('aiRecommendation.premium.title')}
                   </ThemedText>
                 </View>
-
-                <ThinkingStep
-                  label={t('aiRecommendation.thinking.analyze')}
-                  done={!!thinkingText}
-                  accentColor={accentColor}
-                  theme={theme}
-                />
-
-                {thinkingText ? (
-                  <View
-                    style={[
-                      styles.thinkingContent,
-                      { borderLeftColor: `${accentColor}55` },
-                    ]}
-                  > 
-                    <ThemedText  size="xs" variant="secondary" style={styles.thinkingBody}>
-                      {thinkingText}
-                    </ThemedText>
-                  </View>
-                   
-                ) : null}
-
-                <ThinkingStep
-                  label={t('aiRecommendation.thinking.search')}
-                  done={false}
-                  loading={!thinkingText}
-                  accentColor={accentColor}
-                  theme={theme}
-                />
-              </View>
-            ) : (
-              <View style={styles.summaryRow}>
-                <Ionicons name="swap-horizontal" size={22} color={accentColor} />
-                <ThemedText size="s" weight="medium" style={{ color: accentColor }}>
-                  {summary}
-                </ThemedText>
-              </View>
-            )}
-
-            {errorMessage && !isLoading ? (
-              <View
-                style={[
-                  styles.errorBanner,
-                  {
-                    backgroundColor: `${theme.colors.error}22`,
-                    borderColor: theme.colors.error,
-                  },
-                ]}
-              >
-                <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
-                <ThemedText
-                  size="s"
-                  style={[styles.errorBannerText, { color: theme.colors.text }]}
-                >
-                  {errorMessage}
-                </ThemedText>
+                <View style={[styles.premiumNoticeBody]}>
+                  <ThemedText size="s" style={{ color: theme.colors.text }}>
+                    {t('aiRecommendation.premium.description')}
+                  </ThemedText>
+                </View>
               </View>
             ) : null}
 
-            {inviteFriendError && (
-              <View style={[styles.errorBanner, 
-              { backgroundColor: `${theme.colors.error}22`, borderColor: theme.colors.error }
-              ]}>
-                <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
-                <ThemedText size="s" style={[styles.errorBannerText, { color: theme.colors.text }]}>
-                  {inviteFriendError}
-                </ThemedText>
-              </View>
-            )}
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
+            <View
+              style={!isPremiumUser ? styles.lockedPremiumContainer : undefined}
+              pointerEvents={!isPremiumUser ? 'none' : 'auto'}
             >
-              {resultCount === 0 && !isLoading && !errorMessage ? (
-                <View style={[styles.emptyBox, { borderColor: theme.colors.border }]}>
-                  <Ionicons name="sparkles" size={28} color={accentColor} />
-                  <ThemedText variant="secondary" size="s" style={styles.emptyText}>
-                    {emptyText}
+              <View
+                style={[
+                  styles.searchBox,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: `${accentColor}8A`,
+                    shadowColor: accentColor,
+                  },
+                ]}
+              >
+                <Ionicons name="sparkles" size={24} color={accentColor} />
+                <TextInput
+                  value={query}
+                  onChangeText={onChangeQuery}
+                  placeholder={placeholder}
+                  placeholderTextColor={theme.colors.textSecondary}
+                  style={[styles.input, { color: theme.colors.text }]}
+                  multiline
+                  returnKeyType="send"
+                  onSubmitEditing={onSubmitQuery}
+                />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[
+                    styles.submitButton,
+                    {
+                      backgroundColor: accentColor,
+                      opacity: isLoading ? 0.7 : 1,
+                    },
+                  ]}
+                  disabled={isLoading}
+                  onPress={onSubmitQuery}
+                >
+                  <Ionicons name="send" size={20} color={theme.colors.black} />
+                </TouchableOpacity>
+              </View>
+
+              {isLoading ? (
+                <View
+                  style={[
+                    styles.thinkingPanel,
+                    {
+                      borderColor: `${accentColor}33`,
+                      backgroundColor: `${accentColor}0A`,
+                    },
+                  ]}
+                >
+                  <View style={styles.thinkingHeader}>
+                    <Animated.View
+                      style={{
+                        transform: [
+                          {
+                            rotate: spinAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0deg', '360deg'],
+                            }),
+                          },
+                        ],
+                      }}
+                    >
+                      <Ionicons name="sync" size={15} color={accentColor} />
+                    </Animated.View>
+                    <ThemedText size="s" weight="bold" style={{ color: accentColor }}>
+                      {t('aiRecommendation.thinking.title')}
+                    </ThemedText>
+                  </View>
+
+                  <ThinkingStep
+                    label={t('aiRecommendation.thinking.analyze')}
+                    done={!!thinkingText}
+                    accentColor={accentColor}
+                    theme={theme}
+                  />
+
+                  {thinkingText ? (
+                    <View
+                      style={[
+                        styles.thinkingContent,
+                        { borderLeftColor: `${accentColor}55` },
+                      ]}
+                    >
+                      <ThemedText size="xs" variant="secondary" style={styles.thinkingBody}>
+                        {thinkingText}
+                      </ThemedText>
+                    </View>
+                  ) : null}
+
+                  <ThinkingStep
+                    label={t('aiRecommendation.thinking.search')}
+                    done={false}
+                    loading={!thinkingText}
+                    accentColor={accentColor}
+                    theme={theme}
+                  />
+                </View>
+              ) : (
+                <View style={styles.summaryRow}>
+                  <Ionicons name="swap-horizontal" size={22} color={accentColor} />
+                  <ThemedText size="s" weight="medium" style={{ color: accentColor }}>
+                    {summary}
+                  </ThemedText>
+                </View>
+              )}
+
+              {errorMessage && !isLoading ? (
+                <View
+                  style={[
+                    styles.errorBanner,
+                    {
+                      backgroundColor: `${theme.colors.error}22`,
+                      borderColor: theme.colors.error,
+                    },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
+                  <ThemedText
+                    size="s"
+                    style={[styles.errorBannerText, { color: theme.colors.text }]}
+                  >
+                    {errorMessage}
                   </ThemedText>
                 </View>
               ) : null}
-              {isMatchMode
-                ? matchRecommendations.map((item) => renderMatchCard(item))
-                : playerRecommendations.map(renderPlayerCard)}
-            </ScrollView>
+
+              {inviteFriendError && (
+                <View
+                  style={[
+                    styles.errorBanner,
+                    { backgroundColor: `${theme.colors.error}22`, borderColor: theme.colors.error },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
+                  <ThemedText size="s" style={[styles.errorBannerText, { color: theme.colors.text }]}>
+                    {inviteFriendError}
+                  </ThemedText>
+                </View>
+              )}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+              >
+                {resultCount === 0 && !isLoading && !errorMessage ? (
+                  <View style={[styles.emptyBox, { borderColor: theme.colors.border }]}>
+                    <Ionicons name="sparkles" size={28} color={accentColor} />
+                    <ThemedText variant="secondary" size="s" style={styles.emptyText}>
+                      {emptyText}
+                    </ThemedText>
+                  </View>
+                ) : null}
+                {isMatchMode
+                  ? matchRecommendations.map((item) => renderMatchCard(item))
+                  : playerRecommendations.map(renderPlayerCard)}
+              </ScrollView>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -686,6 +722,35 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  premiumNotice: {
+    marginHorizontal: 20,
+    marginTop: 18,
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    shadowOpacity: 0.75,
+    shadowRadius: 16,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    gap: 8,
+  },
+  premiumNoticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  premiumNoticeBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  lockedPremiumContainer: {
+    opacity: 0.3,
   },
   summaryRow: {
     flexDirection: 'row',

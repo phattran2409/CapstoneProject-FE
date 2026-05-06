@@ -2,12 +2,14 @@ import React from "react";
 import { Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/shared/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 type PremiumBadgeProps = {
   label?: string;
   style?: StyleProp<ViewStyle>;
   width?: ViewStyle["width"];
   labelFontSize?: number;
+  isIcon?: boolean;
 };
 
 const PremiumBadge: React.FC<PremiumBadgeProps> = ({
@@ -15,6 +17,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   style,
   width,
   labelFontSize,
+  isIcon = false,
 }) => {
   const { theme } = useTheme();
 
@@ -41,7 +44,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
           },
         ]}
       >
-        {label}
+        {isIcon ? <Ionicons name="diamond-outline" size={24} color={theme.colors.background} /> : label}
       </Text>
     </LinearGradient>
   );

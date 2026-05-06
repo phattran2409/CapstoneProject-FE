@@ -1221,6 +1221,10 @@ const en = {
   },
   aiRecommendation: {
     searching: "AI is finding the best recommendations...",
+    premium: {
+      title: "Premium Feature",
+      description: "AI Recommendation is available for Premium accounts only. Upgrade your plan to unlock this feature.",
+    },
     thinking: {
       title: "AI is thinking...",
       analyze: "Analyzing your query...",

@@ -298,7 +298,8 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
       skillImbalanceRoomIdRef.current = displayRoom.roomId;
       prevSkillImbalanceFlagRef.current = undefined;
     }
-    const isImbalanced = displayRoom.isSkillImbalanced === true;
+    const isOpenRoom = displayRoom.status === 'Open';
+    const isImbalanced = isOpenRoom && displayRoom.isSkillImbalanced === true;
     if (isImbalanced && prevSkillImbalanceFlagRef.current !== true) {
       toast.warning(
         t('roomDetail.skillImbalancedTitle'),
@@ -361,8 +362,6 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
     });
     return () => subscription.remove();
   }, [refetch]);
-
-
 
   const aiMatchRecommendations = useMemo<MatchRecommendation[]>(() => {
     if (!displayRoom) return [];
@@ -827,6 +826,7 @@ const RoomInformationScreen: React.FC<RoomInformationScreenProps> = ({ navigatio
         isLoading={isSuggestingPlayers}
         thinkingText={aiThinkingText}
         errorMessage={aiPlayerSuggestError}
+        isPremium={user?.isPremium}
         playerRecommendations={aiPlayerRecommendationsForModal}
         onClose={closeAiModal}
         onChangeQuery={onAiQueryChange}

@@ -25,6 +25,7 @@ import { useAlert } from '@/shared/hooks';
 import Alert from '@/shared/components/Alert';
 import { useSuggestAI } from '../hooks';
 import { getAIThinkingText } from '@/shared/utils/geminiService';
+import { useAuthStore } from '@/features/auth';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -66,6 +67,8 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   
   const [errorSuggestingRooms, setErrorSuggestingRooms] = useState<string | undefined>(undefined);
   const [aiThinkingText, setAiThinkingText] = useState<string | null>(null);
+  
+  const { user } = useAuthStore();
   // Fetch match rooms from API
   // 1) Recommended matches – không dùng vị trí
   const {
@@ -321,7 +324,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       const thinking = await getAIThinkingText(trimmedQuery, 'match').catch(() => '');
       setAiThinkingText(thinking || null);
 
-      await delay(5000);
+      await delay(3000);
      
       // Phase 2: Call main AI suggest API
       suggestRooms(
@@ -338,6 +341,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           },
           onError: (error: any) => {
             const err = error as { details?: { detail?: string }; code?: string };
+            console.log("error ",error);
             setAiSuggestedRooms([]);
             setErrorSuggestingRooms(getTranslatedError(err?.details?.detail, err?.code));
           },
@@ -574,6 +578,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         isLoading={isSuggestingRooms || isResolvingAiLocation || locationLoading}
         thinkingText={aiThinkingText}
         matchRecommendations={aiSuggestedRooms}
+        isPremium={user?.isPremium} 
         onClose={() => {
           setAiModalVisible(false);
           setAiThinkingText(null);
