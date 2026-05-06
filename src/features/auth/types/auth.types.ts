@@ -10,7 +10,9 @@ export interface User {
   totalMatches?: number;
   createdAt?: string;
   isEmailVerified?: boolean;
+  isPremium?:boolean;
   isActive?: boolean;
+  premiumExpireAt?: string;
   accessToken?: string;
   refreshToken?: string;
 }

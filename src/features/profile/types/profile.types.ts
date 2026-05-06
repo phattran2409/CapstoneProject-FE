@@ -8,6 +8,8 @@ export interface User {
   dateOfBirth: string | null;
   gender: number | null; // 0 = Male, 1 = Female, 2 = Other
   role: number;
+  isPremium?: boolean;
+  premiumExpireAt?:string;
   preferredPositions: string | null;
   shirtNumber: number | null;
   preferredFoot: string | null;

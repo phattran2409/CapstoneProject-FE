@@ -24,6 +24,8 @@ import { toMatchItemData } from '../utils/matchItemMapper';
 import { useAlert } from '@/shared/hooks';
 import Alert from '@/shared/components/Alert';
 import { useSuggestAI } from '../hooks';
+import { getAIThinkingText } from '@/shared/utils/geminiService';
+import { useAuthStore } from '@/features/auth';
 
 type MatchesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Matches'>,
@@ -62,6 +64,11 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   });
   const [optionFilterVisible, setOptionFilterVisible] = useState(false);
   const { latitude, longitude, radiusKm,locationLoading, handleApplyRadiusFilter } = useLocationRadiusFilter({t: t as (key: string, defaultValue?: string | object) => string});
+  
+  const [errorSuggestingRooms, setErrorSuggestingRooms] = useState<string | undefined>(undefined);
+  const [aiThinkingText, setAiThinkingText] = useState<string | null>(null);
+  
+  const { user } = useAuthStore();
   // Fetch match rooms from API
   // 1) Recommended matches – không dùng vị trí
   const {
@@ -282,16 +289,21 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const handleCloseFilter = () => {
     setFilterVisible(false);
   }
-
+  
+  const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+  
   const handleSubmitAiQuery = useCallback(async () => {
     const trimmedQuery = aiQuery.trim();
     if (!trimmedQuery) return;
 
+    setAiThinkingText('');
+    setErrorSuggestingRooms(undefined);
+    setAiSuggestedRooms([]);
     setIsResolvingAiLocation(true);
-    try {
-      let lat = latitude;
-      let lng = longitude;
 
+    let lat = latitude;
+    let lng = longitude;
+    try {
       if (lat == null || lng == null) {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
@@ -308,6 +320,13 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         lng = location.coords.longitude;
       }
 
+      // Phase 1: Await Gemini reasoning — suggestRooms only starts after this resolves
+      const thinking = await getAIThinkingText(trimmedQuery, 'match').catch(() => '');
+      setAiThinkingText(thinking || null);
+
+      await delay(3000);
+     
+      // Phase 2: Call main AI suggest API
       suggestRooms(
         {
           query: trimmedQuery,
@@ -321,21 +340,15 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             setAiSuggestedRooms(response.data.rooms || []);
           },
           onError: (error: any) => {
-            console.log('Error suggest rooms:', error);
-            toast.error(
-              t('common.error', 'Lỗi'),
-              getTranslatedError(error?.message, error?.code) ||
-                t('aiRecommendation.searching'),
-            );
+            const err = error as { details?: { detail?: string }; code?: string };
+            console.log("error ",error);
             setAiSuggestedRooms([]);
+            setErrorSuggestingRooms(getTranslatedError(err?.details?.detail, err?.code));
           },
         },
       );
     } catch (error: any) {
-      toast.error(
-        t('common.error', 'Lỗi'),
-        getTranslatedError(error?.message, error?.code) || t('venueSelection.locationError'),
-      );
+      setErrorSuggestingRooms(getTranslatedError(error?.message, error?.code));
     } finally {
       setIsResolvingAiLocation(false);
     }
@@ -402,13 +415,23 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ThemedView>
+      
       <View style={styles.flex1}>
+        <View style={{padding: theme.spacing.m}}>
+          <TouchableOpacity onPress={() => setAiModalVisible(true)} style={[styles.aiRecommendationButton, { backgroundColor: theme.colors.neonGreen + '18', borderColor: theme.colors.neonGreen, borderWidth: 1, borderRadius: 10, padding: 10 }]}>
+            <Ionicons name="sparkles" size={16} color={theme.colors.neonGreen} />
+            <ThemedText size="s" weight="bold" style={{ color: theme.colors.neonGreen }}>
+              {t("aiRecommendation.match.title")}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
         <ScrollView 
           style={styles.flex1}
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           nestedScrollEnabled={true}
+          contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing || refreshingMyRooms || refreshingRecommended}
@@ -524,6 +547,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           )}
         </ScrollView>
       </View>
+
       <MatchDetailModal
         visible={modalVisible}
         match={selectedMatch}
@@ -533,6 +557,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         }}
         onViewDetail={handleViewDetail}
       />
+
       <PrivateRoomPasswordModal
         visible={passwordModalVisible}
         roomName={pendingJoinParams?.roomName}
@@ -551,14 +576,26 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         mode="match"
         query={aiQuery}
         isLoading={isSuggestingRooms || isResolvingAiLocation || locationLoading}
+        thinkingText={aiThinkingText}
         matchRecommendations={aiSuggestedRooms}
-        onClose={() => setAiModalVisible(false)}
-        onChangeQuery={setAiQuery}
+        isPremium={user?.isPremium} 
+        onClose={() => {
+          setAiModalVisible(false);
+          setAiThinkingText(null);
+          setAiQuery('');
+          setAiSuggestedRooms([]);
+          setErrorSuggestingRooms(undefined);
+        }}
+        onChangeQuery={(val) => {
+          setAiQuery(val);
+          setAiThinkingText(null);
+        }}
         onSubmitQuery={handleSubmitAiQuery}
         onJoinMatch={(recommendation) => {
           setAiModalVisible(false);
           handleViewDetail(recommendation.roomId, aiSuggestedRooms);
         }}
+        errorMessage={errorSuggestingRooms}
       />
 
       {alertOptions && (
@@ -637,6 +674,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  aiRecommendationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: 16,
+    padding: 10,
+    borderRadius: 10,
   },
 });
 

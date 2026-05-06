@@ -22,6 +22,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
+import { PremiumBadge } from "@/shared/components";
 import {
   ThemedSafeAreaView,
   ThemedScrollView,
@@ -107,12 +108,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <ThemedSafeAreaView>
-      {/* Header */}
-      <ThemedScrollView
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        contentContainerStyle={styles.scrollContent}
-      >
         <ThemedView
           style={[
             styles.header,
@@ -126,7 +121,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <ThemedText variant="primary" size="xxl" weight="bold">
             {t("profile.title")}
           </ThemedText>
-        </ThemedView>
+      </ThemedView>
+      {/* Header */}
+      <ThemedScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.scrollContent}
+      >
         <ThemedView
           style={{
             paddingHorizontal: theme.spacing.l,
@@ -197,7 +198,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 {t("profile.personalPage")}
               </Text>
             </View>
-
+            {
+              user?.isPremium && <PremiumBadge />
+            }
             {/* Arrow icon to indicate go to personal page */}
             <Ionicons
               name="chevron-forward"
@@ -208,17 +211,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
           {/* Account Section */}
           <View style={{ marginBottom: theme.spacing.l }}>
-            <Text
+            <View
               style={{
-                fontSize: theme.fontSizes.s,
-                color: theme.colors.textSecondary,
-                fontWeight: "600",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
                 marginBottom: theme.spacing.m,
-                textTransform: "uppercase",
               }}
             >
-              {t("profile.account")}
-            </Text>
+              <Text
+                style={{
+                  fontSize: theme.fontSizes.s,
+                  color: theme.colors.textSecondary,
+                  fontWeight: "600",
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("profile.account")}
+              </Text>
+            </View>
 
             <TouchableOpacity
               style={[
@@ -561,6 +572,37 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               {t("profile.application")}
             </Text>
             <TouchableOpacity
+              onPress={() => navigation.navigate("BookingSchedule")}
+              style={[
+                styles.settingItem,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.border,
+                  paddingVertical: theme.spacing.m,
+                  paddingHorizontal: theme.spacing.m,
+                  borderRadius: theme.radius.m,
+                  marginBottom: theme.spacing.xs,
+                },
+              ]}
+              >
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={theme.colors.text}
+              />
+              <Text
+                style={[styles.settingText, { color: theme.colors.text, fontSize: theme.fontSizes.m, marginLeft: theme.spacing.m }]}
+              >
+                {t("profile.bookingSchedule")}
+              </Text> 
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => setLanguage(language === "vi" ? "en" : "vi")}
               style={[
                 styles.settingItem,
@@ -655,6 +697,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 thumbColor={theme.colors.white}
               />
             </TouchableOpacity>
+
             <TouchableOpacity
               style={[
                 styles.settingItem,
@@ -694,6 +737,67 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               />
             </TouchableOpacity>
           </View>
+              
+          {/* Premium Section */}
+          {!user?.isPremium && (  
+            <View style={{ marginBottom: theme.spacing.l }}>
+              <Text
+                style={{
+                  fontSize: theme.fontSizes.s,
+                  color: theme.colors.textSecondary,
+                  fontWeight: "600",
+                  marginBottom: theme.spacing.m,
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("profile.premium.sectionLabel")}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.settingItem,
+                  {
+                    backgroundColor: "#141414",
+                    borderWidth: 1,
+                    borderColor: "#FFD700",
+                    paddingVertical: theme.spacing.m,
+                    paddingHorizontal: theme.spacing.m,
+                    borderRadius: theme.radius.m,
+                  },
+                ]}
+                onPress={() => navigation.navigate("PremiumUpgrade")}
+                accessibilityRole="button"
+                accessibilityLabel={t("profile.premium.cta")}
+              >
+                <Ionicons name="sparkles-outline" size={24} color="#FFD700" />
+                <View style={{ flex: 1, marginLeft: theme.spacing.m }}>
+                  <Text
+                    style={{
+                      color: "#FFD700",
+                      fontSize: theme.fontSizes.m,
+                      fontWeight: "700",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {t("profile.premium.cardTitle")}
+                  </Text>
+                  <Text
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: theme.fontSizes.s,
+                    }}
+                  >
+                    {t("profile.premium.cardSubtitle")}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Logout Button - thêm marginBottom để không bị CustomTabBar đè, dễ bấm */}
           <TouchableOpacity
@@ -718,6 +822,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               {t("common.buttons.logout")}
             </ThemedText>
           </TouchableOpacity>
+          
         </ThemedView>
       </ThemedScrollView>
     </ThemedSafeAreaView>

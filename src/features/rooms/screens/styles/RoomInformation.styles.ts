@@ -123,32 +123,14 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  openRoomPolicyBanner: {
+  aiRecommendationButton: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderLeftWidth: 4,
-    marginBottom: 16,
-    gap: 12,
-    position: 'relative',
-  },
-  openRoomPolicyCloseButton: {
-    position: 'absolute',
-    top: 8,
-    right: 20,
-    width: 60,
-    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row', 
-  },
-  openRoomPolicyBannerIcon: {
-    paddingTop: 2,
-  },
-  openRoomPolicyBannerText: {
-    flex: 1,
+    gap: 4,
+    marginBottom: 16,
+    padding: 10,
+    borderRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
 });

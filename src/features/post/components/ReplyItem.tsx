@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useTheme } from "@/shared/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemedView, ThemedText } from "@/shared/components/themed";
+import { PremiumBadge } from "@/shared/components";
 import { Reply } from "../types/post.types";
 
 interface ReplyItemProps {
@@ -52,9 +53,17 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({ reply, onLike }) => {
         </View>
         <View style={styles.replyContent}>
           <View style={styles.replyAuthorRow}>
-            <ThemedText variant="primary" size="s" weight="semiBold">
-              {reply.userFullName}
-            </ThemedText>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <ThemedText variant="primary" size="s" weight="semiBold">
+                {reply.userFullName}
+              </ThemedText>
+              {reply.isPremium && (
+                <PremiumBadge
+                  style={{ paddingVertical: 2, paddingHorizontal: 6 }}
+                  labelFontSize={10}
+                />
+              )}
+            </View>
             <ThemedText variant="secondary" size="xs" style={styles.timestamp}>
               {new Date(reply.createdAt).toLocaleDateString()}
             </ThemedText>

@@ -196,5 +196,9 @@ export const API_CONFIG = {
       SUGGEST_PLAYERS: "/ai/suggest-players",
       SUGGEST_ROOMS: "/ai/suggest-rooms",
     },
+    PREMIUM: {
+      PURCHASE: "/premium/purchase",
+      PURCHASE_WALLET: "/premium/purchase/wallet",
+    },
   },
 } as const;

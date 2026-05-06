@@ -8,6 +8,7 @@ import {
 } from "../types/profile.types";
 import { ApiResponse } from "@/shared/api";
 import { API_CONFIG } from "@/shared/constants/api";
+import { DepositResponse } from "@/features/wallet/types/wallet.types";
 
 export interface RadarAssessment {
   type: string;
@@ -213,6 +214,28 @@ export interface NotificationPreferences {
   chat: boolean;
 }
 
+export interface BookingItem {
+  bookingId: string;
+  roomId: string;
+  fieldId: string;
+  fieldName: string;
+  venueName: string;
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface BookingListResponse {
+  bookings: BookingItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export const getNotificationSettings =
   async (): Promise<NotificationPreferences> => {
     const response = await apiClient.get<NotificationPreferences>(
@@ -222,3 +245,41 @@ export const getNotificationSettings =
     console.log("response :", response.data);
     return response.data;
   };
+
+export const getMyBookings = async (
+  date: string,
+  page = 1,
+  pageSize = 10,
+): Promise<BookingListResponse> => {
+  const envelope = await apiClient.get<{
+    isSuccess: boolean;
+    data: BookingListResponse;
+  }>(API_CONFIG.ENDPOINTS.BOOKINGS.LIST, {
+    params: {
+      date,
+      page,
+      pageSize,
+    },
+  }) as unknown as {
+    isSuccess: boolean;
+    data: BookingListResponse;
+  };
+
+  if (!envelope?.isSuccess || !envelope.data) {
+    throw new Error("Invalid response: Booking data is missing");
+  }
+
+  return envelope.data;
+};
+
+export const purchasePremiumDirect = async (): Promise<DepositResponse> => {
+  const data = await apiClient.post(API_CONFIG.ENDPOINTS.PREMIUM.PURCHASE);
+  const body = data as unknown as ApiResponse<DepositResponse>;
+  if (body?.isSuccess) return body.data as DepositResponse;
+  return data as unknown as DepositResponse;
+};
+
+export const purchasePremiumByWallet = async (): Promise<unknown> => {
+  const data = await apiClient.post(API_CONFIG.ENDPOINTS.PREMIUM.PURCHASE_WALLET);
+  return data;
+};

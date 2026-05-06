@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -15,8 +16,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { ThemedText } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
+import { useToast } from '@/shared/toast';
+import { getTranslatedError } from '@/shared/utils/errorTranslations';
 import { MatchRoom, SuggestedPlayerProfile } from '../types/room.types';
 import { formatMatchFormatVsLabel } from '../utils/matchFormatVsLabel';
+import { getMatchFormatBadgeColor, MATCH_FORMAT_BADGE_COLORS } from '@/shared/utils/matchFormatColors';
+import { useInviteFriend } from '../hooks/useInviteFriend';
 
 export type AIRecommendationMode = 'match' | 'player';
 
@@ -41,17 +46,84 @@ interface AIRecommendationModalProps {
   mode: AIRecommendationMode;
   query?: string;
   isLoading?: boolean;
+  /** Text từ Gemini mô tả AI đang phân tích gì — hiện trong thinking panel */
+  thinkingText?: string | null;
   /** Lỗi gần nhất (API / mạng) — hiển thị trong modal thay vì toast để dễ thấy khi modal mở */
   errorMessage?: string | null;
   matchRecommendations?: MatchRoom[];
   playerRecommendations?: SuggestedPlayerProfile[];
+  roomId?: string;
+  isPremium?: boolean; 
   onClose: () => void;
   onChangeQuery?: (value: string) => void;
   onSubmitQuery?: () => void;
   onJoinMatch?: (recommendation: MatchRoom) => void;
   onSecondaryMatchAction?: (recommendation: MatchRoom) => void;
-  onInvitePlayer?: (recommendation: SuggestedPlayerProfile) => void;
 }
+
+const ThinkingStep = ({
+  label,
+  done,
+  loading,
+  accentColor,
+  theme,
+}: {
+  label: string;
+  done: boolean;
+  loading?: boolean;
+  accentColor: string;
+  theme: ReturnType<typeof import('@/shared/theme').useTheme>['theme'];
+}) => (
+  <View style={thinkingStepStyles.row}>
+    <View
+      style={[
+        thinkingStepStyles.dot,
+        {
+          backgroundColor: done ? accentColor : 'transparent',
+          borderColor: done ? accentColor : theme.colors.textSecondary,
+        },
+      ]}
+    >
+      {done ? (
+        <Ionicons name="checkmark" size={9} color={theme.colors.black} />
+      ) : loading ? (
+        <View
+          style={[thinkingStepStyles.pulseDot, { backgroundColor: theme.colors.textSecondary }]}
+        />
+      ) : null}
+    </View>
+    <ThemedText
+      size="xs"
+      style={{
+        color: done ? accentColor : theme.colors.textSecondary,
+        fontWeight: done ? '600' : '400',
+      }}
+    >
+      {label}
+    </ThemedText>
+  </View>
+);
+
+const thinkingStepStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pulseDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+});
 
 const formatDistance = (distanceKm?: number) => {
   if (typeof distanceKm !== 'number') return undefined;
@@ -69,22 +141,44 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
   mode,
   query,
   isLoading = false,
+  thinkingText = null,
   errorMessage = null,
   matchRecommendations = [],
   playerRecommendations = [],
+  roomId,
+  isPremium,
   onClose,
   onChangeQuery,
   onSubmitQuery,
   onJoinMatch,
   onSecondaryMatchAction,
-  onInvitePlayer,
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const toast = useToast();
+  const spinAnim = useRef(new Animated.Value(0)).current;
+  const [invitingPlayerId, setInvitingPlayerId] = useState<string | null>(null);
+  const { mutateAsync: inviteFriendToRoom, isPending: isInvitingFriend } = useInviteFriend();
+  const [inviteFriendError, setInviteFriendError] = useState<string | null>(null);
+  useEffect(() => {
+    if (isLoading) {
+      Animated.loop(
+        Animated.timing(spinAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ).start();
+    } else {
+      spinAnim.stopAnimation();
+      spinAnim.setValue(0);
+    }
+  }, [isLoading, spinAnim]);
   const accentColor = theme.colors.neonGreen;
+  const premiumNeonGold = '#FFD700';
+  const isPremiumUser = !!isPremium;
   const isMatchMode = mode === 'match';
   const resultCount = isMatchMode ? matchRecommendations.length : playerRecommendations.length;
-
   const title = isMatchMode
     ? t('aiRecommendation.match.title')
     : t('aiRecommendation.player.title');
@@ -98,7 +192,9 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
     ? t('aiRecommendation.match.empty')
     : t('aiRecommendation.player.empty');
 
-  const renderMatchCard = (item: MatchRoom) => (
+  const renderMatchCard = (item: MatchRoom) => {
+    const colorFormat = getMatchFormatBadgeColor(formatMatchFormatVsLabel(item.matchFormat), theme.colors.primary);
+    return (
     <View
       key={item.roomId}
       style={[
@@ -128,13 +224,13 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
             style={[
               styles.formatBadge,
               {
-                backgroundColor: `${accentColor}18`,
-                borderColor: `${accentColor}66`,
+                backgroundColor: `${colorFormat}18`,
+                borderColor: `${colorFormat}66`,
               },
             ]}
           >
             <Ionicons name="football" size={12} color={accentColor} />
-            <ThemedText size="xs" weight="bold" style={{ color: accentColor }}>
+            <ThemedText size="xs" weight="bold" style={{ color: accentColor , }}>
               {formatMatchFormatVsLabel(item.matchFormat)}
             </ThemedText>
           </View>
@@ -191,7 +287,8 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
         ) : null} */}
       </View>
     </View>
-  );
+    );
+  };
 
   const renderPlayerCard = (item: SuggestedPlayerProfile) => (
     <View
@@ -219,6 +316,7 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
             </ThemedText>
           </View>
         </View>
+      {item.preferredPositions && (
         <View
           style={[
             styles.positionBadge,
@@ -232,7 +330,9 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
             {item.preferredPositions}
           </ThemedText>
         </View>
+    )}
       </View>
+  
 
       <View style={styles.statsGrid}>
         <MetricItem
@@ -257,12 +357,37 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
       <TouchableOpacity
         activeOpacity={0.85}
         style={[styles.primaryButton, { backgroundColor: accentColor }]}
-        onPress={() => onInvitePlayer?.(item)}
+        onPress={async () => {
+          if (!roomId) return;
+          setInvitingPlayerId(item.userId);
+          try {
+            await inviteFriendToRoom({
+              roomId,
+              friendUserId: item.userId,
+            });
+            toast.success(
+              t('roomDetail.notifications.success'),
+              t('roomDetail.inviteFriendSuccess'),
+            );
+          } catch (error: unknown) {
+            const err = error as { message?: string; code?: string };
+            setInviteFriendError(getTranslatedError(err?.message, err?.code) || t('roomDetail.inviteFriendError'));
+          } finally {
+            setInvitingPlayerId(null);
+          }
+        }}
+        disabled={!roomId || isInvitingFriend}
       >
-        <Ionicons name="person-add" size={20} color={theme.colors.black} />
-        <ThemedText size="m" weight="bold" style={{ color: theme.colors.black }}>
-          {t('aiRecommendation.player.inviteNow')}
-        </ThemedText>
+        {invitingPlayerId === item.userId && isInvitingFriend ? (
+          <Ionicons name="sync" size={20} color={theme.colors.black} />
+        ) : (
+          <>
+            <Ionicons name="person-add" size={20} color={theme.colors.black} />
+            <ThemedText size="m" weight="bold" style={{ color: theme.colors.black }}>
+              {t('aiRecommendation.player.inviteNow')}
+            </ThemedText>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -329,90 +454,189 @@ export const AIRecommendationModal: React.FC<AIRecommendationModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <View
-              style={[
-                styles.searchBox,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: `${accentColor}8A`,
-                  shadowColor: accentColor,
-                },
-              ]}
-            >
-              <Ionicons name="sparkles" size={24} color={accentColor} />
-              <TextInput
-                value={query}
-                onChangeText={onChangeQuery}
-                placeholder={placeholder}
-                placeholderTextColor={theme.colors.textSecondary}
-                style={[styles.input, { color: theme.colors.text }]}
-                multiline
-                returnKeyType="send"
-                onSubmitEditing={onSubmitQuery}
-              />
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={[
-                  styles.submitButton,
-                  {
-                    backgroundColor: accentColor,
-                    opacity: isLoading ? 0.7 : 1,
-                  },
-                ]}
-                disabled={isLoading}
-                onPress={onSubmitQuery}
-              >
-                <Ionicons name="send" size={20} color={theme.colors.black} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <Ionicons
-                name={isLoading ? 'sync' : 'swap-horizontal'}
-                size={22}
-                color={accentColor}
-              />
-              <ThemedText size="s" weight="medium" style={{ color: accentColor }}>
-                {isLoading ? t('aiRecommendation.searching') : summary}
-              </ThemedText>
-            </View>
-
-            {errorMessage && !isLoading ? (
+            {!isPremiumUser ? (
               <View
                 style={[
-                  styles.errorBanner,
+                  styles.premiumNotice,
                   {
-                    backgroundColor: `${theme.colors.error}22`,
-                    borderColor: theme.colors.error,
+                    borderColor: premiumNeonGold,
+                    backgroundColor: `${premiumNeonGold}14`,
+                    shadowColor: premiumNeonGold,
                   },
                 ]}
               >
-                <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
-                <ThemedText
-                  size="s"
-                  style={[styles.errorBannerText, { color: theme.colors.text }]}
-                >
-                  {errorMessage}
-                </ThemedText>
+                <View style={styles.premiumNoticeHeader}>
+                  <Ionicons name="diamond" size={20} color={premiumNeonGold} />
+                  <ThemedText size="m" weight="bold" style={{ color: premiumNeonGold }}>
+                    {t('aiRecommendation.premium.title')}
+                  </ThemedText>
+                </View>
+                <View style={[styles.premiumNoticeBody]}>
+                  <ThemedText size="s" style={{ color: theme.colors.text }}>
+                    {t('aiRecommendation.premium.description')}
+                  </ThemedText>
+                </View>
               </View>
             ) : null}
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
+            <View
+              style={!isPremiumUser ? styles.lockedPremiumContainer : undefined}
+              pointerEvents={!isPremiumUser ? 'none' : 'auto'}
             >
-              {resultCount === 0 && !isLoading && !errorMessage ? (
-                <View style={[styles.emptyBox, { borderColor: theme.colors.border }]}>
-                  <Ionicons name="sparkles" size={28} color={accentColor} />
-                  <ThemedText variant="secondary" size="s" style={styles.emptyText}>
-                    {emptyText}
+              <View
+                style={[
+                  styles.searchBox,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: `${accentColor}8A`,
+                    shadowColor: accentColor,
+                  },
+                ]}
+              >
+                <Ionicons name="sparkles" size={24} color={accentColor} />
+                <TextInput
+                  value={query}
+                  onChangeText={onChangeQuery}
+                  placeholder={placeholder}
+                  placeholderTextColor={theme.colors.textSecondary}
+                  style={[styles.input, { color: theme.colors.text }]}
+                  multiline
+                  returnKeyType="send"
+                  onSubmitEditing={onSubmitQuery}
+                />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[
+                    styles.submitButton,
+                    {
+                      backgroundColor: accentColor,
+                      opacity: isLoading ? 0.7 : 1,
+                    },
+                  ]}
+                  disabled={isLoading}
+                  onPress={onSubmitQuery}
+                >
+                  <Ionicons name="send" size={20} color={theme.colors.black} />
+                </TouchableOpacity>
+              </View>
+
+              {isLoading ? (
+                <View
+                  style={[
+                    styles.thinkingPanel,
+                    {
+                      borderColor: `${accentColor}33`,
+                      backgroundColor: `${accentColor}0A`,
+                    },
+                  ]}
+                >
+                  <View style={styles.thinkingHeader}>
+                    <Animated.View
+                      style={{
+                        transform: [
+                          {
+                            rotate: spinAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0deg', '360deg'],
+                            }),
+                          },
+                        ],
+                      }}
+                    >
+                      <Ionicons name="sync" size={15} color={accentColor} />
+                    </Animated.View>
+                    <ThemedText size="s" weight="bold" style={{ color: accentColor }}>
+                      {t('aiRecommendation.thinking.title')}
+                    </ThemedText>
+                  </View>
+
+                  <ThinkingStep
+                    label={t('aiRecommendation.thinking.analyze')}
+                    done={!!thinkingText}
+                    accentColor={accentColor}
+                    theme={theme}
+                  />
+
+                  {thinkingText ? (
+                    <View
+                      style={[
+                        styles.thinkingContent,
+                        { borderLeftColor: `${accentColor}55` },
+                      ]}
+                    >
+                      <ThemedText size="xs" variant="secondary" style={styles.thinkingBody}>
+                        {thinkingText}
+                      </ThemedText>
+                    </View>
+                  ) : null}
+
+                  <ThinkingStep
+                    label={t('aiRecommendation.thinking.search')}
+                    done={false}
+                    loading={!thinkingText}
+                    accentColor={accentColor}
+                    theme={theme}
+                  />
+                </View>
+              ) : (
+                <View style={styles.summaryRow}>
+                  <Ionicons name="swap-horizontal" size={22} color={accentColor} />
+                  <ThemedText size="s" weight="medium" style={{ color: accentColor }}>
+                    {summary}
+                  </ThemedText>
+                </View>
+              )}
+
+              {errorMessage && !isLoading ? (
+                <View
+                  style={[
+                    styles.errorBanner,
+                    {
+                      backgroundColor: `${theme.colors.error}22`,
+                      borderColor: theme.colors.error,
+                    },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
+                  <ThemedText
+                    size="s"
+                    style={[styles.errorBannerText, { color: theme.colors.text }]}
+                  >
+                    {errorMessage}
                   </ThemedText>
                 </View>
               ) : null}
-              {isMatchMode
-                ? matchRecommendations.map((item) => renderMatchCard(item))
-                : playerRecommendations.map(renderPlayerCard)}
-            </ScrollView>
+
+              {inviteFriendError && (
+                <View
+                  style={[
+                    styles.errorBanner,
+                    { backgroundColor: `${theme.colors.error}22`, borderColor: theme.colors.error },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={22} color={theme.colors.error} />
+                  <ThemedText size="s" style={[styles.errorBannerText, { color: theme.colors.text }]}>
+                    {inviteFriendError}
+                  </ThemedText>
+                </View>
+              )}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+              >
+                {resultCount === 0 && !isLoading && !errorMessage ? (
+                  <View style={[styles.emptyBox, { borderColor: theme.colors.border }]}>
+                    <Ionicons name="sparkles" size={28} color={accentColor} />
+                    <ThemedText variant="secondary" size="s" style={styles.emptyText}>
+                      {emptyText}
+                    </ThemedText>
+                  </View>
+                ) : null}
+                {isMatchMode
+                  ? matchRecommendations.map((item) => renderMatchCard(item))
+                  : playerRecommendations.map(renderPlayerCard)}
+              </ScrollView>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -498,6 +722,35 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  premiumNotice: {
+    marginHorizontal: 20,
+    marginTop: 18,
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    shadowOpacity: 0.75,
+    shadowRadius: 16,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    gap: 8,
+  },
+  premiumNoticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  premiumNoticeBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  lockedPremiumContainer: {
+    opacity: 0.3,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -661,6 +914,30 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
+  },
+  thinkingPanel: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+  },
+  thinkingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  thinkingContent: {
+    borderLeftWidth: 2,
+    paddingLeft: 10,
+    marginLeft: 4,
+    marginVertical: 2,
+  },
+  thinkingBody: {
+    lineHeight: 17,
   },
 });
 

@@ -39,7 +39,6 @@ export {
   PostMediaGrid,
   default as PostMediaGridDefault,
 } from "./PostMediaGrid";
-export { ActiveRoomBannerV2 } from "./ActiveRoomBannerV2";
 export { TabBadge } from "./TabBadge";
 export { EmptyState } from "./EmptyState";
 export { LoadingMoreIndicator } from "./LoadingMoreIndicator";
@@ -69,3 +68,4 @@ export { default as HorizontalScrollWithHint } from "./HorizontalScrollWithHint"
 export type { HorizontalScrollWithHintProps } from "./HorizontalScrollWithHint";
 export { ExpandableText, default as ExpandableTextDefault } from "./ExpandableText";
 export type { ExpandableTextProps } from "./ExpandableText";
+export { default as PremiumBadge } from "./PremiumBadge";

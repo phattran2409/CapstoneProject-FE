@@ -56,7 +56,7 @@ export interface Transaction {
   description : string;
   createdAt : string;
 } 
-export type TransactionType = "BookingPayment" | "BookingIncome" | "Deposit" | "CheckinFee" | "Withdrawal" | "Refund" | "Other" | "All";
+export type TransactionType = "BookingPayment" | "BookingIncome" | "Deposit" | "CheckInFee" | "Withdrawal" | "Refund" | "Other" | "All";
 export interface TransactionQuery {
   page : number;
   pageSize : number;

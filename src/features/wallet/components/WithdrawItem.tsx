@@ -6,6 +6,7 @@ import { useTheme } from "@/shared/theme";
 import { formatDateTime } from "@/shared/utils";
 import { withdrawals } from "../types/wallet.types";
 import { formatCurrency } from "@/shared/utils/formatters";
+import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 
 interface WithdrawItemProps {
   withdrawal: withdrawals;
@@ -31,35 +32,43 @@ const WithdrawItem: React.FC<WithdrawItemProps> = ({ withdrawal }) => {
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
+          padding: theme.spacing.m,
         },
       ]}
     >
-      <View style={styles.row}>
-        <ThemedText variant="primary" size="m" weight="bold">
-          {formatCurrency(withdrawal.amount)}
-        </ThemedText>
-        <View
-          style={[
-            styles.statusBadge,
-            {
-              borderColor: statusColor,
-              backgroundColor: `${statusColor}1A`,
-            },
-          ]}
-        >
-          <ThemedText size="xs" weight="semiBold" style={{ color: statusColor }}>
-            {t(`wallet.withdrawStatus.${status}`, { defaultValue: withdrawal.status })}
-          </ThemedText>
-        </View>
+    <ThemedView style={[styles.containerWithdraw , { backgroundColor: theme.colors.surface}]}>
+      <View style={[styles.contentLeft, { backgroundColor: `${statusColor}1A` , borderColor: statusColor }]}>
+        <FontAwesome6 name="arrow-up-from-bracket" size={16} color={statusColor} />
       </View>
-      {withdrawal.createdAt && (
-      <ThemedText variant="secondary" size="xs" style={{ marginTop: 6 }}>
-          {formatDateTime(withdrawal.createdAt)}
+      <View style={styles.contentRight}>
+        <View style={styles.row}>
+          <ThemedText variant="primary" size="m" weight="bold">
+            {formatCurrency(withdrawal.amount)}
+          </ThemedText>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                borderColor: statusColor,
+                backgroundColor: `${statusColor}1A`,
+              },
+            ]}
+          >
+            <ThemedText size="xs" weight="semiBold" style={{ color: statusColor }}>
+              {t(`wallet.withdrawStatus.${status}`, { defaultValue: withdrawal.status })}
+            </ThemedText>
+          </View>
+        </View>
+        {withdrawal.createdAt && (
+        <ThemedText variant="secondary" size="xs" style={{ marginTop: 6 }}>
+            {formatDateTime(withdrawal.createdAt)}
+          </ThemedText>
+        )}
+        <ThemedText variant="secondary" size="xs" style={{ marginTop: 8 }}>
+          {withdrawal.bankName} • {withdrawal.bankAccountNumber}
         </ThemedText>
-      )}
-      <ThemedText variant="secondary" size="xs" style={{ marginTop: 8 }}>
-        {withdrawal.bankName} • {withdrawal.bankAccountNumber}
-      </ThemedText>
+      </View>
+    </ThemedView>
     </ThemedView>
   );
 };
@@ -81,6 +90,23 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
+  },
+  containerWithdraw: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  contentLeft: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 50,
+    marginRight: 10,
+  },
+  contentRight: {
+    flex: 1,
   },
 });
 

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "~14.0.4",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.9.1",
     "@microsoft/signalr": "^10.0.0",
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -67,6 +68,8 @@
     "react-native": "0.76.9",
     "react-native-curved-bottom-bar": "^3.5.1",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-gifted-charts": "^1.4.76",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-logs": "^5.5.0",
     "react-native-reanimated": "~3.16.1",
     "react-native-safe-area-context": "4.12.0",
