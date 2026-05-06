@@ -336,6 +336,7 @@ const en = {
     datetime: "Date & Time",
     venue: "Venue",
     teamLineup: "Team Lineup",
+    compareStrength: "Compare Strength",
     players: "players",
     teamA: "Team A",
     teamB: "Team B",
@@ -364,6 +365,10 @@ const en = {
     openRoomPolicyTitle: "Match policy",
     openRoomPolicyHint:
       "Fill all slots and have everyone pay the deposit to hold the booking. Current cutoff is {{cutoff}} ({{rule}}). If players or deposits are still missing at cutoff, the match is cancelled and deposits are refunded so the slot is released back to the venue owner.",
+    openRoomPolicyStepDeadlineLabel: "Cutoff time",
+    openRoomPolicyStepRuleLabel: "Policy rule",
+    openRoomPolicyExplanation:
+      "Fill all slots and have everyone pay the deposit to hold the booking. If players or deposits are still missing when the cutoff hits, the match is cancelled and deposits are refunded so the slot is released back to the venue owner.",
     openRoomPolicyRule: {
       "24h_after_creation": "deadline is 24 hours after match creation",
       "2h_before_kickoff": "deadline is 2 hours before kickoff",
@@ -467,7 +472,7 @@ const en = {
     teamAverageElo: "Avg ELO: {{value}}",
     skillImbalancedTitle: "Skill gap",
     skillImbalancedMessage:
-      "Team A ({{teamA}}) vs Team B ({{teamB}}) average Elo differs significantly. Consider rebalancing teams.",
+      "Team {{teamNameA}} ({{teamA}}) vs Team {{teamNameB}} ({{teamB}}) average Elo differs significantly. Consider rebalancing teams.",
     unassigned: "Unassigned",
     countdown: {
       matchStartsIn: "Match starts in",
@@ -580,6 +585,14 @@ const en = {
       generic: "Check-in failed. Please try again.",
     },
   },
+  strengthModal: {
+    title: "Strength Comparison",
+    advantageA: "{{teamNameA}} Advantage",
+    advantageB: "{{teamNameB}} Advantage",
+    advantageNone: "Balanced",
+    advantageDesc: "{{team}} has a {{percent}}% advantage based on current Elo.",
+    advantageDescNone: "Both teams are balanced based on current Elo.",
+  },
   profileHeader: {
     chooseAvatarTitle: "Choose profile photo",
     chooseAvatarMessage: "Where would you like to choose the photo from?",
@@ -665,11 +678,42 @@ const en = {
     postNotification: "Post Notification",
     newsUpdates: "News & updates",
     application: "Application",
+    bookingSchedule: "Booking schedule",
     language: "Language",
     interface: "Dark Mode",
     privacyPolicy: "Privacy policy",
     termsOfService: "Terms & app introduction",
     goToChats: "Go to chats",
+    premium: {
+      sectionLabel: "Subscription",
+      cardTitle: "Upgrade to Premium",
+      cardSubtitle: "Unlock AI tools and standout badges",
+      title: "Premium Upgrade",
+      subtitle: "Unlock an elite digital football experience",
+      tierBadge: "Elite tier",
+      planName: "Premium Member",
+      price: "49,000 VND / month",
+      cta: "Subscribe now",
+      features: {
+        aiSuggestion: "Use AI suggestions for players and matches",
+        radarSummary: "Get AI-powered radar chart summaries",
+        aiFeedback: "Generate feedback with AI in seconds",
+        premiumBadge:
+          "Standout premium badge on your profile, posts, comments, and social activity",
+      },
+      payment: {
+        title: "Payment method",
+        subtitle: "Choose how you want to pay for Premium",
+        wallet: "Pay with wallet",
+        walletDesc: "Deduct directly from your in-app wallet balance",
+        direct: "Direct payment",
+        directDesc: "Open payment gateway to complete payment now",
+        walletSuccess: "Premium purchase via wallet succeeded",
+        walletError: "Unable to pay Premium via wallet",
+        directSuccess: "Premium payment gateway opened",
+        directError: "Unable to open Premium payment gateway",
+      },
+    },
   },
   appIntro: {
     screenTitle: "About & terms",
@@ -1177,6 +1221,15 @@ const en = {
   },
   aiRecommendation: {
     searching: "AI is finding the best recommendations...",
+    premium: {
+      title: "Premium Feature",
+      description: "AI Recommendation is available for Premium accounts only. Upgrade your plan to unlock this feature.",
+    },
+    thinking: {
+      title: "AI is thinking...",
+      analyze: "Analyzing your query...",
+      search: "Searching for matching data...",
+    },
     match: {
       title: "AI Match Room Suggestions",
       placeholder: "Enter your request (e.g. Find a 5v5 field near Cau Giay tonight)...",
@@ -1286,7 +1339,7 @@ const en = {
       booking: "Booking",
       topup: "Top-up",
       refund: "Refund",
-      checkin: "Check-in",
+      checkin: "Payment",
       withdraw: "Withdraw",
     },
     withdrawStatus: {
@@ -1301,6 +1354,22 @@ const en = {
     emptyTransactionsDesc: "Your transactions will appear here",
     emptyWithdrawals: "No withdrawal requests yet",
     emptyWithdrawalsDesc: "Your withdrawal requests will appear here",
+  },
+  bookingSchedule: {
+    title: "Booking Schedule",
+    emptyTitle: "No bookings yet",
+    emptyDescription: "There are no bookings for the selected date.",
+    errorTitle: "Unable to load bookings",
+    errorDescription: "Please check your connection and try again.",
+    retry: "Try again",
+    prev: "Previous",
+    next: "Next",
+    status: {
+      Pending: "Pending",
+      Cancelled: "Cancelled",
+      Confirmed: "Paid",
+      Completed: "Completed",
+    },
   },
   eloBreakdown: {
     title: "ELO CHANGE DETAILS",
@@ -1324,9 +1393,9 @@ const en = {
       title: "Teammate Rating",
       desc: "Voted Match MVP",
     },
-    winRate: {
-      title: "Win Rate",
-      desc: "Won against higher Rank opponent",
+    winStreak: {
+      title: "Win Streak",
+      desc: "Won multiple matches in a row",
     },
     feedbackContribution: {
       title: "Feedback Contribution",

@@ -18,9 +18,10 @@ import * as ImagePicker from "expo-image-picker";
 import { useAlert } from "@/shared/hooks";
 import { useUpdateAvatar } from "../hooks";
 import { useToast } from "@/shared/toast";
-import { RankBadge } from "@/shared/components";
+import { PremiumBadge, RankBadge } from "@/shared/components";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { getImageAvatar, getImageSource } from "@/shared/utils/imageSource";
 
 interface ProfileHeaderProps {
   avatar?: string;
@@ -30,6 +31,7 @@ interface ProfileHeaderProps {
   position?: string | null;
   shirtNumber?: number | null;
   isCurrentUser?: boolean;
+  isPremium?: boolean;
   onEditPress?: () => void;
   // Friendship actions
   friendshipStatus?: FriendshipStatus;
@@ -46,6 +48,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   name,
   elo,
   description,
+  isPremium,
   position,
   shirtNumber,
   isCurrentUser,
@@ -173,20 +176,21 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         style={[
           styles.avatar,
           {
-            borderColor: theme.colors.neonGreen,
-            backgroundColor: "#E8D5C4",
+            width: 125,
+            height: 125,
+            borderColor: isPremium ?  "#FFD700": theme.colors.neonGreen,
             marginBottom: theme.spacing.m,
+            borderWidth: 2,
           },
         ]}
       >
-        {avatar ? (
-          <Image source={{ uri: avatar }} style={styles.avatar} />
-        ) : (
-          <Image
-            source={require("../../../assets/images/default_avatar.png")}
-            style={styles.avatar}
-          />
-        )}
+      {/* badges premium and camera icons */}
+      <View style={{ borderColor: theme.colors.border, borderWidth: 1, borderRadius: 60, width: 120, height: 120, justifyContent: "center", alignItems: "center" }}>
+        <Image
+          source={getImageAvatar({uri: avatar || ""})}
+          style={styles.avatar}
+        />
+      </View>
         {isCurrentUser && (
           <TouchableOpacity
             onPress={handleAvatarUpload}
@@ -198,6 +202,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <Ionicons name="camera" size={16} color={theme.colors.black} />
           </TouchableOpacity>
         )}
+        {
+          isPremium && (
+            <View style={{ position: "absolute", top: 0, right: -20 }}>
+              <PremiumBadge isIcon={true}/>
+            </View>
+          )
+        }
       </View>
 
       {/* Name */}
@@ -242,7 +253,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           eloColor={theme.colors.text}
         />
       </View>
-
       {/* Edit Button or Friendship Action Button */}
       {isCurrentUser ? (
         <TouchableOpacity
@@ -298,10 +308,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           />
         )
       )}
+      {isCurrentUser &&(
       <TouchableOpacity
       onPress={onAchievementsPress}
-        activeOpacity={0.7}
-        style={{ width: "90%", maxWidth: 400, marginTop: theme.spacing.m }}
+      activeOpacity={0.7}
+      style={{ width: "90%", maxWidth: 400, marginTop: theme.spacing.m }}
       >
         <BlurView
           intensity={40}
@@ -341,6 +352,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </LinearGradient>
         </BlurView>
       </TouchableOpacity>
+      )}
+
     </View>
   );
 };

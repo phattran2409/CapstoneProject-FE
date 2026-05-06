@@ -6,7 +6,7 @@ export interface EloBreakdownRecord {
   eloChange: number;
   k1MatchResultComponent: number;
   k2FeedbackSentimentComponent: number;
-  k3WinRateComponent: number;
+  k3WinStreakComponent: number;
   k4ContributionComponent: number;
   k5TrustComponent: number;
   calculationDetails: string;

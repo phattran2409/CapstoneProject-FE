@@ -31,6 +31,7 @@ export interface Post {
   updatedAt?: string;
   media: PostMedia[];
   isLikedByCurrentUser: boolean;
+  isPremium?: boolean;
 }
 
 export interface PostsResponse {
@@ -83,6 +84,7 @@ export interface Comment {
   isEdited: boolean;
   createdAt: string;
   isLikedByCurrentUser?: boolean;
+  isPremium?: boolean;
 }
 
 export interface CommentResponse {
@@ -106,6 +108,7 @@ export interface Reply {
   isEdited: boolean;
   createdAt: string;
   isLikedByCurrentUser?: boolean;
+  isPremium?: boolean;
 }
 
 export interface ReplyResponse {

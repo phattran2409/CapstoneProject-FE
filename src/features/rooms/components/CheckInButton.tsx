@@ -59,7 +59,7 @@ export const CheckInButton: React.FC<CheckInButtonProps> = ({
     let location: Location.LocationObject;
     try {
       location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.High,
       });
     } catch {
       setErrorMessage(t('checkIn.errors.locationUnavailable'));

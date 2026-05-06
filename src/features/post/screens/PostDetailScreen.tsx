@@ -43,6 +43,7 @@ import {
   PostDetailSkeleton,
   ActionButton,
   PostActions,
+  PremiumBadge,
 } from "@/shared/components";
 import { useAuthStore } from "@/features/auth";
 import { useToast } from "@/shared/toast";
@@ -298,9 +299,17 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
                 />
               )}
               <View style={{ marginLeft: 12, flex: 1 }}>
-                <ThemedText variant="primary" size="m" weight="bold">
-                  {post.userFullName}
-                </ThemedText>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <ThemedText variant="primary" size="m" weight="bold">
+                    {post.userFullName}
+                  </ThemedText>
+                  {post.isPremium && (
+                    <PremiumBadge
+                      style={{ paddingVertical: 2, paddingHorizontal: 6 }}
+                      labelFontSize={10}
+                    />
+                  )}
+                </View>
                 <ThemedText variant="secondary" size="s">
                   {new Date(post.createdAt).toLocaleDateString()}
                   {post.isEdited &&

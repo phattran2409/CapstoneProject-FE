@@ -6,11 +6,9 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  TextInput,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,14 +21,17 @@ import {
   useFeedbackSessionStore,
   type FeedbackPlayer,
 } from "../store/feedbackSessionStore";
-import { useSubmitMatchFeedbacksBatch } from "../hooks";
+import { useSubmitMatchFeedbacksBatch, useReportPlayer } from "../hooks";
 import {
   DEFAULT_PLAYER_FEEDBACK_ID,
   type MatchFeedbackBatchItem,
+  ReportType,
 } from "../types/feedback.types";
 import { useAuthStore } from "@/features/auth";
 import { getImageAvatar } from "@/shared/utils/imageSource";
 import { getTranslatedError } from "@/shared/utils/errorTranslations";
+import { ReportPlayerModal } from "../components/ReportPlayerModal";
+import CommentSection from "../components/CommentSection";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "FeedbackOpponentRating">;
 
@@ -45,8 +46,18 @@ const FeedbackOpponentRatingScreen: React.FC<Props> = ({ navigation }) => {
 
   const session = useFeedbackSessionStore((s) => s.session);
   const setStep = useFeedbackSessionStore((s) => s.setStep);
+  const markPlayerReported = useFeedbackSessionStore((s) => s.markPlayerReported);
   const user = useAuthStore((s) => s.user);
   const submitBatchMutation = useSubmitMatchFeedbacksBatch();
+  const reportPlayerMutation = useReportPlayer();
+
+  // Report modal state
+  const [reportTargetPlayer, setReportTargetPlayer] = useState<FeedbackPlayer | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType | null>(null);
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportError, setReportError] = useState<string | null>(null);
 
   const opponents: FeedbackPlayer[] = useMemo(
     () => session?.opponents ?? [],
@@ -58,6 +69,55 @@ const FeedbackOpponentRatingScreen: React.FC<Props> = ({ navigation }) => {
   const [modalPlayer, setModalPlayer] = useState<FeedbackPlayer | null>(null);
   const [draftRating, setDraftRating] = useState(0);
   const [draftComment, setDraftComment] = useState("");
+
+  const handleReport = (player: FeedbackPlayer) => {
+    setReportTargetPlayer(player);
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async (reportType: ReportType, description: string) => {
+    if (!session || !reportTargetPlayer) {
+      toast.error(
+        t("feedback.report.sessionMissing", "Thiếu thông tin trận"),
+        t("feedback.report.sessionMissingMessage", "Không thể gửi báo cáo."),
+      );
+      return;
+    }
+    setIsReporting(true);
+    try {
+      await reportPlayerMutation.mutateAsync({
+        reportedUserId: reportTargetPlayer.userId,
+        reportType,
+        description,
+        matchId: session.roomId,
+      });
+      await markPlayerReported(reportTargetPlayer.userId);
+      // Clear rating/comment for reported player
+      setRatings((prev) => {
+        const next = { ...prev };
+        delete next[reportTargetPlayer.userId];
+        return next;
+      });
+      setComments((prev) => {
+        const next = { ...prev };
+        delete next[reportTargetPlayer.userId];
+        return next;
+      });
+      setShowReportModal(false);
+      setReportTargetPlayer(null);
+      setSelectedReportType(null);
+      setReportDescription("");
+      setReportError(null);
+      toast.info(t("reportModal.success.user"));
+    } catch (error: any) {
+      console.error("Error reporting opponent:", error);
+      toast.error(
+        getTranslatedError(error?.message) || t("reportModal.error.user"),
+      );
+    } finally {
+      setIsReporting(false);
+    }
+  };
 
   const navigateToFieldRating = useCallback(async () => {
     await setStep("fieldRating");
@@ -217,11 +277,20 @@ const FeedbackOpponentRatingScreen: React.FC<Props> = ({ navigation }) => {
               : t("feedback.opponent.rate", "Đánh giá")}
           </Text>
         </TouchableOpacity>
+        {/* Report button */}
+        <TouchableOpacity
+          style={styles.reportRowBtn}
+          onPress={() => handleReport(item)}
+          hitSlop={8}
+        >
+          <Ionicons name="flag-outline" size={16} color={theme.colors.error} />
+        </TouchableOpacity>
       </View>
     );
   };
 
   return (
+    <>
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
@@ -407,32 +476,17 @@ const FeedbackOpponentRatingScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={[styles.modalLabel, { color: theme.colors.text }]}>
                 {t("feedback.opponent.commentLabel", "Nhận xét (tùy chọn)")}
               </Text>
-              <ScrollView
-                keyboardShouldPersistTaps="handled"
-                style={{ maxHeight: 110 }}
-                nestedScrollEnabled
-              >
-                <TextInput
-                  style={[
-                    styles.commentInput,
-                    {
-                      backgroundColor: theme.colors.background,
-                      color: theme.colors.text,
-                      borderColor: theme.colors.border,
-                    },
-                  ]}
-                  placeholder={t(
-                    "feedback.opponent.commentPlaceholder",
-                    "Nhận xét về cầu thủ này...",
-                  )}
-                  placeholderTextColor={theme.colors.textTertiary}
-                  value={draftComment}
-                  onChangeText={setDraftComment}
-                  multiline
-                  maxLength={200}
-                  textAlignVertical="top"
-                />
-              </ScrollView>
+              <CommentSection
+                rating={draftRating}
+                comment={draftComment}
+                onCommentChange={setDraftComment}
+                playerRole={modalPlayer?.position ?? ""}
+                placeholder={t(
+                  "feedback.opponent.commentPlaceholder",
+                  "Nhận xét về cầu thủ này...",
+                )}
+                maxHeight={110}
+              />
 
               {/* Actions */}
               <View style={styles.modalActions}>
@@ -468,6 +522,32 @@ const FeedbackOpponentRatingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       )}
     </SafeAreaView>
+
+      <ReportPlayerModal
+        visible={showReportModal}
+        isReporting={isReporting}
+        selectedReportType={selectedReportType}
+        reportDescription={reportDescription}
+        reportError={reportError}
+        onSelectType={(type) => {
+          setSelectedReportType(type);
+          setReportError(null);
+        }}
+        onChangeDescription={(text) => {
+          setReportDescription(text);
+          setReportError(null);
+        }}
+        setReportError={setReportError}
+        onRequestClose={() => {
+          setShowReportModal(false);
+          setReportTargetPlayer(null);
+          setSelectedReportType(null);
+          setReportDescription("");
+          setReportError(null);
+        }}
+        onSubmit={handleReportSubmit}
+      />
+    </>
   );
 };
 
@@ -518,6 +598,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    flexShrink: 0,
+  },
+  reportRowBtn: {
+    padding: 6,
     flexShrink: 0,
   },
   emptyContainer: {

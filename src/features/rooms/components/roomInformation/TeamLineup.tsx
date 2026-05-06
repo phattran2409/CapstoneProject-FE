@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText, ThemedIcon } from '@/shared/components/themed';
 import { useTheme } from '@/shared/theme';
 import type { TFunction } from 'i18next';
@@ -26,6 +26,7 @@ interface TeamLineupProps {
   roomActionsDisabled?: boolean;
   teamAName: string;
   teamBName: string;
+  onOpenStrengthComparison?: () => void;
 }
 
 export const TeamLineup: React.FC<TeamLineupProps> = ({
@@ -45,6 +46,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   roomActionsDisabled = false,
   teamAName,
   teamBName,
+  onOpenStrengthComparison,
 }) => {
   const { theme } = useTheme();
   const slotsPerTeam = displayRoom.totalSlots / 2;
@@ -56,9 +58,19 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
   return (
     <View style={styles.teamLineupSection}>
       <View style={styles.teamLineupHeader}>
-        <ThemedText variant="primary" size="l" weight="bold">
-          {t('roomDetail.teamLineup')} ({displayRoom.filledSlots}/{displayRoom.totalSlots})
-        </ThemedText>
+        <View>
+          <ThemedText variant="primary" size="l" weight="bold">
+            {t('roomDetail.teamLineup')} ({displayRoom.filledSlots}/{displayRoom.totalSlots})
+          </ThemedText>
+          {onOpenStrengthComparison && (
+            <TouchableOpacity onPress={onOpenStrengthComparison} style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+              <ThemedIcon name="bar-chart" size={16} color={theme.colors.neonGreen} />
+              <ThemedText size="sm" style={{ color: theme.colors.neonGreen, marginLeft: 6, textDecorationLine: 'underline' }}>
+                {t('roomDetail.compareStrength')}
+              </ThemedText>
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={styles.signalRIndicator}>
           <View
             style={[

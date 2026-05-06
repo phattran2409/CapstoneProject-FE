@@ -181,7 +181,6 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
     ? myRadarQuery
     : userRadarQuery;
   
-  console.log("analysisRadarData", analysisRadarData);
   // Memoize converted matches
   const listMatches = useMemo(() => {
     const seen = new Set<string>();
@@ -433,6 +432,7 @@ const PersonalPageScreen: React.FC<PersonalPageScreenProps> = ({
               elo={profile?.playerProfile?.currentElo || 0}
               description={profile?.bio}
               position={profile?.preferredPositions}
+              isPremium={profile?.isPremium}
               shirtNumber={profile?.shirtNumber}
               isCurrentUser={isCurrentUser}
               onEditPress={handleEditProfile}

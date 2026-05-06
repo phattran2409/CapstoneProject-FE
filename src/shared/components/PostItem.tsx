@@ -12,6 +12,7 @@ import { useAuthStore } from "@/features/auth";
 import { getRelativeTime } from "@/shared/utils";
 import auth from "../firebase";
 import ActionButton from "./ActionButton";
+import { PremiumBadge } from "@/shared/components";
 import { useDeletePost, useUpdatePost } from "@/features/post/hooks";
 import { InviteFriendsModal } from "@/features/rooms/components/InviteFriendsModal";
 
@@ -119,9 +120,17 @@ export const PostItem: React.FC<PostItemProps> = ({
             )}
           </TouchableOpacity>
           <View style={{ marginLeft: 12, flex: 1 }}>
-            <ThemedText variant="primary" size="m" weight="bold">
-              {post.userFullName}
-            </ThemedText>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <ThemedText variant="primary" size="m" weight="bold">
+                {post.userFullName}
+              </ThemedText>
+              {post.isPremium && (
+                <PremiumBadge
+                  style={{ paddingVertical: 2, paddingHorizontal: 6 }}
+                  labelFontSize={10}
+                />
+              )}
+            </View>
             <Text
               style={[
                 styles.postTimestamp,

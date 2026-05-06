@@ -38,6 +38,15 @@ const AppAboutTermsScreen: React.FC<Props> = ({ navigation }) => {
       : [];
   }, [t]);
 
+  const openRoomPolicyLines = useMemo(
+    () => [
+      `${t("roomDetail.openRoomPolicyStepDeadlineLabel")}: hệ thống tự đóng phòng khi chạm mốc hạn chốt.`,
+      `${t("roomDetail.openRoomPolicyStepRuleLabel")} - ${t("roomDetail.openRoomPolicyRule.15m_grace")}: nếu trận được tạo khi còn dưới 2 giờ trước giờ đá, phòng sẽ được giữ tối đa 15 phút rồi đóng.`,
+      `${t("roomDetail.openRoomPolicyStepRuleLabel")} - ${t("roomDetail.openRoomPolicyRule.24h_after_creation")} / ${t("roomDetail.openRoomPolicyRule.2h_before_kickoff")}: hệ thống chọn mốc đến sớm hơn để đóng phòng tự động.`,
+    ],
+    [t],
+  );
+
   const renderBullet = (line: string, i: number) => (
     <View key={`${i}-${line.slice(0, 24)}`} style={styles.bulletRow}>
       <View
@@ -167,6 +176,11 @@ const AppAboutTermsScreen: React.FC<Props> = ({ navigation }) => {
         {sectionCard("person-outline", "appIntro.sectionPlayerTitle", playerFeatures)}
         {sectionCard("flag-outline", "appIntro.sectionHostTitle", hostFeatures)}
         {sectionCard("analytics-outline", "appIntro.sectionPlatformTitle", platformFeatures)}
+        {sectionCard(
+          "time-outline",
+          "roomDetail.openRoomPolicyTitle",
+          openRoomPolicyLines,
+        )}
 
         <View
           style={[

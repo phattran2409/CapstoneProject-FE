@@ -337,6 +337,7 @@ const vi = {
     description: "Mô tả",
     venue: "Địa điểm",
     teamLineup: "Đội hình tham gia",
+    compareStrength: "So sánh thực lực",
     players: "người chơi",
     teamA: "Đội A",
     teamB: "Đội B",
@@ -364,10 +365,14 @@ const vi = {
     openRoomPolicyTitle: "Chính sách của trận đấu",
     openRoomPolicyHint:
       "Rủ đủ người và mọi người đóng cọc để giữ slot. Hạn chốt hiện tại là {{cutoff}} ({{rule}}). Nếu trận chưa đủ người hoặc chưa đủ cọc khi đến hạn, hệ thống sẽ hủy trận và hoàn cọc để trả slot cho chủ sân.",
+    openRoomPolicyStepDeadlineLabel: "Thời gian đóng trận đấu",
+    openRoomPolicyStepRuleLabel: "Quy tắc áp dụng",
+    openRoomPolicyExplanation:
+      "Rủ đủ người và mọi người đóng cọc để giữ slot. Khi đến hạn mà trận chưa đủ người hoặc chưa đủ cọc, hệ thống sẽ hủy trận và hoàn cọc để trả slot cho chủ sân.",
     openRoomPolicyRule: {
-      "24h_after_creation": "chốt sau 24 giờ từ lúc tạo trận",
-      "2h_before_kickoff": "chốt trước giờ bóng lăn 2 tiếng",
-      "15m_grace": "đặt sát giờ nên chỉ có 15 phút gia ân",
+      "24h_after_creation": "Chốt sau 24 giờ từ lúc tạo trận",
+      "2h_before_kickoff": "Chốt trước giờ bóng lăn 2 tiếng",
+      "15m_grace": "Đặt sát giờ nên chỉ có 15 phút gia ân",
     },
     depositOpenHint:
       "Mỗi người đóng cọc sẽ cộng dồn vào tổng; khi đủ chỗ và mọi người đã cọc, trận được xác nhận.",
@@ -398,7 +403,8 @@ const vi = {
     roomDeleted: "Trận đã bị xóa",
     roomDeletedReason: "Trận đã bị xóa bởi host hoặc đã hết người chơi.",
     hostChanged: "Bạn đã trở thành Host!",
-    hostChangedDesc: "Host cũ đã rời khỏi trận. Bạn được chỉ định làm host mới.",
+    hostChangedDesc:
+      "Host cũ đã rời khỏi trận. Bạn được chỉ định làm host mới.",
     loginRequired: "Yêu cầu đăng nhập",
     loginRequiredDesc: "Vui lòng đăng nhập để tham gia trận",
     joinFirst: "Chưa tham gia",
@@ -406,7 +412,8 @@ const vi = {
     joinFirstRoom: "Bạn chưa tham gia trận",
     joinFirstRoomDesc: "Bạn cần tham gia trận trước khi vào màn đội hình.",
     selectTeamFirst: "Chọn đội trước khi vào sân",
-    selectTeamFirstDesc: "Vui lòng chọn Team A hoặc Team B rồi mới vào màn đội hình.",
+    selectTeamFirstDesc:
+      "Vui lòng chọn Team A hoặc Team B rồi mới vào màn đội hình.",
     chooseTeamSuccess: "Chọn đội thành công!",
     chooseTeamDesc: "Bạn đã chọn Team {{team}} với vị trí {{position}}",
     chooseTeamError: "Không thể chọn đội",
@@ -416,7 +423,8 @@ const vi = {
     kickSuccessDesc: "Đã kick cầu thủ khỏi trận",
     kickError: "Không thể kick cầu thủ",
     cancelTitle: "Hủy trận",
-    cancelMessage: "Bạn có chắc muốn hủy trận này? Hành động không thể hoàn tác.",
+    cancelMessage:
+      "Bạn có chắc muốn hủy trận này? Hành động không thể hoàn tác.",
     cancelSuccess: "Thành công",
     cancelSuccessDesc: "Trận đã được hủy",
     cancelError: "Không thể hủy trận",
@@ -430,7 +438,8 @@ const vi = {
     inviteSend: "Gửi",
     inviteFriendSuccess: "Đã gửi lời mời vào trận",
     inviteFriendError: "Không thể gửi lời mời vào trận",
-    shareMessage: "Tham gia trận đấu của mình nhé!\n\nThể thức: {{format}}\nThời gian: {{date}} {{time}}\nSân: {{venue}}\n\nTham gia tại đây: {{url}}",
+    shareMessage:
+      "Tham gia trận đấu của mình nhé!\n\nThể thức: {{format}}\nThời gian: {{date}} {{time}}\nSân: {{venue}}\n\nTham gia tại đây: {{url}}",
     shareSuccess: "Chia sẻ thành công!",
     hostMenuCancelRoom: "Hủy trận",
     setPrivateRoom: "Chuyển thành trận riêng tư",
@@ -467,7 +476,7 @@ const vi = {
     teamAverageElo: "TB ELO: {{value}}",
     skillImbalancedTitle: "Chênh lệch trình độ",
     skillImbalancedMessage:
-      "ELO TB đội A ({{teamA}}) và đội B ({{teamB}}) chênh lệch đáng kể. Cân nhắc đổi đội để cân bằng trận.",
+      "ELO TB đội {{teamNameA}} ({{teamA}}) và đội {{teamNameB}} ({{teamB}}) chênh lệch đáng kể. Cân nhắc đổi đội để cân bằng trận.",
     unassigned: "chờ tham gia",
     countdown: {
       matchStartsIn: "Trận đấu bắt đầu sau",
@@ -497,7 +506,8 @@ const vi = {
     transferRequested: "Yêu cầu chuyển host",
     transferRequestedDesc: "{{hostName}} đã yêu cầu chuyển quyền host cho bạn",
     transferRejected: "Yêu cầu chuyển host bị từ chối",
-    transferRejectedDesc: "{{targetUserName}} đã từ chối yêu cầu chuyển quyền host của bạn",
+    transferRejectedDesc:
+      "{{targetUserName}} đã từ chối yêu cầu chuyển quyền host của bạn",
     transferAccepted: "Yêu cầu chuyển host đã được chấp nhận",
     transferAcceptedDesc: "{{newHostName}} đã trở thành host của trận",
   },
@@ -546,7 +556,8 @@ const vi = {
       "Tiền trừ từ ví của bạn làm cọc. Khi đủ người và mọi người đã cọc, trận được xác nhận; khi trận bắt đầu, khoản này được chuyển cho chủ sân theo lịch đặt.",
     toast: {
       directPaymentSuccess: "Đã mở link thanh toán trực tiếp từ cổng VNPay",
-      directPaymentError: "Không thể mở link thanh toán trực tiếp từ cổng VNPay",
+      directPaymentError:
+        "Không thể mở link thanh toán trực tiếp từ cổng VNPay",
     },
   },
   checkIn: {
@@ -560,8 +571,7 @@ const vi = {
     modalTitle: "Điểm danh tại sân",
     modalBody:
       "Hệ thống sẽ dùng vị trí GPS của bạn để xác nhận bạn đang ở gần sân (trong vòng 300m). Điều này giúp bảo vệ bạn nếu có tranh chấp về việc có mặt hay không.",
-    modalNote:
-      "Đây là tính năng tùy chọn. Bạn có thể bỏ qua nếu không muốn.",
+    modalNote: "Đây là tính năng tùy chọn. Bạn có thể bỏ qua nếu không muốn.",
     confirmButton: "Lấy vị trí & Điểm danh",
     skipButton: "Bỏ qua, không điểm danh",
     sectionTitle: "Điểm danh",
@@ -578,6 +588,15 @@ const vi = {
       roomCancelled: "Trận đã bị hủy, không thể điểm danh.",
       generic: "Điểm danh thất bại. Vui lòng thử lại.",
     },
+  },
+  strengthModal: {
+    title: "So sánh thực lực",
+    advantageA: "Ưu thế đội {{teamNameA}}",
+    advantageB: "Ưu thế đội {{teamNameB}}",
+    advantageNone: "Cân bằng",
+    advantageDesc:
+      "Đội {{team}} đang có ưu thế {{percent}}% dựa trên chỉ số Elo hiện tại.",
+    advantageDescNone: "Hai đội đang cân bằng dựa trên chỉ số Elo hiện tại.",
   },
   profileHeader: {
     chooseAvatarTitle: "Chọn ảnh đại diện",
@@ -631,7 +650,10 @@ const vi = {
     resendIn: "Gửi lại sau {{seconds}}s",
     resent: "Đã gửi lại mã thành công!",
     changeEmail: "Thay đổi địa chỉ email",
-    success: { title: "Xác thực thành công!", message: "Vui lòng đăng nhập để tiếp tục." },
+    success: {
+      title: "Xác thực thành công!",
+      message: "Vui lòng đăng nhập để tiếp tục.",
+    },
     errors: {
       incomplete: "Vui lòng nhập đủ 6 số OTP",
       invalid: "Mã OTP không hợp lệ. Vui lòng thử lại.",
@@ -643,7 +665,7 @@ const vi = {
     resentMessage: "Vui lòng kiểm tra email của bạn.",
   },
   profile: {
-    personalPage: "Trang cá nhân",  
+    personalPage: "Trang cá nhân",
     title: "Hồ sơ & Cài đặt",
     nameLabel: "Họ tên",
     emailLabel: "Email",
@@ -665,11 +687,42 @@ const vi = {
     postNotification: "Thông báo bài viết",
     newsUpdates: "Tin tức & cập nhật",
     application: "Ứng dụng",
+    bookingSchedule: "Lịch đặt sân",
     language: "Ngôn ngữ",
     interface: "Giao diện tối",
     privacyPolicy: "Chính sách bảo mật",
     termsOfService: "Điều khoản & giới thiệu app",
     goToChats: "Đi đến trò chuyện",
+    premium: {
+      sectionLabel: "Gói đăng ký",
+      cardTitle: "Nâng cấp Premium",
+      cardSubtitle: "Mở khóa bộ công cụ AI và huy hiệu nổi bật",
+      title: "Nâng cấp Premium",
+      subtitle: "Mở khóa trải nghiệm bóng đá kỹ thuật số đỉnh cao",
+      tierBadge: "Gói Elite",
+      planName: "Premium Member",
+      price: "49.000 VND / tháng",
+      cta: "Đăng ký ngay",
+      features: {
+        aiSuggestion: "Sử dụng gợi ý AI cho cầu thủ và trận đấu",
+        radarSummary: "Nhận bản tóm tắt biểu đồ radar bằng AI",
+        aiFeedback: "Tạo nhận xét sau trận bằng AI nhanh và chuẩn hơn",
+        premiumBadge:
+          "Huy hiệu nổi bật ở trang cá nhân, bài đăng, bình luận và hoạt động cộng đồng",
+      },
+      payment: {
+        title: "Phương thức thanh toán",
+        subtitle: "Chọn cách bạn muốn thanh toán gói Premium",
+        wallet: "Thanh toán bằng ví",
+        walletDesc: "Trừ trực tiếp từ số dư ví trong ứng dụng",
+        direct: "Thanh toán trực tiếp",
+        directDesc: "Mở cổng thanh toán để thanh toán ngay",
+        walletSuccess: "Đăng ký Premium bằng ví thành công",
+        walletError: "Không thể thanh toán Premium bằng ví",
+        directSuccess: "Đã mở cổng thanh toán Premium",
+        directError: "Không thể mở cổng thanh toán Premium",
+      },
+    },
   },
   appIntro: {
     screenTitle: "Giới thiệu & điều khoản",
@@ -752,7 +805,7 @@ const vi = {
       goals: "Bàn thắng",
       winRate: "Tỷ lệ thắng",
       age: "Tuổi",
-    }, 
+    },
     analysis: {
       title: "Phân tích hồ sơ trận đấu",
       loadingHint: "Đang cập nhật phân tích AI...",
@@ -838,7 +891,8 @@ const vi = {
   },
   receivedFeedback: {
     title: "Đánh giá nhận được",
-    subtitle: "Lọc theo số sao hoặc thời gian, tìm trận trên header và gửi phản hồi.",
+    subtitle:
+      "Lọc theo số sao hoặc thời gian, tìm trận trên header và gửi phản hồi.",
     filterTime: "Thời gian",
     filterRating: "Đánh giá (sao)",
     matchSearchPlaceholder: "Tìm theo trận đấu…",
@@ -881,7 +935,8 @@ const vi = {
     noReplyYet: "Người này chưa phản hồi.",
     loadError: "Không tải được danh sách đánh giá đã gửi.",
     emptyTitle: "Chưa có đánh giá đã gửi",
-    emptyDesc: "Sau khi bạn chấm đồng đội kết thúc trận, đánh giá và phản hồi (nếu có) sẽ hiện tại đây.",
+    emptyDesc:
+      "Sau khi bạn chấm đồng đội kết thúc trận, đánh giá và phản hồi (nếu có) sẽ hiện tại đây.",
     emptySearchTitle: "Không có kết quả",
     emptySearchDesc: "Thử từ khóa khác hoặc xóa ô tìm kiếm.",
     emptyFilterTitle: "Không có mục khớp bộ lọc",
@@ -921,9 +976,11 @@ const vi = {
   },
   chat: {
     noConversations: "Không có trò chuyện",
-    noConversationsDescription: "Không có trò chuyện nào. Hãy bắt đầu trò chuyện với người khác.",
+    noConversationsDescription:
+      "Không có trò chuyện nào. Hãy bắt đầu trò chuyện với người khác.",
     noMessages: "Không có tin nhắn",
-    noMessagesDescription: "Không có tin nhắn nào. Hãy bắt đầu trò chuyện với người khác.",
+    noMessagesDescription:
+      "Không có tin nhắn nào. Hãy bắt đầu trò chuyện với người khác.",
     searchPlaceholder: "Tìm kiếm trò chuyện",
     title: "Trò chuyện",
     you: "Bạn",
@@ -1070,8 +1127,7 @@ const vi = {
       submit: "Gửi báo cáo",
       button: "Báo cáo người chơi này",
       descriptionLabel: "Mô tả chi tiết",
-      descriptionPlaceholder:
-        "Nhập mô tả chi tiết về hành vi vi phạm...",
+      descriptionPlaceholder: "Nhập mô tả chi tiết về hành vi vi phạm...",
       validation: {
         typeRequired: "Vui lòng chọn lý do báo cáo.",
         descriptionRequired: "Vui lòng nhập mô tả chi tiết.",
@@ -1199,9 +1255,19 @@ const vi = {
   },
   aiRecommendation: {
     searching: "AI đang tìm gợi ý phù hợp nhất...",
+    premium: {
+      title: "Tính năng gói đăng ký",
+      description: "Tính năng AI đề xuất chỉ dành cho tài khoản gói đăng ký. Vui lòng nâng cấp để mở khóa.",
+    },
+    thinking: {
+      title: "AI đang suy nghĩ...",
+      analyze: "Đang phân tích câu hỏi của bạn...",
+      search: "Đang tìm kiếm dữ liệu phù hợp...",
+    },
     match: {
       title: "AI Gợi ý Trận đấu",
-      placeholder: "Nhập yêu cầu của bạn (VD: Tìm sân 5 gần Cầu Giấy tối nay)...",
+      placeholder:
+        "Nhập yêu cầu của bạn (VD: Tìm sân 5 gần Cầu Giấy tối nay)...",
       summary: "Đã tìm thấy {{count}} Trận đấu phù hợp nhất...",
       empty: "Nhập vị trí, thời gian hoặc loại sân để AI gợi ý trận đấu.",
       unknownVenue: "Chưa rõ địa điểm",
@@ -1212,9 +1278,11 @@ const vi = {
     },
     player: {
       title: "AI Gợi ý Cầu thủ",
-      placeholder: "Nhập yêu cầu của bạn (VD: Cần tiền vệ ELO 1400+ đá tối nay)...",
+      placeholder:
+        "Nhập yêu cầu của bạn (VD: Cần tiền vệ ELO 1400+ đá tối nay)...",
       summary: "Đã tìm thấy {{count}} cầu thủ phù hợp nhất...",
-      empty: "Nhập vị trí chơi, ELO, chuỗi thắng hoặc đánh giá cộng đồng để AI gợi ý cầu thủ.",
+      empty:
+        "Nhập vị trí chơi, ELO, chuỗi thắng hoặc đánh giá cộng đồng để AI gợi ý cầu thủ.",
       elo: "ELO",
       winStreak: "Chuỗi thắng",
       winStreakValue: "{{count}} trận",
@@ -1254,7 +1322,7 @@ const vi = {
     bookingIncome: "Thu nhập từ đặt sân",
     topup: "Nạp tiền",
     refund: "Hoàn tiền",
-    checkinFee: "Phí check-in",
+    checkinFee: "Thanh toán",
     other: "Khác",
     recentTransactions: "Giao dịch gần đây",
     viewAll: "Xem tất cả",
@@ -1284,7 +1352,7 @@ const vi = {
     updateBankInfo: "Cập nhật thông tin ngân hàng",
     updateBankInfoBtn: "Cập nhật thông tin",
     saveBankInfo: "Lưu thông tin ngân hàng",
-    depositMinError: "Vui lòng nhập số tiền tối thiểu 1.000 VND",
+    depositMinError: "Vui lòng nhập số tiền tối thiểu 10.000 VND",
     paymentLinkError: "Không thể mở link thanh toán. Vui lòng thử lại.",
     noPaymentUrl: "Không nhận được link thanh toán. Vui lòng thử lại.",
     noPaymentLinkError: "Không nhận được link thanh toán. Vui lòng thử lại.",
@@ -1308,7 +1376,7 @@ const vi = {
       booking: "Đặt sân",
       topup: "Nạp tiền",
       refund: "Hoàn tiền",
-      checkin: "Check-in",
+      checkin: "Thanh toán",
       withdraw: "Rút tiền",
     },
     withdrawStatus: {
@@ -1317,12 +1385,28 @@ const vi = {
       processing: "Đang xử lý",
       completed: "Hoàn thành",
       rejected: "Từ chối",
-      cancelled: "Đã hủy"
+      cancelled: "Đã hủy",
     },
     emptyTransactions: "Chưa có giao dịch nào",
     emptyTransactionsDesc: "Các giao dịch của bạn sẽ hiển thị ở đây",
     emptyWithdrawals: "Chưa có yêu cầu rút tiền nào",
     emptyWithdrawalsDesc: "Các yêu cầu rút tiền của bạn sẽ hiển thị ở đây",
+  },
+  bookingSchedule: {
+    title: "Lịch đặt sân",
+    emptyTitle: "Chưa có lịch đặt sân",
+    emptyDescription: "Không có lịch đặt sân trong ngày đã chọn.",
+    errorTitle: "Không thể tải lịch đặt sân",
+    errorDescription: "Vui lòng kiểm tra kết nối và thử lại.",
+    retry: "Thử lại",
+    prev: "Trước",
+    next: "Sau",
+    status: {
+      Pending: "Đang chờ",
+      Cancelled: "Đã hủy",
+      Confirmed: "Đã thanh toán",
+      Completed: "Hoàn thành",
+    },
   },
   eloBreakdown: {
     title: "CHI TIẾT THAY ĐỔI ELO",
@@ -1346,9 +1430,9 @@ const vi = {
       title: "Đánh giá đồng đội",
       desc: "Được bình chọn là MVP của trận",
     },
-    winRate: {
-      title: "Tỷ lệ thắng",
-      desc: "Thắng đối thủ có bậc Rank cao hơn",
+    winStreak: {
+      title: "Chuỗi thắng",
+      desc: "Thắng liên tiếp nhiều trận đấu",
     },
     feedbackContribution: {
       title: "Đóng góp đánh giá",

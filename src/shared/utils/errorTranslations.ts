@@ -127,6 +127,7 @@ export const backendErrorMessages = {
     "An achievement with this name already exists": "Thành tích đã đạt được",
     "Failed to upload badge icon": "Tải biểu tượng thành tích thất bại",
     "Invalid criteria type": "Chưa hoàn thành đủ nội dung",
+    "Current location is unavailable": "Không thể lấy được vị trí. Vui lòng bật GPS và thử lại.",
 };
 
 // Backend error "title/code" map (code-based translation).
@@ -136,6 +137,8 @@ const backendErrorCodeMessages: Record<string, string> = {
   "MatchRoom.OutsideOperatingHours": "Thời gian yêu cầu nằm ngoài khung giờ hoạt động của sân.",
   "MatchRoom.SlotAlreadyBooked": "Thời gian đã được đặt chỗ bởi phòng khác",
   "AiSuggestion.ServiceUnavailable" : "Dịch vụ AI tạm thời không phản hồi",
+  "MatchRoom.TooFar": "Bạn đang cách sân quá xa",
+  "MatchRoomErrors.InvalidTime" : "Không thể tạo trận đấu có thời gian bắt đầu ở quá khứ" 
 };
 
 export const getTranslatedError = (errMessage?: string, errCode?: string): string => {

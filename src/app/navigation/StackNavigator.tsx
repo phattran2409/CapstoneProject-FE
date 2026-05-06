@@ -19,6 +19,8 @@ import {
   RoomChatScreen,
   ProfileScreen,
   AppAboutTermsScreen,
+  BookingScheduleScreen,
+  PremiumUpgradeScreen,
   RoomInformation,
   FriendRequestsScreen,
   NotificationsScreen,
@@ -266,6 +268,26 @@ const StackNavigator: React.FC = () => {
               component={AppAboutTermsScreen}
               options={{
                 headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="BookingSchedule"
+              component={BookingScheduleScreen}
+              options={{
+                headerShown: false,
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="PremiumUpgrade"
+              component={PremiumUpgradeScreen}
+              options={{
+                headerShown: true,
+                title: "",
+                headerShadowVisible: false,
+                headerStyle: { backgroundColor: "#0B0B0F" },
+                headerTintColor: "#FFD700",
                 animation: "slide_from_right",
               }}
             />
