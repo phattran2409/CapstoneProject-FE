@@ -15,6 +15,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/shared/theme";
+import { useToast } from "@/shared/toast";
+import { useAuthStore } from "@/features/auth";
 import { useGenerateSuggestionComment } from "../hooks/useFeedback";
 
 /** Template comments keyed by star rating (1–5) */
@@ -87,9 +89,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const toast = useToast();
+  const { user } = useAuthStore();
   const generateSuggestionMutation = useGenerateSuggestionComment();
   const [sentimentModalVisible, setSentimentModalVisible] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState<string | null>(null);
+  const isPremiumUser = user?.isPremium === true;
 
   // Sync selectedSentiment with rating
   React.useEffect(() => {
@@ -205,23 +210,47 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             style={[
               styles.aiSelector,
               {
-                borderColor: theme.colors.neonGreen,
-                backgroundColor: theme.colors.neonGreen + "1A",
+                borderColor: isPremiumUser ? theme.colors.neonGreen : theme.colors.border,
+                backgroundColor: isPremiumUser
+                  ? theme.colors.neonGreen + "1A"
+                  : theme.colors.surface,
                 opacity: generateSuggestionMutation.isPending ? 0.6 : 1,
               },
             ]}
             onPress={() => {
+              if (!isPremiumUser) {
+                toast.info(
+                  t("roomDetail.notifications.warning", "Cảnh báo"),
+                  t(
+                    "feedback.rating.premiumOnly",
+                    "Chức năng này chỉ dành cho người dùng đăng ký gói Premium.",
+                  ),
+                );
+                return;
+              }
               if (!generateSuggestionMutation.isPending) setSentimentModalVisible(true);
             }}
             activeOpacity={0.75}
             disabled={generateSuggestionMutation.isPending}
           >
             {generateSuggestionMutation.isPending ? (
-              <ActivityIndicator size="small" color={theme.colors.neonGreen} />
+              <ActivityIndicator
+                size="small"
+                color={isPremiumUser ? theme.colors.neonGreen : theme.colors.textSecondary}
+              />
             ) : (
-              <Ionicons name="chatbox-ellipses-outline" size={18} color={theme.colors.neonGreen} />
+              <Ionicons
+                name="chatbox-ellipses-outline"
+                size={18}
+                color={isPremiumUser ? theme.colors.neonGreen : theme.colors.textSecondary}
+              />
             )}
-            <Text style={[styles.aiSelectorText, { color: theme.colors.neonGreen }]}>
+            <Text
+              style={[
+                styles.aiSelectorText,
+                { color: isPremiumUser ? theme.colors.neonGreen : theme.colors.textSecondary },
+              ]}
+            >
               {generateSuggestionMutation.isPending
                 ? t("common.loading", "Đang tạo...")
                 : selectedSentiment
@@ -231,7 +260,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             <Ionicons
               name={sentimentModalVisible ? "chevron-up" : "chevron-down"}
               size={14}
-              color={theme.colors.neonGreen}
+              color={isPremiumUser ? theme.colors.neonGreen : theme.colors.textSecondary}
               style={{ marginLeft: "auto" }}
             />
           </TouchableOpacity>
