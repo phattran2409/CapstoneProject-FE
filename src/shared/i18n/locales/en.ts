@@ -1393,9 +1393,9 @@ const en = {
       title: "Teammate Rating",
       desc: "Voted Match MVP",
     },
-    winRate: {
-      title: "Win Rate",
-      desc: "Won against higher Rank opponent",
+    winStreak: {
+      title: "Win Streak",
+      desc: "Won multiple matches in a row",
     },
     feedbackContribution: {
       title: "Feedback Contribution",

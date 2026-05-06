@@ -6,7 +6,7 @@ import { useTheme } from "@/shared/theme";
 export type EloBreakdownType =
   | "matchResult"
   | "teammateRating"
-  | "winRate"
+  | "winStreak"
   | "feedbackContribution"
   | "reputation";
 
@@ -21,7 +21,7 @@ export interface EloBreakdownItemProps {
 const ICONS: Record<EloBreakdownType, string> = {
   matchResult: "trophy-outline",
   teammateRating: "people-outline",
-  winRate: "stats-chart-outline",
+  winStreak: "stats-chart-outline",
   feedbackContribution: "football-outline",
   reputation: "shield-checkmark-outline",
 };
