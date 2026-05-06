@@ -92,7 +92,7 @@ export const StrengthComparisonModal: React.FC<StrengthComparisonModalProps> = (
   const radius = 100;
   const strokeWidth = 24;
   const circumference = 2 * Math.PI * radius;
-  const strokeDasharrayA = `${(percentA / 100) * circumference} ${circumference}`;
+  const strokeDasharrayB = `${(percentB / 100) * circumference} ${circumference}`;
 
   return (
     <Modal
@@ -141,14 +141,23 @@ export const StrengthComparisonModal: React.FC<StrengthComparisonModalProps> = (
           <View style={styles.teamsRow}>
             <View style={styles.teamInfoLeft}>
               <ThemedText size="l" weight="bold" style={{ color: '#4CAF50' }}>{teamAName}</ThemedText>
-              <View style={[styles.eloBadge, { borderColor: '#4CAF50' }]}>
+              <View style={[styles.eloBadge, { borderColor: '#4CAF50', backgroundColor: '#4CAF5020' }]}>
                 <ThemedText size="s" weight="bold" style={{ color: '#4CAF50' }}>{Math.round(eloA)} Elo</ThemedText>
               </View>
             </View>
 
             <View style={styles.chartContainer}>
               <Svg height={radius * 2 + strokeWidth} width={radius * 2 + strokeWidth} viewBox={`0 0 ${radius * 2 + strokeWidth} ${radius * 2 + strokeWidth}`}>
-                {/* Team B Circle (Background) */}
+                {/* Team A Circle (Background) */}
+                <Circle
+                  cx={(radius * 2 + strokeWidth) / 2}
+                  cy={(radius * 2 + strokeWidth) / 2}
+                  r={radius}
+                  stroke="#4CAF50" // Darker green for A
+                  strokeWidth={strokeWidth}
+                  fill="none"
+                />
+                {/* Team B Circle (Foreground) */}
                 <Circle
                   cx={(radius * 2 + strokeWidth) / 2}
                   cy={(radius * 2 + strokeWidth) / 2}
@@ -156,17 +165,8 @@ export const StrengthComparisonModal: React.FC<StrengthComparisonModalProps> = (
                   stroke="#a8e063" // Lighter green for B
                   strokeWidth={strokeWidth}
                   fill="none"
-                />
-                {/* Team A Circle (Foreground) */}
-                <Circle
-                  cx={(radius * 2 + strokeWidth) / 2}
-                  cy={(radius * 2 + strokeWidth) / 2}
-                  r={radius}
-                  stroke="#2e7d32" // Darker green for A
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeDasharray={strokeDasharrayA}
-                  strokeDashoffset={circumference / 4} // Start from top
+                  strokeDasharray={strokeDasharrayB}
+                  strokeDashoffset={circumference / 4} // Start from top, goes right
                   strokeLinecap="butt"
                 />
               </Svg>
@@ -177,7 +177,7 @@ export const StrengthComparisonModal: React.FC<StrengthComparisonModalProps> = (
 
             <View style={styles.teamInfoRight}>
               <ThemedText size="l" weight="bold" style={{ color: '#a8e063' }}>{teamBName}</ThemedText>
-              <View style={[styles.eloBadge, { borderColor: '#a8e063' }]}>
+              <View style={[styles.eloBadge, { borderColor: '#a8e063', backgroundColor: '#a8e06320' }]}>
                 <ThemedText size="s" weight="bold" style={{ color: '#a8e063' }}>{Math.round(eloB)} Elo</ThemedText>
               </View>
             </View>
