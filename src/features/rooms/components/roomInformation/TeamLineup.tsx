@@ -65,7 +65,7 @@ export const TeamLineup: React.FC<TeamLineupProps> = ({
           {onOpenStrengthComparison && (
             <TouchableOpacity onPress={onOpenStrengthComparison} style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
               <ThemedIcon name="bar-chart" size={16} color={theme.colors.neonGreen} />
-              <ThemedText size="sm" style={{ color: theme.colors.neonGreen, marginLeft: 6, textDecorationLine: 'underline' }}>
+              <ThemedText size="s" style={{ color: theme.colors.neonGreen, marginLeft: 6, textDecorationLine: 'underline' }}>
                 {t('roomDetail.compareStrength')}
               </ThemedText>
             </TouchableOpacity>
