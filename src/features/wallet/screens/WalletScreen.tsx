@@ -279,9 +279,9 @@ const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       value: "Refund",
     },
     {
-      key: "CheckinFee",
+      key: "CheckInFee",
       label: t("wallet.filters.checkin", { defaultValue: "Thanh Toán" }),
-      value: "CheckinFee",
+      value: "CheckInFee",
     },
     {
       key: "Withdrawal",
